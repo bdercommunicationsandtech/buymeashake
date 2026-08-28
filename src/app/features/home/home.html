@@ -1,0 +1,188 @@
+<!-- ------------------------------------------------------------------ Hero -->
+<section class="arena-bg relative overflow-hidden">
+  <div class="grid-lines absolute inset-0 opacity-60"></div>
+
+  <div class="relative mx-auto grid max-w-6xl gap-12 px-5 py-16 lg:grid-cols-[1fr_1.05fr] lg:items-center lg:py-24">
+    <div class="anim-rise">
+      <span
+        class="inline-flex items-center gap-2 rounded-full border border-lime/30 bg-lime/10 px-4 py-1.5 text-[11px] font-bold uppercase tracking-[0.18em] text-lime"
+      >
+        <span class="relative flex h-1.5 w-1.5">
+          <span class="absolute inline-flex h-full w-full rounded-full bg-lime"></span>
+        </span>
+        Prototipo v1.0
+      </span>
+
+      <h1 class="mt-6 text-[clamp(2.6rem,7vw,4.4rem)] font-black text-white">
+        Invita un shake,<br />
+        <span class="text-gradient-lime">no un café.</span>
+      </h1>
+
+      <p class="mt-6 max-w-xl text-lg leading-relaxed text-white/60">
+        La plataforma de apoyo hecha para el mundo del fitness. Tu comunidad te invita batidos de
+        proteína de ${{ shakePrice }} y tú sigues entrenando, publicando rutinas y compitiendo.
+      </p>
+
+      <div class="mt-9 flex flex-wrap items-center gap-3">
+        <button
+          type="button"
+          class="glow-lime rounded-full bg-lime px-7 py-3.5 text-base font-bold text-void transition hover:brightness-110"
+          (click)="supportDemo(3)"
+        >
+          Probar el checkout · ${{ shakePrice * 3 }}
+        </button>
+      </div>
+
+      <dl class="mt-12 grid max-w-lg grid-cols-2 gap-6 sm:grid-cols-4">
+        @for (stat of stats; track stat.label) {
+          <div>
+            <dt class="text-2xl font-extrabold text-lime">{{ stat.value }}</dt>
+            <dd class="mt-1 text-[11px] font-semibold uppercase tracking-wider text-white/40">
+              {{ stat.label }}
+            </dd>
+          </div>
+        }
+      </dl>
+    </div>
+
+    <div class="anim-rise" style="animation-delay: 0.12s">
+      <app-sport-widget [bare]="true" (activityChange)="onSpotlightChange($event)" />
+    </div>
+  </div>
+
+  <!-- Ticker -->
+  <div class="ticker-mask relative border-y border-white/8 bg-void/60 py-3.5">
+    <div class="anim-marquee flex w-max gap-10">
+      @for (round of [1, 2]; track round) {
+        @for (item of ticker; track $index) {
+          <span class="flex items-center gap-10 text-sm font-semibold whitespace-nowrap text-white/40">
+            {{ item }}
+            <span class="h-1.5 w-1.5 rounded-full bg-lime/60"></span>
+          </span>
+        }
+      }
+    </div>
+  </div>
+</section>
+
+<!-- ------------------------------------------------------- Cómo funciona -->
+<section class="mx-auto max-w-6xl px-5 py-20">
+  <div class="max-w-2xl">
+    <p class="text-[11px] font-bold uppercase tracking-[0.22em] text-lime">Cómo funciona</p>
+    <h2 class="mt-3 text-4xl font-black text-white sm:text-5xl">
+      Tres pasos y tu comunidad ya te apoya
+    </h2>
+  </div>
+
+  <div class="mt-12 grid gap-5 md:grid-cols-3">
+    @for (step of steps; track step.index) {
+      <article class="glass group rounded-3xl p-7 transition hover:border-lime/30">
+        <span class="text-5xl font-black text-white/10 transition group-hover:text-lime/30">
+          {{ step.index }}
+        </span>
+        <h3 class="mt-4 text-xl font-bold text-white">{{ step.title }}</h3>
+        <p class="mt-3 text-sm leading-relaxed text-white/50">{{ step.detail }}</p>
+      </article>
+    }
+  </div>
+</section>
+
+<!-- ------------------------------------------------------- Creador demo -->
+<section class="mx-auto max-w-6xl px-5 pb-20">
+  <div class="glass-strong relative overflow-hidden rounded-[32px] p-8 sm:p-12">
+    <div
+      class="pointer-events-none absolute -top-28 -right-24 h-72 w-72 rounded-full bg-lime/12 blur-3xl"
+    ></div>
+
+    <div class="relative grid gap-10 lg:grid-cols-[1fr_auto] lg:items-center">
+      <div>
+        <p class="text-[11px] font-bold uppercase tracking-[0.22em] text-lime">Perfil de ejemplo</p>
+        <h2 class="mt-3 text-4xl font-black text-white">{{ creator.name }}</h2>
+        <p class="mt-2 text-base text-white/55">
+          {{ creator.role }} · {{ creator.city }}
+        </p>
+        <p class="mt-5 max-w-xl text-sm leading-relaxed text-white/50">{{ creator.bio }}</p>
+
+        <div class="mt-7 flex flex-wrap gap-2">
+          @for (discipline of creator.disciplines; track discipline) {
+            <span
+              class="rounded-full border border-white/12 bg-white/4 px-3.5 py-1.5 text-xs font-semibold text-white/60"
+            >
+              {{ discipline }}
+            </span>
+          }
+        </div>
+
+        <a
+          routerLink="/sofia"
+          class="mt-8 inline-flex items-center gap-2 rounded-full bg-lime px-6 py-3 text-sm font-bold text-void transition hover:brightness-110"
+        >
+          Ver su página
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M5 12h14M13 6l6 6-6 6" />
+          </svg>
+        </a>
+      </div>
+
+      <div class="w-full max-w-xs shrink-0 rounded-3xl border border-white/10 bg-void/50 p-6 lg:w-80">
+        <p class="text-xs font-semibold uppercase tracking-wider text-white/40">Meta actual</p>
+        <p class="mt-2 text-sm font-semibold leading-snug text-white">{{ creator.goalTitle }}</p>
+
+        <div class="mt-5 h-2.5 overflow-hidden rounded-full bg-white/8">
+          <div
+            class="h-full rounded-full bg-lime transition-[width] duration-700"
+            [style.width.%]="(creator.goalRaised / creator.goalTarget) * 100"
+          ></div>
+        </div>
+        <p class="mt-3 text-sm text-white/50">
+          <span class="font-extrabold text-lime">${{ creator.goalRaised }}</span>
+          de ${{ creator.goalTarget }}
+        </p>
+
+        <div class="mt-6 grid grid-cols-2 gap-4 border-t border-white/8 pt-5 text-center">
+          <div>
+            <p class="text-xl font-extrabold text-white">{{ creator.supporters }}</p>
+            <p class="text-[10px] font-semibold uppercase tracking-wider text-white/35">apoyos</p>
+          </div>
+          <div>
+            <p class="text-xl font-extrabold text-white">{{ creator.streakDays }}</p>
+            <p class="text-[10px] font-semibold uppercase tracking-wider text-white/35">
+              días de racha
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- --------------------------------------------------------------- CTA -->
+<section class="mx-auto max-w-6xl px-5 pb-24">
+  <div
+    class="relative overflow-hidden rounded-[32px] bg-lime px-8 py-14 text-center text-void sm:px-16"
+  >
+    <div class="grid-lines absolute inset-0 opacity-25"></div>
+    <div class="relative">
+      <h2 class="text-4xl font-black sm:text-5xl">¿Listo para tu primer shake?</h2>
+      <p class="mx-auto mt-4 max-w-xl text-base font-medium text-void/70">
+        Este prototipo no cobra nada: es una maqueta interactiva para validar el diseño y el flujo
+        completo antes de conectar Stripe de verdad.
+      </p>
+      <div class="mt-8 flex flex-wrap justify-center gap-3">
+        <button
+          type="button"
+          class="rounded-full bg-void px-7 py-3.5 text-base font-bold text-lime transition hover:brightness-125"
+          (click)="supportDemo(1)"
+        >
+          Invitar 1 shake · ${{ shakePrice }}
+        </button>
+        <a
+          routerLink="/widget"
+          class="rounded-full border-2 border-void/25 px-7 py-3.5 text-base font-bold text-void transition hover:border-void/60"
+        >
+          Ver el laboratorio
+        </a>
+      </div>
+    </div>
+  </div>
+</section>

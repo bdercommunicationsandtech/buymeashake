@@ -1,0 +1,170 @@
+@if (checkout.open()) {
+  <div class="overlay" role="dialog" aria-modal="true" aria-label="Pago de prueba con Stripe">
+    <button type="button" class="overlay-backdrop" aria-label="Cerrar" (click)="close()"></button>
+
+    <div class="sheet">
+      @if (checkout.paid()) {
+        <!-- ----------------------------------------- Confirmación -->
+        <div class="done">
+          <div class="done-mark">
+            <svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4 12.5l5 5L20 6.5" />
+            </svg>
+          </div>
+          <h2>Pago de prueba listo</h2>
+          <p class="done-amount">${{ checkout.total() }}.00 USD</p>
+          <p class="done-copy">
+            {{ checkout.draft()?.shakes }} shake(s) para
+            <strong>{{ checkout.draft()?.creatorName }}</strong>. En el producto real Stripe
+            confirmaría el cargo y enviaría el recibo por correo.
+          </p>
+          @if (checkout.draft()?.message) {
+            <p class="done-note">“{{ checkout.draft()?.message }}”</p>
+          }
+          <button type="button" class="pay-btn" (click)="close()">Volver al prototipo</button>
+          <p class="test-note">Ningún cargo real fue procesado.</p>
+        </div>
+      } @else {
+        <div class="grid-panels">
+          <!-- ------------------------------------------- Resumen -->
+          <aside class="summary">
+            <div class="summary-brand">
+              <span class="summary-logo">bm<span>s</span></span>
+              <span class="summary-name">buymeashake.fit</span>
+            </div>
+
+            <p class="summary-label">Apoyar a {{ checkout.draft()?.creatorName }}</p>
+            <p class="summary-total">${{ checkout.total() }}.00</p>
+            <p class="summary-sub">
+              {{ checkout.draft()?.shakes }} × Shake de proteína · ${{ checkout.draft()?.unitPrice }}.00
+            </p>
+
+            <div class="summary-line">
+              <div class="summary-thumb">
+                <svg viewBox="0 0 32 32" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round">
+                  <rect x="12" y="4" width="8" height="4" rx="2" fill="currentColor" stroke="none" />
+                  <path d="M10 10h12l-1.4 16a4 4 0 0 1-4 3.6h-1.2a4 4 0 0 1-4-3.6z" />
+                </svg>
+              </div>
+              <div>
+                <p class="summary-item">Shake de proteína</p>
+                <p class="summary-item-sub">Apoyo único · &#64;{{ checkout.draft()?.creatorHandle }}</p>
+              </div>
+              <p class="summary-item-price">${{ checkout.total() }}.00</p>
+            </div>
+
+            <div class="summary-total-row">
+              <span>Total a pagar</span>
+              <span>${{ checkout.total() }}.00 USD</span>
+            </div>
+
+            <p class="summary-powered">
+              Powered by <strong>stripe</strong>
+              <span class="summary-dot">·</span> Términos
+              <span class="summary-dot">·</span> Privacidad
+            </p>
+          </aside>
+
+          <!-- ---------------------------------- Formulario Stripe -->
+          <section class="form-panel">
+            <div class="form-head">
+              <h2>Pagar con tarjeta</h2>
+              <button type="button" class="close-btn" (click)="close()" aria-label="Cerrar">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+                  <path d="M6 6l12 12M18 6L6 18" />
+                </svg>
+              </button>
+            </div>
+
+            <div class="wallet-row">
+              <button type="button" class="wallet-btn wallet-dark" disabled>
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M16.4 12.9c0-2.2 1.8-3.3 1.9-3.4-1-1.5-2.6-1.7-3.2-1.7-1.4-.1-2.6.8-3.3.8s-1.7-.8-2.9-.8c-1.5 0-2.9.9-3.7 2.3-1.6 2.7-.4 6.7 1.1 8.9.7 1 1.6 2.2 2.8 2.2 1.1 0 1.5-.7 2.9-.7s1.7.7 2.9.7c1.2 0 2-1.1 2.7-2.2.5-.8.8-1.6 1-2.4-.1 0-2.2-.9-2.2-3.7zM14.3 5.9c.6-.7 1-1.7.9-2.7-.9.1-2 .6-2.6 1.3-.6.6-1 1.6-.9 2.6 1 .1 2-.5 2.6-1.2z" /></svg>
+                Pay
+              </button>
+              <button type="button" class="wallet-btn" disabled>
+                <span class="g-mark">G</span> Pay
+              </button>
+            </div>
+
+            <div class="divider"><span>o paga con tarjeta</span></div>
+
+            <label class="field">
+              <span class="field-label">Correo</span>
+              <input
+                type="email"
+                class="input"
+                autocomplete="email"
+                [value]="email()"
+                (input)="onEmailInput($any($event.target).value)"
+              />
+            </label>
+
+            <label class="field">
+              <span class="field-label">Información de la tarjeta</span>
+              <div class="card-group">
+                <div class="card-row card-row-top">
+                  <input
+                    class="input input-bare"
+                    inputmode="numeric"
+                    placeholder="1234 1234 1234 1234"
+                    [value]="cardNumber()"
+                    (input)="onCardInput($any($event.target).value)"
+                  />
+                  <span class="brand-tag">{{ brand() }}</span>
+                </div>
+                <div class="card-row-split">
+                  <input
+                    class="input input-bare"
+                    inputmode="numeric"
+                    placeholder="MM/AA"
+                    [value]="expiry()"
+                    (input)="onExpiryInput($any($event.target).value)"
+                  />
+                  <input
+                    class="input input-bare input-cvc"
+                    inputmode="numeric"
+                    placeholder="CVC"
+                    [value]="cvc()"
+                    (input)="onCvcInput($any($event.target).value)"
+                  />
+                </div>
+              </div>
+            </label>
+
+            <label class="field">
+              <span class="field-label">Nombre en la tarjeta</span>
+              <input
+                class="input"
+                autocomplete="cc-name"
+                [value]="cardName()"
+                (input)="onNameInput($any($event.target).value)"
+              />
+            </label>
+
+            <label class="field">
+              <span class="field-label">Código postal</span>
+              <input
+                class="input"
+                inputmode="numeric"
+                [value]="zip()"
+                (input)="onZipInput($any($event.target).value)"
+              />
+            </label>
+
+            <button type="button" class="pay-btn" [disabled]="!canPay()" (click)="pay()">
+              @if (processing()) {
+                <span class="spinner"></span> Procesando…
+              } @else {
+                Pagar ${{ checkout.total() }}.00
+              }
+            </button>
+
+            <p class="test-note">
+              Modo prueba · prototipo visual sin cobros reales. Usa cualquier dato.
+            </p>
+          </section>
+        </div>
+      }
+    </div>
+  </div>
+}

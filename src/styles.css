@@ -1,0 +1,668 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap');
+@import 'tailwindcss';
+
+@theme {
+  --font-sans: 'Outfit', ui-sans-serif, system-ui, sans-serif;
+
+  --color-void: #070a08;
+  --color-ink: #12181a;
+  --color-ink-soft: #1b2325;
+  --color-lime: #c9ff3d;
+  --color-lime-deep: #5cba7a;
+  --color-flame: #ff5a2c;
+  --color-stripe: #635bff;
+  --color-stripe-ink: #0a2540;
+}
+
+/* ------------------------------------------------------------------ */
+/* Base                                                                */
+/* ------------------------------------------------------------------ */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  background-color: var(--color-void);
+  color: #e9f2ea;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+}
+
+::selection {
+  background: var(--color-lime);
+  color: var(--color-void);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-lime);
+  outline-offset: 3px;
+}
+
+/* ------------------------------------------------------------------ */
+/* Utilidades de superficie                                            */
+/* ------------------------------------------------------------------ */
+
+.arena-bg {
+  background-color: var(--color-void);
+  background-image:
+    radial-gradient(at 12% 0%, rgba(201, 255, 61, 0.16) 0px, transparent 55%),
+    radial-gradient(at 88% 8%, rgba(99, 91, 255, 0.16) 0px, transparent 50%),
+    radial-gradient(at 50% 100%, rgba(92, 186, 122, 0.12) 0px, transparent 55%);
+}
+
+.grid-lines {
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.045) 1px, transparent 1px);
+  background-size: 48px 48px;
+}
+
+.glass {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+.glass-strong {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+}
+
+.glass-header {
+  background: rgba(7, 10, 8, 0.72);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+.text-gradient-lime {
+  background: linear-gradient(100deg, var(--color-lime), #6ff5a8 55%, var(--color-lime));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.glow-lime {
+  box-shadow:
+    0 0 0 1px rgba(201, 255, 61, 0.35),
+    0 18px 60px -18px rgba(201, 255, 61, 0.55);
+}
+
+.ticker-mask {
+  mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+}
+
+/* ------------------------------------------------------------------ */
+/* Animaciones de interfaz                                             */
+/* ------------------------------------------------------------------ */
+
+@keyframes float-soft {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes pulse-ring {
+  0% {
+    transform: scale(0.85);
+    opacity: 0.55;
+  }
+  70%,
+  100% {
+    transform: scale(1.4);
+    opacity: 0;
+  }
+}
+
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes spin-360 {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.anim-float {
+  animation: float-soft 6s ease-in-out infinite;
+}
+
+.anim-marquee {
+  animation: marquee 26s linear infinite;
+}
+
+.anim-rise {
+  animation: rise-in 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.anim-spin {
+  animation: spin-360 0.8s linear infinite;
+}
+
+/* ------------------------------------------------------------------ */
+/* Escena deportiva: convenciones compartidas                          */
+/* ------------------------------------------------------------------ */
+
+/* Las figuras se dibujan en un viewBox 0 0 200 200 y sus articulaciones
+   giran alrededor de coordenadas del viewBox, no de la caja del elemento. */
+.joint {
+  transform-box: view-box;
+  transform-origin: center;
+}
+
+/* Cuando el widget está en pausa toda la escena congela su animación. */
+.scene-paused * {
+  animation-play-state: paused !important;
+}
+
+/* En reposo la escena vuelve a su pose base: la animación sólo corre mientras
+   el usuario sobrevuela o agita el widget. */
+.scene-idle [class^='a-'],
+.scene-idle [class*=' a-'] {
+  animation: none !important;
+}
+
+/* Agitar con el puntero acelera el vaivén del shaker. */
+.scene.is-shaking .a-shaker-body,
+.scene.is-shaking .a-shaker-liquid {
+  animation-duration: 0.4s;
+}
+
+.scene.is-shaking .a-shaker-bubble {
+  animation-duration: 0.9s;
+}
+
+/* ------------------------------------------------------------------ */
+/* 1. Shaker                                                           */
+/* ------------------------------------------------------------------ */
+
+@keyframes shaker-tilt {
+  0%,
+  100% {
+    transform: rotate(-9deg) translateY(2px);
+  }
+  50% {
+    transform: rotate(9deg) translateY(-6px);
+  }
+}
+
+@keyframes shaker-liquid {
+  0%,
+  100% {
+    transform: translate(-7px, 1px) rotate(-7deg);
+  }
+  50% {
+    transform: translate(7px, -4px) rotate(7deg);
+  }
+}
+
+@keyframes shaker-bubble {
+  0% {
+    transform: translateY(6px) scale(0.5);
+    opacity: 0;
+  }
+  25% {
+    opacity: 0.95;
+  }
+  100% {
+    transform: translateY(-46px) scale(1.15);
+    opacity: 0;
+  }
+}
+
+.a-shaker-body {
+  animation: shaker-tilt 0.9s ease-in-out infinite;
+}
+
+.a-shaker-liquid {
+  animation: shaker-liquid 0.9s ease-in-out infinite;
+}
+
+.a-shaker-bubble {
+  animation: shaker-bubble 1.8s ease-in infinite;
+}
+
+/* ------------------------------------------------------------------ */
+/* 2. Sentadilla — cadena cinemática enraizada en el tobillo           */
+/* ------------------------------------------------------------------ */
+
+@keyframes squat-shin {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  50% {
+    transform: rotate(-34deg);
+  }
+}
+
+@keyframes squat-thigh {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  50% {
+    transform: rotate(64deg);
+  }
+}
+
+@keyframes squat-torso {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  50% {
+    transform: rotate(-45deg);
+  }
+}
+
+@keyframes squat-arms {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  50% {
+    transform: rotate(20deg);
+  }
+}
+
+.a-squat-shin {
+  animation: squat-shin 1.9s ease-in-out infinite;
+}
+
+.a-squat-thigh {
+  animation: squat-thigh 1.9s ease-in-out infinite;
+}
+
+.a-squat-torso {
+  animation: squat-torso 1.9s ease-in-out infinite;
+}
+
+.a-squat-arms {
+  animation: squat-arms 1.9s ease-in-out infinite;
+}
+
+/* ------------------------------------------------------------------ */
+/* 3. Correr                                                           */
+/* ------------------------------------------------------------------ */
+
+@keyframes run-thigh {
+  0%,
+  100% {
+    transform: rotate(-40deg);
+  }
+  50% {
+    transform: rotate(30deg);
+  }
+}
+
+@keyframes run-shin {
+  0% {
+    transform: rotate(34deg);
+  }
+  35% {
+    transform: rotate(2deg);
+  }
+  70% {
+    transform: rotate(62deg);
+  }
+  100% {
+    transform: rotate(34deg);
+  }
+}
+
+@keyframes run-arm {
+  0%,
+  100% {
+    transform: rotate(38deg);
+  }
+  50% {
+    transform: rotate(-34deg);
+  }
+}
+
+@keyframes run-bob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  25%,
+  75% {
+    transform: translateY(-6px);
+  }
+}
+
+@keyframes run-ground {
+  from {
+    stroke-dashoffset: 0;
+  }
+  to {
+    stroke-dashoffset: -60;
+  }
+}
+
+.a-run-bob {
+  animation: run-bob 0.66s ease-in-out infinite;
+}
+
+.a-run-thigh {
+  animation: run-thigh 0.66s ease-in-out infinite;
+}
+
+.a-run-shin {
+  animation: run-shin 0.66s ease-in-out infinite;
+}
+
+.a-run-arm {
+  animation: run-arm 0.66s ease-in-out infinite;
+}
+
+.a-run-ground {
+  stroke-dasharray: 18 12;
+  animation: run-ground 0.5s linear infinite;
+}
+
+.phase-half {
+  animation-delay: -0.33s;
+}
+
+/* ------------------------------------------------------------------ */
+/* 4. Salto de cuerda                                                  */
+/* ------------------------------------------------------------------ */
+
+@keyframes rope-spin {
+  0% {
+    transform: scaleY(1);
+  }
+  50% {
+    transform: scaleY(-1);
+  }
+  100% {
+    transform: scaleY(1);
+  }
+}
+
+@keyframes jump-hop {
+  0%,
+  100% {
+    transform: translateY(0) scaleY(0.95);
+  }
+  20% {
+    transform: translateY(-2px) scaleY(1);
+  }
+  50% {
+    transform: translateY(-22px) scaleY(1.03);
+  }
+  80% {
+    transform: translateY(-2px) scaleY(1);
+  }
+}
+
+@keyframes jump-forearm {
+  0%,
+  100% {
+    transform: rotate(-8deg);
+  }
+  50% {
+    transform: rotate(8deg);
+  }
+}
+
+.a-rope {
+  animation: rope-spin 0.62s linear infinite;
+}
+
+.a-jump-hop {
+  animation: jump-hop 0.62s ease-in-out infinite;
+}
+
+.a-jump-forearm {
+  animation: jump-forearm 0.31s ease-in-out infinite;
+}
+
+/* ------------------------------------------------------------------ */
+/* 5. Ciclismo                                                         */
+/* ------------------------------------------------------------------ */
+
+@keyframes crank-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes cycle-thigh {
+  0%,
+  100% {
+    transform: rotate(-20deg);
+  }
+  50% {
+    transform: rotate(22deg);
+  }
+}
+
+@keyframes cycle-shin {
+  0% {
+    transform: rotate(46deg);
+  }
+  40% {
+    transform: rotate(6deg);
+  }
+  100% {
+    transform: rotate(46deg);
+  }
+}
+
+@keyframes road-dash {
+  from {
+    stroke-dashoffset: 0;
+  }
+  to {
+    stroke-dashoffset: -72;
+  }
+}
+
+.a-wheel {
+  animation: crank-spin 0.85s linear infinite;
+}
+
+.a-crank {
+  animation: crank-spin 0.85s linear infinite;
+}
+
+.a-cycle-thigh {
+  animation: cycle-thigh 0.85s ease-in-out infinite;
+}
+
+.a-cycle-shin {
+  animation: cycle-shin 0.85s ease-in-out infinite;
+}
+
+.a-road {
+  stroke-dasharray: 22 14;
+  animation: road-dash 0.6s linear infinite;
+}
+
+/* ------------------------------------------------------------------ */
+/* 6. Pesas — press militar                                            */
+/* ------------------------------------------------------------------ */
+
+@keyframes press-bar {
+  0%,
+  100% {
+    transform: translateY(16px);
+  }
+  45%,
+  58% {
+    transform: translateY(0);
+  }
+}
+
+/* El escalado del brazo va sincronizado con el recorrido de la barra para que
+   la mano nunca se despegue de ella: 98 - 52 * scaleY = altura de la barra. */
+@keyframes press-arm {
+  0%,
+  100% {
+    transform: scaleY(0.692);
+  }
+  45%,
+  58% {
+    transform: scaleY(1);
+  }
+}
+
+@keyframes press-dip {
+  0%,
+  100% {
+    transform: translateY(5px);
+  }
+  45%,
+  58% {
+    transform: translateY(0);
+  }
+}
+
+.a-press-bar {
+  animation: press-bar 1.7s cubic-bezier(0.35, 0, 0.25, 1) infinite;
+}
+
+.a-press-arm {
+  animation: press-arm 1.7s cubic-bezier(0.35, 0, 0.25, 1) infinite;
+}
+
+.a-press-dip {
+  animation: press-dip 1.7s cubic-bezier(0.35, 0, 0.25, 1) infinite;
+}
+
+/* ------------------------------------------------------------------ */
+/* 7. Cross — star jumps                                               */
+/* ------------------------------------------------------------------ */
+
+@keyframes jack-arm-left {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  50% {
+    transform: rotate(122deg);
+  }
+}
+
+@keyframes jack-arm-right {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  50% {
+    transform: rotate(-122deg);
+  }
+}
+
+@keyframes jack-leg-left {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  50% {
+    transform: rotate(24deg);
+  }
+}
+
+@keyframes jack-leg-right {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  50% {
+    transform: rotate(-24deg);
+  }
+}
+
+@keyframes jack-hop {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-12px);
+  }
+}
+
+.a-jack-arm-left {
+  animation: jack-arm-left 0.72s ease-in-out infinite;
+}
+
+.a-jack-arm-right {
+  animation: jack-arm-right 0.72s ease-in-out infinite;
+}
+
+.a-jack-leg-left {
+  animation: jack-leg-left 0.72s ease-in-out infinite;
+}
+
+.a-jack-leg-right {
+  animation: jack-leg-right 0.72s ease-in-out infinite;
+}
+
+.a-jack-hop {
+  animation: jack-hop 0.72s ease-in-out infinite;
+}
+
+/* ------------------------------------------------------------------ */
+/* Accesibilidad                                                       */
+/* ------------------------------------------------------------------ */
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  .anim-float,
+  .anim-marquee,
+  .anim-rise,
+  [class^='a-'],
+  [class*=' a-'] {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}

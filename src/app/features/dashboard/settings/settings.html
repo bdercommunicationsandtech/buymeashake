@@ -1,174 +1,259 @@
 <div class="space-y-6">
   
-  <h1 class="text-2xl font-black text-gray-900">Settings</h1>
+  <div>
+    <h1 class="text-2xl font-black text-gray-900">Ajustes & Perfil</h1>
+    <p class="text-xs text-gray-500 mt-1">Administra tu información pública de atleta, meta deportiva y métodos de pago.</p>
+  </div>
 
-  <!-- Tabs (Fiel a Screenshot 5) -->
+  <!-- Tabs -->
   <div class="flex items-center gap-6 border-b border-gray-200 text-sm font-bold">
+    <button
+      type="button"
+      (click)="setTab('profile')"
+      class="pb-3 transition relative"
+      [class]="activeTab() === 'profile' ? 'text-gray-900 border-b-2 border-black -mb-px' : 'text-gray-400 hover:text-gray-700'"
+    >
+      Perfil de Atleta
+    </button>
+    <button
+      type="button"
+      (click)="setTab('goals')"
+      class="pb-3 transition relative"
+      [class]="activeTab() === 'goals' ? 'text-gray-900 border-b-2 border-black -mb-px' : 'text-gray-400 hover:text-gray-700'"
+    >
+      Meta Deportiva
+    </button>
     <button
       type="button"
       (click)="setTab('settings')"
       class="pb-3 transition relative"
       [class]="activeTab() === 'settings' ? 'text-gray-900 border-b-2 border-black -mb-px' : 'text-gray-400 hover:text-gray-700'"
     >
-      Settings
-    </button>
-    <button
-      type="button"
-      (click)="setTab('notifications')"
-      class="pb-3 transition relative"
-      [class]="activeTab() === 'notifications' ? 'text-gray-900 border-b-2 border-black -mb-px' : 'text-gray-400 hover:text-gray-700'"
-    >
-      Notifications
+      Moneda & Precios
     </button>
   </div>
 
-  @if (activeTab() === 'settings') {
-    <!-- Contenedor Principal (Fiel a Screenshot 5) -->
-    <div class="bg-white rounded-3xl p-6 sm:p-10 border border-gray-200/80 shadow-xs space-y-8 max-w-3xl">
+  @if (errorMessage()) {
+    <div class="rounded-2xl bg-red-50 p-4 border border-red-200 text-xs font-bold text-red-600 max-w-3xl">
+      {{ errorMessage() }}
+    </div>
+  }
+
+  <!-- TAB 1: PERFIL DE ATLETA -->
+  @if (activeTab() === 'profile') {
+    <div class="bg-white rounded-3xl p-6 sm:p-10 border border-gray-200/80 shadow-xs space-y-6 max-w-3xl">
       
-      <!-- 1. Payment Currency -->
+      <!-- Avatar & Portada Upload -->
+      <div class="flex flex-col sm:flex-row items-start sm:items-center gap-6 pb-4 border-b border-gray-100">
+        <div class="relative group">
+          @if (avatarUrl()) {
+            <img [src]="avatarUrl()" alt="Avatar" class="h-20 w-20 rounded-full object-cover border-2 border-gray-200 shadow-xs" />
+          } @else {
+            <div class="h-20 w-20 rounded-full bg-gray-900 text-[#c9ff3d] grid place-items-center text-2xl font-black shrink-0">
+              {{ (fullName() || 'A').slice(0, 2).toUpperCase() }}
+            </div>
+          }
+          <label class="absolute inset-0 bg-black/50 text-white rounded-full flex items-center justify-center text-[10px] font-bold opacity-0 group-hover:opacity-100 transition cursor-pointer">
+            {{ uploadingAvatar() ? 'Subiendo...' : 'Cambiar' }}
+            <input type="file" accept="image/*" class="hidden" (change)="onAvatarSelected($event)" [disabled]="uploadingAvatar()" />
+          </label>
+        </div>
+
+        <div>
+          <h3 class="text-sm font-black text-gray-900">Foto de Perfil</h3>
+          <p class="text-xs text-gray-500 mt-0.5">Se muestra en tu perfil público y en el Top 10.</p>
+          <label class="mt-2 inline-block rounded-xl border border-gray-200 px-3 py-1.5 text-xs font-bold text-gray-700 hover:bg-gray-50 cursor-pointer transition">
+            {{ uploadingAvatar() ? 'Subiendo...' : 'Subir nueva foto' }}
+            <input type="file" accept="image/*" class="hidden" (change)="onAvatarSelected($event)" [disabled]="uploadingAvatar()" />
+          </label>
+        </div>
+      </div>
+
+      <!-- Nombre Completo -->
       <div>
-        <label class="block text-sm font-black text-gray-900">Payment currency</label>
-        <p class="text-xs text-gray-500 mt-0.5">Your supporters will pay in this currency.</p>
-        
-        <div class="mt-3">
+        <label class="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-1">Nombre Público</label>
+        <input
+          type="text"
+          class="w-full rounded-2xl border border-gray-200 bg-white px-4 py-3 text-sm font-semibold text-gray-900 focus:border-black focus:outline-none"
+          [value]="fullName()"
+          (input)="fullName.set($any($event.target).value)"
+        />
+      </div>
+
+      <!-- Biografía -->
+      <div>
+        <label class="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-1">Biografía Deportiva</label>
+        <textarea
+          rows="3"
+          placeholder="Cuéntale a tu comunidad sobre tus entrenamientos, metas y trayectoria..."
+          class="w-full rounded-2xl border border-gray-200 bg-white px-4 py-3 text-sm font-medium text-gray-900 focus:border-black focus:outline-none"
+          [value]="bio()"
+          (input)="bio.set($any($event.target).value)"
+        ></textarea>
+      </div>
+
+      <!-- Ciudad & Deporte -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-1">Ciudad / País</label>
+          <input
+            type="text"
+            placeholder="Ej. CDMX, México"
+            class="w-full rounded-2xl border border-gray-200 bg-white px-4 py-3 text-sm font-semibold text-gray-900 focus:border-black focus:outline-none"
+            [value]="city()"
+            (input)="city.set($any($event.target).value)"
+          />
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-1">Disciplina Principal</label>
           <select
-            class="w-full rounded-2xl border border-gray-200 bg-white px-4 py-3 text-sm font-semibold text-gray-900 focus:border-black focus:outline-none shadow-xs"
-            [value]="currency()"
-            (change)="currency.set($any($event.target).value)"
+            class="w-full rounded-2xl border border-gray-200 bg-white px-4 py-3 text-sm font-semibold text-gray-900 focus:border-black focus:outline-none"
+            [value]="primarySportCode()"
+            (change)="primarySportCode.set(+$any($event.target).value)"
           >
-            <option value="United States Dollar (USD)">United States Dollar (USD - $)</option>
-            <option value="Mexican Peso (MXN)">Mexican Peso (MXN - $)</option>
-            <option value="Euro (EUR)">Euro (EUR - €)</option>
-            <option value="Colombian Peso (COP)">Colombian Peso (COP - $)</option>
+            @for (sport of sports; track sport.code) {
+              <option [value]="sport.code">{{ sport.label }}</option>
+            }
           </select>
         </div>
       </div>
 
-      <hr class="border-gray-100" />
-
-      <!-- 2. Cover Credit Card Fee (Toggle switch) -->
-      <div class="flex items-start justify-between gap-4">
-        <div>
-          <h3 class="text-sm font-black text-gray-900">Cover credit card fee</h3>
-          <p class="text-xs text-gray-500 mt-0.5 max-w-md">
-            If turned off, your fans will incur the credit card fee associated with their payment.
-          </p>
-        </div>
-
+      <!-- Botón Guardar -->
+      <div class="pt-2">
         <button
           type="button"
-          (click)="toggleCoverFee()"
-          class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none"
-          [class]="coverFee() ? 'bg-[#f5b300]' : 'bg-gray-200'"
+          (click)="saveProfile()"
+          [disabled]="loading()"
+          class="rounded-full bg-black hover:bg-gray-800 text-white px-8 py-3 text-xs font-bold transition shadow-xs disabled:opacity-50"
         >
-          <span
-            class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"
-            [class]="coverFee() ? 'translate-x-5' : 'translate-x-0'"
-          ></span>
+          {{ saved() ? '¡Cambios guardados!' : 'Guardar Perfil' }}
         </button>
       </div>
 
-      <hr class="border-gray-100" />
-
-      <!-- 3. Mark as NSFW (Toggle switch) -->
-      <div class="flex items-start justify-between gap-4">
-        <div>
-          <h3 class="text-sm font-black text-gray-900">Mark as NSFW (mandatory for 18+ content)</h3>
-          <p class="text-xs text-gray-500 mt-0.5 max-w-md">
-            Indicate that your page is not suitable for children. Regardless, pornography is not allowed on the platform. <a href="#" class="text-gray-700 underline font-semibold">Learn more</a>
-          </p>
-        </div>
-
-        <button
-          type="button"
-          (click)="toggleNsfw()"
-          class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none"
-          [class]="nsfw() ? 'bg-[#f5b300]' : 'bg-gray-200'"
-        >
-          <span
-            class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"
-            [class]="nsfw() ? 'translate-x-5' : 'translate-x-0'"
-          ></span>
-        </button>
-      </div>
-
-      <hr class="border-gray-100" />
-
-      <!-- 4. Google Analytics -->
-      <div>
-        <label class="block text-sm font-black text-gray-900">Google Analytics</label>
-        <p class="text-xs text-gray-500 mt-0.5">
-          Add your Google Analytics tracking code to send page visitor data to your Google Analytics account.
-        </p>
-
-        <div class="mt-3">
-          <input
-            type="text"
-            placeholder="UA-XXXXXXXXX-Y or G-XXXXXXXXXX"
-            class="w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm font-mono text-gray-900 placeholder:text-gray-400 focus:bg-white focus:border-black focus:outline-none"
-            [value]="analyticsCode()"
-            (input)="analyticsCode.set($any($event.target).value)"
-          />
-        </div>
-      </div>
-
-      <hr class="border-gray-100" />
-
-      <!-- 5. My page link -->
-      <div>
-        <label class="block text-sm font-black text-gray-900">My page link</label>
-        <p class="text-xs text-gray-500 mt-0.5">Customize your personal athlete URL.</p>
-
-        <div class="mt-3 flex rounded-2xl border border-gray-200 bg-white overflow-hidden shadow-xs">
-          <span class="inline-flex items-center px-4 bg-gray-50 text-gray-500 text-xs font-semibold border-r border-gray-200">
-            buymeashake.com/
-          </span>
-          <input
-            type="text"
-            class="flex-1 px-4 py-3 text-sm font-semibold text-gray-900 outline-none"
-            [value]="pageHandle()"
-            (input)="pageHandle.set($any($event.target).value)"
-          />
-        </div>
-      </div>
-
-      <!-- Save Button -->
-      <div class="pt-4 flex items-center justify-between">
-        <button
-          type="button"
-          (click)="save()"
-          class="rounded-full bg-black hover:bg-gray-800 text-white px-7 py-3 text-xs font-bold transition shadow-xs"
-        >
-          {{ saved() ? '¡Cambios guardados!' : 'Save changes' }}
-        </button>
-      </div>
-
-    </div>
-  } @else {
-    <!-- Notifications Settings Tab -->
-    <div class="bg-white rounded-3xl p-6 sm:p-10 border border-gray-200/80 shadow-xs space-y-6 max-w-3xl">
-      <h2 class="text-base font-black text-gray-900">Email Notifications</h2>
-      <p class="text-xs text-gray-500">Choose what emails you would like to receive from buymeashake.fit.</p>
-
-      <div class="space-y-4 pt-2">
-        <label class="flex items-center gap-3 cursor-pointer">
-          <input type="checkbox" checked class="h-4 w-4 rounded border-gray-300 text-black focus:ring-black" />
-          <span class="text-sm font-medium text-gray-800">Email me every time someone buys me a shake</span>
-        </label>
-        <label class="flex items-center gap-3 cursor-pointer">
-          <input type="checkbox" checked class="h-4 w-4 rounded border-gray-300 text-black focus:ring-black" />
-          <span class="text-sm font-medium text-gray-800">Monthly payout summary</span>
-        </label>
-        <label class="flex items-center gap-3 cursor-pointer">
-          <input type="checkbox" class="h-4 w-4 rounded border-gray-300 text-black focus:ring-black" />
-          <span class="text-sm font-medium text-gray-800">Product updates and community announcements</span>
-        </label>
-      </div>
-
-      <button type="button" class="rounded-full bg-black text-white px-6 py-2.5 text-xs font-bold mt-4">
-        Save preferences
-      </button>
     </div>
   }
+
+  <!-- TAB 2: META DEPORTIVA -->
+  @if (activeTab() === 'goals') {
+    <div class="bg-white rounded-3xl p-6 sm:p-10 border border-gray-200/80 shadow-xs space-y-6 max-w-3xl">
+      
+      @if (activeGoal()) {
+        <div class="p-6 rounded-2xl bg-amber-50 border border-amber-200 space-y-3">
+          <div class="flex items-center justify-between">
+            <span class="text-[10px] font-black uppercase text-amber-800 tracking-wider">Meta Activa</span>
+            <span class="text-xs font-bold text-amber-900">
+              ${{ activeGoal()?.raised }} / ${{ activeGoal()?.target }} USD
+            </span>
+          </div>
+          <h3 class="text-base font-black text-gray-900">{{ activeGoal()?.title }}</h3>
+          
+          <!-- Barra de progreso -->
+          <div class="h-2.5 w-full bg-amber-200/60 rounded-full overflow-hidden">
+            <div
+              class="h-full bg-amber-500 rounded-full transition-all duration-500"
+              [style.width.%]="Math.min(Math.round(((activeGoal()?.raised || 0) / (activeGoal()?.target || 1)) * 100), 100)"
+            ></div>
+          </div>
+        </div>
+      }
+
+      <div>
+        <h2 class="text-base font-black text-gray-900">Establecer Nueva Meta</h2>
+        <p class="text-xs text-gray-500 mt-0.5">Tus seguidores verán esta meta en tu perfil y cada shake aportará a alcanzarla.</p>
+      </div>
+
+      <div>
+        <label class="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-1">Título de la Meta</label>
+        <input
+          type="text"
+          placeholder="Ej. Campeonato Panamericano 2026 en Brasil"
+          class="w-full rounded-2xl border border-gray-200 bg-white px-4 py-3 text-sm font-semibold text-gray-900 focus:border-black focus:outline-none"
+          [value]="goalTitle()"
+          (input)="goalTitle.set($any($event.target).value)"
+        />
+      </div>
+
+      <div>
+        <label class="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-1">Monto Objetivo (USD)</label>
+        <input
+          type="number"
+          min="10"
+          placeholder="1500"
+          class="w-full rounded-2xl border border-gray-200 bg-white px-4 py-3 text-sm font-semibold text-gray-900 focus:border-black focus:outline-none"
+          [value]="goalTarget()"
+          (input)="goalTarget.set(+$any($event.target).value)"
+        />
+      </div>
+
+      <div class="pt-2">
+        <button
+          type="button"
+          (click)="saveGoal()"
+          class="rounded-full bg-black hover:bg-gray-800 text-white px-8 py-3 text-xs font-bold transition shadow-xs"
+        >
+          {{ goalSaved() ? '¡Meta activada!' : 'Activar Meta' }}
+        </button>
+      </div>
+
+    </div>
+  }
+
+  <!-- TAB 3: MONEDA & PRECIO DE SHAKE -->
+  @if (activeTab() === 'settings') {
+    <div class="bg-white rounded-3xl p-6 sm:p-10 border border-gray-200/80 shadow-xs space-y-6 max-w-3xl">
+      
+      <!-- Precio del Shake -->
+      <div>
+        <label class="block text-sm font-black text-gray-900">Precio de 1 Shake</label>
+        <p class="text-xs text-gray-500 mt-0.5">Monto base por cada shake que tus seguidores te inviten.</p>
+        
+        <div class="mt-3 flex items-center gap-3">
+          <span class="text-lg font-black text-gray-900">$</span>
+          <input
+            type="number"
+            min="1"
+            max="100"
+            class="w-32 rounded-2xl border border-gray-200 bg-white px-4 py-3 text-sm font-bold text-gray-900 focus:border-black focus:outline-none"
+            [value]="shakePrice()"
+            (input)="shakePrice.set(+$any($event.target).value)"
+          />
+          <span class="text-sm font-bold text-gray-500">{{ currency() }}</span>
+        </div>
+      </div>
+
+      <hr class="border-gray-100" />
+
+      <!-- Moneda -->
+      <div>
+        <label class="block text-sm font-black text-gray-900">Moneda de Cobro</label>
+        <p class="text-xs text-gray-500 mt-0.5">Moneda principal en la que tus fans verán los precios.</p>
+        
+        <div class="mt-3">
+          <select
+            class="w-full rounded-2xl border border-gray-200 bg-white px-4 py-3 text-sm font-semibold text-gray-900 focus:border-black focus:outline-none"
+            [value]="currency()"
+            (change)="currency.set($any($event.target).value)"
+          >
+            <option value="USD">Dólares Americanos (USD - $)</option>
+            <option value="MXN">Pesos Mexicanos (MXN - $)</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Botón Guardar Ajustes -->
+      <div class="pt-4">
+        <button
+          type="button"
+          (click)="saveProfile()"
+          [disabled]="loading()"
+          class="rounded-full bg-black hover:bg-gray-800 text-white px-8 py-3 text-xs font-bold transition shadow-xs disabled:opacity-50"
+        >
+          {{ saved() ? '¡Ajustes guardados!' : 'Guardar Ajustes' }}
+        </button>
+      </div>
+
+    </div>
+  }
+
 </div>

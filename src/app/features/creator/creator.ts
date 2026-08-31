@@ -9,7 +9,17 @@ import {
   RECENT_SUPPORTERS,
   SHAKE_PRICE,
 } from '../../core/demo';
-import { SportWidget } from '../../shared/sport-widget/sport-widget';
+import {
+  IconButtonShareComponent,
+  IconButtonSupportComponent,
+  IconCalendarComponent,
+  IconDumbbellComponent,
+  IconKarateComponent,
+  IconPackageComponent,
+  IconRunningComponent,
+  IconShakerComponent,
+  IconSoccerComponent,
+} from '../../shared/icons';
 
 export interface CreatorProduct {
   title: string;
@@ -25,17 +35,39 @@ export interface CreatorTier {
   benefits: string[];
 }
 
-export interface CreatorBooking {
+export interface CreatorBookingService {
+  id: string;
   title: string;
   duration: string;
   price: number;
+  description: string;
   platform: string;
+  category: 'Conocer al Atleta' | 'Asesoría de Técnica' | 'Consultoría Deportiva';
+}
+
+export interface CalendarDay {
+  dayNumber: number;
+  dateStr: string;
+  isAvailable: boolean;
+  isPast: boolean;
+  dayName: string;
 }
 
 @Component({
   selector: 'app-creator',
   standalone: true,
-  imports: [CommonModule, SportWidget],
+  imports: [
+    CommonModule,
+    IconShakerComponent,
+    IconDumbbellComponent,
+    IconSoccerComponent,
+    IconKarateComponent,
+    IconRunningComponent,
+    IconButtonShareComponent,
+    IconButtonSupportComponent,
+    IconPackageComponent,
+    IconCalendarComponent,
+  ],
   templateUrl: './creator.html',
 })
 export class Creator {
@@ -53,10 +85,65 @@ export class Creator {
   readonly activity = signal<Activity>(ACTIVITIES[0]);
   readonly currency = signal<'USD' | 'MXN'>('USD');
 
-  // Booking picker state
-  readonly selectedDate = signal('2026-09-02');
-  readonly selectedTime = signal('18:00');
-  readonly bookingSuccess = signal(false);
+  // --- CALENDLY-STYLE 1-ON-1 BOOKING STATE ---
+  readonly selectedService = signal<CreatorBookingService | null>(null);
+  readonly selectedDate = signal<string>('2026-09-03');
+  readonly selectedTimeSlot = signal<string>('18:00');
+  readonly bookingStep = signal<'select-service' | 'select-time' | 'confirm'>('select-service');
+
+  readonly availableTimeSlots = signal<string[]>([
+    '09:00 AM',
+    '10:30 AM',
+    '12:00 PM',
+    '04:00 PM',
+    '05:30 PM',
+    '07:00 PM',
+  ]);
+
+  readonly calendarDays = signal<CalendarDay[]>([
+    { dayNumber: 1, dateStr: '2026-09-01', isAvailable: false, isPast: true, dayName: 'Mar' },
+    { dayNumber: 2, dateStr: '2026-09-02', isAvailable: false, isPast: true, dayName: 'Mié' },
+    { dayNumber: 3, dateStr: '2026-09-03', isAvailable: true, isPast: false, dayName: 'Jue' },
+    { dayNumber: 4, dateStr: '2026-09-04', isAvailable: true, isPast: false, dayName: 'Vie' },
+    { dayNumber: 5, dateStr: '2026-09-05', isAvailable: true, isPast: false, dayName: 'Sáb' },
+    { dayNumber: 6, dateStr: '2026-09-06', isAvailable: false, isPast: false, dayName: 'Dom' },
+    { dayNumber: 7, dateStr: '2026-09-07', isAvailable: true, isPast: false, dayName: 'Lun' },
+    { dayNumber: 8, dateStr: '2026-09-08', isAvailable: true, isPast: false, dayName: 'Mar' },
+    { dayNumber: 9, dateStr: '2026-09-09', isAvailable: true, isPast: false, dayName: 'Mié' },
+    { dayNumber: 10, dateStr: '2026-09-10', isAvailable: true, isPast: false, dayName: 'Jue' },
+    { dayNumber: 11, dateStr: '2026-09-11', isAvailable: true, isPast: false, dayName: 'Vie' },
+    { dayNumber: 12, dateStr: '2026-09-12', isAvailable: false, isPast: false, dayName: 'Sáb' },
+  ]);
+
+  readonly bookingServices: CreatorBookingService[] = [
+    {
+      id: 'srv_1',
+      title: 'Charla 1-a-1 & Conocer al Atleta',
+      duration: '30 min',
+      price: 25.0,
+      description: 'Espacio para conversar sobre mi trayectoria, mentalidad deportiva, consejos y motivación.',
+      platform: 'Google Meet',
+      category: 'Conocer al Atleta',
+    },
+    {
+      id: 'srv_2',
+      title: 'Revisión de Técnica de Levantamiento',
+      duration: '45 min',
+      price: 40.0,
+      description: 'Analizamos tus videos de sentadilla, banca o peso muerto y corregimos biomecánica en vivo.',
+      platform: 'Google Meet',
+      category: 'Asesoría de Técnica',
+    },
+    {
+      id: 'srv_3',
+      title: 'Asesoría de Programación & Periodización',
+      duration: '60 min',
+      price: 60.0,
+      description: 'Estructuración de tu bloque de entrenamiento, selección de ejercicios y gestión de fatiga.',
+      platform: 'Google Meet',
+      category: 'Consultoría Deportiva',
+    },
+  ];
 
   readonly products: CreatorProduct[] = [
     {
@@ -85,21 +172,6 @@ export class Creator {
       price: 15,
       description: 'Bloques de entrenamiento semanales y Q&A grupal mensual.',
       benefits: ['Todo lo del Nivel Atleta', 'Descarga libre de todos mis PDFs', 'Sesión mensual grupal en Meet'],
-    },
-  ];
-
-  readonly bookingServices: CreatorBooking[] = [
-    {
-      title: 'Revisión de Técnica 1-a-1 en Vivo',
-      duration: '45 min',
-      price: 35.0,
-      platform: 'Google Meet',
-    },
-    {
-      title: 'Asesoría de Programación y Periodización',
-      duration: '60 min',
-      price: 50.0,
-      platform: 'Google Meet',
     },
   ];
 
@@ -146,12 +218,34 @@ export class Creator {
     this.activity.set(activity);
   }
 
-  bookSession(service: CreatorBooking): void {
+  // --- CALENDLY WORKFLOW METHODS ---
+  selectServiceToBook(service: CreatorBookingService): void {
+    this.selectedService.set(service);
+    this.bookingStep.set('select-time');
+  }
+
+  selectDate(day: CalendarDay): void {
+    if (!day.isAvailable || day.isPast) return;
+    this.selectedDate.set(day.dateStr);
+  }
+
+  selectSlot(slot: string): void {
+    this.selectedTimeSlot.set(slot);
+  }
+
+  backToServices(): void {
+    this.bookingStep.set('select-service');
+  }
+
+  confirmBookingCheckout(): void {
+    const srv = this.selectedService();
+    if (!srv) return;
+
     this.checkout.start({
       creatorName: this.creator.name,
       creatorHandle: this.creator.handle,
-      shakes: Math.round(service.price / this.currentPrice()),
-      message: `Reserva de Asesoría 1:1: ${service.title} para el ${this.selectedDate()} a las ${this.selectedTime()}`,
+      shakes: Math.round(srv.price / this.currentPrice()),
+      message: `Reserva 1-a-1: ${srv.title} · Fecha: ${this.selectedDate()} a las ${this.selectedTimeSlot()}`,
       activity: this.activity().id,
       currency: this.currency(),
       unitPrice: this.currentPrice(),

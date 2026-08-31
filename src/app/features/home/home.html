@@ -21,7 +21,8 @@
             </div>
           </div>
           <p class="mt-2 text-[10px] font-semibold text-gray-400 flex items-center gap-1">
-            <span>❤️</span> {{ athlete.supporters }} seguidores
+            <app-icon-button-support size="12" customClass="text-red-500" />
+            <span>{{ athlete.supporters }} seguidores</span>
           </p>
         </a>
       }
@@ -45,7 +46,8 @@
             </div>
           </div>
           <p class="mt-2 text-[10px] font-semibold text-gray-400 flex items-center gap-1">
-            <span>❤️</span> {{ athlete.supporters }} seguidores
+            <app-icon-button-support size="12" customClass="text-red-500" />
+            <span>{{ athlete.supporters }} seguidores</span>
           </p>
         </a>
       }
@@ -54,10 +56,14 @@
     <!-- Contenido Central del Hero -->
     <div class="max-w-3xl mx-auto text-center relative z-10">
       
-      <!-- Social Proof Rating -->
+      <!-- Social Proof Rating con SVG Stars -->
       <div class="inline-flex items-center gap-2 mb-6">
-        <div class="flex text-emerald-500 text-xs">
-          ★★★★★
+        <div class="flex text-emerald-500 gap-0.5">
+          <app-icon-star size="14" />
+          <app-icon-star size="14" />
+          <app-icon-star size="14" />
+          <app-icon-star size="14" />
+          <app-icon-star size="14" />
         </div>
         <span class="text-xs font-bold text-gray-600">
           La comunidad favorita de +50,000 atletas y entrenadores
@@ -107,7 +113,7 @@
         
         <!-- Burbuja Flotante 1 (Izquierda Arriba) -->
         <div class="hidden sm:flex items-center gap-2.5 bg-white rounded-2xl p-3 shadow-md border border-gray-100 absolute -left-28 top-4 z-20 text-left animate-bounce" style="animation-duration: 4s;">
-          <span class="text-lg">🥤</span>
+          <span class="text-amber-500"><app-icon-shaker size="20" /></span>
           <div>
             <p class="text-xs font-bold text-gray-900">Carlos invitó 5 shakes</p>
             <p class="text-[10px] text-gray-400 font-medium">Hace 5 min</p>
@@ -116,7 +122,7 @@
 
         <!-- Burbuja Flotante 2 (Izquierda Abajo) -->
         <div class="hidden sm:flex items-center gap-2.5 bg-white rounded-2xl p-3 shadow-md border border-gray-100 absolute -left-20 bottom-8 z-20 text-left">
-          <span class="text-lg">💪</span>
+          <span class="text-emerald-500"><app-icon-dumbbell size="20" /></span>
           <div>
             <p class="text-xs font-bold text-gray-900">Mariana: "¡Gran rutina!"</p>
             <p class="text-[10px] text-emerald-600 font-bold">+$15 USD</p>
@@ -125,7 +131,7 @@
 
         <!-- Burbuja Flotante 3 (Derecha Arriba) -->
         <div class="hidden sm:flex items-center gap-2.5 bg-white rounded-2xl p-3 shadow-md border border-gray-100 absolute -right-24 top-8 z-20 text-left">
-          <span class="text-lg">❤️</span>
+          <span class="text-red-500"><app-icon-button-support size="20" /></span>
           <div>
             <p class="text-xs font-bold text-gray-900">Diego invitó 10 shakes</p>
             <p class="text-[10px] text-gray-400">"Para el viaje al torneo coach"</p>
@@ -136,7 +142,8 @@
         <div class="bg-white rounded-3xl p-6 sm:p-7 border border-gray-200/80 shadow-lg relative z-10 text-left space-y-4">
           <div class="flex items-center justify-between">
             <h3 class="font-black text-gray-900 text-sm sm:text-base flex items-center gap-2">
-              <span>🥤</span> Invítale un shake a Sofía
+              <app-icon-shaker size="18" customClass="text-amber-500" />
+              <span>Invítale un shake a Sofía</span>
             </h3>
             <span class="text-xs font-bold text-gray-400">$3 USD / shake</span>
           </div>
@@ -177,9 +184,10 @@
           <button
             type="button"
             (click)="supportDemo()"
-            class="w-full rounded-2xl bg-[#e05438] hover:bg-[#c9452b] text-white py-3.5 text-sm font-black shadow-sm transition active:scale-95"
+            class="w-full rounded-2xl bg-[#e05438] hover:bg-[#c9452b] text-white py-3.5 text-sm font-black shadow-sm transition active:scale-95 flex items-center justify-center gap-2"
           >
-            Apoyar ${{ shakesCount() * shakePrice }} USD
+            <app-icon-shaker size="18" />
+            <span>Apoyar ${{ shakesCount() * shakePrice }} USD</span>
           </button>
         </div>
 
@@ -226,7 +234,10 @@
           </div>
 
           <div class="mt-6 pt-4 border-t border-gray-100 flex items-center justify-between">
-            <span class="text-xs font-bold text-gray-600">{{ leader.shakes }} shakes 🥤</span>
+            <span class="text-xs font-bold text-gray-600 flex items-center gap-1">
+              <app-icon-shaker size="14" customClass="text-amber-500" />
+              <span>{{ leader.shakes }} shakes</span>
+            </span>
             <a
               [routerLink]="['/', leader.handle]"
               class="rounded-xl bg-gray-900 hover:bg-black text-[#c9ff3d] px-3.5 py-1.5 text-xs font-bold transition"
@@ -253,8 +264,8 @@
       <!-- Card 1 -->
       <div class="bg-white rounded-3xl p-7 border border-gray-200/80 shadow-xs flex flex-col justify-between">
         <div>
-          <div class="h-10 w-10 rounded-2xl bg-amber-50 text-amber-600 grid place-items-center text-lg font-black mb-4">
-            🥤
+          <div class="h-10 w-10 rounded-2xl bg-amber-50 text-amber-600 grid place-items-center mb-4">
+            <app-icon-shaker size="22" />
           </div>
           <h3 class="font-black text-gray-900 text-base">Shakes de Apoyo Único</h3>
           <p class="mt-2 text-xs text-gray-500 leading-relaxed">
@@ -266,8 +277,8 @@
       <!-- Card 2 -->
       <div class="bg-white rounded-3xl p-7 border border-gray-200/80 shadow-xs flex flex-col justify-between">
         <div>
-          <div class="h-10 w-10 rounded-2xl bg-emerald-50 text-emerald-600 grid place-items-center text-lg font-black mb-4">
-            ⭐
+          <div class="h-10 w-10 rounded-2xl bg-emerald-50 text-emerald-600 grid place-items-center mb-4">
+            <app-icon-dumbbell size="22" />
           </div>
           <h3 class="font-black text-gray-900 text-base">Membresías Recurrentes</h3>
           <p class="mt-2 text-xs text-gray-500 leading-relaxed">
@@ -279,8 +290,8 @@
       <!-- Card 3 -->
       <div class="bg-white rounded-3xl p-7 border border-gray-200/80 shadow-xs flex flex-col justify-between">
         <div>
-          <div class="h-10 w-10 rounded-2xl bg-indigo-50 text-indigo-600 grid place-items-center text-lg font-black mb-4">
-            🗓️
+          <div class="h-10 w-10 rounded-2xl bg-indigo-50 text-indigo-600 grid place-items-center mb-4">
+            <app-icon-running size="22" />
           </div>
           <h3 class="font-black text-gray-900 text-base">Tienda & Asesorías 1-a-1</h3>
           <p class="mt-2 text-xs text-gray-500 leading-relaxed">

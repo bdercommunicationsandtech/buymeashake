@@ -1,5 +1,6 @@
 import { Component, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { IconShakerComponent } from '../../../shared/icons';
 
 export interface ReferredAthlete {
   name: string;
@@ -11,13 +12,13 @@ export interface ReferredAthlete {
 }
 
 @Component({
-  selector: 'app-referrals',
+  selector: 'app-dashboard-referrals',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, IconShakerComponent],
   templateUrl: './referrals.html',
 })
 export class DashboardReferrals {
-  readonly referralLink = signal('https://buymeashake.com/join?ref=sofifit');
+  readonly referralLink = signal('https://buymeashake.fit/join?ref=sofifit');
   readonly copied = signal(false);
 
   readonly referredAthletes = signal<ReferredAthlete[]>([

@@ -150,54 +150,49 @@
       </article>
     </div>
 
-    <!-- Columna Derecha: Panel Interactivo Multi-Pestaña -->
+    <!-- Columna Derecha: Panel de Apoyo Multi-Pestaña -->
     <aside class="lg:sticky lg:top-20 space-y-5">
-      
-      <!-- Preview interactivo del Shaker -->
-      <div class="bg-white rounded-3xl p-5 border border-gray-200/80 shadow-xs">
-        <app-sport-widget
-          [compact]="true"
-          [showControls]="false"
-          (activityChange)="onActivityChange($event)"
-        />
-      </div>
 
       <!-- Tarjeta Principal de Apoyo / Acciones -->
       <div class="bg-white rounded-3xl p-6 sm:p-7 border border-gray-200/80 shadow-xs space-y-5">
         
-        <!-- Pestañas de Apoyo -->
+        <!-- Pestañas de Apoyo con Iconos SVG -->
         <div class="flex items-center gap-1 bg-gray-100 p-1 rounded-2xl text-xs font-bold">
           <button
             type="button"
             (click)="setTab('shakes')"
-            class="flex-1 py-2 rounded-xl transition"
+            class="flex-1 py-2 rounded-xl transition flex items-center justify-center gap-1.5"
             [class]="activeTab() === 'shakes' ? 'bg-white text-gray-900 shadow-xs' : 'text-gray-500 hover:text-gray-900'"
           >
-            🥤 Shakes
+            <app-icon-shaker size="15" />
+            <span>Shakes</span>
           </button>
           <button
             type="button"
             (click)="setTab('memberships')"
-            class="flex-1 py-2 rounded-xl transition"
+            class="flex-1 py-2 rounded-xl transition flex items-center justify-center gap-1.5"
             [class]="activeTab() === 'memberships' ? 'bg-white text-gray-900 shadow-xs' : 'text-gray-500 hover:text-gray-900'"
           >
-            ⭐ Membresías
+            <app-icon-button-support size="15" />
+            <span>Membresías</span>
           </button>
           <button
             type="button"
             (click)="setTab('shop')"
-            class="flex-1 py-2 rounded-xl transition"
+            class="flex-1 py-2 rounded-xl transition flex items-center justify-center gap-1.5"
             [class]="activeTab() === 'shop' ? 'bg-white text-gray-900 shadow-xs' : 'text-gray-500 hover:text-gray-900'"
           >
-            📦 Tienda
+            <app-icon-package size="15" />
+            <span>Tienda</span>
           </button>
           <button
             type="button"
             (click)="setTab('booking')"
-            class="flex-1 py-2 rounded-xl transition"
+            class="flex-1 py-2 rounded-xl transition flex items-center justify-center gap-1.5"
             [class]="activeTab() === 'booking' ? 'bg-white text-gray-900 shadow-xs' : 'text-gray-500 hover:text-gray-900'"
           >
-            🗓️ Agendar
+            <app-icon-calendar size="15" />
+            <span>Agendar</span>
           </button>
         </div>
 
@@ -347,60 +342,135 @@
           </div>
         }
 
-        <!-- 4. PESTAÑA AGENDAR SESIÓN 1-A-1 -->
+        <!-- 4. PESTAÑA AGENDAR SESIÓN 1-A-1 (CALENDLY STYLE) -->
         @if (activeTab() === 'booking') {
           <div class="space-y-4">
-            <div>
-              <h3 class="text-sm font-black text-gray-900">Agendar Asesoría 1-a-1</h3>
-              <p class="text-xs text-gray-500 mt-0.5">Selecciona el servicio y horario para tu videollamada.</p>
-            </div>
+            
+            <!-- PASO 1: SELECCIONAR TIPO DE ASESORÍA / SERVICIO -->
+            @if (bookingStep() === 'select-service') {
+              <div>
+                <h3 class="text-sm font-black text-gray-900">Agenda una Sesión 1-a-1</h3>
+                <p class="text-xs text-gray-500 mt-0.5">Charlas deportivas, revisión de técnica o consultoría personalizada.</p>
+              </div>
 
-            <!-- Servicios -->
-            <div class="space-y-3">
-              @for (service of bookingServices; track service.title) {
-                <div class="p-4 rounded-2xl border border-gray-200 bg-gray-50/50 space-y-3">
-                  <div class="flex items-center justify-between">
-                    <h4 class="text-xs font-bold text-gray-900">{{ service.title }}</h4>
-                    <span class="text-xs font-black text-emerald-600">${{ service.price }} USD</span>
-                  </div>
-                  <p class="text-[11px] text-gray-500">⏱️ {{ service.duration }} · 💻 {{ service.platform }}</p>
-
-                  <!-- Selector Fecha y Hora -->
-                  <div class="grid grid-cols-2 gap-2 pt-1">
-                    <div>
-                      <label class="block text-[10px] font-bold text-gray-600 uppercase mb-0.5">Fecha</label>
-                      <input
-                        type="date"
-                        [value]="selectedDate()"
-                        (input)="selectedDate.set($any($event.target).value)"
-                        class="w-full rounded-lg border border-gray-300 bg-white p-1.5 text-xs font-semibold outline-none"
-                      />
-                    </div>
-                    <div>
-                      <label class="block text-[10px] font-bold text-gray-600 uppercase mb-0.5">Hora</label>
-                      <select
-                        [value]="selectedTime()"
-                        (change)="selectedTime.set($any($event.target).value)"
-                        class="w-full rounded-lg border border-gray-300 bg-white p-1.5 text-xs font-semibold outline-none"
-                      >
-                        <option value="10:00">10:00 AM</option>
-                        <option value="12:00">12:00 PM</option>
-                        <option value="16:00">04:00 PM</option>
-                        <option value="18:00">06:00 PM</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  <button
-                    type="button"
-                    (click)="bookSession(service)"
-                    class="w-full rounded-xl bg-black text-white py-2.5 text-xs font-bold hover:bg-gray-800 transition flex items-center justify-center gap-1"
+              <div class="space-y-3">
+                @for (service of bookingServices; track service.id) {
+                  <div
+                    (click)="selectServiceToBook(service)"
+                    class="p-4 rounded-2xl border border-gray-200 bg-white hover:border-gray-900 hover:shadow-xs transition cursor-pointer space-y-2 group"
                   >
-                    <span>Reservar & Pagar ${{ service.price }} USD</span>
-                  </button>
+                    <div class="flex items-center justify-between">
+                      <span class="text-[10px] font-black uppercase tracking-wider text-indigo-700 bg-indigo-50 px-2.5 py-0.5 rounded-md">
+                        {{ service.category }}
+                      </span>
+                      <span class="text-sm font-black text-gray-900">${{ service.price }} USD</span>
+                    </div>
+
+                    <h4 class="text-sm font-bold text-gray-900 group-hover:text-black">{{ service.title }}</h4>
+                    <p class="text-xs text-gray-500 leading-relaxed">{{ service.description }}</p>
+
+                    <div class="pt-2 border-t border-gray-100 flex items-center justify-between text-xs text-gray-400 font-semibold">
+                      <span class="flex items-center gap-1.5 text-gray-600">
+                        <app-icon-calendar size="14" />
+                        {{ service.duration }} · {{ service.platform }}
+                      </span>
+                      <span class="text-xs font-black text-black group-hover:underline flex items-center gap-1">
+                        <span>Ver horarios</span>
+                        <span>→</span>
+                      </span>
+                    </div>
+                  </div>
+                }
+              </div>
+            }
+
+            <!-- PASO 2: CALENDARIO & SELECTOR DE HORARIOS (ESTILO CALENDLY) -->
+            @if (bookingStep() === 'select-time' && selectedService()) {
+              <div class="space-y-4">
+                
+                <!-- Encabezado de Servicio Seleccionado -->
+                <div class="flex items-center justify-between pb-3 border-b border-gray-100">
+                  <div>
+                    <button
+                      type="button"
+                      (click)="backToServices()"
+                      class="text-xs font-bold text-gray-400 hover:text-black flex items-center gap-1 mb-1"
+                    >
+                      <span>←</span>
+                      <span>Cambiar servicio</span>
+                    </button>
+                    <h3 class="text-sm font-black text-gray-900">{{ selectedService()?.title }}</h3>
+                    <p class="text-xs text-gray-500">{{ selectedService()?.duration }} · ${{ selectedService()?.price }} USD</p>
+                  </div>
+                  <span class="text-xs font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-lg">
+                    Google Meet
+                  </span>
                 </div>
-              }
-            </div>
+
+                <!-- Calendario de Días Interactivos (Calendly Grid) -->
+                <div>
+                  <label class="block text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-2">
+                    1. Selecciona un Día (Septiembre 2026)
+                  </label>
+                  
+                  <div class="grid grid-cols-4 sm:grid-cols-6 gap-2">
+                    @for (day of calendarDays(); track day.dateStr) {
+                      <button
+                        type="button"
+                        [disabled]="!day.isAvailable || day.isPast"
+                        (click)="selectDate(day)"
+                        class="py-2.5 px-1 rounded-xl text-center border transition flex flex-col items-center"
+                        [class]="
+                          selectedDate() === day.dateStr
+                            ? 'border-black bg-gray-900 text-[#c9ff3d] shadow-xs'
+                            : day.isAvailable && !day.isPast
+                            ? 'border-gray-200 bg-white hover:border-gray-400 text-gray-800'
+                            : 'border-transparent bg-gray-50 text-gray-300 cursor-not-allowed'
+                        "
+                      >
+                        <span class="text-[9px] font-bold uppercase">{{ day.dayName }}</span>
+                        <span class="text-sm font-black mt-0.5">{{ day.dayNumber }}</span>
+                      </button>
+                    }
+                  </div>
+                </div>
+
+                <!-- Franjas Horarias Disponibles (Time Slots) -->
+                <div>
+                  <label class="block text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-2">
+                    2. Selecciona la Hora (Zona Horaria Local)
+                  </label>
+
+                  <div class="grid grid-cols-2 gap-2">
+                    @for (slot of availableTimeSlots(); track slot) {
+                      <button
+                        type="button"
+                        (click)="selectSlot(slot)"
+                        class="py-2.5 px-3 rounded-xl border text-xs font-bold transition text-center"
+                        [class]="
+                          selectedTimeSlot() === slot
+                            ? 'border-emerald-600 bg-emerald-50 text-emerald-800 ring-2 ring-emerald-400/40'
+                            : 'border-gray-200 bg-white hover:border-gray-300 text-gray-700'
+                        "
+                      >
+                        {{ slot }}
+                      </button>
+                    }
+                  </div>
+                </div>
+
+                <!-- Botón Confirmar Reserva -->
+                <button
+                  type="button"
+                  (click)="confirmBookingCheckout()"
+                  class="w-full rounded-2xl bg-black hover:bg-gray-800 text-white py-3.5 text-xs sm:text-sm font-black transition shadow-sm flex items-center justify-center gap-2 mt-2"
+                >
+                  <app-icon-calendar size="16" />
+                  <span>Confirmar & Pagar ${{ selectedService()?.price }} USD</span>
+                </button>
+              </div>
+            }
+
           </div>
         }
 

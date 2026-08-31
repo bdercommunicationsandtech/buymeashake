@@ -1,6 +1,8 @@
-import { Component, computed, signal } from '@angular/core';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
+import { ExploreService } from '../../core/explore.service';
+import { IconShakerComponent, IconTrophyComponent } from '../../shared/icons';
 
 export interface AthleteProfile {
   id: string;
@@ -18,12 +20,15 @@ export interface AthleteProfile {
 @Component({
   selector: 'app-explore',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, IconTrophyComponent, IconShakerComponent],
   templateUrl: './explore.html',
 })
-export class Explore {
+export class Explore implements OnInit {
+  private readonly exploreService = inject(ExploreService);
+
   readonly selectedCategory = signal<string>('Todos');
   readonly searchQuery = signal<string>('');
+  readonly loading = signal(false);
 
   readonly categories = [
     'Todos',
@@ -57,109 +62,72 @@ export class Explore {
       handle: 'mateorun',
       initials: 'MV',
       sport: 'Running & Atletismo',
-      bio: 'Maratonista y ultra trail runner. Financiando boleto y preparación para UTMB Mont-Blanc.',
-      shakesThisMonth: 289,
-      totalRaised: 1420,
+      bio: 'Maratonista elite (2:18 PR). Entrenando para el Maratón de Valencia.',
+      shakesThisMonth: 280,
+      totalRaised: 1400,
       rank: 2,
       avatarBg: 'bg-blue-500',
     },
     {
       id: '3',
-      name: 'Camila Ortiz',
-      handle: 'cami_cross',
-      initials: 'CO',
+      name: 'Camila Torres',
+      handle: 'camifit',
+      initials: 'CT',
       sport: 'CrossFit',
-      bio: 'Semifinalista CrossFit Games. Recaudando para viaje y hospedaje en Torneo Internacional.',
+      bio: 'Atleta Semifinalista CrossFit Games & Coach de halterofilia.',
       shakesThisMonth: 215,
-      totalRaised: 1150,
+      totalRaised: 1075,
       rank: 3,
-      avatarBg: 'bg-purple-500',
+      avatarBg: 'bg-indigo-500',
     },
     {
       id: '4',
       name: 'Lucas Benítez',
-      handle: 'lucas_bjj',
+      handle: 'lucasbjj',
       initials: 'LB',
       sport: 'Artes Marciales & Boxeo',
-      bio: 'Cinturón marrón BJJ y competidor IBJJF. Preparación y campamento para el Mundial Master.',
-      shakesThisMonth: 184,
-      totalRaised: 980,
+      bio: 'Cinturón negro de Brazilian Jiu-Jitsu. Preparación para el Mundial IBJJF.',
+      shakesThisMonth: 160,
+      totalRaised: 800,
       rank: 4,
-      avatarBg: 'bg-red-500',
-    },
-    {
-      id: '5',
-      name: 'Diego Morales',
-      handle: 'diegocali',
-      initials: 'DM',
-      sport: 'Calistenia',
-      bio: 'Atleta de Street Workout & Calistenia freestyle. Competencias nacionales y talleres.',
-      shakesThisMonth: 156,
-      totalRaised: 790,
-      rank: 5,
-      avatarBg: 'bg-amber-500',
-    },
-    {
-      id: '6',
-      name: 'Valeria Serna',
-      handle: 'valenutri',
-      initials: 'VS',
-      sport: 'Movilidad & Yoga',
-      bio: 'Especialista en movilidad articular, recuperación deportiva y prevención de lesiones.',
-      shakesThisMonth: 132,
-      totalRaised: 680,
-      rank: 6,
-      avatarBg: 'bg-rose-500',
-    },
-    {
-      id: '7',
-      name: 'Javier Restrepo',
-      handle: 'javi_pedal',
-      initials: 'JR',
-      sport: 'Ciclismo & Ruta',
-      bio: 'Ciclista de ruta élite. Equipamiento y mantenimiento de bicicleta para Vuelta Nacional.',
-      shakesThisMonth: 118,
-      totalRaised: 590,
-      rank: 7,
-      avatarBg: 'bg-teal-500',
-    },
-    {
-      id: '8',
-      name: 'Andrea Navarro',
-      handle: 'andrea_swim',
-      initials: 'AN',
-      sport: 'Deportes Acuáticos',
-      bio: 'Nadadora de aguas abiertas y triatleta. Entrenando para el cruce de Cozumel 10K.',
-      shakesThisMonth: 104,
-      totalRaised: 520,
-      rank: 8,
-      avatarBg: 'bg-cyan-500',
-    },
-    {
-      id: '9',
-      name: 'Carlos Rivas',
-      handle: 'carlos_box',
-      initials: 'CR',
-      sport: 'Artes Marciales & Boxeo',
-      bio: 'Boxeador amateur en busca del debut profesional. Guantes, vendajes y sparrings.',
-      shakesThisMonth: 95,
-      totalRaised: 470,
-      rank: 9,
-      avatarBg: 'bg-orange-500',
-    },
-    {
-      id: '10',
-      name: 'Elena Fuentes',
-      handle: 'elena_tri',
-      initials: 'EF',
-      sport: 'Fútbol & Colectivos',
-      bio: 'Jugadora de fútbol semiprofesional y preparadora física juvenil.',
-      shakesThisMonth: 82,
-      totalRaised: 410,
-      rank: 10,
-      avatarBg: 'bg-lime-600',
+      avatarBg: 'bg-purple-500',
     },
   ]);
+
+  ngOnInit(): void {
+    this.fetchLeaderboard();
+  }
+
+  fetchLeaderboard(): void {
+    this.exploreService.getMonthlyLeaderboard(10).subscribe({
+      next: (items) => {
+        if (items && items.length > 0) {
+          const mapped: AthleteProfile[] = items.map((it) => ({
+            id: String(it.athlete_id),
+            name: it.athlete_name,
+            handle: it.handle,
+            initials: it.athlete_name.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase(),
+            sport: it.primary_sport,
+            bio: 'Atleta oficial en buymeashake.fit',
+            shakesThisMonth: it.total_shakes_this_month,
+            totalRaised: Number(it.total_raised_this_month),
+            rank: it.ranking_position,
+            avatarBg: it.ranking_position === 1 ? 'bg-amber-500' : it.ranking_position === 2 ? 'bg-slate-400' : 'bg-amber-700',
+          }));
+          this.athletes.set(mapped);
+        }
+      },
+      error: () => {
+        // En caso de que el backend no tenga atletas aún, conserva los datos demo
+      },
+    });
+  }
+
+  readonly topAthletes = computed(() => {
+    return [...this.athletes()]
+      .sort((a, b) => (a.rank ?? 99) - (b.rank ?? 99))
+      .slice(0, 10);
+  });
 
   readonly topPodium = computed(() => {
     return this.athletes().slice(0, 3);
@@ -170,11 +138,12 @@ export class Explore {
   });
 
   readonly filteredAthletes = computed(() => {
-    const cat = this.selectedCategory();
+    const category = this.selectedCategory();
     const query = this.searchQuery().toLowerCase().trim();
 
     return this.athletes().filter((athlete) => {
-      const matchesCat = cat === 'Todos' || athlete.sport.toLowerCase().includes(cat.toLowerCase());
+      const matchesCategory =
+        category === 'Todos' || athlete.sport === category;
       const matchesQuery =
         !query ||
         athlete.name.toLowerCase().includes(query) ||
@@ -182,7 +151,7 @@ export class Explore {
         athlete.sport.toLowerCase().includes(query) ||
         athlete.bio.toLowerCase().includes(query);
 
-      return matchesCat && matchesQuery;
+      return matchesCategory && matchesQuery;
     });
   });
 
@@ -191,6 +160,10 @@ export class Explore {
   }
 
   onSearch(value: string): void {
+    this.searchQuery.set(value);
+  }
+
+  onSearchInput(value: string): void {
     this.searchQuery.set(value);
   }
 }

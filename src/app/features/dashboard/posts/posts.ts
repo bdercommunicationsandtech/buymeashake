@@ -1,5 +1,6 @@
 import { Component, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { IconButtonSupportComponent, IconLockComponent } from '../../../shared/icons';
 
 export interface CreatorPost {
   title: string;
@@ -12,7 +13,7 @@ export interface CreatorPost {
 @Component({
   selector: 'app-dashboard-posts',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, IconLockComponent, IconButtonSupportComponent],
   templateUrl: './posts.html',
 })
 export class DashboardPosts {
@@ -28,7 +29,7 @@ export class DashboardPosts {
       type: 'public',
     },
     {
-      title: 'Rutina exclusiva de movilidad para sentadilla profunda 🔒',
+      title: 'Rutina exclusiva de movilidad para sentadilla profunda',
       excerpt: 'Bloque completo de 15 minutos para tobillos y cadera antes de día pesado de piernas.',
       date: 'Hace 1 semana',
       likes: 45,

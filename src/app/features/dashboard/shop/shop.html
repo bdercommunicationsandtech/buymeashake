@@ -36,26 +36,29 @@
     <button
       type="button"
       (click)="setTab('products')"
-      class="pb-3 transition relative"
+      class="pb-3 transition relative flex items-center gap-1.5"
       [class]="activeTab() === 'products' ? 'text-gray-900 border-b-2 border-black -mb-px' : 'text-gray-400 hover:text-gray-700'"
     >
-      📦 Productos Digitales
+      <app-icon-package size="16" />
+      <span>Productos Digitales</span>
     </button>
     <button
       type="button"
       (click)="setTab('bookings')"
-      class="pb-3 transition relative"
+      class="pb-3 transition relative flex items-center gap-1.5"
       [class]="activeTab() === 'bookings' ? 'text-gray-900 border-b-2 border-black -mb-px' : 'text-gray-400 hover:text-gray-700'"
     >
-      🗓️ Asesorías & Videollamadas
+      <app-icon-calendar size="16" />
+      <span>Asesorías & Videollamadas</span>
     </button>
     <button
       type="button"
       (click)="setTab('calendar')"
-      class="pb-3 transition relative"
+      class="pb-3 transition relative flex items-center gap-1.5"
       [class]="activeTab() === 'calendar' ? 'text-gray-900 border-b-2 border-black -mb-px' : 'text-gray-400 hover:text-gray-700'"
     >
-      📅 Próximas Sesiones Agendadas
+      <app-icon-calendar size="16" />
+      <span>Próximas Sesiones Agendadas</span>
     </button>
   </div>
 
@@ -167,8 +170,8 @@
         @for (session of scheduledSessions(); track session.meetingLink) {
           <div class="p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-gray-50/50 transition">
             <div class="flex items-start gap-4">
-              <div class="h-11 w-11 rounded-2xl bg-indigo-50 text-indigo-700 grid place-items-center font-black text-sm shrink-0">
-                📅
+              <div class="h-11 w-11 rounded-2xl bg-indigo-50 text-indigo-700 grid place-items-center shrink-0">
+                <app-icon-calendar size="20" />
               </div>
               <div>
                 <div class="flex items-center gap-2">
@@ -179,7 +182,8 @@
                 </div>
                 <p class="text-xs text-gray-600 mt-0.5 font-medium">{{ session.serviceTitle }}</p>
                 <p class="text-xs text-gray-400 font-semibold mt-1 flex items-center gap-1.5">
-                  <span>⏰ {{ session.date }} · {{ session.time }}</span>
+                  <app-icon-calendar size="12" />
+                  <span>{{ session.date }} · {{ session.time }}</span>
                 </p>
               </div>
             </div>

@@ -3,6 +3,16 @@ import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { CheckoutService } from '../../core/checkout.service';
 import { SHAKE_PRICE } from '../../core/demo';
+import {
+  IconButtonShareComponent,
+  IconButtonSupportComponent,
+  IconDumbbellComponent,
+  IconKarateComponent,
+  IconRunningComponent,
+  IconShakerComponent,
+  IconSoccerComponent,
+  IconStarComponent,
+} from '../../shared/icons';
 
 export interface FloatingAthlete {
   name: string;
@@ -16,7 +26,18 @@ export interface FloatingAthlete {
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [
+    CommonModule,
+    RouterLink,
+    IconShakerComponent,
+    IconDumbbellComponent,
+    IconSoccerComponent,
+    IconKarateComponent,
+    IconRunningComponent,
+    IconButtonShareComponent,
+    IconButtonSupportComponent,
+    IconStarComponent,
+  ],
   templateUrl: './home.html',
 })
 export class Home {

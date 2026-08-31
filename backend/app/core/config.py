@@ -12,7 +12,7 @@ class Settings(BaseSettings):
     BACKEND_CORS_ORIGINS: list[str] = [
         "http://localhost:4200",
         "http://localhost:3000",
-        "https://buymeashake.com",
+        "https://buymeashake.fit",
     ]
 
     # Database (MySQL con aiomysql async driver)

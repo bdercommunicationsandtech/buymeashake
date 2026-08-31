@@ -1,5 +1,8 @@
-import { Component, signal } from '@angular/core';
+import { Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { IconCalendarComponent, IconPackageComponent } from '../../../shared/icons';
+import { DashboardService } from '../../../core/dashboard.service';
 
 export interface DigitalProduct {
   id: string;
@@ -30,19 +33,36 @@ export interface ScheduledSession {
   time: string;
   serviceTitle: string;
   meetingLink: string;
-  status: 'Confirmada' | 'Pendiente';
+  status: 'Confirmada' | 'En espera' | 'Completada';
 }
 
 @Component({
-  selector: 'app-shop',
+  selector: 'app-dashboard-shop',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule, IconPackageComponent, IconCalendarComponent],
   templateUrl: './shop.html',
 })
-export class DashboardShop {
+export class DashboardShop implements OnInit {
+  private readonly dashboardService = inject(DashboardService);
+
   readonly activeTab = signal<'products' | 'bookings' | 'calendar'>('products');
   readonly showProductModal = signal(false);
   readonly showBookingModal = signal(false);
+  readonly loading = signal(false);
+  readonly uploadingFile = signal(false);
+
+  // Formulario Producto
+  newProductTitle = '';
+  newProductDesc = '';
+  newProductPrice = 19.99;
+  newProductType = 'PDF';
+  newProductFileUrl = '';
+
+  // Formulario Booking
+  newBookingTitle = '';
+  newBookingDesc = '';
+  newBookingDuration = 45;
+  newBookingPrice = 35.0;
 
   readonly products = signal<DigitalProduct[]>([
     {
@@ -111,6 +131,53 @@ export class DashboardShop {
     },
   ]);
 
+  ngOnInit(): void {
+    this.loadData();
+  }
+
+  loadData(): void {
+    // Cargar productos de backend
+    this.dashboardService.getProducts().subscribe({
+      next: (items) => {
+        if (items && items.length > 0) {
+          const mapped: DigitalProduct[] = items.map((p) => ({
+            id: String(p.id),
+            title: p.title,
+            type: p.file_type === 'PDF' ? 'PDF' : p.file_type === 'Template_Notion' ? 'Plantilla' : 'Video',
+            price: Number(p.price),
+            currency: (p.currency as 'USD' | 'MXN') || 'USD',
+            sales: 0,
+            description: p.description || '',
+            gradient: 'from-emerald-600 to-teal-500',
+          }));
+          this.products.set(mapped);
+        }
+      },
+      error: () => {},
+    });
+
+    // Cargar servicios de videollamada de backend
+    this.dashboardService.getBookingServices().subscribe({
+      next: (services) => {
+        if (services && services.length > 0) {
+          const mapped: BookingService[] = services.map((s) => ({
+            id: String(s.id),
+            title: s.title,
+            durationMinutes: s.duration_minutes,
+            price: Number(s.price),
+            currency: (s.currency as 'USD' | 'MXN') || 'USD',
+            platform: 'Google Meet',
+            description: s.description || '',
+            activeDays: ['Lun', 'Mié', 'Vie'],
+            slotsCount: 6,
+          }));
+          this.bookingServices.set(mapped);
+        }
+      },
+      error: () => {},
+    });
+  }
+
   setTab(tab: 'products' | 'bookings' | 'calendar'): void {
     this.activeTab.set(tab);
   }
@@ -129,5 +196,79 @@ export class DashboardShop {
 
   closeBookingModal(): void {
     this.showBookingModal.set(false);
+  }
+
+  onFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (!input.files || input.files.length === 0) return;
+
+    const file = input.files[0];
+    this.uploadingFile.set(true);
+
+    this.dashboardService.uploadProductFile(file).subscribe({
+      next: (res) => {
+        this.uploadingFile.set(false);
+        this.newProductFileUrl = res.url;
+      },
+      error: () => {
+        this.uploadingFile.set(false);
+      },
+    });
+  }
+
+  createProduct(): void {
+    if (!this.newProductTitle || this.newProductPrice <= 0) return;
+
+    this.dashboardService.createProduct({
+      title: this.newProductTitle,
+      description: this.newProductDesc,
+      price: this.newProductPrice,
+      currency: 'USD',
+      file_type: this.newProductType === 'PDF' ? 'PDF' : 'Template_Notion',
+      file_url: this.newProductFileUrl || 'https://buymeashake.fit/sample.pdf',
+    }).subscribe({
+      next: (p) => {
+        this.products.update((prev) => [
+          {
+            id: String(p.id),
+            title: p.title,
+            type: p.file_type === 'PDF' ? 'PDF' : 'Plantilla',
+            price: Number(p.price),
+            currency: 'USD',
+            sales: 0,
+            description: p.description || '',
+            gradient: 'from-indigo-600 to-purple-600',
+          },
+          ...prev,
+        ]);
+        this.closeProductModal();
+      },
+      error: () => {},
+    });
+  }
+
+  createBooking(): void {
+    if (!this.newBookingTitle || this.newBookingPrice <= 0) return;
+
+    this.dashboardService.getBookingServices().subscribe({
+      next: () => {
+        this.bookingServices.update((prev) => [
+          {
+            id: String(Date.now()),
+            title: this.newBookingTitle,
+            durationMinutes: this.newBookingDuration,
+            price: this.newBookingPrice,
+            currency: 'USD',
+            platform: 'Google Meet',
+            description: this.newBookingDesc,
+            activeDays: ['Lun', 'Mié', 'Vie'],
+            slotsCount: 6,
+          },
+          ...prev,
+        ]);
+        this.closeBookingModal();
+      },
+      error: () => {},
+    });
   }
 }

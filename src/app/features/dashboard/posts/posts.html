@@ -19,14 +19,17 @@
         <div class="space-y-2">
           <div class="flex items-center gap-2">
             <span
-              class="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md"
+              class="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md flex items-center gap-1"
               [class]="
                 post.type === 'members-only'
                   ? 'bg-amber-50 text-amber-700 border border-amber-200'
                   : 'bg-gray-100 text-gray-700'
               "
             >
-              {{ post.type === 'members-only' ? 'Exclusivo Miembros 🔒' : 'Público' }}
+              @if (post.type === 'members-only') {
+                <app-icon-lock size="11" />
+              }
+              <span>{{ post.type === 'members-only' ? 'Exclusivo Miembros' : 'Público' }}</span>
             </span>
             <span class="text-xs text-gray-400 font-medium">{{ post.date }}</span>
           </div>
@@ -36,7 +39,8 @@
 
         <div class="flex items-center gap-3 shrink-0">
           <span class="text-xs font-bold text-gray-500 flex items-center gap-1">
-            ❤️ {{ post.likes }}
+            <app-icon-button-support size="13" customClass="text-red-500" />
+            <span>{{ post.likes }}</span>
           </span>
           <button type="button" class="text-xs font-bold text-gray-700 hover:text-black border border-gray-200 rounded-xl px-3 py-1.5 transition">
             Editar

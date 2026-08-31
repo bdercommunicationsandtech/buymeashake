@@ -14,16 +14,16 @@ export class Footer {
       title: 'Producto',
       links: [
         { path: '/', label: 'Inicio' },
-        { path: '/widget', label: 'Laboratorio de widgets' },
-        { path: '/sofia', label: 'Perfil demo' },
+        { path: '/explore', label: 'Explorar atletas' },
+        { path: '/auth/login', label: 'Iniciar sesión' },
       ],
     },
     {
       title: 'Para atletas',
       links: [
-        { path: '/sofia', label: 'Metas de recaudación' },
-        { path: '/widget', label: 'Incrustar en tu web' },
-        { path: '/', label: 'Cómo funciona' },
+        { path: '/auth/register', label: 'Crear mi página' },
+        { path: '/dashboard/home', label: 'Panel de control' },
+        { path: '/dashboard/referrals', label: 'Programa de referidos' },
       ],
     },
   ];

@@ -6,6 +6,7 @@ export interface CheckoutDraft {
   readonly creatorHandle: string;
   readonly shakes: number;
   readonly unitPrice: number;
+  readonly currency: 'USD' | 'MXN';
   readonly message: string;
   readonly activity: ActivityId;
 }
@@ -17,6 +18,7 @@ export interface CheckoutRequest {
   readonly message?: string;
   readonly activity?: ActivityId;
   readonly unitPrice?: number;
+  readonly currency?: 'USD' | 'MXN';
 }
 
 /**
@@ -47,6 +49,7 @@ export class CheckoutService {
       creatorHandle: request.creatorHandle,
       shakes,
       unitPrice: request.unitPrice ?? SHAKE_PRICE,
+      currency: request.currency ?? 'USD',
       message: request.message?.trim() ?? '',
       activity: request.activity ?? 'shaker',
     });

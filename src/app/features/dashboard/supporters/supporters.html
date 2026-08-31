@@ -1,0 +1,106 @@
+<div class="space-y-6">
+  
+  <h1 class="text-2xl font-black text-gray-900">Supporters</h1>
+
+  <!-- Tabs (Fiel a Screenshot 3) -->
+  <div class="flex items-center gap-6 border-b border-gray-200 text-sm font-bold">
+    <button
+      type="button"
+      (click)="setTab('one-time')"
+      class="pb-3 transition relative"
+      [class]="activeTab() === 'one-time' ? 'text-gray-900 border-b-2 border-black -mb-px' : 'text-gray-400 hover:text-gray-700'"
+    >
+      One-time
+    </button>
+    <button
+      type="button"
+      (click)="setTab('settings')"
+      class="pb-3 transition relative"
+      [class]="activeTab() === 'settings' ? 'text-gray-900 border-b-2 border-black -mb-px' : 'text-gray-400 hover:text-gray-700'"
+    >
+      Settings
+    </button>
+  </div>
+
+  @if (activeTab() === 'one-time') {
+    <!-- Contenedor Principal (Fiel a Screenshot 3) -->
+    <div class="bg-white rounded-3xl p-6 sm:p-8 border border-gray-200/80 shadow-xs space-y-6">
+      
+      <!-- Fila de Métricas -->
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        
+        <div class="bg-[#fafafb] rounded-2xl p-5 border border-gray-100">
+          <p class="text-2xl font-black text-gray-900">{{ supporterCount() }}</p>
+          <p class="text-xs font-semibold text-gray-500 mt-1 flex items-center gap-1.5">
+            <svg class="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+            </svg>
+            Supporter
+          </p>
+        </div>
+
+        <div class="bg-[#fafafb] rounded-2xl p-5 border border-gray-100">
+          <p class="text-2xl font-black text-gray-900">${{ last30Days() }}</p>
+          <p class="text-xs font-semibold text-gray-500 mt-1 flex items-center gap-1.5">
+            <svg class="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            Last 30 days
+          </p>
+        </div>
+
+        <div class="bg-[#fafafb] rounded-2xl p-5 border border-gray-100">
+          <p class="text-2xl font-black text-gray-900">${{ allTime() }}</p>
+          <p class="text-xs font-semibold text-gray-500 mt-1 flex items-center gap-1.5">
+            <svg class="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+            </svg>
+            All-time
+          </p>
+        </div>
+
+      </div>
+
+      <!-- Empty state con corazón -->
+      <div class="border-t border-gray-100 pt-12 pb-8 text-center">
+        <div class="h-12 w-12 rounded-full bg-gray-50 border border-gray-200/60 grid place-items-center mx-auto text-gray-400 mb-4">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+          </svg>
+        </div>
+        <h3 class="text-base font-black text-gray-900">Your first supporter is closer than you think!</h3>
+        <p class="text-xs text-gray-500 max-w-sm mx-auto mt-1.5 leading-relaxed">
+          Share your page on social media to help them find you.
+        </p>
+      </div>
+    </div>
+  } @else {
+    <!-- Pestaña de Settings de Supporters -->
+    <div class="bg-white rounded-3xl p-6 sm:p-8 border border-gray-200/80 shadow-xs space-y-6">
+      <div>
+        <h2 class="text-base font-black text-gray-900">Configuración de donaciones</h2>
+        <p class="text-xs text-gray-500 mt-1">Personaliza el precio predeterminado y el texto de cada shake.</p>
+      </div>
+
+      <div class="space-y-4 max-w-md">
+        <div>
+          <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Precio por Shake</label>
+          <div class="flex rounded-xl border border-gray-300 overflow-hidden">
+            <span class="bg-gray-50 px-3.5 py-2.5 text-sm font-bold text-gray-500 border-r border-gray-200">$</span>
+            <input type="number" value="3" class="flex-1 px-3 py-2 text-sm font-bold outline-none"/>
+            <span class="bg-gray-50 px-3.5 py-2.5 text-xs font-bold text-gray-500 border-l border-gray-200">USD</span>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Mensaje de agradecimiento predeterminado</label>
+          <textarea rows="3" class="w-full rounded-xl border border-gray-300 p-3 text-sm outline-none focus:border-black">¡Muchas gracias por invitarme un shake! Me ayuda a seguir entrenando y creando contenido.</textarea>
+        </div>
+
+        <button type="button" class="rounded-xl bg-black text-white px-5 py-2.5 text-xs font-bold hover:bg-gray-800 transition">
+          Guardar cambios
+        </button>
+      </div>
+    </div>
+  }
+</div>

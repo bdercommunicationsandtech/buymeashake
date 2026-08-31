@@ -12,7 +12,7 @@
             </svg>
           </div>
           <h2>Pago de prueba listo</h2>
-          <p class="done-amount">${{ checkout.total() }}.00 USD</p>
+          <p class="done-amount">${{ checkout.total() }}.00 {{ checkout.draft()?.currency }}</p>
           <p class="done-copy">
             {{ checkout.draft()?.shakes }} shake(s) para
             <strong>{{ checkout.draft()?.creatorName }}</strong>. En el producto real Stripe
@@ -55,7 +55,7 @@
 
             <div class="summary-total-row">
               <span>Total a pagar</span>
-              <span>${{ checkout.total() }}.00 USD</span>
+              <span>${{ checkout.total() }}.00 {{ checkout.draft()?.currency }}</span>
             </div>
 
             <p class="summary-powered">

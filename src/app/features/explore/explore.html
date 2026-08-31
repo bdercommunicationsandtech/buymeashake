@@ -1,0 +1,223 @@
+<div class="min-h-screen bg-[#fafafb] text-gray-900 pb-20 font-sans">
+  
+  <!-- Hero / Header -->
+  <section class="border-b border-gray-200 bg-white py-12 px-5 sm:px-8">
+    <div class="mx-auto max-w-5xl text-center">
+      <span class="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3.5 py-1 text-xs font-bold text-emerald-700 border border-emerald-200">
+        <span class="h-2 w-2 rounded-full bg-[#c9ff3d] animate-pulse"></span>
+        Comunidad Deportiva Oficial
+      </span>
+      <h1 class="mt-4 text-3xl sm:text-5xl font-black tracking-tight text-gray-900">
+        Apoya a los atletas que inspiran tu día a día
+      </h1>
+      <p class="mt-3.5 text-base sm:text-lg text-gray-600 max-w-2xl mx-auto">
+        Invita un shake de apoyo directo para competencias, equipo, viajes y preparación deportiva.
+      </p>
+
+      <!-- Barra de Búsqueda -->
+      <div class="mt-8 max-w-xl mx-auto">
+        <div class="relative">
+          <input
+            type="text"
+            placeholder="Buscar por atleta, disciplina o @handle..."
+            class="w-full rounded-2xl border border-gray-200 bg-gray-50/70 pl-11 pr-4 py-3.5 text-sm text-gray-900 placeholder:text-gray-400 focus:bg-white focus:border-gray-900 focus:outline-none shadow-xs transition"
+            [value]="searchQuery()"
+            (input)="onSearch($any($event.target).value)"
+          />
+          <svg class="absolute left-4 top-3.5 h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Contenedor Principal -->
+  <div class="mx-auto max-w-5xl px-5 pt-10">
+    
+    <!-- 🏆 TOP 10 MENSUAL -->
+    <section class="mb-14">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-6">
+        <div>
+          <span class="text-xs font-black uppercase tracking-wider text-amber-600 bg-amber-50 px-2.5 py-1 rounded-md">
+            Leaderboard Oficial
+          </span>
+          <h2 class="text-2xl sm:text-3xl font-black text-gray-900 mt-1">Top 10 Atletas del Mes</h2>
+        </div>
+        <span class="text-xs font-semibold text-gray-500">Basado en shakes recibidos este mes</span>
+      </div>
+
+      <!-- Podio (Top 1, 2, 3) -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-5 items-end mb-6">
+        @for (top of topPodium(); track top.id; let idx = $index) {
+          <div
+            class="bg-white rounded-3xl p-6 border shadow-sm relative transition hover:shadow-md"
+            [class]="idx === 0 ? 'border-amber-300 md:-translate-y-3 ring-2 ring-amber-200/50' : 'border-gray-200/80'"
+          >
+            <!-- Badge de lugar -->
+            <div class="absolute -top-3.5 left-6">
+              <span
+                class="inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-black shadow-xs"
+                [class]="
+                  idx === 0
+                    ? 'bg-amber-400 text-gray-900 ring-2 ring-amber-200'
+                    : idx === 1
+                    ? 'bg-gray-200 text-gray-800'
+                    : 'bg-amber-700/80 text-white'
+                "
+              >
+                #{{ top.rank }} {{ idx === 0 ? '🥇 1er Lugar' : idx === 1 ? '🥈 2do Lugar' : '🥉 3er Lugar' }}
+              </span>
+            </div>
+
+            <div class="flex items-center gap-4 mt-2">
+              <div class="grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-gray-900 text-base font-black text-[#c9ff3d]">
+                {{ top.initials }}
+              </div>
+              <div class="min-w-0 flex-1">
+                <h3 class="font-extrabold text-gray-900 truncate">{{ top.name }}</h3>
+                <p class="text-xs text-gray-500 font-medium">&#64;{{ top.handle }}</p>
+                <span class="inline-block mt-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md">
+                  {{ top.sport }}
+                </span>
+              </div>
+            </div>
+
+            <div class="mt-5 pt-4 border-t border-gray-100 flex items-center justify-between">
+              <div>
+                <p class="text-[11px] text-gray-400 font-medium">Shakes este mes</p>
+                <p class="text-lg font-black text-gray-900">{{ top.shakesThisMonth }} 🥤</p>
+              </div>
+              <a
+                [routerLink]="['/', top.handle]"
+                class="rounded-xl bg-[#c9ff3d] hover:bg-[#bbf033] px-3.5 py-2 text-xs font-black text-[#070a08] transition shadow-xs"
+              >
+                Invitar Shake
+              </a>
+            </div>
+          </div>
+        }
+      </div>
+
+      <!-- Resto del Top 10 (Lugares 4 al 10) -->
+      <div class="bg-white rounded-3xl border border-gray-200/80 shadow-xs overflow-hidden">
+        <div class="p-5 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
+          <span class="text-xs font-bold uppercase tracking-wider text-gray-500">Posición & Atleta</span>
+          <span class="text-xs font-bold uppercase tracking-wider text-gray-500">Shakes Recibidos</span>
+        </div>
+        <div class="divide-y divide-gray-100">
+          @for (athlete of topRemaining(); track athlete.id) {
+            <div class="p-4 sm:p-5 flex items-center justify-between gap-4 hover:bg-gray-50/60 transition">
+              <div class="flex items-center gap-4 min-w-0">
+                <span class="font-black text-sm text-gray-400 w-6 text-center">#{{ athlete.rank }}</span>
+                <div class="h-10 w-10 rounded-2xl bg-gray-900 text-[#c9ff3d] font-black text-xs grid place-items-center shrink-0">
+                  {{ athlete.initials }}
+                </div>
+                <div class="min-w-0">
+                  <h4 class="text-sm font-bold text-gray-900 truncate">{{ athlete.name }}</h4>
+                  <p class="text-xs text-gray-500 truncate">&#64;{{ athlete.handle }} · {{ athlete.sport }}</p>
+                </div>
+              </div>
+
+              <div class="flex items-center gap-4 shrink-0">
+                <div class="text-right">
+                  <span class="text-sm font-black text-gray-900">{{ athlete.shakesThisMonth }} 🥤</span>
+                </div>
+                <a
+                  [routerLink]="['/', athlete.handle]"
+                  class="rounded-xl border border-gray-200 hover:border-gray-900 bg-white px-3 py-1.5 text-xs font-bold text-gray-900 transition"
+                >
+                  Apoyar
+                </a>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    </section>
+
+    <!-- Filtros de Categoría -->
+    <section>
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-xl font-black text-gray-900">Explorar por Disciplina</h3>
+        <span class="text-xs text-gray-500">{{ filteredAthletes().length }} atletas encontrados</span>
+      </div>
+
+      <div class="flex items-center gap-2 overflow-x-auto pb-4 scrollbar-none mb-6">
+        @for (cat of categories; track cat) {
+          <button
+            type="button"
+            class="shrink-0 rounded-xl px-4 py-2 text-xs sm:text-sm font-bold transition"
+            [class]="
+              selectedCategory() === cat
+                ? 'bg-gray-900 text-[#c9ff3d] shadow-sm'
+                : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'
+            "
+            (click)="setCategory(cat)"
+          >
+            {{ cat }}
+          </button>
+        }
+      </div>
+
+      <!-- Cuadrícula de Atletas -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+        @for (athlete of filteredAthletes(); track athlete.id) {
+          <article class="bg-white rounded-3xl p-6 border border-gray-200/80 shadow-xs transition hover:border-gray-300 hover:shadow-sm flex flex-col justify-between">
+            <div>
+              <div class="flex items-start justify-between gap-4">
+                <div class="flex items-center gap-3.5">
+                  <div class="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-gray-900 text-sm font-black text-[#c9ff3d]">
+                    {{ athlete.initials }}
+                  </div>
+                  <div>
+                    <h3 class="font-extrabold text-gray-900 text-base">{{ athlete.name }}</h3>
+                    <p class="text-xs text-gray-500 font-medium">&#64;{{ athlete.handle }}</p>
+                  </div>
+                </div>
+                
+                <span class="rounded-lg bg-gray-50 border border-gray-200/80 px-2.5 py-1 text-xs font-bold text-gray-700">
+                  {{ athlete.sport }}
+                </span>
+              </div>
+
+              <p class="mt-3.5 text-sm text-gray-600 leading-relaxed line-clamp-2">
+                {{ athlete.bio }}
+              </p>
+            </div>
+
+            <div class="mt-6 pt-4 border-t border-gray-100 flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <span class="text-xs font-semibold text-gray-400">Apoyo mensual:</span>
+                <span class="text-xs font-extrabold text-gray-900 bg-gray-100 px-2 py-0.5 rounded-md">
+                  {{ athlete.shakesThisMonth }} shakes
+                </span>
+              </div>
+              
+              <a
+                [routerLink]="['/', athlete.handle]"
+                class="rounded-xl border border-gray-200 hover:border-gray-900 bg-white hover:bg-gray-900 hover:text-[#c9ff3d] px-4 py-2 text-xs font-bold text-gray-900 transition"
+              >
+                Ver Perfil
+              </a>
+            </div>
+          </article>
+        }
+      </div>
+
+      @if (filteredAthletes().length === 0) {
+        <div class="bg-white rounded-3xl p-12 text-center border border-gray-100 mt-4">
+          <p class="text-base font-bold text-gray-900">No se encontraron atletas</p>
+          <p class="text-sm text-gray-500 mt-1">Intenta con otra disciplina o término de búsqueda.</p>
+          <button
+            type="button"
+            class="mt-4 rounded-xl bg-gray-900 text-[#c9ff3d] px-4 py-2 text-xs font-bold"
+            (click)="setCategory('Todos'); onSearch('')"
+          >
+            Restablecer filtros
+          </button>
+        </div>
+      }
+    </section>
+  </div>
+</div>

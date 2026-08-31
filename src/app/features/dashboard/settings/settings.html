@@ -1,0 +1,174 @@
+<div class="space-y-6">
+  
+  <h1 class="text-2xl font-black text-gray-900">Settings</h1>
+
+  <!-- Tabs (Fiel a Screenshot 5) -->
+  <div class="flex items-center gap-6 border-b border-gray-200 text-sm font-bold">
+    <button
+      type="button"
+      (click)="setTab('settings')"
+      class="pb-3 transition relative"
+      [class]="activeTab() === 'settings' ? 'text-gray-900 border-b-2 border-black -mb-px' : 'text-gray-400 hover:text-gray-700'"
+    >
+      Settings
+    </button>
+    <button
+      type="button"
+      (click)="setTab('notifications')"
+      class="pb-3 transition relative"
+      [class]="activeTab() === 'notifications' ? 'text-gray-900 border-b-2 border-black -mb-px' : 'text-gray-400 hover:text-gray-700'"
+    >
+      Notifications
+    </button>
+  </div>
+
+  @if (activeTab() === 'settings') {
+    <!-- Contenedor Principal (Fiel a Screenshot 5) -->
+    <div class="bg-white rounded-3xl p-6 sm:p-10 border border-gray-200/80 shadow-xs space-y-8 max-w-3xl">
+      
+      <!-- 1. Payment Currency -->
+      <div>
+        <label class="block text-sm font-black text-gray-900">Payment currency</label>
+        <p class="text-xs text-gray-500 mt-0.5">Your supporters will pay in this currency.</p>
+        
+        <div class="mt-3">
+          <select
+            class="w-full rounded-2xl border border-gray-200 bg-white px-4 py-3 text-sm font-semibold text-gray-900 focus:border-black focus:outline-none shadow-xs"
+            [value]="currency()"
+            (change)="currency.set($any($event.target).value)"
+          >
+            <option value="United States Dollar (USD)">United States Dollar (USD - $)</option>
+            <option value="Mexican Peso (MXN)">Mexican Peso (MXN - $)</option>
+            <option value="Euro (EUR)">Euro (EUR - €)</option>
+            <option value="Colombian Peso (COP)">Colombian Peso (COP - $)</option>
+          </select>
+        </div>
+      </div>
+
+      <hr class="border-gray-100" />
+
+      <!-- 2. Cover Credit Card Fee (Toggle switch) -->
+      <div class="flex items-start justify-between gap-4">
+        <div>
+          <h3 class="text-sm font-black text-gray-900">Cover credit card fee</h3>
+          <p class="text-xs text-gray-500 mt-0.5 max-w-md">
+            If turned off, your fans will incur the credit card fee associated with their payment.
+          </p>
+        </div>
+
+        <button
+          type="button"
+          (click)="toggleCoverFee()"
+          class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none"
+          [class]="coverFee() ? 'bg-[#f5b300]' : 'bg-gray-200'"
+        >
+          <span
+            class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"
+            [class]="coverFee() ? 'translate-x-5' : 'translate-x-0'"
+          ></span>
+        </button>
+      </div>
+
+      <hr class="border-gray-100" />
+
+      <!-- 3. Mark as NSFW (Toggle switch) -->
+      <div class="flex items-start justify-between gap-4">
+        <div>
+          <h3 class="text-sm font-black text-gray-900">Mark as NSFW (mandatory for 18+ content)</h3>
+          <p class="text-xs text-gray-500 mt-0.5 max-w-md">
+            Indicate that your page is not suitable for children. Regardless, pornography is not allowed on the platform. <a href="#" class="text-gray-700 underline font-semibold">Learn more</a>
+          </p>
+        </div>
+
+        <button
+          type="button"
+          (click)="toggleNsfw()"
+          class="relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none"
+          [class]="nsfw() ? 'bg-[#f5b300]' : 'bg-gray-200'"
+        >
+          <span
+            class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"
+            [class]="nsfw() ? 'translate-x-5' : 'translate-x-0'"
+          ></span>
+        </button>
+      </div>
+
+      <hr class="border-gray-100" />
+
+      <!-- 4. Google Analytics -->
+      <div>
+        <label class="block text-sm font-black text-gray-900">Google Analytics</label>
+        <p class="text-xs text-gray-500 mt-0.5">
+          Add your Google Analytics tracking code to send page visitor data to your Google Analytics account.
+        </p>
+
+        <div class="mt-3">
+          <input
+            type="text"
+            placeholder="UA-XXXXXXXXX-Y or G-XXXXXXXXXX"
+            class="w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm font-mono text-gray-900 placeholder:text-gray-400 focus:bg-white focus:border-black focus:outline-none"
+            [value]="analyticsCode()"
+            (input)="analyticsCode.set($any($event.target).value)"
+          />
+        </div>
+      </div>
+
+      <hr class="border-gray-100" />
+
+      <!-- 5. My page link -->
+      <div>
+        <label class="block text-sm font-black text-gray-900">My page link</label>
+        <p class="text-xs text-gray-500 mt-0.5">Customize your personal athlete URL.</p>
+
+        <div class="mt-3 flex rounded-2xl border border-gray-200 bg-white overflow-hidden shadow-xs">
+          <span class="inline-flex items-center px-4 bg-gray-50 text-gray-500 text-xs font-semibold border-r border-gray-200">
+            buymeashake.com/
+          </span>
+          <input
+            type="text"
+            class="flex-1 px-4 py-3 text-sm font-semibold text-gray-900 outline-none"
+            [value]="pageHandle()"
+            (input)="pageHandle.set($any($event.target).value)"
+          />
+        </div>
+      </div>
+
+      <!-- Save Button -->
+      <div class="pt-4 flex items-center justify-between">
+        <button
+          type="button"
+          (click)="save()"
+          class="rounded-full bg-black hover:bg-gray-800 text-white px-7 py-3 text-xs font-bold transition shadow-xs"
+        >
+          {{ saved() ? '¡Cambios guardados!' : 'Save changes' }}
+        </button>
+      </div>
+
+    </div>
+  } @else {
+    <!-- Notifications Settings Tab -->
+    <div class="bg-white rounded-3xl p-6 sm:p-10 border border-gray-200/80 shadow-xs space-y-6 max-w-3xl">
+      <h2 class="text-base font-black text-gray-900">Email Notifications</h2>
+      <p class="text-xs text-gray-500">Choose what emails you would like to receive from buymeashake.fit.</p>
+
+      <div class="space-y-4 pt-2">
+        <label class="flex items-center gap-3 cursor-pointer">
+          <input type="checkbox" checked class="h-4 w-4 rounded border-gray-300 text-black focus:ring-black" />
+          <span class="text-sm font-medium text-gray-800">Email me every time someone buys me a shake</span>
+        </label>
+        <label class="flex items-center gap-3 cursor-pointer">
+          <input type="checkbox" checked class="h-4 w-4 rounded border-gray-300 text-black focus:ring-black" />
+          <span class="text-sm font-medium text-gray-800">Monthly payout summary</span>
+        </label>
+        <label class="flex items-center gap-3 cursor-pointer">
+          <input type="checkbox" class="h-4 w-4 rounded border-gray-300 text-black focus:ring-black" />
+          <span class="text-sm font-medium text-gray-800">Product updates and community announcements</span>
+        </label>
+      </div>
+
+      <button type="button" class="rounded-full bg-black text-white px-6 py-2.5 text-xs font-bold mt-4">
+        Save preferences
+      </button>
+    </div>
+  }
+</div>

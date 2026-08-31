@@ -26,6 +26,12 @@ export class Home {
 
   readonly spotlight = signal<Activity>(ACTIVITIES[0]);
 
+  readonly topAthletes = [
+    { rank: 1, name: 'Sofía Ramírez', handle: 'sofifit', sport: 'Powerlifting', shakes: 342, initials: 'SR' },
+    { rank: 2, name: 'Mateo Vargas', handle: 'mateorun', sport: 'Ultra Running', shakes: 289, initials: 'MV' },
+    { rank: 3, name: 'Camila Ortiz', handle: 'cami_cross', sport: 'CrossFit', shakes: 215, initials: 'CO' },
+  ];
+
   readonly stats = [
     { value: '0%', label: 'de mensualidad' },
     { value: `$${SHAKE_PRICE}`, label: 'por shake' },
@@ -42,7 +48,7 @@ export class Home {
       creatorName: this.creator.name,
       creatorHandle: this.creator.handle,
       shakes,
-      message: 'Probando el prototipo de buymeashake.fit',
+      message: 'Apoyo directo a tu preparación deportiva',
       activity: this.spotlight().id,
     });
   }

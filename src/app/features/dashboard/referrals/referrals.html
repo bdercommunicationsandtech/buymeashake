@@ -1,0 +1,110 @@
+<div class="max-w-4xl mx-auto space-y-6">
+  <div>
+    <h1 class="text-2xl font-black text-gray-900">Programa de Referidos</h1>
+    <p class="text-sm text-gray-500 mt-1">Invita a otros entrenadores o atletas a sumarse a buymeashake y gana recompensas.</p>
+  </div>
+
+  <!-- Banner / Tarjeta de Link -->
+  <div class="bg-gradient-to-br from-gray-900 to-[#12181a] text-white rounded-3xl p-6 sm:p-8 shadow-sm border border-gray-800 relative overflow-hidden">
+    <div class="relative z-10 max-w-xl">
+      <span class="inline-block text-[11px] font-black uppercase tracking-wider text-[#070a08] bg-[#c9ff3d] px-2.5 py-1 rounded-md mb-3">
+        Gana el 5% de por vida
+      </span>
+      <h2 class="text-xl sm:text-2xl font-black leading-tight text-white">
+        Comparte tu enlace exclusivo de atleta
+      </h2>
+      <p class="mt-2 text-sm text-gray-300">
+        Por cada creador fitness que cree su página con tu link, recibirás una comisión de sus primeros 100 shakes apoyados.
+      </p>
+
+      <!-- Input para copiar -->
+      <div class="mt-6 flex flex-col sm:flex-row gap-2.5">
+        <input
+          type="text"
+          readonly
+          [value]="referralLink()"
+          class="flex-1 rounded-xl bg-white/10 border border-white/15 px-4 py-3 text-sm font-mono text-white outline-none focus:border-[#c9ff3d]"
+        />
+        <button
+          type="button"
+          (click)="copyLink()"
+          class="rounded-xl bg-[#c9ff3d] hover:bg-[#bbf033] px-6 py-3 text-sm font-extrabold text-[#070a08] transition shadow-xs flex items-center justify-center gap-2"
+        >
+          @if (copied()) {
+            <svg class="w-4 h-4 text-gray-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+            </svg>
+            <span>¡Copiado!</span>
+          } @else {
+            <svg class="w-4 h-4 text-gray-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+            </svg>
+            <span>Copiar Enlace</span>
+          }
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Métricas de Referidos -->
+  <div class="grid grid-cols-1 sm:grid-cols-3 gap-5">
+    <div class="bg-white rounded-3xl p-6 border border-gray-100 shadow-sm">
+      <p class="text-xs font-bold text-gray-400 uppercase tracking-wider">Atletas Invitados</p>
+      <p class="text-3xl font-black text-gray-900 mt-2">3</p>
+      <p class="text-xs text-emerald-600 font-semibold mt-2">2 activos este mes</p>
+    </div>
+
+    <div class="bg-white rounded-3xl p-6 border border-gray-100 shadow-sm">
+      <p class="text-xs font-bold text-gray-400 uppercase tracking-wider">Shakes Generados</p>
+      <p class="text-3xl font-black text-gray-900 mt-2">130 🥤</p>
+      <p class="text-xs text-gray-500 font-medium mt-2">Por tu red de referidos</p>
+    </div>
+
+    <div class="bg-white rounded-3xl p-6 border border-gray-100 shadow-sm">
+      <p class="text-xs font-bold text-gray-400 uppercase tracking-wider">Total Ganado</p>
+      <p class="text-3xl font-black text-emerald-600 mt-2">$56.50 USD</p>
+      <p class="text-xs text-gray-500 font-medium mt-2">Transferible a tu cuenta</p>
+    </div>
+  </div>
+
+  <!-- Lista de Atletas Referidos -->
+  <div class="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
+    <div class="p-6 border-b border-gray-100 flex items-center justify-between">
+      <h2 class="text-lg font-black text-gray-900">Atletas en tu red</h2>
+      <span class="text-xs font-semibold text-gray-400">3 registrados</span>
+    </div>
+
+    <div class="divide-y divide-gray-100">
+      @for (referred of referredAthletes(); track referred.handle) {
+        <div class="p-5 flex items-center justify-between gap-4 hover:bg-gray-50/50 transition">
+          <div class="flex items-center gap-3.5 min-w-0">
+            <div class="h-10 w-10 rounded-2xl bg-gray-100 font-black text-gray-700 grid place-items-center text-xs">
+              {{ referred.name.slice(0, 2).toUpperCase() }}
+            </div>
+            <div class="min-w-0">
+              <p class="text-sm font-bold text-gray-900 truncate">{{ referred.name }}</p>
+              <p class="text-xs text-gray-500 font-medium">&#64;{{ referred.handle }} · Unido el {{ referred.joinedDate }}</p>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-6 text-right">
+            <div>
+              <p class="text-sm font-black text-gray-900">{{ referred.shakesCount }} shakes</p>
+              <p class="text-xs text-emerald-600 font-bold">+${{ referred.earnedAmount }} USD</p>
+            </div>
+            <span
+              class="hidden sm:inline-block rounded-lg px-2.5 py-1 text-xs font-bold"
+              [class]="
+                referred.status === 'Activo'
+                  ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                  : 'bg-gray-100 text-gray-600'
+              "
+            >
+              {{ referred.status }}
+            </span>
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+</div>

@@ -11,8 +11,8 @@ export class Header {
 
   readonly links = [
     { path: '/', label: 'Inicio' },
-    { path: '/widget', label: 'Laboratorio' },
-    { path: '/sofia', label: 'Perfil demo' },
+    { path: '/explore', label: 'Explorar' },
+    { path: '/auth/login', label: 'Iniciar sesión' },
   ];
 
   toggleMenu(): void {

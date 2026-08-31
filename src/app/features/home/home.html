@@ -10,27 +10,31 @@
         <span class="relative flex h-1.5 w-1.5">
           <span class="absolute inline-flex h-full w-full rounded-full bg-lime"></span>
         </span>
-        Prototipo v1.0
+        Plataforma Deportiva Oficial
       </span>
 
       <h1 class="mt-6 text-[clamp(2.6rem,7vw,4.4rem)] font-black text-white">
         Invita un shake,<br />
-        <span class="text-gradient-lime">no un café.</span>
+        <span class="text-gradient-lime">apoya a un atleta.</span>
       </h1>
 
       <p class="mt-6 max-w-xl text-lg leading-relaxed text-white/60">
-        La plataforma de apoyo hecha para el mundo del fitness. Tu comunidad te invita batidos de
-        proteína de ${{ shakePrice }} y tú sigues entrenando, publicando rutinas y compitiendo.
+        La plataforma de financiamiento hecha para deportistas de todas las disciplinas. Tu comunidad te invita shakes de ${{ shakePrice }} para tus viajes a competencias, equipo y preparación.
       </p>
 
       <div class="mt-9 flex flex-wrap items-center gap-3">
-        <button
-          type="button"
+        <a
+          routerLink="/auth/register"
           class="glow-lime rounded-full bg-lime px-7 py-3.5 text-base font-bold text-void transition hover:brightness-110"
-          (click)="supportDemo(3)"
         >
-          Probar el checkout · ${{ shakePrice * 3 }}
-        </button>
+          Crear mi página de atleta
+        </a>
+        <a
+          routerLink="/explore"
+          class="rounded-full border border-white/20 bg-white/5 hover:bg-white/10 px-6 py-3.5 text-base font-bold text-white transition"
+        >
+          Explorar Top Atletas
+        </a>
       </div>
 
       <dl class="mt-12 grid max-w-lg grid-cols-2 gap-6 sm:grid-cols-4">
@@ -65,8 +69,56 @@
   </div>
 </section>
 
+<!-- ------------------------------------------------------- SECCIÓN TOP 10 PREVIEW -->
+<section class="mx-auto max-w-6xl px-5 py-16">
+  <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8">
+    <div>
+      <span class="text-xs font-black uppercase tracking-wider text-lime">Ranking en vivo</span>
+      <h2 class="text-3xl sm:text-4xl font-black text-white mt-1">Líderes de la comunidad</h2>
+    </div>
+    <a
+      routerLink="/explore"
+      class="inline-flex items-center gap-2 text-sm font-bold text-lime hover:underline"
+    >
+      Ver Top 10 completo en Explorar
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+      </svg>
+    </a>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+    @for (leader of topAthletes; track leader.handle) {
+      <div class="glass rounded-3xl p-6 border border-white/10 hover:border-lime/40 transition flex flex-col justify-between">
+        <div class="flex items-center gap-4">
+          <div class="h-12 w-12 rounded-2xl bg-lime text-void font-black text-sm grid place-items-center shrink-0">
+            {{ leader.initials }}
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="text-xs font-extrabold text-lime">#{{ leader.rank }}</span>
+              <h3 class="font-bold text-white text-base">{{ leader.name }}</h3>
+            </div>
+            <p class="text-xs text-white/50">&#64;{{ leader.handle }} · {{ leader.sport }}</p>
+          </div>
+        </div>
+
+        <div class="mt-6 pt-4 border-t border-white/10 flex items-center justify-between">
+          <span class="text-xs font-bold text-white/70">{{ leader.shakes }} shakes este mes</span>
+          <a
+            [routerLink]="['/', leader.handle]"
+            class="rounded-xl bg-lime hover:brightness-110 px-3.5 py-1.5 text-xs font-black text-void transition"
+          >
+            Apoyar
+          </a>
+        </div>
+      </div>
+    }
+  </div>
+</section>
+
 <!-- ------------------------------------------------------- Cómo funciona -->
-<section class="mx-auto max-w-6xl px-5 py-20">
+<section class="mx-auto max-w-6xl px-5 py-16 border-t border-white/8">
   <div class="max-w-2xl">
     <p class="text-[11px] font-bold uppercase tracking-[0.22em] text-lime">Cómo funciona</p>
     <h2 class="mt-3 text-4xl font-black text-white sm:text-5xl">
@@ -114,7 +166,7 @@
         </div>
 
         <a
-          routerLink="/sofia"
+          [routerLink]="['/', creator.handle]"
           class="mt-8 inline-flex items-center gap-2 rounded-full bg-lime px-6 py-3 text-sm font-bold text-void transition hover:brightness-110"
         >
           Ver su página
@@ -163,24 +215,22 @@
   >
     <div class="grid-lines absolute inset-0 opacity-25"></div>
     <div class="relative">
-      <h2 class="text-4xl font-black sm:text-5xl">¿Listo para tu primer shake?</h2>
+      <h2 class="text-4xl font-black sm:text-5xl">¿Listo para recibir tu primer shake?</h2>
       <p class="mx-auto mt-4 max-w-xl text-base font-medium text-void/70">
-        Este prototipo no cobra nada: es una maqueta interactiva para validar el diseño y el flujo
-        completo antes de conectar Stripe de verdad.
+        Crea tu perfil de atleta en menos de un minuto y empieza a recibir apoyo directo de tus seguidores.
       </p>
       <div class="mt-8 flex flex-wrap justify-center gap-3">
-        <button
-          type="button"
-          class="rounded-full bg-void px-7 py-3.5 text-base font-bold text-lime transition hover:brightness-125"
-          (click)="supportDemo(1)"
-        >
-          Invitar 1 shake · ${{ shakePrice }}
-        </button>
         <a
-          routerLink="/widget"
+          routerLink="/auth/register"
+          class="rounded-full bg-void px-7 py-3.5 text-base font-bold text-lime transition hover:brightness-125"
+        >
+          Empezar ahora gratis
+        </a>
+        <a
+          routerLink="/explore"
           class="rounded-full border-2 border-void/25 px-7 py-3.5 text-base font-bold text-void transition hover:border-void/60"
         >
-          Ver el laboratorio
+          Explorar la comunidad
         </a>
       </div>
     </div>

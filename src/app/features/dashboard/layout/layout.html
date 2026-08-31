@@ -1,0 +1,244 @@
+<div class="min-h-screen bg-[#f7f7f8] flex flex-col font-sans text-gray-900">
+  
+  <!-- Banner superior de aviso (como en BMC) -->
+  <div class="bg-[#fdf4dc] border-b border-[#fae8b4] py-2.5 px-4 text-center text-xs font-semibold text-gray-800 flex items-center justify-center gap-3">
+    <span>¡Tu página está activa! Configura tu cuenta de Stripe para empezar a recibir fondos.</span>
+    <a routerLink="/dashboard/payouts" class="rounded-full bg-black text-white px-3.5 py-1 text-xs font-bold hover:bg-gray-800 transition">
+      Configurar
+    </a>
+  </div>
+
+  <div class="flex-1 flex overflow-hidden">
+    
+    <!-- Sidebar izquierdo fiel a BMC -->
+    <aside class="w-60 bg-white border-r border-gray-200/80 flex flex-col shrink-0">
+      
+      <!-- Logo de la app -->
+      <div class="h-16 flex items-center px-6">
+        <a routerLink="/" class="flex items-center gap-2">
+          <span class="grid h-9 w-9 place-items-center rounded-xl bg-[#c9ff3d] text-[#070a08] font-bold shadow-xs">
+            <svg viewBox="0 0 32 32" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linejoin="round">
+              <rect x="12" y="4" width="8" height="4" rx="2" fill="currentColor" stroke="none" />
+              <path d="M10 10h12l-1.4 16a4 4 0 0 1-4 3.6h-1.2a4 4 0 0 1-4-3.6z" />
+              <path d="M11 20h10" stroke-linecap="round" />
+            </svg>
+          </span>
+          <span class="text-base font-black tracking-tight text-gray-900">
+            buymeashake
+          </span>
+        </a>
+      </div>
+
+      <!-- Links de navegación -->
+      <nav class="flex-1 overflow-y-auto px-3 py-2 space-y-0.5 text-xs font-semibold">
+        
+        <!-- Inicio -->
+        <a
+          routerLink="/dashboard/home"
+          routerLinkActive="bg-[#fff9e6] text-gray-950 font-bold border-l-3 border-[#f5b300]"
+          [routerLinkActiveOptions]="{ exact: true }"
+          class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition"
+        >
+          <svg class="w-4 h-4 text-[#f5b300]" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"/>
+          </svg>
+          Home
+        </a>
+
+        <!-- View page -->
+        <a
+          routerLink="/sofia"
+          target="_blank"
+          class="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition"
+        >
+          <div class="flex items-center gap-3">
+            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+            </svg>
+            View page
+          </div>
+          <svg class="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+          </svg>
+        </a>
+
+        <!-- SECCIÓN MONETIZE -->
+        <div class="pt-5 pb-1 px-3.5 text-[10px] font-extrabold uppercase tracking-wider text-gray-400">
+          Monetize
+        </div>
+
+        <a
+          routerLink="/dashboard/supporters"
+          routerLinkActive="bg-[#fff9e6] text-gray-950 font-bold border-l-3 border-[#f5b300]"
+          class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition"
+        >
+          <svg class="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+          </svg>
+          Supporters
+        </a>
+
+        <a
+          routerLink="/dashboard/memberships"
+          routerLinkActive="bg-[#fff9e6] text-gray-950 font-bold border-l-3 border-[#f5b300]"
+          class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition"
+        >
+          <svg class="w-4 h-4 text-amber-500" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"/>
+          </svg>
+          Memberships
+        </a>
+
+        <a
+          routerLink="/dashboard/shop"
+          routerLinkActive="bg-[#fff9e6] text-gray-950 font-bold border-l-3 border-[#f5b300]"
+          class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition"
+        >
+          <svg class="w-4 h-4 text-amber-500" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M10 2a4 4 0 00-4 4v1H5a1 1 0 00-.994.89l-1 9A1 1 0 004 18h12a1 1 0 00.994-1.11l-1-9A1 1 0 0015 7h-1V6a4 4 0 00-4-4zm2 5V6a2 2 0 10-4 0v1h4zm-6 3a1 1 0 112 0 1 1 0 01-2 0zm7-1a1 1 0 100 2 1 1 0 000-2z" clip-rule="evenodd"/>
+          </svg>
+          Shop
+        </a>
+
+        <!-- Publish dropdown -->
+        <div>
+          <button
+            type="button"
+            (click)="togglePublish()"
+            class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition"
+          >
+            <div class="flex items-center gap-3">
+              <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
+              </svg>
+              Publish
+            </div>
+            <svg
+              class="w-3.5 h-3.5 text-gray-400 transition transform"
+              [class.rotate-180]="publishOpen()"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+            </svg>
+          </button>
+
+          @if (publishOpen()) {
+            <div class="pl-8 pr-2 py-1 space-y-1">
+              <a
+                routerLink="/dashboard/posts"
+                routerLinkActive="text-gray-950 font-bold"
+                class="flex items-center gap-2.5 py-1.5 px-2 rounded-lg text-xs text-gray-500 hover:text-gray-900 transition"
+              >
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                </svg>
+                Posts
+              </a>
+            </div>
+          }
+        </div>
+
+        <a
+          routerLink="/dashboard/referrals"
+          routerLinkActive="bg-[#fff9e6] text-gray-950 font-bold border-l-3 border-[#f5b300]"
+          class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition"
+        >
+          <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
+          </svg>
+          Referidos
+        </a>
+
+        <!-- SECCIÓN SETTINGS -->
+        <div class="pt-5 pb-1 px-3.5 text-[10px] font-extrabold uppercase tracking-wider text-gray-400">
+          Settings
+        </div>
+
+        <a
+          routerLink="/dashboard/buttons-graphics"
+          routerLinkActive="bg-[#fff9e6] text-gray-950 font-bold border-l-3 border-[#f5b300]"
+          class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition"
+        >
+          <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z"/>
+          </svg>
+          Buttons & Graphics
+        </a>
+
+        <a
+          routerLink="/dashboard/integrations"
+          routerLinkActive="bg-[#fff9e6] text-gray-950 font-bold border-l-3 border-[#f5b300]"
+          class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition"
+        >
+          <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+          </svg>
+          Integrations
+        </a>
+
+        <a
+          routerLink="/dashboard/payouts"
+          routerLinkActive="bg-[#fff9e6] text-gray-950 font-bold border-l-3 border-[#f5b300]"
+          class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition"
+        >
+          <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+          Payouts (Stripe)
+        </a>
+
+        <a
+          routerLink="/dashboard/settings"
+          routerLinkActive="bg-[#fff9e6] text-gray-950 font-bold border-l-3 border-[#f5b300]"
+          class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition"
+        >
+          <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+          </svg>
+          Settings
+        </a>
+      </nav>
+    </aside>
+
+    <!-- Área principal derecha -->
+    <div class="flex-1 flex flex-col min-w-0 overflow-y-auto">
+      
+      <!-- Topbar Header con avatar, notificaciones y menú -->
+      <header class="h-16 bg-white border-b border-gray-200/80 px-6 sm:px-10 flex items-center justify-end gap-3 sticky top-0 z-30">
+        
+        <!-- Notificaciones -->
+        <button type="button" class="h-9 w-9 rounded-full bg-gray-50 hover:bg-gray-100 grid place-items-center text-gray-600 transition">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+          </svg>
+        </button>
+
+        <!-- Profile badge / User button -->
+        <div class="flex items-center gap-2 bg-gray-50 border border-gray-200/80 rounded-full py-1 pl-1 pr-3 cursor-pointer hover:bg-gray-100 transition">
+          <div class="h-7 w-7 rounded-full bg-gray-900 text-[#c9ff3d] grid place-items-center text-[10px] font-black">
+            SR
+          </div>
+          <span class="text-xs font-bold text-gray-700">Sofía R.</span>
+        </div>
+      </header>
+
+      <!-- Contenedor del contenido -->
+      <main class="flex-1 p-6 sm:p-10 max-w-5xl w-full mx-auto">
+        <router-outlet></router-outlet>
+      </main>
+
+      <!-- Botón flotante de ayuda "?" como en BMC -->
+      <div class="fixed bottom-6 right-6 z-40">
+        <button
+          type="button"
+          class="h-10 w-10 rounded-full bg-gray-900 hover:bg-black text-white shadow-lg grid place-items-center font-bold text-sm transition active:scale-95"
+        >
+          ?
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,130 @@
+<div class="min-h-screen bg-gray-50 flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8 font-sans">
+  <div class="sm:mx-auto sm:w-full sm:max-w-md">
+    <!-- Logo -->
+    <a routerLink="/" class="flex justify-center items-center gap-2 mb-6">
+      <span class="grid h-10 w-10 place-items-center rounded-xl bg-[#c9ff3d] text-[#070a08] font-bold shadow-sm">
+        <svg viewBox="0 0 32 32" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linejoin="round">
+          <rect x="12" y="4" width="8" height="4" rx="2" fill="currentColor" stroke="none" />
+          <path d="M10 10h12l-1.4 16a4 4 0 0 1-4 3.6h-1.2a4 4 0 0 1-4-3.6z" />
+          <path d="M11 20h10" stroke-linecap="round" />
+        </svg>
+      </span>
+      <span class="text-2xl font-extrabold tracking-tight text-gray-900">
+        buymeashake
+      </span>
+    </a>
+
+    <h2 class="text-center text-3xl font-black text-gray-900 tracking-tight">
+      Crea tu página en 1 minuto
+    </h2>
+    <p class="mt-2 text-center text-sm text-gray-600">
+      Empieza a recibir apoyo de tu comunidad deportiva. Sin mensualidades.
+    </p>
+  </div>
+
+  <div class="mt-8 sm:mx-auto sm:w-full sm:max-w-lg">
+    <div class="bg-white py-8 px-6 shadow-sm sm:rounded-3xl sm:px-10 border border-gray-200/80">
+      <form class="space-y-5" (ngSubmit)="submit()">
+        
+        <!-- Handle URL preview -->
+        <div>
+          <label class="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-1">
+            Elige tu enlace de atleta
+          </label>
+          <div class="flex rounded-xl border border-gray-300 focus-within:border-gray-900 focus-within:ring-1 focus-within:ring-gray-900 overflow-hidden shadow-xs">
+            <span class="inline-flex items-center px-3.5 bg-gray-50 text-gray-500 text-xs sm:text-sm font-semibold border-r border-gray-200">
+              buymeashake.com/
+            </span>
+            <input
+              type="text"
+              required
+              placeholder="tu_nombre"
+              class="flex-1 min-w-0 block w-full px-3.5 py-3 text-sm text-gray-900 placeholder-gray-400 outline-none font-semibold"
+              [value]="handle()"
+              (input)="onHandleInput($any($event.target).value)"
+            />
+          </div>
+        </div>
+
+        <!-- Nombre completo -->
+        <div>
+          <label class="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-1">
+            Nombre o Alias de Atleta / Coach
+          </label>
+          <input
+            type="text"
+            required
+            placeholder="Ej. Sofía Ramírez"
+            class="appearance-none block w-full px-4 py-3 border border-gray-300 rounded-xl shadow-xs placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-gray-900 focus:border-gray-900 text-sm font-medium"
+            [value]="name()"
+            (input)="name.set($any($event.target).value)"
+          />
+        </div>
+
+        <!-- Disciplina principal -->
+        <div>
+          <label class="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-1">
+            Disciplina o Deporte Principal
+          </label>
+          <select
+            class="block w-full px-4 py-3 border border-gray-300 rounded-xl shadow-xs bg-white text-sm font-medium text-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900 focus:border-gray-900"
+            [value]="selectedSport()"
+            (change)="selectedSport.set($any($event.target).value)"
+          >
+            @for (sport of sports; track sport) {
+              <option [value]="sport">{{ sport }}</option>
+            }
+          </select>
+        </div>
+
+        <!-- Correo -->
+        <div>
+          <label class="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-1">
+            Correo electrónico
+          </label>
+          <input
+            type="email"
+            required
+            placeholder="atleta@ejemplo.com"
+            class="appearance-none block w-full px-4 py-3 border border-gray-300 rounded-xl shadow-xs placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-gray-900 focus:border-gray-900 text-sm"
+            [value]="email()"
+            (input)="email.set($any($event.target).value)"
+          />
+        </div>
+
+        <!-- Contraseña -->
+        <div>
+          <label class="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-1">
+            Contraseña
+          </label>
+          <input
+            type="password"
+            required
+            placeholder="Mínimo 8 caracteres"
+            class="appearance-none block w-full px-4 py-3 border border-gray-300 rounded-xl shadow-xs placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-gray-900 focus:border-gray-900 text-sm"
+            [value]="password()"
+            (input)="password.set($any($event.target).value)"
+          />
+        </div>
+
+        <div>
+          <button
+            type="submit"
+            class="w-full flex justify-center py-4 px-4 rounded-2xl shadow-sm text-sm sm:text-base font-black text-[#070a08] bg-[#c9ff3d] hover:bg-[#bbf033] focus:outline-none transition active:scale-[0.99]"
+          >
+            Crear mi página de atleta
+          </button>
+        </div>
+      </form>
+
+      <div class="mt-6 text-center">
+        <p class="text-xs text-gray-500">
+          ¿Ya tienes cuenta?
+          <a routerLink="/auth/login" class="font-bold text-gray-900 hover:underline">
+            Inicia sesión aquí
+          </a>
+        </p>
+      </div>
+    </div>
+  </div>
+</div>

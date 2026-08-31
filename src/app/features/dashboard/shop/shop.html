@@ -1,0 +1,310 @@
+<div class="space-y-6 max-w-5xl">
+  
+  <!-- Header -->
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div>
+      <h1 class="text-2xl font-black text-gray-900">Tienda & Asesorías 1-a-1</h1>
+      <p class="text-sm text-gray-500 mt-1">
+        Vende productos digitales (PDFs, guías) y agenda videollamadas privadas de asesoría o técnica.
+      </p>
+    </div>
+
+    <!-- Botones de Acción -->
+    <div class="flex items-center gap-2">
+      @if (activeTab() === 'products') {
+        <button
+          type="button"
+          (click)="openProductModal()"
+          class="rounded-full bg-black text-white px-5 py-2.5 text-xs font-bold hover:bg-gray-800 transition flex items-center gap-1.5 shadow-xs"
+        >
+          <span>+ Nuevo Producto Digital</span>
+        </button>
+      } @else if (activeTab() === 'bookings') {
+        <button
+          type="button"
+          (click)="openBookingModal()"
+          class="rounded-full bg-black text-white px-5 py-2.5 text-xs font-bold hover:bg-gray-800 transition flex items-center gap-1.5 shadow-xs"
+        >
+          <span>+ Nuevo Servicio 1-a-1</span>
+        </button>
+      }
+    </div>
+  </div>
+
+  <!-- Tabs Superiores -->
+  <div class="flex items-center gap-6 border-b border-gray-200 text-sm font-bold">
+    <button
+      type="button"
+      (click)="setTab('products')"
+      class="pb-3 transition relative"
+      [class]="activeTab() === 'products' ? 'text-gray-900 border-b-2 border-black -mb-px' : 'text-gray-400 hover:text-gray-700'"
+    >
+      📦 Productos Digitales
+    </button>
+    <button
+      type="button"
+      (click)="setTab('bookings')"
+      class="pb-3 transition relative"
+      [class]="activeTab() === 'bookings' ? 'text-gray-900 border-b-2 border-black -mb-px' : 'text-gray-400 hover:text-gray-700'"
+    >
+      🗓️ Asesorías & Videollamadas
+    </button>
+    <button
+      type="button"
+      (click)="setTab('calendar')"
+      class="pb-3 transition relative"
+      [class]="activeTab() === 'calendar' ? 'text-gray-900 border-b-2 border-black -mb-px' : 'text-gray-400 hover:text-gray-700'"
+    >
+      📅 Próximas Sesiones Agendadas
+    </button>
+  </div>
+
+  <!-- CONTENIDO: PESTAÑA 1 - PRODUCTOS DIGITALES -->
+  @if (activeTab() === 'products') {
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
+      @for (prod of products(); track prod.id) {
+        <div class="bg-white rounded-3xl p-5 border border-gray-200/80 shadow-xs flex flex-col justify-between hover:border-gray-300 transition">
+          <div>
+            <div class="h-36 rounded-2xl bg-gradient-to-tr {{ prod.gradient }} text-white p-4 flex flex-col justify-between shadow-xs">
+              <span class="text-[10px] font-black uppercase tracking-wider bg-black/30 backdrop-blur-xs px-2 py-0.5 rounded-md w-fit">
+                {{ prod.type }}
+              </span>
+              <p class="font-black text-base leading-tight">{{ prod.title }}</p>
+            </div>
+            <h3 class="font-black text-gray-900 text-sm mt-3.5">{{ prod.title }}</h3>
+            <p class="text-xs text-gray-500 mt-1 line-clamp-2 leading-relaxed">{{ prod.description }}</p>
+          </div>
+
+          <div class="mt-4 pt-3 border-t border-gray-100 flex items-center justify-between">
+            <span class="text-sm font-black text-emerald-600">${{ prod.price }} {{ prod.currency }}</span>
+            <span class="text-xs font-semibold text-gray-400">{{ prod.sales }} descargas</span>
+          </div>
+        </div>
+      }
+
+      <!-- Card para agregar producto -->
+      <div
+        (click)="openProductModal()"
+        class="border-2 border-dashed border-gray-200 hover:border-gray-400 rounded-3xl p-6 text-center flex flex-col items-center justify-center transition cursor-pointer min-h-[260px] bg-white/50"
+      >
+        <div class="h-10 w-10 rounded-full bg-gray-100 grid place-items-center text-gray-600 mb-2 font-black text-lg">
+          +
+        </div>
+        <p class="text-sm font-bold text-gray-800">Publicar nuevo producto digital</p>
+        <p class="text-xs text-gray-400 mt-1">PDFs de rutinas, guías nutricionales o calculadoras</p>
+      </div>
+    </div>
+  }
+
+  <!-- CONTENIDO: PESTAÑA 2 - ASESORÍAS 1-A-1 & SERVICIOS -->
+  @if (activeTab() === 'bookings') {
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+      @for (service of bookingServices(); track service.id) {
+        <div class="bg-white rounded-3xl p-6 sm:p-7 border border-gray-200/80 shadow-xs flex flex-col justify-between">
+          <div>
+            <div class="flex items-start justify-between gap-4">
+              <div>
+                <span class="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-indigo-700 bg-indigo-50 px-2.5 py-1 rounded-lg">
+                  <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                  </svg>
+                  {{ service.durationMinutes }} Minutos · {{ service.platform }}
+                </span>
+                <h3 class="text-base font-black text-gray-900 mt-2.5">{{ service.title }}</h3>
+              </div>
+              <p class="text-lg font-black text-emerald-600 shrink-0">${{ service.price }} {{ service.currency }}</p>
+            </div>
+
+            <p class="text-xs text-gray-600 mt-3 leading-relaxed">{{ service.description }}</p>
+
+            <div class="mt-4 flex items-center gap-2">
+              <span class="text-xs font-semibold text-gray-400">Días activos:</span>
+              <div class="flex gap-1">
+                @for (day of service.activeDays; track day) {
+                  <span class="text-[11px] font-bold text-gray-700 bg-gray-100 px-2 py-0.5 rounded-md">{{ day }}</span>
+                }
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-6 pt-4 border-t border-gray-100 flex items-center justify-between">
+            <span class="text-xs font-semibold text-gray-400">{{ service.slotsCount }} horarios disponibles</span>
+            <button type="button" class="text-xs font-bold text-gray-700 hover:text-black border border-gray-200 rounded-xl px-3 py-1.5 transition">
+              Editar disponibilidad
+            </button>
+          </div>
+        </div>
+      }
+
+      <!-- Agregar nuevo servicio 1-a-1 -->
+      <div
+        (click)="openBookingModal()"
+        class="border-2 border-dashed border-gray-200 hover:border-gray-400 rounded-3xl p-6 text-center flex flex-col items-center justify-center transition cursor-pointer min-h-[200px] bg-white/50"
+      >
+        <div class="h-10 w-10 rounded-full bg-gray-100 grid place-items-center text-gray-600 mb-2 font-black text-lg">
+          +
+        </div>
+        <p class="text-sm font-bold text-gray-800">Ofrecer nuevo servicio de videollamada</p>
+        <p class="text-xs text-gray-400 mt-1">Revisión de técnica, videollamada 1:1 o consultoría</p>
+      </div>
+    </div>
+  }
+
+  <!-- CONTENIDO: PESTAÑA 3 - CALENDARIO & PRÓXIMAS SESIONES -->
+  @if (activeTab() === 'calendar') {
+    <div class="bg-white rounded-3xl border border-gray-200/80 shadow-xs overflow-hidden">
+      <div class="p-6 border-b border-gray-100 flex items-center justify-between">
+        <div>
+          <h2 class="text-base font-black text-gray-900">Agenda de Sesiones Confirmadas</h2>
+          <p class="text-xs text-gray-500 mt-0.5">Los atletas reciben el enlace de Google Meet automáticamente tras pagar.</p>
+        </div>
+        <span class="text-xs font-bold text-emerald-800 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200">
+          Google Calendar Sincronizado
+        </span>
+      </div>
+
+      <div class="divide-y divide-gray-100">
+        @for (session of scheduledSessions(); track session.meetingLink) {
+          <div class="p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-gray-50/50 transition">
+            <div class="flex items-start gap-4">
+              <div class="h-11 w-11 rounded-2xl bg-indigo-50 text-indigo-700 grid place-items-center font-black text-sm shrink-0">
+                📅
+              </div>
+              <div>
+                <div class="flex items-center gap-2">
+                  <h3 class="text-sm font-bold text-gray-900">{{ session.athleteName }}</h3>
+                  <span class="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md">
+                    {{ session.status }}
+                  </span>
+                </div>
+                <p class="text-xs text-gray-600 mt-0.5 font-medium">{{ session.serviceTitle }}</p>
+                <p class="text-xs text-gray-400 font-semibold mt-1 flex items-center gap-1.5">
+                  <span>⏰ {{ session.date }} · {{ session.time }}</span>
+                </p>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-3">
+              <a
+                [href]="session.meetingLink"
+                target="_blank"
+                class="rounded-xl bg-black hover:bg-gray-800 text-white px-4 py-2 text-xs font-bold transition flex items-center gap-1.5"
+              >
+                <span>Entrar a Meet</span>
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+                </svg>
+              </a>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  }
+
+  <!-- MODAL: CREAR PRODUCTO DIGITAL -->
+  @if (showProductModal()) {
+    <div class="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4">
+      <div class="bg-white rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl space-y-5 animate-in fade-in zoom-in-95">
+        <div class="flex items-center justify-between">
+          <h3 class="text-lg font-black text-gray-900">Publicar Producto Digital</h3>
+          <button (click)="closeProductModal()" class="text-gray-400 hover:text-gray-900 text-lg font-bold">✕</button>
+        </div>
+
+        <div class="space-y-4">
+          <div>
+            <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Título del Producto</label>
+            <input type="text" placeholder="Ej. Rutina de Fuerza 8 Semanas (PDF)" class="w-full rounded-xl border border-gray-300 p-3 text-sm outline-none focus:border-black font-semibold"/>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Precio (USD/MXN)</label>
+              <input type="number" placeholder="15.00" class="w-full rounded-xl border border-gray-300 p-3 text-sm outline-none focus:border-black font-bold"/>
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Tipo de Archivo</label>
+              <select class="w-full rounded-xl border border-gray-300 p-3 text-sm outline-none focus:border-black">
+                <option>PDF (Documento descargable)</option>
+                <option>Enlace Privado de Video</option>
+                <option>Plantilla Notion / Excel</option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Descripción</label>
+            <textarea rows="3" placeholder="Explica qué incluye este material..." class="w-full rounded-xl border border-gray-300 p-3 text-sm outline-none focus:border-black"></textarea>
+          </div>
+
+          <!-- Drag and drop zone -->
+          <div class="border-2 border-dashed border-gray-300 rounded-2xl p-5 text-center bg-gray-50 cursor-pointer hover:border-black transition">
+            <p class="text-xs font-bold text-gray-700">Arrastra tu archivo PDF o recurso aquí</p>
+            <p class="text-[10px] text-gray-400 mt-0.5">Hasta 100MB por archivo</p>
+          </div>
+        </div>
+
+        <div class="pt-3 flex gap-2">
+          <button (click)="closeProductModal()" type="button" class="flex-1 rounded-xl border border-gray-200 py-3 text-xs font-bold text-gray-700 hover:bg-gray-50">
+            Cancelar
+          </button>
+          <button (click)="closeProductModal()" type="button" class="flex-1 rounded-xl bg-black text-white py-3 text-xs font-bold hover:bg-gray-800">
+            Publicar en mi Tienda
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- MODAL: CREAR SERVICIO 1-A-1 -->
+  @if (showBookingModal()) {
+    <div class="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4">
+      <div class="bg-white rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl space-y-5 animate-in fade-in zoom-in-95">
+        <div class="flex items-center justify-between">
+          <h3 class="text-lg font-black text-gray-900">Configurar Sesión 1-a-1</h3>
+          <button (click)="closeBookingModal()" class="text-gray-400 hover:text-gray-900 text-lg font-bold">✕</button>
+        </div>
+
+        <div class="space-y-4">
+          <div>
+            <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Nombre del Servicio</label>
+            <input type="text" placeholder="Ej. Revisión de Técnica de Levantamiento" class="w-full rounded-xl border border-gray-300 p-3 text-sm outline-none focus:border-black font-semibold"/>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Precio</label>
+              <input type="number" placeholder="35.00" class="w-full rounded-xl border border-gray-300 p-3 text-sm outline-none focus:border-black font-bold"/>
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Duración</label>
+              <select class="w-full rounded-xl border border-gray-300 p-3 text-sm outline-none focus:border-black">
+                <option>30 minutos</option>
+                <option selected>45 minutos</option>
+                <option>60 minutos</option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Plataforma de Videollamada</label>
+            <select class="w-full rounded-xl border border-gray-300 p-3 text-sm outline-none focus:border-black">
+              <option>Google Meet (Generación automática)</option>
+              <option>Zoom</option>
+              <option>WhatsApp Video</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="pt-3 flex gap-2">
+          <button (click)="closeBookingModal()" type="button" class="flex-1 rounded-xl border border-gray-200 py-3 text-xs font-bold text-gray-700 hover:bg-gray-50">
+            Cancelar
+          </button>
+          <button (click)="closeBookingModal()" type="button" class="flex-1 rounded-xl bg-black text-white py-3 text-xs font-bold hover:bg-gray-800">
+            Guardar & Habilitar Agenda
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+</div>

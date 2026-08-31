@@ -1,5 +1,5 @@
 import { Component, signal } from '@angular/core';
-import { RouterLink, RouterLinkActive } from '@angular/router';
+import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 
 @Component({
   selector: 'app-header',
@@ -8,11 +8,12 @@ import { RouterLink, RouterLinkActive } from '@angular/router';
 })
 export class Header {
   readonly menuOpen = signal(false);
+  readonly searchQuery = signal('');
+
+  constructor(private router: Router) {}
 
   readonly links = [
-    { path: '/', label: 'Inicio' },
-    { path: '/explore', label: 'Explorar' },
-    { path: '/auth/login', label: 'Iniciar sesión' },
+    { path: '/explore', label: 'Explorar atletas' },
   ];
 
   toggleMenu(): void {
@@ -21,5 +22,18 @@ export class Header {
 
   closeMenu(): void {
     this.menuOpen.set(false);
+  }
+
+  onSearch(val: string): void {
+    this.searchQuery.set(val);
+  }
+
+  submitSearch(): void {
+    const q = this.searchQuery().trim();
+    if (q) {
+      this.router.navigate(['/explore'], { queryParams: { q } });
+    } else {
+      this.router.navigate(['/explore']);
+    }
   }
 }

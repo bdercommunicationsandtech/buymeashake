@@ -1,238 +1,324 @@
-<!-- ------------------------------------------------------------------ Hero -->
-<section class="arena-bg relative overflow-hidden">
-  <div class="grid-lines absolute inset-0 opacity-60"></div>
-
-  <div class="relative mx-auto grid max-w-6xl gap-12 px-5 py-16 lg:grid-cols-[1fr_1.05fr] lg:items-center lg:py-24">
-    <div class="anim-rise">
-      <span
-        class="inline-flex items-center gap-2 rounded-full border border-lime/30 bg-lime/10 px-4 py-1.5 text-[11px] font-bold uppercase tracking-[0.18em] text-lime"
-      >
-        <span class="relative flex h-1.5 w-1.5">
-          <span class="absolute inline-flex h-full w-full rounded-full bg-lime"></span>
-        </span>
-        Plataforma Deportiva Oficial
-      </span>
-
-      <h1 class="mt-6 text-[clamp(2.6rem,7vw,4.4rem)] font-black text-white">
-        Invita un shake,<br />
-        <span class="text-gradient-lime">apoya a un atleta.</span>
-      </h1>
-
-      <p class="mt-6 max-w-xl text-lg leading-relaxed text-white/60">
-        La plataforma de financiamiento hecha para deportistas de todas las disciplinas. Tu comunidad te invita shakes de ${{ shakePrice }} para tus viajes a competencias, equipo y preparación.
-      </p>
-
-      <div class="mt-9 flex flex-wrap items-center gap-3">
+<div class="min-h-screen bg-[#fafafb] text-gray-900 font-sans overflow-hidden">
+  
+  <!-- ------------------------------------------------------------- 1. HERO SECTION (Fiel a Screenshot 1) -->
+  <section class="relative pt-12 pb-20 sm:pt-16 sm:pb-28 px-5">
+    
+    <!-- Floating Athletes Left (Desktop) -->
+    <div class="hidden xl:flex flex-col gap-5 absolute left-6 top-16 w-56 pointer-events-auto">
+      @for (athlete of leftAthletes; track athlete.name; let i = $index) {
         <a
-          routerLink="/auth/register"
-          class="glow-lime rounded-full bg-lime px-7 py-3.5 text-base font-bold text-void transition hover:brightness-110"
+          routerLink="/sofifit"
+          class="bg-white rounded-2xl p-3.5 border border-gray-200/80 shadow-sm hover:shadow-md hover:-translate-y-1 transition duration-200 block"
+          [style.transform]="'rotate(' + (i === 0 ? '-3deg' : i === 1 ? '2deg' : '-2deg') + ')'"
         >
-          Crear mi página de atleta
-        </a>
-        <a
-          routerLink="/explore"
-          class="rounded-full border border-white/20 bg-white/5 hover:bg-white/10 px-6 py-3.5 text-base font-bold text-white transition"
-        >
-          Explorar Top Atletas
-        </a>
-      </div>
-
-      <dl class="mt-12 grid max-w-lg grid-cols-2 gap-6 sm:grid-cols-4">
-        @for (stat of stats; track stat.label) {
-          <div>
-            <dt class="text-2xl font-extrabold text-lime">{{ stat.value }}</dt>
-            <dd class="mt-1 text-[11px] font-semibold uppercase tracking-wider text-white/40">
-              {{ stat.label }}
-            </dd>
+          <div class="flex items-center gap-3">
+            <div class="h-9 w-9 rounded-full bg-gray-900 text-[#c9ff3d] grid place-items-center font-black text-xs shrink-0">
+              {{ athlete.initials }}
+            </div>
+            <div class="min-w-0">
+              <p class="text-xs font-bold text-gray-900 truncate">{{ athlete.name }}</p>
+              <p class="text-[10px] text-gray-500 truncate">{{ athlete.discipline }}</p>
+            </div>
           </div>
-        }
-      </dl>
-    </div>
-
-    <div class="anim-rise" style="animation-delay: 0.12s">
-      <app-sport-widget [bare]="true" (activityChange)="onSpotlightChange($event)" />
-    </div>
-  </div>
-
-  <!-- Ticker -->
-  <div class="ticker-mask relative border-y border-white/8 bg-void/60 py-3.5">
-    <div class="anim-marquee flex w-max gap-10">
-      @for (round of [1, 2]; track round) {
-        @for (item of ticker; track $index) {
-          <span class="flex items-center gap-10 text-sm font-semibold whitespace-nowrap text-white/40">
-            {{ item }}
-            <span class="h-1.5 w-1.5 rounded-full bg-lime/60"></span>
-          </span>
-        }
+          <p class="mt-2 text-[10px] font-semibold text-gray-400 flex items-center gap-1">
+            <span>❤️</span> {{ athlete.supporters }} seguidores
+          </p>
+        </a>
       }
     </div>
-  </div>
-</section>
 
-<!-- ------------------------------------------------------- SECCIÓN TOP 10 PREVIEW -->
-<section class="mx-auto max-w-6xl px-5 py-16">
-  <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8">
-    <div>
-      <span class="text-xs font-black uppercase tracking-wider text-lime">Ranking en vivo</span>
-      <h2 class="text-3xl sm:text-4xl font-black text-white mt-1">Líderes de la comunidad</h2>
-    </div>
-    <a
-      routerLink="/explore"
-      class="inline-flex items-center gap-2 text-sm font-bold text-lime hover:underline"
-    >
-      Ver Top 10 completo en Explorar
-      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
-      </svg>
-    </a>
-  </div>
-
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
-    @for (leader of topAthletes; track leader.handle) {
-      <div class="glass rounded-3xl p-6 border border-white/10 hover:border-lime/40 transition flex flex-col justify-between">
-        <div class="flex items-center gap-4">
-          <div class="h-12 w-12 rounded-2xl bg-lime text-void font-black text-sm grid place-items-center shrink-0">
-            {{ leader.initials }}
-          </div>
-          <div>
-            <div class="flex items-center gap-2">
-              <span class="text-xs font-extrabold text-lime">#{{ leader.rank }}</span>
-              <h3 class="font-bold text-white text-base">{{ leader.name }}</h3>
+    <!-- Floating Athletes Right (Desktop) -->
+    <div class="hidden xl:flex flex-col gap-5 absolute right-6 top-16 w-56 pointer-events-auto">
+      @for (athlete of rightAthletes; track athlete.name; let i = $index) {
+        <a
+          routerLink="/sofifit"
+          class="bg-white rounded-2xl p-3.5 border border-gray-200/80 shadow-sm hover:shadow-md hover:-translate-y-1 transition duration-200 block"
+          [style.transform]="'rotate(' + (i === 0 ? '3deg' : i === 1 ? '-2deg' : '3deg') + ')'"
+        >
+          <div class="flex items-center gap-3">
+            <div class="h-9 w-9 rounded-full bg-gray-900 text-[#c9ff3d] grid place-items-center font-black text-xs shrink-0">
+              {{ athlete.initials }}
             </div>
-            <p class="text-xs text-white/50">&#64;{{ leader.handle }} · {{ leader.sport }}</p>
+            <div class="min-w-0">
+              <p class="text-xs font-bold text-gray-900 truncate">{{ athlete.name }}</p>
+              <p class="text-[10px] text-gray-500 truncate">{{ athlete.discipline }}</p>
+            </div>
+          </div>
+          <p class="mt-2 text-[10px] font-semibold text-gray-400 flex items-center gap-1">
+            <span>❤️</span> {{ athlete.supporters }} seguidores
+          </p>
+        </a>
+      }
+    </div>
+
+    <!-- Contenido Central del Hero -->
+    <div class="max-w-3xl mx-auto text-center relative z-10">
+      
+      <!-- Social Proof Rating -->
+      <div class="inline-flex items-center gap-2 mb-6">
+        <div class="flex text-emerald-500 text-xs">
+          ★★★★★
+        </div>
+        <span class="text-xs font-bold text-gray-600">
+          La comunidad favorita de +50,000 atletas y entrenadores
+        </span>
+      </div>
+
+      <!-- Headline Principal -->
+      <h1 class="text-4xl sm:text-6xl md:text-7xl font-black tracking-tight text-gray-950 leading-[1.08]">
+        Financia tu camino deportivo
+      </h1>
+
+      <!-- Subheadline -->
+      <p class="mt-6 text-base sm:text-xl text-gray-600 max-w-xl mx-auto font-normal leading-relaxed">
+        Recibe apoyo directo. Crea membresías. Vende asesorías y planes. Más fácil y rápido de lo que crees.
+      </p>
+
+      <!-- Botón CTA Principal -->
+      <div class="mt-8">
+        <a
+          routerLink="/auth/register"
+          class="inline-flex items-center justify-center rounded-full bg-[#f5b300] hover:bg-[#e0a400] text-gray-950 text-base sm:text-lg font-black px-9 py-4 shadow-sm hover:shadow-md transition active:scale-95"
+        >
+          Crear mi página
+        </a>
+        <p class="mt-3 text-xs font-medium text-gray-400">
+          ¡Es gratis y toma menos de un minuto!
+        </p>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ------------------------------------------------------------- 2. FEATURE SHOWCASE (Fiel a Screenshot 2) -->
+  <section class="max-w-5xl mx-auto px-5 mb-24">
+    <div class="bg-[#f4f4f6] rounded-[36px] p-8 sm:p-14 text-center relative overflow-hidden">
+      
+      <span class="text-[11px] font-black uppercase tracking-widest text-gray-400">APOYO DIRECTO</span>
+      <h2 class="text-2xl sm:text-4xl font-black text-gray-950 mt-2 max-w-lg mx-auto tracking-tight">
+        Dale a tus seguidores una forma fácil de apoyarte.
+      </h2>
+      <p class="text-xs sm:text-sm text-gray-600 max-w-md mx-auto mt-3 leading-relaxed">
+        buymeashake hace que apoyar tu disciplina sea simple y transparente. En un par de clics, tus seguidores pueden invitarte un shake y dejarte un mensaje motivacional.
+      </p>
+
+      <!-- Mockup del Widget de Apoyo con burbujas flotantes alrededor -->
+      <div class="mt-12 max-w-md mx-auto relative">
+        
+        <!-- Burbuja Flotante 1 (Izquierda Arriba) -->
+        <div class="hidden sm:flex items-center gap-2.5 bg-white rounded-2xl p-3 shadow-md border border-gray-100 absolute -left-28 top-4 z-20 text-left animate-bounce" style="animation-duration: 4s;">
+          <span class="text-lg">🥤</span>
+          <div>
+            <p class="text-xs font-bold text-gray-900">Carlos invitó 5 shakes</p>
+            <p class="text-[10px] text-gray-400 font-medium">Hace 5 min</p>
           </div>
         </div>
 
-        <div class="mt-6 pt-4 border-t border-white/10 flex items-center justify-between">
-          <span class="text-xs font-bold text-white/70">{{ leader.shakes }} shakes este mes</span>
-          <a
-            [routerLink]="['/', leader.handle]"
-            class="rounded-xl bg-lime hover:brightness-110 px-3.5 py-1.5 text-xs font-black text-void transition"
+        <!-- Burbuja Flotante 2 (Izquierda Abajo) -->
+        <div class="hidden sm:flex items-center gap-2.5 bg-white rounded-2xl p-3 shadow-md border border-gray-100 absolute -left-20 bottom-8 z-20 text-left">
+          <span class="text-lg">💪</span>
+          <div>
+            <p class="text-xs font-bold text-gray-900">Mariana: "¡Gran rutina!"</p>
+            <p class="text-[10px] text-emerald-600 font-bold">+$15 USD</p>
+          </div>
+        </div>
+
+        <!-- Burbuja Flotante 3 (Derecha Arriba) -->
+        <div class="hidden sm:flex items-center gap-2.5 bg-white rounded-2xl p-3 shadow-md border border-gray-100 absolute -right-24 top-8 z-20 text-left">
+          <span class="text-lg">❤️</span>
+          <div>
+            <p class="text-xs font-bold text-gray-900">Diego invitó 10 shakes</p>
+            <p class="text-[10px] text-gray-400">"Para el viaje al torneo coach"</p>
+          </div>
+        </div>
+
+        <!-- Tarjeta Central del Widget (Fiel a Screenshot 2) -->
+        <div class="bg-white rounded-3xl p-6 sm:p-7 border border-gray-200/80 shadow-lg relative z-10 text-left space-y-4">
+          <div class="flex items-center justify-between">
+            <h3 class="font-black text-gray-900 text-sm sm:text-base flex items-center gap-2">
+              <span>🥤</span> Invítale un shake a Sofía
+            </h3>
+            <span class="text-xs font-bold text-gray-400">$3 USD / shake</span>
+          </div>
+
+          <!-- Selector de Shakes (Pills) -->
+          <div class="flex gap-2">
+            @for (n of [1, 3, 5]; track n) {
+              <button
+                type="button"
+                (click)="setShakes(n)"
+                class="flex-1 py-2.5 rounded-xl border text-sm font-black transition"
+                [class]="
+                  shakesCount() === n
+                    ? 'border-[#e05438] bg-[#e05438] text-white shadow-xs'
+                    : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300'
+                "
+              >
+                {{ n }}
+              </button>
+            }
+            <div class="flex-1 py-2 rounded-xl border border-gray-200 bg-white text-center text-xs font-bold text-gray-400 flex items-center justify-center">
+              Otro
+            </div>
+          </div>
+
+          <!-- Input Mensaje -->
+          <div>
+            <input
+              type="text"
+              placeholder="Escribe un mensaje de aliento..."
+              class="w-full rounded-xl border border-gray-200 bg-gray-50/50 p-3 text-xs text-gray-900 placeholder:text-gray-400 outline-none focus:bg-white focus:border-gray-900 transition"
+              [value]="supportMessage()"
+              (input)="supportMessage.set($any($event.target).value)"
+            />
+          </div>
+
+          <!-- Botón de Donación (Color Terracota / Naranja BMC) -->
+          <button
+            type="button"
+            (click)="supportDemo()"
+            class="w-full rounded-2xl bg-[#e05438] hover:bg-[#c9452b] text-white py-3.5 text-sm font-black shadow-sm transition active:scale-95"
           >
-            Apoyar
+            Apoyar ${{ shakesCount() * shakePrice }} USD
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ------------------------------------------------------------- 3. TOP 10 MENSUAL PREVIEW -->
+  <section class="max-w-5xl mx-auto px-5 mb-24">
+    <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-3 mb-8">
+      <div>
+        <span class="text-xs font-black uppercase tracking-wider text-amber-600 bg-amber-50 px-2.5 py-1 rounded-md">
+          Leaderboard en vivo
+        </span>
+        <h2 class="text-2xl sm:text-3xl font-black text-gray-950 mt-1.5 tracking-tight">
+          Líderes de la comunidad este mes
+        </h2>
+      </div>
+      <a
+        routerLink="/explore"
+        class="inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold text-gray-900 hover:text-[#f5b300] transition"
+      >
+        <span>Ver Top 10 completo</span>
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+        </svg>
+      </a>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+      @for (leader of topLeaders; track leader.handle) {
+        <div class="bg-white rounded-3xl p-6 border border-gray-200/80 shadow-xs hover:border-gray-300 hover:shadow-sm transition flex flex-col justify-between">
+          <div class="flex items-center gap-4">
+            <div class="h-12 w-12 rounded-2xl bg-gray-900 text-[#c9ff3d] font-black text-sm grid place-items-center shrink-0">
+              {{ leader.initials }}
+            </div>
+            <div class="min-w-0">
+              <div class="flex items-center gap-1.5">
+                <span class="text-[11px] font-black text-amber-600">#{{ leader.rank }}</span>
+                <h3 class="font-black text-gray-900 text-sm truncate">{{ leader.name }}</h3>
+              </div>
+              <p class="text-xs text-gray-500 truncate">&#64;{{ leader.handle }} · {{ leader.sport }}</p>
+            </div>
+          </div>
+
+          <div class="mt-6 pt-4 border-t border-gray-100 flex items-center justify-between">
+            <span class="text-xs font-bold text-gray-600">{{ leader.shakes }} shakes 🥤</span>
+            <a
+              [routerLink]="['/', leader.handle]"
+              class="rounded-xl bg-gray-900 hover:bg-black text-[#c9ff3d] px-3.5 py-1.5 text-xs font-bold transition"
+            >
+              Apoyar
+            </a>
+          </div>
+        </div>
+      }
+    </div>
+  </section>
+
+  <!-- ------------------------------------------------------------- 4. CÓMO FUNCIONA / 3 FORMAS DE GANAR -->
+  <section class="max-w-5xl mx-auto px-5 mb-24">
+    <div class="text-center max-w-xl mx-auto mb-12">
+      <span class="text-[11px] font-black uppercase tracking-widest text-gray-400">CRECIMIENTO & MONETIZACIÓN</span>
+      <h2 class="text-2xl sm:text-4xl font-black text-gray-950 mt-2 tracking-tight">
+        Tres formas de monetizar tu pasión deportiva
+      </h2>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      
+      <!-- Card 1 -->
+      <div class="bg-white rounded-3xl p-7 border border-gray-200/80 shadow-xs flex flex-col justify-between">
+        <div>
+          <div class="h-10 w-10 rounded-2xl bg-amber-50 text-amber-600 grid place-items-center text-lg font-black mb-4">
+            🥤
+          </div>
+          <h3 class="font-black text-gray-900 text-base">Shakes de Apoyo Único</h3>
+          <p class="mt-2 text-xs text-gray-500 leading-relaxed">
+            Permite que tus seguidores te inviten shakes de $3, $5 o $10 USD en un solo clic, sin contratos ni fricción.
+          </p>
+        </div>
+      </div>
+
+      <!-- Card 2 -->
+      <div class="bg-white rounded-3xl p-7 border border-gray-200/80 shadow-xs flex flex-col justify-between">
+        <div>
+          <div class="h-10 w-10 rounded-2xl bg-emerald-50 text-emerald-600 grid place-items-center text-lg font-black mb-4">
+            ⭐
+          </div>
+          <h3 class="font-black text-gray-900 text-base">Membresías Recurrentes</h3>
+          <p class="mt-2 text-xs text-gray-500 leading-relaxed">
+            Crea niveles mensuales con acceso exclusivo a rutinas, videos de técnica y comunidad privada en Discord o WhatsApp.
+          </p>
+        </div>
+      </div>
+
+      <!-- Card 3 -->
+      <div class="bg-white rounded-3xl p-7 border border-gray-200/80 shadow-xs flex flex-col justify-between">
+        <div>
+          <div class="h-10 w-10 rounded-2xl bg-indigo-50 text-indigo-600 grid place-items-center text-lg font-black mb-4">
+            🗓️
+          </div>
+          <h3 class="font-black text-gray-900 text-base">Tienda & Asesorías 1-a-1</h3>
+          <p class="mt-2 text-xs text-gray-500 leading-relaxed">
+            Vende guías de entrenamiento en PDF y agenda videollamadas privadas para revisión de técnica o programación.
+          </p>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ------------------------------------------------------------- 5. CTA FINAL -->
+  <section class="max-w-5xl mx-auto px-5 pb-24">
+    <div class="bg-gradient-to-br from-gray-950 via-gray-900 to-[#12181a] rounded-[36px] p-8 sm:p-14 text-center text-white relative overflow-hidden shadow-md">
+      <div class="relative z-10 max-w-xl mx-auto">
+        <h2 class="text-3xl sm:text-4xl font-black tracking-tight text-white">
+          ¿Listo para empezar tu página?
+        </h2>
+        <p class="mt-3 text-xs sm:text-sm text-gray-300 leading-relaxed">
+          Únete a miles de atletas y entrenadores que ya reciben el apoyo directo de su comunidad deportiva.
+        </p>
+
+        <div class="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
+          <a
+            routerLink="/auth/register"
+            class="w-full sm:w-auto rounded-full bg-[#f5b300] hover:bg-[#e0a400] text-gray-950 font-black px-8 py-3.5 text-sm transition shadow-sm"
+          >
+            Crear mi página gratis
+          </a>
+          <a
+            routerLink="/explore"
+            class="w-full sm:w-auto rounded-full bg-white/10 hover:bg-white/15 text-white font-bold px-7 py-3.5 text-sm transition"
+          >
+            Explorar atletas
           </a>
         </div>
       </div>
-    }
-  </div>
-</section>
-
-<!-- ------------------------------------------------------- Cómo funciona -->
-<section class="mx-auto max-w-6xl px-5 py-16 border-t border-white/8">
-  <div class="max-w-2xl">
-    <p class="text-[11px] font-bold uppercase tracking-[0.22em] text-lime">Cómo funciona</p>
-    <h2 class="mt-3 text-4xl font-black text-white sm:text-5xl">
-      Tres pasos y tu comunidad ya te apoya
-    </h2>
-  </div>
-
-  <div class="mt-12 grid gap-5 md:grid-cols-3">
-    @for (step of steps; track step.index) {
-      <article class="glass group rounded-3xl p-7 transition hover:border-lime/30">
-        <span class="text-5xl font-black text-white/10 transition group-hover:text-lime/30">
-          {{ step.index }}
-        </span>
-        <h3 class="mt-4 text-xl font-bold text-white">{{ step.title }}</h3>
-        <p class="mt-3 text-sm leading-relaxed text-white/50">{{ step.detail }}</p>
-      </article>
-    }
-  </div>
-</section>
-
-<!-- ------------------------------------------------------- Creador demo -->
-<section class="mx-auto max-w-6xl px-5 pb-20">
-  <div class="glass-strong relative overflow-hidden rounded-[32px] p-8 sm:p-12">
-    <div
-      class="pointer-events-none absolute -top-28 -right-24 h-72 w-72 rounded-full bg-lime/12 blur-3xl"
-    ></div>
-
-    <div class="relative grid gap-10 lg:grid-cols-[1fr_auto] lg:items-center">
-      <div>
-        <p class="text-[11px] font-bold uppercase tracking-[0.22em] text-lime">Perfil de ejemplo</p>
-        <h2 class="mt-3 text-4xl font-black text-white">{{ creator.name }}</h2>
-        <p class="mt-2 text-base text-white/55">
-          {{ creator.role }} · {{ creator.city }}
-        </p>
-        <p class="mt-5 max-w-xl text-sm leading-relaxed text-white/50">{{ creator.bio }}</p>
-
-        <div class="mt-7 flex flex-wrap gap-2">
-          @for (discipline of creator.disciplines; track discipline) {
-            <span
-              class="rounded-full border border-white/12 bg-white/4 px-3.5 py-1.5 text-xs font-semibold text-white/60"
-            >
-              {{ discipline }}
-            </span>
-          }
-        </div>
-
-        <a
-          [routerLink]="['/', creator.handle]"
-          class="mt-8 inline-flex items-center gap-2 rounded-full bg-lime px-6 py-3 text-sm font-bold text-void transition hover:brightness-110"
-        >
-          Ver su página
-          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M5 12h14M13 6l6 6-6 6" />
-          </svg>
-        </a>
-      </div>
-
-      <div class="w-full max-w-xs shrink-0 rounded-3xl border border-white/10 bg-void/50 p-6 lg:w-80">
-        <p class="text-xs font-semibold uppercase tracking-wider text-white/40">Meta actual</p>
-        <p class="mt-2 text-sm font-semibold leading-snug text-white">{{ creator.goalTitle }}</p>
-
-        <div class="mt-5 h-2.5 overflow-hidden rounded-full bg-white/8">
-          <div
-            class="h-full rounded-full bg-lime transition-[width] duration-700"
-            [style.width.%]="(creator.goalRaised / creator.goalTarget) * 100"
-          ></div>
-        </div>
-        <p class="mt-3 text-sm text-white/50">
-          <span class="font-extrabold text-lime">${{ creator.goalRaised }}</span>
-          de ${{ creator.goalTarget }}
-        </p>
-
-        <div class="mt-6 grid grid-cols-2 gap-4 border-t border-white/8 pt-5 text-center">
-          <div>
-            <p class="text-xl font-extrabold text-white">{{ creator.supporters }}</p>
-            <p class="text-[10px] font-semibold uppercase tracking-wider text-white/35">apoyos</p>
-          </div>
-          <div>
-            <p class="text-xl font-extrabold text-white">{{ creator.streakDays }}</p>
-            <p class="text-[10px] font-semibold uppercase tracking-wider text-white/35">
-              días de racha
-            </p>
-          </div>
-        </div>
-      </div>
     </div>
-  </div>
-</section>
+  </section>
 
-<!-- --------------------------------------------------------------- CTA -->
-<section class="mx-auto max-w-6xl px-5 pb-24">
-  <div
-    class="relative overflow-hidden rounded-[32px] bg-lime px-8 py-14 text-center text-void sm:px-16"
-  >
-    <div class="grid-lines absolute inset-0 opacity-25"></div>
-    <div class="relative">
-      <h2 class="text-4xl font-black sm:text-5xl">¿Listo para recibir tu primer shake?</h2>
-      <p class="mx-auto mt-4 max-w-xl text-base font-medium text-void/70">
-        Crea tu perfil de atleta en menos de un minuto y empieza a recibir apoyo directo de tus seguidores.
-      </p>
-      <div class="mt-8 flex flex-wrap justify-center gap-3">
-        <a
-          routerLink="/auth/register"
-          class="rounded-full bg-void px-7 py-3.5 text-base font-bold text-lime transition hover:brightness-125"
-        >
-          Empezar ahora gratis
-        </a>
-        <a
-          routerLink="/explore"
-          class="rounded-full border-2 border-void/25 px-7 py-3.5 text-base font-bold text-void transition hover:border-void/60"
-        >
-          Explorar la comunidad
-        </a>
-      </div>
-    </div>
-  </div>
-</section>
+</div>

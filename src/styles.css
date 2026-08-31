@@ -31,8 +31,8 @@ html {
 body {
   margin: 0;
   font-family: var(--font-sans);
-  background-color: var(--color-void);
-  color: #e9f2ea;
+  background-color: #fafafb;
+  color: #111827;
   -webkit-font-smoothing: antialiased;
 }
 

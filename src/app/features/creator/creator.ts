@@ -251,7 +251,7 @@ export class Creator {
     Math.max(this.creator.goalTarget - this.creator.goalRaised, 0)
   );
 
-  setTab(tab: 'shakes' | 'memberships' | 'shop' | 'booking'): void {
+  setTab(tab: 'shakes' | 'memberships' | 'shop' | 'booking' | 'posts'): void {
     this.activeTab.set(tab);
   }
 

@@ -1,12 +1,12 @@
-<header class="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-gray-100 font-sans">
+<header class="sticky top-0 z-50 bg-white/95 dark:bg-[#090c0a]/95 backdrop-blur-md border-b border-gray-100 dark:border-white/10 font-sans transition-colors duration-200">
   <div class="mx-auto flex h-16 max-w-6xl items-center justify-between px-5">
     
     <!-- Lado Izquierdo: Links secundarios -->
-    <div class="hidden md:flex items-center gap-6 text-sm font-semibold text-gray-600">
-      <a routerLink="/explore" class="hover:text-gray-900 transition">Explorar atletas</a>
-      <a routerLink="/explore" class="hover:text-gray-900 transition flex items-center gap-1">
+    <div class="hidden md:flex items-center gap-6 text-sm font-semibold text-gray-600 dark:text-gray-300">
+      <a routerLink="/explore" class="hover:text-gray-900 dark:hover:text-white transition">Explorar atletas</a>
+      <a routerLink="/explore" class="hover:text-gray-900 dark:hover:text-white transition flex items-center gap-1">
         <span>Top 10</span>
-        <span class="text-[10px] font-black text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded">En vivo</span>
+        <span class="text-[10px] font-black text-amber-600 dark:text-[#c9ff3d] bg-amber-50 dark:bg-white/10 px-1.5 py-0.5 rounded">En vivo</span>
       </a>
     </div>
 
@@ -19,33 +19,38 @@
           <path d="M11 20h10" stroke-linecap="round" />
         </svg>
       </span>
-      <span class="text-lg font-black tracking-tight text-gray-900">
-        buymeashake
+      <span class="text-lg font-black tracking-tight text-gray-900 dark:text-white">
+        buymeashake.fit
       </span>
     </a>
 
-    <!-- Lado Derecho: Buscador, Login y CTA -->
-    <div class="flex items-center gap-3 sm:gap-4">
+    <!-- Lado Derecho: Buscador, Theme Toggle, Login y CTA -->
+    <div class="flex items-center gap-2.5 sm:gap-4">
       
-      <!-- Buscador rápido (Fiel a BMC) -->
-      <div class="hidden lg:flex items-center relative">
-        <input
-          type="text"
-          placeholder="Buscar atletas..."
-          class="w-44 rounded-full bg-gray-50 hover:bg-gray-100 focus:bg-white border border-gray-200/80 pl-8 pr-3 py-1.5 text-xs text-gray-800 placeholder:text-gray-400 focus:border-gray-900 focus:w-56 focus:outline-none transition-all shadow-xs"
-          [value]="searchQuery()"
-          (input)="onSearch($any($event.target).value)"
-          (keydown.enter)="submitSearch()"
-        />
-        <svg class="w-3.5 h-3.5 text-gray-400 absolute left-3 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-        </svg>
-      </div>
+      <!-- Botón Toggle Modo Claro / Oscuro -->
+      <button
+        type="button"
+        (click)="themeService.toggleTheme()"
+        class="h-9 w-9 rounded-xl border border-gray-200 dark:border-white/15 bg-gray-50 dark:bg-white/5 text-gray-700 dark:text-gray-200 flex items-center justify-center hover:bg-gray-100 dark:hover:bg-white/10 transition shadow-xs"
+        aria-label="Cambiar tema"
+      >
+        @if (themeService.currentTheme() === 'dark') {
+          <!-- Sol (para pasar a claro) -->
+          <svg class="w-4 h-4 text-[#c9ff3d]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+          </svg>
+        } @else {
+          <!-- Luna (para pasar a oscuro) -->
+          <svg class="w-4 h-4 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+          </svg>
+        }
+      </button>
 
       <!-- Iniciar Sesión -->
       <a
         routerLink="/auth/login"
-        class="hidden sm:inline-block text-xs font-bold text-gray-700 hover:text-gray-950 transition px-2 py-1.5"
+        class="hidden sm:inline-block text-xs font-bold text-gray-700 dark:text-gray-300 hover:text-gray-950 dark:hover:text-white transition px-2 py-1.5"
       >
         Iniciar sesión
       </a>

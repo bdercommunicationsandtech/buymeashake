@@ -4,13 +4,12 @@
       <h1 class="text-2xl font-black text-gray-900">Publicaciones (Posts)</h1>
       <p class="text-sm text-gray-500 mt-1">Comparte rutinas, artículos técnicos, fotos de entrenamientos o anuncios con tu comunidad.</p>
     </div>
-    <button
-      type="button"
-      (click)="openCreate()"
-      class="rounded-full bg-black text-white px-5 py-2.5 text-xs font-bold hover:bg-gray-800 transition flex items-center gap-1.5"
+    <a
+      routerLink="/dashboard/posts/new"
+      class="rounded-full bg-black dark:bg-[#c9ff3d] text-white dark:text-gray-950 px-5 py-2.5 text-xs font-black hover:opacity-90 transition flex items-center gap-1.5 shadow-sm"
     >
       <span>+ Crear publicación</span>
-    </button>
+    </a>
   </div>
 
   <div class="space-y-4">

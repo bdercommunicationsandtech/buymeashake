@@ -1,5 +1,6 @@
 import { Component, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RouterLink } from '@angular/router';
 import { IconButtonSupportComponent, IconLockComponent } from '../../../shared/icons';
 
 export interface CreatorPost {
@@ -13,7 +14,7 @@ export interface CreatorPost {
 @Component({
   selector: 'app-dashboard-posts',
   standalone: true,
-  imports: [CommonModule, IconLockComponent, IconButtonSupportComponent],
+  imports: [CommonModule, RouterLink, IconLockComponent, IconButtonSupportComponent],
   templateUrl: './posts.html',
 })
 export class DashboardPosts {

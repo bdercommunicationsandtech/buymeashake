@@ -1,10 +1,12 @@
 <!-- ---------------------------------------------------------- Portada / Banner -->
-<div class="min-h-screen bg-[#fafafb] text-gray-900 pb-20 font-sans">
+<div class="min-h-screen bg-[#fafafb] dark:bg-[#090c0a] text-gray-900 dark:text-gray-100 pb-20 font-sans transition-colors duration-300">
   <section class="relative">
-    <div class="h-48 sm:h-64 w-full bg-gradient-to-r from-emerald-600 via-teal-600 to-[#12181a] relative overflow-hidden">
-      <div class="absolute inset-0 opacity-20 bg-[radial-gradient(#fff_1px,transparent_1px)] [background-size:16px_16px]"></div>
+    <div class="h-56 sm:h-72 w-full bg-cover bg-center relative overflow-hidden border-b border-gray-200 dark:border-white/10"
+         style="background-image: url('https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=2000&auto=format&fit=crop');">
+      <div class="absolute inset-0 bg-gradient-to-t from-[#fafafb] dark:from-[#090c0a] via-[#090c0a]/60 to-black/40"></div>
+      
       <div class="absolute top-4 right-5">
-        <span class="inline-flex items-center gap-1.5 rounded-full bg-black/40 backdrop-blur-md px-3.5 py-1.5 text-xs font-semibold text-white/90">
+        <span class="inline-flex items-center gap-1.5 rounded-full bg-black/60 backdrop-blur-md px-3.5 py-1.5 text-xs font-semibold text-white">
           <span class="h-2 w-2 rounded-full bg-[#c9ff3d] animate-pulse"></span>
           Entrenando en Guadalajara
         </span>
@@ -14,12 +16,12 @@
     <div class="mx-auto max-w-5xl px-5">
       <div class="-mt-16 sm:-mt-20 flex flex-col sm:flex-row sm:items-end justify-between gap-5">
         <div class="flex flex-col sm:flex-row sm:items-end gap-4 sm:gap-5">
-          <!-- Avatar -->
+          <!-- Avatar con borde Action Green -->
           <div class="relative">
-            <div class="grid h-28 w-28 sm:h-32 sm:w-32 shrink-0 place-items-center rounded-3xl border-4 border-white bg-gray-900 text-3xl sm:text-4xl font-black text-[#c9ff3d] shadow-lg shadow-black/5">
+            <div class="grid h-28 w-28 sm:h-32 sm:w-32 shrink-0 place-items-center rounded-3xl border-4 border-white dark:border-[#c9ff3d] bg-gray-900 text-3xl sm:text-4xl font-black text-[#c9ff3d] shadow-2xl shadow-black/40">
               {{ creator.initials }}
             </div>
-            <div class="absolute -bottom-1 -right-1 grid h-8 w-8 place-items-center rounded-full bg-emerald-500 text-white ring-4 ring-white shadow">
+            <div class="absolute -bottom-1 -right-1 grid h-8 w-8 place-items-center rounded-full bg-emerald-500 text-white ring-4 ring-white dark:ring-[#090c0a] shadow">
               <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M20 6L9 17l-5-5" />
               </svg>
@@ -28,12 +30,12 @@
 
           <div class="pb-1">
             <div class="flex flex-wrap items-center gap-2">
-              <h1 class="text-2xl sm:text-3xl font-black tracking-tight text-gray-900">{{ creator.name }}</h1>
-              <span class="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-bold text-emerald-700 border border-emerald-200">
+              <h1 class="font-display text-2xl sm:text-3xl font-black tracking-tight text-gray-950 dark:text-white">{{ creator.name }}</h1>
+              <span class="inline-flex items-center gap-1 rounded-full bg-emerald-50 dark:bg-emerald-950/40 px-2.5 py-0.5 text-xs font-bold text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800">
                 Atleta Oficial
               </span>
             </div>
-            <p class="mt-1 text-sm font-medium text-gray-500">
+            <p class="mt-1 text-sm font-medium text-gray-500 dark:text-gray-400">
               &#64;{{ creator.handle }} · {{ creator.role }} · {{ creator.city }}
             </p>
           </div>
@@ -42,9 +44,9 @@
         <div class="flex gap-2.5 pb-1">
           <button
             type="button"
-            class="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-bold text-gray-700 shadow-sm transition hover:bg-gray-50 hover:border-gray-300"
+            class="inline-flex items-center gap-2 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-white/5 px-4 py-2.5 text-sm font-bold text-gray-700 dark:text-gray-200 shadow-sm transition hover:bg-gray-50 dark:hover:bg-white/10"
           >
-            <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-4 h-4 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
             </svg>
             Compartir
@@ -61,14 +63,14 @@
     <div class="space-y-6">
       
       <!-- Sobre mí -->
-      <article class="bg-white rounded-3xl p-6 sm:p-7 border border-gray-200/80 shadow-xs">
-        <h2 class="text-lg font-extrabold text-gray-900">Sobre mí</h2>
-        <p class="mt-3 text-sm leading-relaxed text-gray-600">{{ creator.bio }}</p>
+      <article class="bg-white dark:bg-[#121614] rounded-3xl p-6 sm:p-7 border border-gray-200/80 dark:border-white/10 shadow-xs">
+        <h2 class="font-display text-lg font-black text-gray-950 dark:text-white">Sobre el Atleta</h2>
+        <p class="mt-3 text-sm leading-relaxed text-gray-600 dark:text-gray-300">{{ creator.bio }}</p>
         
         <div class="mt-5 flex flex-wrap gap-2">
           @for (discipline of creator.disciplines; track discipline) {
-            <span class="inline-flex items-center gap-1.5 rounded-xl bg-gray-50 border border-gray-200/80 px-3 py-1.5 text-xs font-semibold text-gray-700">
-              <span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
+            <span class="inline-flex items-center gap-1.5 rounded-xl bg-gray-50 dark:bg-white/5 border border-gray-200/80 dark:border-white/10 px-3 py-1.5 text-xs font-semibold text-gray-700 dark:text-gray-300">
+              <span class="h-1.5 w-1.5 rounded-full bg-emerald-500 dark:bg-[#c9ff3d]"></span>
               {{ discipline }}
             </span>
           }
@@ -76,38 +78,38 @@
       </article>
 
       <!-- Meta de recaudación -->
-      <article class="bg-white rounded-3xl p-6 sm:p-7 border border-gray-200/80 shadow-xs">
+      <article class="bg-white dark:bg-[#121614] rounded-3xl p-6 sm:p-7 border border-gray-200/80 dark:border-white/10 shadow-xs">
         <div class="flex items-start justify-between gap-4">
           <div>
-            <span class="inline-block text-[11px] font-extrabold uppercase tracking-wider text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-lg">
+            <span class="inline-block text-[11px] font-extrabold uppercase tracking-wider text-emerald-700 dark:text-[#c9ff3d] bg-emerald-50 dark:bg-white/5 px-2.5 py-1 rounded-lg">
               Meta activa
             </span>
-            <h2 class="mt-2.5 text-lg font-black text-gray-900">{{ creator.goalTitle }}</h2>
+            <h2 class="font-display mt-2.5 text-lg font-black text-gray-950 dark:text-white">{{ creator.goalTitle }}</h2>
           </div>
-          <p class="shrink-0 text-2xl font-black text-gray-900">{{ goalPercent() }}%</p>
+          <p class="shrink-0 font-display text-2xl font-black text-gray-950 dark:text-[#c9ff3d]">{{ goalPercent() }}%</p>
         </div>
 
-        <div class="relative mt-5 h-3.5 overflow-hidden rounded-full bg-gray-100">
+        <div class="relative mt-5 h-3.5 overflow-hidden rounded-full bg-gray-100 dark:bg-black/40">
           <div
-            class="absolute inset-y-0 left-0 rounded-full bg-emerald-300 transition-[width] duration-500"
+            class="absolute inset-y-0 left-0 rounded-full bg-emerald-300 dark:bg-[#c9ff3d]/40 transition-[width] duration-500"
             [style.width.%]="previewPercent()"
           ></div>
           <div
-            class="absolute inset-y-0 left-0 rounded-full bg-[#c9ff3d] transition-[width] duration-700"
+            class="absolute inset-y-0 left-0 rounded-full bg-[#c9ff3d] shadow-[0_0_12px_rgba(201,255,61,0.5)] transition-[width] duration-700"
             [style.width.%]="goalPercent()"
           ></div>
         </div>
 
         <div class="mt-4 flex flex-wrap items-center justify-between gap-2 text-sm">
-          <p class="font-medium text-gray-500">
-            <span class="font-black text-gray-900">${{ creator.goalRaised }}</span>
+          <p class="font-medium text-gray-500 dark:text-gray-400">
+            <span class="font-black text-gray-900 dark:text-white">${{ creator.goalRaised }}</span>
             recaudados de ${{ creator.goalTarget }} USD
           </p>
-          <p class="font-semibold text-gray-400">Faltan ${{ remaining() }}</p>
+          <p class="font-semibold text-gray-400 dark:text-gray-500">Faltan ${{ remaining() }}</p>
         </div>
 
-        <div class="mt-4 rounded-2xl bg-gray-50 border border-gray-200/70 p-3.5 text-xs font-medium text-gray-600 flex items-start gap-2.5">
-          <svg class="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div class="mt-4 rounded-2xl bg-gray-50 dark:bg-white/5 border border-gray-200/70 dark:border-white/10 p-3.5 text-xs font-medium text-gray-600 dark:text-gray-300 flex items-start gap-2.5">
+          <svg class="w-4 h-4 text-emerald-600 dark:text-[#c9ff3d] shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
           <p>
@@ -117,29 +119,29 @@
       </article>
 
       <!-- Apoyos recientes -->
-      <article class="bg-white rounded-3xl p-6 sm:p-7 border border-gray-200/80 shadow-xs">
+      <article class="bg-white dark:bg-[#121614] rounded-3xl p-6 sm:p-7 border border-gray-200/80 dark:border-white/10 shadow-xs">
         <div class="flex items-center justify-between">
-          <h2 class="text-lg font-extrabold text-gray-900">Apoyos recientes</h2>
-          <span class="text-xs font-bold text-gray-400 bg-gray-100 px-2.5 py-1 rounded-full">{{ creator.supporters }} apoyos</span>
+          <h2 class="font-display text-lg font-black text-gray-950 dark:text-white">Apoyos recientes</h2>
+          <span class="text-xs font-bold text-gray-400 bg-gray-100 dark:bg-white/5 px-2.5 py-1 rounded-full">{{ creator.supporters }} apoyos</span>
         </div>
 
         <ul class="mt-6 space-y-3.5">
           @for (supporter of supporters; track supporter.name + supporter.when) {
-            <li class="flex items-start gap-4 rounded-2xl border border-gray-100 bg-[#fbfbfc] p-4 transition hover:border-gray-200">
+            <li class="flex items-start gap-4 rounded-2xl border border-gray-100 dark:border-white/5 bg-[#fbfbfc] dark:bg-white/5 p-4 transition hover:border-gray-200 dark:hover:border-white/15">
               <span class="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-gray-900 text-xs font-black text-[#c9ff3d]">
                 {{ supporter.initials }}
               </span>
               <div class="min-w-0 flex-1">
                 <div class="flex items-center justify-between gap-2">
-                  <p class="text-sm font-bold text-gray-900 truncate">
+                  <p class="text-sm font-bold text-gray-900 dark:text-white truncate">
                     {{ supporter.name }}
-                    <span class="font-normal text-gray-500">invitó {{ supporter.shakes }} shake{{ supporter.shakes === 1 ? '' : 's' }}</span>
+                    <span class="font-normal text-gray-500 dark:text-gray-400">invitó {{ supporter.shakes }} shake{{ supporter.shakes === 1 ? '' : 's' }}</span>
                   </p>
-                  <span class="shrink-0 text-xs font-extrabold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md">
+                  <span class="shrink-0 text-xs font-extrabold text-emerald-600 dark:text-[#c9ff3d] bg-emerald-50 dark:bg-white/10 px-2 py-0.5 rounded-md">
                     +${{ supporter.shakes * 3 }} USD
                   </span>
                 </div>
-                <p class="mt-1.5 text-sm text-gray-600 leading-relaxed">“{{ supporter.message }}”</p>
+                <p class="mt-1.5 text-sm text-gray-600 dark:text-gray-300 leading-relaxed">“{{ supporter.message }}”</p>
                 <p class="mt-2 text-[11px] font-semibold text-gray-400">
                   {{ supporter.when }}
                 </p>
@@ -154,15 +156,15 @@
     <aside class="lg:sticky lg:top-20 space-y-5">
 
       <!-- Tarjeta Principal de Apoyo / Acciones -->
-      <div class="bg-white rounded-3xl p-6 sm:p-7 border border-gray-200/80 shadow-xs space-y-5">
+      <div class="bg-white dark:bg-[#121614] rounded-3xl p-6 sm:p-7 border border-gray-200/80 dark:border-white/10 shadow-xs space-y-5">
         
         <!-- Pestañas de Apoyo con Iconos SVG -->
-        <div class="flex items-center gap-1 bg-gray-100 p-1 rounded-2xl text-xs font-bold">
+        <div class="flex items-center gap-1 bg-gray-100 dark:bg-white/5 p-1 rounded-2xl text-xs font-bold">
           <button
             type="button"
             (click)="setTab('shakes')"
             class="flex-1 py-2 rounded-xl transition flex items-center justify-center gap-1.5"
-            [class]="activeTab() === 'shakes' ? 'bg-white text-gray-900 shadow-xs' : 'text-gray-500 hover:text-gray-900'"
+            [class]="activeTab() === 'shakes' ? 'bg-white dark:bg-[#1f2421] text-gray-900 dark:text-white shadow-xs' : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'"
           >
             <app-icon-shaker size="15" />
             <span>Shakes</span>
@@ -171,7 +173,7 @@
             type="button"
             (click)="setTab('memberships')"
             class="flex-1 py-2 rounded-xl transition flex items-center justify-center gap-1.5"
-            [class]="activeTab() === 'memberships' ? 'bg-white text-gray-900 shadow-xs' : 'text-gray-500 hover:text-gray-900'"
+            [class]="activeTab() === 'memberships' ? 'bg-white dark:bg-[#1f2421] text-gray-900 dark:text-white shadow-xs' : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'"
           >
             <app-icon-button-support size="15" />
             <span>Membresías</span>
@@ -180,7 +182,7 @@
             type="button"
             (click)="setTab('shop')"
             class="flex-1 py-2 rounded-xl transition flex items-center justify-center gap-1.5"
-            [class]="activeTab() === 'shop' ? 'bg-white text-gray-900 shadow-xs' : 'text-gray-500 hover:text-gray-900'"
+            [class]="activeTab() === 'shop' ? 'bg-white dark:bg-[#1f2421] text-gray-900 dark:text-white shadow-xs' : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'"
           >
             <app-icon-package size="15" />
             <span>Tienda</span>
@@ -189,25 +191,39 @@
             type="button"
             (click)="setTab('booking')"
             class="flex-1 py-2 rounded-xl transition flex items-center justify-center gap-1.5"
-            [class]="activeTab() === 'booking' ? 'bg-white text-gray-900 shadow-xs' : 'text-gray-500 hover:text-gray-900'"
+            [class]="activeTab() === 'booking' ? 'bg-white dark:bg-[#1f2421] text-gray-900 dark:text-white shadow-xs' : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'"
           >
             <app-icon-calendar size="15" />
             <span>Agendar</span>
+          </button>
+          <button
+            type="button"
+            (click)="setTab('posts')"
+            class="flex-1 py-2 rounded-xl transition flex items-center justify-center gap-1.5"
+            [class]="activeTab() === 'posts' ? 'bg-white dark:bg-[#1f2421] text-gray-900 dark:text-white shadow-xs' : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'"
+          >
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
+            </svg>
+            <span>Posts</span>
           </button>
         </div>
 
         <!-- 1. PESTAÑA SHAKES (ONE-TIME SUPPORT) -->
         @if (activeTab() === 'shakes') {
-          <div class="space-y-4">
+          <div class="space-y-5">
             <div class="flex items-center justify-between">
-              <h2 class="text-base font-black text-gray-900">Invítale un shake</h2>
+              <div>
+                <h2 class="font-display text-lg font-black text-gray-950 dark:text-white">Invítale un Shaker</h2>
+                <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Apoya su preparación deportiva</p>
+              </div>
               
               <!-- Selector Moneda -->
-              <div class="flex rounded-xl bg-gray-100 p-1 border border-gray-200/60">
+              <div class="flex rounded-xl bg-gray-100 dark:bg-white/10 p-1 border border-gray-200/60 dark:border-white/10">
                 <button
                   type="button"
                   class="rounded-lg px-2.5 py-1 text-xs font-bold transition"
-                  [class]="currency() === 'USD' ? 'bg-white text-gray-900 shadow-xs' : 'text-gray-500 hover:text-gray-900'"
+                  [class]="currency() === 'USD' ? 'bg-white dark:bg-[#121614] text-gray-900 dark:text-white shadow-xs' : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'"
                   (click)="currency.set('USD')"
                 >
                   USD
@@ -215,7 +231,7 @@
                 <button
                   type="button"
                   class="rounded-lg px-2.5 py-1 text-xs font-bold transition"
-                  [class]="currency() === 'MXN' ? 'bg-white text-gray-900 shadow-xs' : 'text-gray-500 hover:text-gray-900'"
+                  [class]="currency() === 'MXN' ? 'bg-white dark:bg-[#121614] text-gray-900 dark:text-white shadow-xs' : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'"
                   (click)="currency.set('MXN')"
                 >
                   MXN
@@ -223,31 +239,27 @@
               </div>
             </div>
 
-            <p class="text-xs font-medium text-gray-500">
-              ${{ currentPrice() }} {{ currency() }} por shake · Seguro con Stripe
-            </p>
-
-            <!-- Selección de cantidad -->
-            <div class="flex gap-2">
+            <!-- Selección de cantidad de Shakes -->
+            <div class="grid grid-cols-4 gap-2.5">
               @for (option of quickShakes; track option) {
                 <button
                   type="button"
-                  class="flex-1 rounded-2xl border py-3 text-center transition"
+                  class="rounded-2xl border py-3.5 text-center transition flex flex-col items-center justify-center gap-0.5"
                   [class]="
                     shakes() === option
-                      ? 'border-gray-900 bg-gray-900 text-[#c9ff3d] shadow-sm'
-                      : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:bg-gray-50'
+                      ? 'border-[#c9ff3d] bg-[#c9ff3d]/10 dark:bg-[#c9ff3d]/15 text-[#c9ff3d] ring-2 ring-[#c9ff3d]/40 shadow-sm'
+                      : 'border-gray-200 dark:border-white/10 bg-gray-50/50 dark:bg-white/5 text-gray-700 dark:text-gray-200 hover:border-gray-400 dark:hover:border-white/20'
                   "
                   (click)="setShakes(option)"
                 >
-                  <span class="block text-lg font-black leading-tight">{{ option }}</span>
+                  <span class="block text-xl font-black leading-tight">{{ option }}</span>
                   <span class="block text-[10px] font-bold uppercase tracking-wider opacity-80">
-                    {{ option === 1 ? 'Shake' : 'Shakes' }}
+                    ${{ option * currentPrice() }}
                   </span>
                 </button>
               }
 
-              <label class="flex-1 rounded-2xl border border-gray-200 bg-white px-2 py-1.5 text-center focus-within:border-gray-900">
+              <label class="rounded-2xl border border-gray-200 dark:border-white/10 bg-gray-50/50 dark:bg-white/5 px-2 py-2 text-center focus-within:border-[#c9ff3d] flex flex-col items-center justify-center">
                 <span class="block text-[10px] font-bold uppercase tracking-wider text-gray-400">
                   Otro
                 </span>
@@ -255,7 +267,7 @@
                   type="number"
                   min="1"
                   max="99"
-                  class="w-full bg-transparent text-center text-lg font-black text-gray-900 outline-none"
+                  class="w-full bg-transparent text-center text-lg font-black text-gray-900 dark:text-white outline-none"
                   [value]="shakes()"
                   (input)="onShakesInput($any($event.target).value)"
                   aria-label="Cantidad personalizada de shakes"
@@ -265,14 +277,14 @@
 
             <!-- Mensaje -->
             <div>
-              <label class="block text-xs font-bold uppercase tracking-wider text-gray-600 mb-1">
+              <label class="block text-xs font-bold uppercase tracking-wider text-gray-600 dark:text-gray-300 mb-1.5">
                 Mensaje de aliento (opcional)
               </label>
               <textarea
                 rows="3"
                 maxlength="240"
                 placeholder="¡Mucho éxito en tu competencia!..."
-                class="w-full resize-none rounded-2xl border border-gray-200 bg-gray-50/50 p-3.5 text-sm text-gray-900 placeholder:text-gray-400 focus:bg-white focus:border-gray-900 focus:outline-none transition"
+                class="w-full resize-none rounded-2xl border border-gray-200 dark:border-white/10 bg-gray-50/50 dark:bg-white/5 p-3.5 text-sm text-gray-900 dark:text-white placeholder:text-gray-400 focus:bg-white dark:focus:bg-[#0c0f10] focus:border-[#c9ff3d] focus:outline-none transition"
                 [value]="message()"
                 (input)="onMessageInput($any($event.target).value)"
               ></textarea>
@@ -281,10 +293,10 @@
               </span>
             </div>
 
-            <!-- Botón de Pago -->
+            <!-- Botón de Pago Principal -->
             <button
               type="button"
-              class="w-full rounded-2xl bg-[#c9ff3d] hover:bg-[#bbf033] py-4 text-sm sm:text-base font-black text-[#070a08] shadow-sm transition hover:shadow-md active:scale-[0.99] flex items-center justify-center gap-2"
+              class="w-full rounded-2xl bg-[#c9ff3d] hover:bg-[#bbf033] py-4 text-sm sm:text-base font-black text-gray-950 shadow-lg shadow-[#c9ff3d]/20 transition transform active:scale-[0.98] flex items-center justify-center gap-2"
               (click)="support()"
             >
               <span>Apoyar ${{ amount() }} {{ currency() }}</span>
@@ -298,18 +310,22 @@
         <!-- 2. PESTAÑA MEMBRESÍAS -->
         @if (activeTab() === 'memberships') {
           <div class="space-y-4">
-            <h3 class="text-sm font-black text-gray-900">Membresías Mensuales</h3>
+            <div>
+              <h3 class="font-display text-base font-black text-gray-950 dark:text-white">Membresías Mensuales</h3>
+              <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Apoya de forma recurrente y accede a beneficios exclusivos.</p>
+            </div>
+
             @for (tier of tiers; track tier.name) {
-              <div class="p-4 rounded-2xl border border-gray-200 bg-gray-50/50 space-y-2">
+              <div class="p-5 rounded-2xl border border-gray-200/80 dark:border-white/10 bg-[#fbfbfc] dark:bg-white/5 space-y-3 hover:border-gray-300 dark:hover:border-white/20 transition">
                 <div class="flex items-center justify-between">
-                  <h4 class="text-sm font-bold text-gray-900">{{ tier.name }}</h4>
-                  <span class="text-sm font-black text-emerald-600">${{ tier.price }} / mes</span>
+                  <h4 class="font-display text-sm font-black text-gray-900 dark:text-white">{{ tier.name }}</h4>
+                  <span class="text-sm font-black text-emerald-600 dark:text-[#c9ff3d]">${{ tier.price }} / mes</span>
                 </div>
-                <p class="text-xs text-gray-500">{{ tier.description }}</p>
+                <p class="text-xs text-gray-600 dark:text-gray-300 leading-relaxed">{{ tier.description }}</p>
                 <button
                   type="button"
                   (click)="joinTier(tier)"
-                  class="w-full mt-2 rounded-xl bg-black text-white py-2 text-xs font-bold hover:bg-gray-800 transition"
+                  class="w-full mt-2 rounded-xl bg-gray-950 dark:bg-[#c9ff3d] text-white dark:text-gray-950 py-2.5 text-xs font-black hover:opacity-90 transition shadow-xs"
                 >
                   Unirse por ${{ tier.price }} USD
                 </button>
@@ -321,19 +337,23 @@
         <!-- 3. PESTAÑA TIENDA DIGITAL -->
         @if (activeTab() === 'shop') {
           <div class="space-y-4">
-            <h3 class="text-sm font-black text-gray-900">Productos Digitales</h3>
+            <div>
+              <h3 class="font-display text-base font-black text-gray-950 dark:text-white">Tienda Fitness Digital</h3>
+              <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Guías en PDF, rutinas estructuradas y plantillas descargables.</p>
+            </div>
+
             @for (product of products; track product.title) {
-              <div class="p-4 rounded-2xl border border-gray-200 bg-gray-50/50 space-y-2">
+              <div class="p-5 rounded-2xl border border-gray-200/80 dark:border-white/10 bg-[#fbfbfc] dark:bg-white/5 space-y-3 hover:border-gray-300 dark:hover:border-white/20 transition">
                 <div class="flex items-center justify-between">
-                  <span class="text-[10px] font-black uppercase text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">{{ product.type }}</span>
-                  <span class="text-sm font-black text-gray-900">${{ product.price }} USD</span>
+                  <span class="text-[10px] font-black uppercase text-emerald-700 dark:text-[#c9ff3d] bg-emerald-50 dark:bg-white/10 px-2.5 py-0.5 rounded-md border border-emerald-200/50 dark:border-white/10">{{ product.type }}</span>
+                  <span class="text-sm font-black text-gray-900 dark:text-white">${{ product.price }} USD</span>
                 </div>
-                <h4 class="text-xs font-bold text-gray-900">{{ product.title }}</h4>
-                <p class="text-xs text-gray-500">{{ product.description }}</p>
+                <h4 class="font-display text-xs font-black text-gray-900 dark:text-white">{{ product.title }}</h4>
+                <p class="text-xs text-gray-600 dark:text-gray-300 leading-relaxed">{{ product.description }}</p>
                 <button
                   type="button"
                   (click)="buyProduct(product)"
-                  class="w-full mt-2 rounded-xl bg-black text-white py-2 text-xs font-bold hover:bg-gray-800 transition"
+                  class="w-full mt-2 rounded-xl bg-gray-950 dark:bg-[#c9ff3d] text-white dark:text-gray-950 py-2.5 text-xs font-black hover:opacity-90 transition shadow-xs"
                 >
                   Comprar & Descargar
                 </button>
@@ -349,32 +369,32 @@
             <!-- PASO 1: SELECCIONAR TIPO DE ASESORÍA / SERVICIO -->
             @if (bookingStep() === 'select-service') {
               <div>
-                <h3 class="text-sm font-black text-gray-900">Agenda una Sesión 1-a-1</h3>
-                <p class="text-xs text-gray-500 mt-0.5">Charlas deportivas, revisión de técnica o consultoría personalizada.</p>
+                <h3 class="font-display text-base font-black text-gray-950 dark:text-white">Agenda una Sesión 1-a-1</h3>
+                <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Charlas deportivas, revisión de técnica o consultoría personalizada.</p>
               </div>
 
               <div class="space-y-3">
                 @for (service of bookingServices; track service.id) {
                   <div
                     (click)="selectServiceToBook(service)"
-                    class="p-4 rounded-2xl border border-gray-200 bg-white hover:border-gray-900 hover:shadow-xs transition cursor-pointer space-y-2 group"
+                    class="p-5 rounded-2xl border border-gray-200/80 dark:border-white/10 bg-[#fbfbfc] dark:bg-white/5 hover:border-gray-950 dark:hover:border-[#c9ff3d] transition cursor-pointer space-y-2.5 group"
                   >
                     <div class="flex items-center justify-between">
-                      <span class="text-[10px] font-black uppercase tracking-wider text-indigo-700 bg-indigo-50 px-2.5 py-0.5 rounded-md">
+                      <span class="text-[10px] font-black uppercase tracking-wider text-indigo-700 dark:text-[#c9ff3d] bg-indigo-50 dark:bg-white/10 px-2.5 py-0.5 rounded-md">
                         {{ service.category }}
                       </span>
-                      <span class="text-sm font-black text-gray-900">${{ service.price }} USD</span>
+                      <span class="text-sm font-black text-gray-900 dark:text-white">${{ service.price }} USD</span>
                     </div>
 
-                    <h4 class="text-sm font-bold text-gray-900 group-hover:text-black">{{ service.title }}</h4>
-                    <p class="text-xs text-gray-500 leading-relaxed">{{ service.description }}</p>
+                    <h4 class="font-display text-sm font-black text-gray-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-[#c9ff3d] transition">{{ service.title }}</h4>
+                    <p class="text-xs text-gray-600 dark:text-gray-300 leading-relaxed">{{ service.description }}</p>
 
-                    <div class="pt-2 border-t border-gray-100 flex items-center justify-between text-xs text-gray-400 font-semibold">
-                      <span class="flex items-center gap-1.5 text-gray-600">
+                    <div class="pt-2 border-t border-gray-100 dark:border-white/5 flex items-center justify-between text-xs text-gray-400 font-semibold">
+                      <span class="flex items-center gap-1.5 text-gray-600 dark:text-gray-400">
                         <app-icon-calendar size="14" />
                         {{ service.duration }} · {{ service.platform }}
                       </span>
-                      <span class="text-xs font-black text-black group-hover:underline flex items-center gap-1">
+                      <span class="text-xs font-black text-gray-950 dark:text-[#c9ff3d] group-hover:underline flex items-center gap-1">
                         <span>Ver horarios</span>
                         <span>→</span>
                       </span>
@@ -389,27 +409,27 @@
               <div class="space-y-4">
                 
                 <!-- Encabezado de Servicio Seleccionado -->
-                <div class="flex items-center justify-between pb-3 border-b border-gray-100">
+                <div class="flex items-center justify-between pb-3 border-b border-gray-100 dark:border-white/10">
                   <div>
                     <button
                       type="button"
                       (click)="backToServices()"
-                      class="text-xs font-bold text-gray-400 hover:text-black flex items-center gap-1 mb-1"
+                      class="text-xs font-bold text-gray-400 hover:text-gray-950 dark:hover:text-white flex items-center gap-1 mb-1"
                     >
                       <span>←</span>
                       <span>Cambiar servicio</span>
                     </button>
-                    <h3 class="text-sm font-black text-gray-900">{{ selectedService()?.title }}</h3>
-                    <p class="text-xs text-gray-500">{{ selectedService()?.duration }} · ${{ selectedService()?.price }} USD</p>
+                    <h3 class="font-display text-sm font-black text-gray-900 dark:text-white">{{ selectedService()?.title }}</h3>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">{{ selectedService()?.duration }} · ${{ selectedService()?.price }} USD</p>
                   </div>
-                  <span class="text-xs font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-lg">
+                  <span class="text-xs font-bold text-emerald-700 dark:text-[#c9ff3d] bg-emerald-50 dark:bg-white/10 px-2.5 py-1 rounded-lg">
                     Google Meet
                   </span>
                 </div>
 
                 <!-- Calendario de Días Interactivos (Calendly Grid) -->
                 <div>
-                  <label class="block text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-2">
+                  <label class="block text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-2">
                     1. Selecciona un Día (Septiembre 2026)
                   </label>
                   
@@ -422,10 +442,10 @@
                         class="py-2.5 px-1 rounded-xl text-center border transition flex flex-col items-center"
                         [class]="
                           selectedDate() === day.dateStr
-                            ? 'border-black bg-gray-900 text-[#c9ff3d] shadow-xs'
+                            ? 'border-gray-950 dark:border-[#c9ff3d] bg-gray-900 dark:bg-[#1f2421] text-[#c9ff3d] shadow-xs'
                             : day.isAvailable && !day.isPast
-                            ? 'border-gray-200 bg-white hover:border-gray-400 text-gray-800'
-                            : 'border-transparent bg-gray-50 text-gray-300 cursor-not-allowed'
+                            ? 'border-gray-200 dark:border-white/10 bg-white dark:bg-white/5 hover:border-gray-400 text-gray-800 dark:text-gray-200'
+                            : 'border-transparent bg-gray-50 dark:bg-white/5 text-gray-300 dark:text-gray-600 cursor-not-allowed'
                         "
                       >
                         <span class="text-[9px] font-bold uppercase">{{ day.dayName }}</span>
@@ -437,11 +457,11 @@
 
                 <!-- Franjas Horarias Disponibles (Time Slots) -->
                 <div>
-                  <label class="block text-[11px] font-bold uppercase tracking-wider text-gray-500 mb-2">
+                  <label class="block text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-2">
                     2. Selecciona la Hora (Zona Horaria Local)
                   </label>
 
-                  <div class="grid grid-cols-2 gap-2">
+                  <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
                     @for (slot of availableTimeSlots(); track slot) {
                       <button
                         type="button"
@@ -449,8 +469,8 @@
                         class="py-2.5 px-3 rounded-xl border text-xs font-bold transition text-center"
                         [class]="
                           selectedTimeSlot() === slot
-                            ? 'border-emerald-600 bg-emerald-50 text-emerald-800 ring-2 ring-emerald-400/40'
-                            : 'border-gray-200 bg-white hover:border-gray-300 text-gray-700'
+                            ? 'border-emerald-600 dark:border-[#c9ff3d] bg-emerald-50 dark:bg-[#c9ff3d]/10 text-emerald-800 dark:text-[#c9ff3d] ring-2 ring-emerald-400/40'
+                            : 'border-gray-200 dark:border-white/10 bg-white dark:bg-white/5 hover:border-gray-300 text-gray-700 dark:text-gray-300'
                         "
                       >
                         {{ slot }}
@@ -463,7 +483,7 @@
                 <button
                   type="button"
                   (click)="confirmBookingCheckout()"
-                  class="w-full rounded-2xl bg-black hover:bg-gray-800 text-white py-3.5 text-xs sm:text-sm font-black transition shadow-sm flex items-center justify-center gap-2 mt-2"
+                  class="w-full rounded-2xl bg-gray-950 dark:bg-[#c9ff3d] text-white dark:text-gray-950 py-3.5 text-xs sm:text-sm font-black transition shadow-sm flex items-center justify-center gap-2 mt-2 hover:opacity-90"
                 >
                   <app-icon-calendar size="16" />
                   <span>Confirmar & Pagar ${{ selectedService()?.price }} USD</span>
@@ -471,6 +491,28 @@
               </div>
             }
 
+          </div>
+        }
+
+        <!-- 5. PESTAÑA POSTS & BITÁCORA -->
+        @if (activeTab() === 'posts') {
+          <div class="space-y-6">
+            <div>
+              <h2 class="text-base font-black text-gray-900 dark:text-white">Publicaciones & Entrenamientos</h2>
+              <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                Bitácora de preparación, rutinas y contenido exclusivo.
+              </p>
+            </div>
+
+            <div class="space-y-5">
+              @for (post of posts(); track post.id) {
+                <app-post-card
+                  [post]="post"
+                  (onLike)="likePost($event)"
+                  (onUnlock)="unlockPost($event)"
+                />
+              }
+            </div>
           </div>
         }
 

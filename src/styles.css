@@ -1,10 +1,24 @@
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Montserrat:wght@700;800;900&display=swap');
 @import 'tailwindcss';
 
-@theme {
-  --font-sans: 'Outfit', ui-sans-serif, system-ui, sans-serif;
+@custom-variant dark (&:where(.dark, .dark *));
 
-  --color-void: #070a08;
+@theme {
+  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --font-display: 'Montserrat', ui-sans-serif, system-ui, sans-serif;
+
+  --color-surface-dim: #111415;
+  --color-surface-container-lowest: #0c0f10;
+  --color-surface-container-low: #191c1d;
+  --color-surface-container: #1d2021;
+  --color-surface-container-high: #282a2b;
+  --color-surface-container-highest: #323536;
+  --color-action-green: #ccff00;
+  --color-primary-fixed: #c3f400;
+
+  --color-void: #090c0a;
+  --color-dark-card: #121614;
+  --color-dark-border: rgba(255, 255, 255, 0.08);
   --color-ink: #12181a;
   --color-ink-soft: #1b2325;
   --color-lime: #c9ff3d;
@@ -34,6 +48,12 @@ body {
   background-color: #fafafb;
   color: #111827;
   -webkit-font-smoothing: antialiased;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+html.dark body {
+  background-color: #090c0a;
+  color: #f3f4f6;
 }
 
 h1,

@@ -1,24 +1,44 @@
 import { Injectable, computed, signal } from '@angular/core';
 import { ActivityId, SHAKE_PRICE } from './demo';
 
+export type CheckoutType = 'shake' | 'membership' | 'product' | 'booking';
+
 export interface CheckoutDraft {
+  readonly type?: CheckoutType;
   readonly creatorName: string;
   readonly creatorHandle: string;
+  readonly title?: string;
   readonly shakes: number;
   readonly unitPrice: number;
   readonly currency: 'USD' | 'MXN';
   readonly message: string;
   readonly activity: ActivityId;
+  readonly downloadUrl?: string;
+  readonly bookingDetails?: {
+    date: string;
+    time: string;
+    platform: string;
+    meetingLink?: string;
+  };
 }
 
 export interface CheckoutRequest {
+  readonly type?: CheckoutType;
   readonly creatorName: string;
   readonly creatorHandle: string;
-  readonly shakes: number;
+  readonly title?: string;
+  readonly shakes?: number;
   readonly message?: string;
   readonly activity?: ActivityId;
   readonly unitPrice?: number;
   readonly currency?: 'USD' | 'MXN';
+  readonly downloadUrl?: string;
+  readonly bookingDetails?: {
+    date: string;
+    time: string;
+    platform: string;
+    meetingLink?: string;
+  };
 }
 
 /**
@@ -42,16 +62,20 @@ export class CheckoutService {
   });
 
   start(request: CheckoutRequest): void {
-    const shakes = Math.min(Math.max(Math.round(request.shakes) || 1, 1), 99);
+    const shakes = Math.min(Math.max(Math.round(request.shakes ?? 1) || 1, 1), 99);
 
     this._draft.set({
+      type: request.type ?? 'shake',
       creatorName: request.creatorName,
       creatorHandle: request.creatorHandle,
+      title: request.title,
       shakes,
       unitPrice: request.unitPrice ?? SHAKE_PRICE,
       currency: request.currency ?? 'USD',
       message: request.message?.trim() ?? '',
       activity: request.activity ?? 'shaker',
+      downloadUrl: request.downloadUrl,
+      bookingDetails: request.bookingDetails,
     });
     this._paid.set(false);
     this._open.set(true);

@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Posts &amp; Audio - Buymeashake.fit</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "on-tertiary": "#21323e",
+                      "outline": "#8e9379",
+                      "primary-fixed": "#c3f400",
+                      "on-primary-fixed": "#161e00",
+                      "on-secondary-fixed-variant": "#474646",
+                      "on-primary": "#283500",
+                      "deep-charcoal": "#121212",
+                      "secondary": "#c8c6c5",
+                      "primary-fixed-dim": "#abd600",
+                      "on-tertiary-fixed": "#0b1d29",
+                      "surface-container-low": "#191c1d",
+                      "on-error-container": "#ffdad6",
+                      "surface-dim": "#111415",
+                      "on-primary-container": "#556d00",
+                      "on-secondary-fixed": "#1c1b1b",
+                      "secondary-fixed-dim": "#c8c6c5",
+                      "secondary-fixed": "#e5e2e1",
+                      "inverse-primary": "#506600",
+                      "tertiary-container": "#d2e5f5",
+                      "iron-grey": "#1F1F1F",
+                      "tertiary-fixed": "#d2e5f5",
+                      "on-primary-fixed-variant": "#3c4d00",
+                      "primary-container": "#c3f400",
+                      "surface-tint": "#abd600",
+                      "on-surface-variant": "#c4c9ac",
+                      "secondary-container": "#4a4949",
+                      "stadium-white": "#FFFFFF",
+                      "surface-variant": "#323536",
+                      "surface-container-highest": "#323536",
+                      "primary": "#ffffff",
+                      "surface-container-lowest": "#0c0f10",
+                      "on-tertiary-container": "#556774",
+                      "surface-container-high": "#282a2b",
+                      "tertiary": "#ffffff",
+                      "surface": "#111415",
+                      "burn-red": "#FF3B30",
+                      "surface-container": "#1d2021",
+                      "on-surface": "#e1e3e4",
+                      "inverse-surface": "#e1e3e4",
+                      "on-secondary-container": "#bab8b7",
+                      "error": "#ffb4ab",
+                      "error-container": "#93000a",
+                      "outline-variant": "#444933",
+                      "inverse-on-surface": "#2e3132",
+                      "tertiary-fixed-dim": "#b6c9d8",
+                      "surface-bright": "#373a3b",
+                      "on-error": "#690005",
+                      "background": "#111415",
+                      "on-background": "#e1e3e4",
+                      "on-secondary": "#313030",
+                      "action-green": "#CCFF00",
+                      "recovery-blue": "#00D1FF",
+                      "on-tertiary-fixed-variant": "#374956"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "margin-mobile": "16px",
+                      "margin-desktop": "40px",
+                      "gutter": "24px",
+                      "base": "8px",
+                      "container-max": "1200px"
+              },
+              "fontFamily": {
+                      "display-lg-mobile": [
+                              "Montserrat"
+                      ],
+                      "body-lg": [
+                              "Inter"
+                      ],
+                      "display-lg": [
+                              "Montserrat"
+                      ],
+                      "body-md": [
+                              "Inter"
+                      ],
+                      "caption": [
+                              "Inter"
+                      ],
+                      "headline-md": [
+                              "Montserrat"
+                      ],
+                      "headline-lg": [
+                              "Montserrat"
+                      ],
+                      "label-bold": [
+                              "Inter"
+                      ]
+              },
+              "fontSize": {
+                      "display-lg-mobile": [
+                              "36px",
+                              {
+                                      "lineHeight": "42px",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "900"
+                              }
+                      ],
+                      "body-lg": [
+                              "18px",
+                              {
+                                      "lineHeight": "28px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "display-lg": [
+                              "48px",
+                              {
+                                      "lineHeight": "56px",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "900"
+                              }
+                      ],
+                      "body-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "caption": [
+                              "12px",
+                              {
+                                      "lineHeight": "16px",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "headline-md": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "headline-lg": [
+                              "32px",
+                              {
+                                      "lineHeight": "40px",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "label-bold": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "letterSpacing": "0.05em",
+                                      "fontWeight": "700"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+      </script>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;900&amp;family=Inter:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .material-symbols-outlined.filled {
+            font-variation-settings: 'FILL' 1;
+        }
+    </style>
+</head>
+<body class="bg-deep-charcoal text-stadium-white min-h-screen font-body-md overflow-x-hidden selection:bg-action-green selection:text-deep-charcoal">
+<!-- TopAppBar -->
+<header class="bg-deep-charcoal dark:bg-deep-charcoal fixed top-0 w-full z-50 border-b border-iron-grey shadow-[0_0_15px_rgba(204,255,0,0.1)]">
+<div class="flex justify-between items-center px-margin-mobile md:px-margin-desktop py-4 max-w-container-max mx-auto">
+<div class="flex items-center gap-8">
+<span class="font-display-lg-mobile md:font-display-lg text-display-lg-mobile md:text-display-lg text-action-green tracking-tighter">Buymeashake.fit</span>
+<nav class="hidden md:flex gap-6">
+<a class="text-stadium-white opacity-80 hover:opacity-100 hover:text-action-green transition-colors duration-200 font-headline-md text-headline-md" href="#">How it works</a>
+<a class="text-stadium-white opacity-80 hover:opacity-100 hover:text-action-green transition-colors duration-200 font-headline-md text-headline-md" href="#">Athletes</a>
+<a class="text-action-green font-bold border-b-2 border-action-green pb-1 font-headline-md text-headline-md" href="#">Feed</a>
+</nav>
+</div>
+<div class="hidden md:flex gap-4 items-center">
+<button class="font-label-bold text-label-bold text-stadium-white opacity-80 hover:opacity-100 hover:text-action-green transition-colors duration-200 active:scale-95">Login</button>
+<button class="font-label-bold text-label-bold bg-action-green text-deep-charcoal px-6 py-2 rounded font-bold hover:bg-primary-fixed-dim transition-colors active:scale-95 shadow-[0_0_15px_rgba(204,255,0,0.2)] hover:shadow-[0_0_20px_rgba(204,255,0,0.4)]">Sign Up</button>
+</div>
+<!-- Mobile Menu Toggle -->
+<button class="md:hidden text-stadium-white">
+<span class="material-symbols-outlined text-3xl">menu</span>
+</button>
+</div>
+</header>
+<main class="pt-24 pb-32 px-margin-mobile md:px-margin-desktop max-w-container-max mx-auto">
+<!-- Creator Header -->
+<div class="mb-12 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+<div class="flex items-center gap-6">
+<div class="w-24 h-24 rounded-full overflow-hidden border-2 border-action-green relative group cursor-pointer">
+<img class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" data-alt="A professional athlete in a modern gym setting, wearing high-performance dark athletic gear. High contrast lighting with subtle green rim light, shot from a dynamic low angle to emphasize strength and focus. The aesthetic is gritty but clean, reflecting a high-end fitness brand." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDyhS_LkGfNzxB3BMnRfKXnDjGRFdnEffSJIHrKJFCJYEXxR_SCWBPGFd2A4mFBbqxBbODwRckkwiG1iUJYS7qLlXoLEgZtE6BsuJE7j5vkPM5qNXslRETOLfD2sfDrKY1MGmt41JycrjDBc5kXuvOnyx0SNGIgwTqmsh8GCgqVPNJDtfdmubbh4zmJBDJFk2shcznZBFbeHQBUSa7MNpmUojX4_3TLQogBSy8VwlmgH7MgRZYlXk5J"/>
+<div class="absolute inset-0 bg-deep-charcoal/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined text-stadium-white">photo_camera</span>
+</div>
+</div>
+<div>
+<h1 class="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg font-bold text-stadium-white">Marcus "The Grind" Thorne</h1>
+<p class="font-body-md text-body-md text-on-surface-variant flex items-center gap-2 mt-1">
+<span class="material-symbols-outlined text-action-green filled text-sm">verified</span> Pro Powerlifter
+                    </p>
+</div>
+</div>
+<div class="flex gap-4 w-full md:w-auto">
+<button class="flex-1 md:flex-none font-label-bold text-label-bold bg-action-green text-deep-charcoal px-6 py-3 rounded-lg hover:bg-primary-fixed-dim transition-colors shadow-[0_0_15px_rgba(204,255,0,0.2)] flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-lg">local_cafe</span> Buy a Shake
+                </button>
+<button class="flex-1 md:flex-none font-label-bold text-label-bold bg-iron-grey text-stadium-white border border-outline px-6 py-3 rounded-lg hover:bg-surface-container-high transition-colors flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-lg">star</span> Join Squad
+                </button>
+</div>
+</div>
+<!-- Content Grid -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+<!-- Main Feed -->
+<div class="lg:col-span-8 flex flex-col gap-8">
+<!-- Filter Tabs -->
+<div class="flex gap-2 border-b border-iron-grey pb-2 overflow-x-auto no-scrollbar">
+<button class="font-label-bold text-label-bold px-4 py-2 text-action-green border-b-2 border-action-green whitespace-nowrap">All Posts</button>
+<button class="font-label-bold text-label-bold px-4 py-2 text-on-surface-variant hover:text-stadium-white transition-colors whitespace-nowrap">Videos</button>
+<button class="font-label-bold text-label-bold px-4 py-2 text-on-surface-variant hover:text-stadium-white transition-colors whitespace-nowrap">Audio</button>
+<button class="font-label-bold text-label-bold px-4 py-2 text-on-surface-variant hover:text-stadium-white transition-colors whitespace-nowrap">Members Only</button>
+</div>
+<!-- Post: Locked Video -->
+<article class="bg-iron-grey rounded-xl border border-surface-variant overflow-hidden group">
+<div class="relative h-64 md:h-96 w-full bg-deep-charcoal flex items-center justify-center">
+<img class="absolute inset-0 w-full h-full object-cover opacity-40 blur-sm" data-alt="A cinematic still of a powerlifter heavily wrapping their knees before a massive squat in a dark, atmospheric gym. Chalk dust floats in the air, caught by bright, focused overhead spotlights. The mood is intense and highly focused, using a high-contrast dark color palette with vivid neon green highlights on the equipment." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB1ni9tnwm7sHsD8ngupiUs4w_xoNoGBogyicluD7tf0ZkLWasoS8yp8xBnZbQrK1WtOrFfdQFfRgsvsusXpIs8vc-1jfZpaYUH3yKVR9sUwcpEcIj1tnI1m9wbJoNi29C2dMy3_HgqPFWH-1xBAdRs-E6HMpcNr3xU-i80pg-n966Ql1O57vxscnOLomRcQB6U8QS4Yo3ryCYKCD77o3rWlz812-H4jCfjAOdRCL7m_HQaRhzejhWW"/>
+<div class="absolute inset-0 bg-gradient-to-t from-deep-charcoal via-deep-charcoal/50 to-transparent"></div>
+<!-- Locked Overlay -->
+<div class="relative z-10 flex flex-col items-center justify-center text-center p-6 bg-deep-charcoal/80 backdrop-blur-md rounded-xl border border-surface-variant max-w-sm mx-auto shadow-2xl">
+<div class="w-16 h-16 rounded-full bg-surface-container-high flex items-center justify-center mb-4 border border-outline/30">
+<span class="material-symbols-outlined text-3xl text-action-green">lock</span>
+</div>
+<h3 class="font-headline-md text-headline-md mb-2">Members Only Content</h3>
+<p class="font-body-md text-body-md text-on-surface-variant mb-6">Unlock 'My Pre-Competition Routine' and get exclusive access to my full prep protocols.</p>
+<button class="font-label-bold text-label-bold bg-action-green text-deep-charcoal px-6 py-2 rounded w-full hover:bg-primary-fixed-dim transition-colors shadow-[0_0_10px_rgba(204,255,0,0.15)]">Unlock for 1 Shake</button>
+</div>
+</div>
+<div class="p-6">
+<div class="flex items-center justify-between mb-4">
+<span class="inline-flex items-center gap-1 text-xs font-label-bold px-2 py-1 bg-surface-container-highest text-action-green rounded">
+<span class="material-symbols-outlined text-[14px]">videocam</span> Video
+                            </span>
+<span class="font-caption text-caption text-on-surface-variant">2 hrs ago</span>
+</div>
+<h2 class="font-headline-lg-mobile md:font-headline-md text-headline-lg-mobile md:text-headline-md font-bold mb-2 group-hover:text-action-green transition-colors cursor-pointer">My Pre-Competition Routine (Full Breakdown)</h2>
+<p class="font-body-md text-body-md text-on-surface-variant mb-4">Taking you through exactly what I do 24 hours before stepping on the platform. Nutrition, mobility, and the mental checklist.</p>
+<div class="flex items-center gap-6 border-t border-surface-variant pt-4 mt-4">
+<button class="flex items-center gap-2 text-on-surface-variant hover:text-action-green transition-colors group/btn">
+<span class="material-symbols-outlined group-hover/btn:filled">favorite</span>
+<span class="font-label-bold text-label-bold">2.4k</span>
+</button>
+<button class="flex items-center gap-2 text-on-surface-variant hover:text-stadium-white transition-colors">
+<span class="material-symbols-outlined">chat_bubble</span>
+<span class="font-label-bold text-label-bold">142</span>
+</button>
+</div>
+</div>
+</article>
+<!-- Post: Audio Podcast -->
+<article class="bg-iron-grey rounded-xl border border-surface-variant overflow-hidden hover:border-outline/50 transition-colors">
+<div class="p-6">
+<div class="flex items-center justify-between mb-4">
+<span class="inline-flex items-center gap-1 text-xs font-label-bold px-2 py-1 bg-surface-container-highest text-stadium-white rounded">
+<span class="material-symbols-outlined text-[14px]">headphones</span> Audio
+                            </span>
+<span class="font-caption text-caption text-on-surface-variant">Yesterday</span>
+</div>
+<div class="flex gap-4 mb-6">
+<div class="w-24 h-24 rounded bg-surface-container-low shrink-0 flex items-center justify-center border border-surface-variant relative overflow-hidden">
+<img class="absolute inset-0 w-full h-full object-cover" data-alt="A stylized podcast cover art image featuring a minimalist, high-contrast vector illustration of a kettlebell with lightning bolts. The color scheme is deep charcoal black with vibrant electric green highlights. The aesthetic is bold, aggressive, and perfectly suited for a high-performance sports audio track." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDBcvRJJQ7RcwjFPSfKbJQKIkMrPzwPSKhltC-udULXzRrod66AnEcfzoVN7dRXuFBpCTOsjDE7D-Z4E8wVNl6OGlWRexi_9EKT9UAJTWv_K3vX7xMXlX97b0klFL_2rmjpBMN62NeOv5zg32i78VHohgBMNs4fruf2qUNVZWcoBoUK3Biuz87PO4kYsrya7tP5gLsS-cqcIfjJamYlaxX2HJHX31mFvn5GYfHn80Vz8BnFvlbxTs6W"/>
+<div class="absolute inset-0 bg-deep-charcoal/30 flex items-center justify-center">
+<button class="w-10 h-10 rounded-full bg-action-green text-deep-charcoal flex items-center justify-center hover:scale-110 transition-transform shadow-[0_0_15px_rgba(204,255,0,0.3)]">
+<span class="material-symbols-outlined filled">play_arrow</span>
+</button>
+</div>
+</div>
+<div>
+<h2 class="font-headline-md text-headline-md font-bold mb-1">Mindset for the Grind - Ep. 4</h2>
+<p class="font-body-md text-body-md text-on-surface-variant line-clamp-2">When the physical strength runs out, what keeps you pulling? We discuss the psychology of breaking plateaus and refusing to quit when the bar feels welded to the floor.</p>
+</div>
+</div>
+<!-- Audio Player UI -->
+<div class="bg-deep-charcoal rounded-lg p-3 flex items-center gap-4 mb-4 border border-surface-variant">
+<span class="font-caption text-caption w-8 text-right">0:00</span>
+<div class="flex-1 h-2 bg-surface-container-high rounded-full relative cursor-pointer group">
+<div class="absolute left-0 top-0 h-full w-1/3 bg-action-green rounded-full group-hover:shadow-[0_0_8px_rgba(204,255,0,0.5)] transition-shadow"></div>
+<div class="absolute left-1/3 top-1/2 -translate-y-1/2 -translate-x-1/2 w-3 h-3 bg-stadium-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"></div>
+</div>
+<span class="font-caption text-caption w-8">45:20</span>
+</div>
+<div class="flex items-center gap-6 border-t border-surface-variant pt-4">
+<button class="flex items-center gap-2 text-action-green transition-colors">
+<span class="material-symbols-outlined filled">favorite</span>
+<span class="font-label-bold text-label-bold">856</span>
+</button>
+<button class="flex items-center gap-2 text-on-surface-variant hover:text-stadium-white transition-colors">
+<span class="material-symbols-outlined">chat_bubble</span>
+<span class="font-label-bold text-label-bold">45</span>
+</button>
+</div>
+</div>
+</article>
+<!-- Post: Photo Gallery -->
+<article class="bg-iron-grey rounded-xl border border-surface-variant overflow-hidden hover:border-outline/50 transition-colors">
+<div class="p-6 pb-4">
+<div class="flex items-center justify-between mb-4">
+<span class="inline-flex items-center gap-1 text-xs font-label-bold px-2 py-1 bg-surface-container-highest text-stadium-white rounded">
+<span class="material-symbols-outlined text-[14px]">photo_library</span> Gallery
+                            </span>
+<span class="font-caption text-caption text-on-surface-variant">3 days ago</span>
+</div>
+<h2 class="font-headline-md text-headline-md font-bold mb-2">New PB in the Lab 🧪</h2>
+<p class="font-body-md text-body-md text-on-surface-variant mb-4">705lbs feeling like an empty bar. The new programming is paying off big time. Huge shoutout to the squad for the energy today.</p>
+</div>
+<!-- Bento Grid Gallery -->
+<div class="grid grid-cols-2 gap-1 px-1">
+<div class="aspect-square relative group overflow-hidden cursor-pointer">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="A black and white photograph of massive barbell plates stacked on a power bar. The shot is tightly cropped on the iron, emphasizing texture and weight. High contrast lighting creates deep shadows, conveying a gritty, hard-work aesthetic typical of elite powerlifting gyms." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB78Va9ZRCje4fGMCBB8j-AYTETPjI0R5BRIdtFsklFovR3Ne1q5S7_pNgE-i9VN_yyoMnY7gj1dlyKPRgv_O_oYf6L7oEaSJUr__VQM02AyVYKb26Ek_FKsGsLK06eqQ88KlJSTwOGwmAdEzWF6ze3DUM3AoLN7aigZGoz1sYdY6SMzDti-QSYRL7eY8heqYjpmzNKvbGT-A207KPU3oLcvGXysSYvj7Ei6KUY6GOnBZFV_mCOrq7B"/>
+</div>
+<div class="grid grid-rows-2 gap-1">
+<div class="relative group overflow-hidden cursor-pointer">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="A dynamic, low-angle shot of a powerlifter mid-deadlift. The athlete is straining, face obscured by shadow, muscles tense. The lighting is dark and moody, with a single bright overhead light casting harsh shadows. The color palette is almost monochromatic with subtle green accents." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC69WUwZ1DdGQVZ4JgRKNEPXVlGVo3VnUWgR1fvwsvN-x_gwEBeCqm_LhddkO6vGp85d366KK4Sz5WYVng6l78SSLALZueVLQP5YXSg3IrbbSHVuOHceWK0HFMoFGiAikQ24Hs12waD74MjiL9RgdcyTAEHM1xuv__1CCfIqzN2H8rhQJGTCCMvqn6fRrWcs2b6UpEjL914d2b59YOqznSJDLwH8DZ3IY7UCJJFCMYgTsx0Z51YTFE9"/>
+</div>
+<div class="relative group overflow-hidden cursor-pointer">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="A close-up shot of heavily chalked hands gripping a knurled barbell. The texture of the chalk and the steel is prominent. The background is completely dark, focusing entirely on the grip and the intensity of the moment. High contrast, gritty style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuA0xa5_DcM9PWuI9nkz6MEq-sBUN8vL7jnzi0XVnXfUcNXlL-1ZWPCuO2cNp8awR3eSP47TMGWfhmLEFyuZMc0ABPnh9-LinGqj7Zn2amT3cYZrNXJ5Au_eWKdGDgllNtA3RRMip5InF9dmONi9gyKxiEnPQltTVsrSnPrDp2qccRoECFAkUHjGXVnt7BA3TyZWKI1e2dLAmUzSMRcTQ2Pu-NJuz7pRlISDTOqNzaZFo56qPajzTPLc"/>
+<div class="absolute inset-0 bg-deep-charcoal/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+<span class="font-label-bold text-label-bold">+2 more</span>
+</div>
+</div>
+</div>
+</div>
+<div class="p-6 pt-4">
+<div class="flex flex-wrap gap-2 mb-4">
+<span class="px-3 py-1 bg-surface-container-high rounded-full font-caption text-caption text-on-surface-variant border border-surface-variant">#Powerlifting</span>
+<span class="px-3 py-1 bg-surface-container-high rounded-full font-caption text-caption text-on-surface-variant border border-surface-variant">#Deadlift</span>
+<span class="px-3 py-1 bg-surface-container-high rounded-full font-caption text-caption text-on-surface-variant border border-surface-variant">#PersonalBest</span>
+</div>
+<div class="flex items-center gap-6 border-t border-surface-variant pt-4">
+<button class="flex items-center gap-2 text-on-surface-variant hover:text-action-green transition-colors group/btn">
+<span class="material-symbols-outlined group-hover/btn:filled">favorite</span>
+<span class="font-label-bold text-label-bold">4.1k</span>
+</button>
+<button class="flex items-center gap-2 text-on-surface-variant hover:text-stadium-white transition-colors">
+<span class="material-symbols-outlined">chat_bubble</span>
+<span class="font-label-bold text-label-bold">302</span>
+</button>
+</div>
+</div>
+</article>
+</div>
+<!-- Sidebar / Shaker Metric -->
+<aside class="lg:col-span-4 hidden lg:flex flex-col gap-6">
+<!-- Goal Component -->
+<div class="bg-iron-grey rounded-xl border border-surface-variant p-6 sticky top-24">
+<h3 class="font-headline-md text-headline-md font-bold mb-1">Road to Nationals</h3>
+<p class="font-body-md text-body-md text-on-surface-variant mb-6">Support my travel &amp; entry fees.</p>
+<div class="flex items-end gap-6 h-48 mb-6">
+<!-- The Shaker Graphic -->
+<div class="w-16 h-full bg-deep-charcoal border-2 border-surface-variant rounded-b-xl rounded-t-md relative overflow-hidden flex-shrink-0">
+<!-- Lid -->
+<div class="absolute top-0 w-full h-4 bg-surface-variant border-b border-surface-container-high z-10"></div>
+<!-- Liquid -->
+<div class="absolute bottom-0 w-full bg-action-green transition-all duration-1000 shadow-[0_0_20px_rgba(204,255,0,0.4)]" style="height: 75%;">
+<!-- Bubbles effect -->
+<div class="absolute top-0 left-0 w-full h-full opacity-20 bg-[radial-gradient(circle,transparent_20%,#000_120%)]"></div>
+</div>
+<!-- Measurement lines -->
+<div class="absolute inset-0 flex flex-col justify-between py-6 px-1 z-10 pointer-events-none opacity-30">
+<div class="w-2 h-px bg-stadium-white"></div>
+<div class="w-4 h-px bg-stadium-white"></div>
+<div class="w-2 h-px bg-stadium-white"></div>
+<div class="w-4 h-px bg-stadium-white"></div>
+</div>
+</div>
+<div class="flex-1 pb-4">
+<div class="text-display-lg font-display-lg text-action-green leading-none mb-2">75%</div>
+<div class="font-label-bold text-label-bold text-stadium-white">375 / 500 Shakes</div>
+</div>
+</div>
+<button class="w-full font-label-bold text-label-bold bg-action-green text-deep-charcoal px-6 py-3 rounded-lg hover:bg-primary-fixed-dim transition-colors shadow-[0_0_15px_rgba(204,255,0,0.2)] flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-lg">local_cafe</span> Fuel the Goal
+                    </button>
+</div>
+<!-- Top Supporters -->
+<div class="bg-iron-grey rounded-xl border border-surface-variant p-6">
+<h3 class="font-headline-md text-headline-md font-bold mb-4 flex items-center gap-2">
+<span class="material-symbols-outlined text-action-green">military_tech</span> Top Supporters
+                    </h3>
+<ul class="space-y-4">
+<li class="flex items-center justify-between">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center font-label-bold text-action-green border border-surface-variant">JD</div>
+<span class="font-label-bold text-label-bold">J. Doe</span>
+</div>
+<span class="font-caption text-caption text-on-surface-variant">50 Shakes</span>
+</li>
+<li class="flex items-center justify-between">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center font-label-bold text-stadium-white border border-surface-variant">SW</div>
+<span class="font-label-bold text-label-bold">Sarah W.</span>
+</div>
+<span class="font-caption text-caption text-on-surface-variant">25 Shakes</span>
+</li>
+<li class="flex items-center justify-between">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-surface-container-high flex items-center justify-center font-label-bold text-stadium-white border border-surface-variant">MK</div>
+<span class="font-label-bold text-label-bold">Mike K.</span>
+</div>
+<span class="font-caption text-caption text-on-surface-variant">15 Shakes</span>
+</li>
+</ul>
+</div>
+</aside>
+</div>
+</main>
+<!-- Footer -->
+<footer class="bg-deep-charcoal dark:bg-deep-charcoal w-full py-12 border-t border-iron-grey">
+<div class="flex flex-col md:flex-row justify-between items-center px-margin-mobile md:px-margin-desktop gap-gutter max-w-container-max mx-auto">
+<div class="font-headline-md text-headline-md text-stadium-white">Buymeashake.fit</div>
+<div class="flex flex-wrap justify-center gap-6">
+<a class="text-on-surface-variant hover:text-stadium-white transition-colors font-caption text-caption" href="#">Terms of Service</a>
+<a class="text-on-surface-variant hover:text-stadium-white transition-colors font-caption text-caption" href="#">Privacy Policy</a>
+<a class="text-on-surface-variant hover:text-stadium-white transition-colors font-caption text-caption" href="#">Contact Support</a>
+<a class="text-on-surface-variant hover:text-stadium-white transition-colors font-caption text-caption" href="#">Brand Assets</a>
+</div>
+<div class="font-caption text-caption text-on-surface-variant dark:text-on-surface-variant">
+                © 2024 Buymeashake.fit. Fueling the grind.
+            </div>
+</div>
+</footer>
+</body></html>

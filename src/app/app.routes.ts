@@ -102,7 +102,24 @@ export const routes: Routes = [
     ]
   },
 
-  // 4. Perfil Público del Creador (Catch dynamic user handles like /sofifit or /yahirruiz)
+  // 4. Portal del Supporter / Seguidor (Fiel a studio.buymeacoffee.com/home)
+  {
+    path: 'fan/home',
+    title: 'Following Feed — Buymeashake.fit',
+    loadComponent: () => import('./features/supporter/home/supporter-home').then((m) => m.DashboardSupporterHome),
+  },
+  {
+    path: 'fan/account',
+    title: 'My Account — Buymeashake.fit',
+    loadComponent: () => import('./features/supporter/account/supporter-account.component').then((m) => m.SupporterAccountComponent),
+  },
+  {
+    path: 'feed',
+    redirectTo: 'fan/home',
+    pathMatch: 'full',
+  },
+
+  // 5. Perfil Público del Creador (Catch dynamic user handles like /sofifit or /yahirruiz)
   {
     path: ':username',
     title: 'Perfil de atleta — buymeashake',

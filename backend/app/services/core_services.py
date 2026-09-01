@@ -1,4 +1,5 @@
 import secrets
+from datetime import datetime, timedelta
 from decimal import Decimal
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -26,9 +27,11 @@ from app.repositories.base_repos import (
     AthleteRepository,
     BookingRepository,
     DashboardRepository,
+    FollowRepository,
     GoalRepository,
     LookupRepository,
     MembershipRepository,
+    OtpRepository,
     PostRepository,
     ReferralRepository,
     ShopRepository,
@@ -49,25 +52,31 @@ from app.schemas.dtos import (
     DashboardMetricsResponse,
     DigitalProductCreateRequest,
     DigitalProductResponse,
+    FollowedAthleteResponse,
     GoalCreateRequest,
     GoalResponse,
     LookupGroupResponse,
     LookupItemResponse,
     MembershipTierCreateRequest,
     MembershipTierResponse,
+    PaginatedResponse,
     PaymentIntentResponse,
     PostCreateRequest,
     PostResponse,
     ReferralDashboardResponse,
     RefreshTokenRequest,
+    RequestOtpRequest,
+    RequestOtpResponse,
     ShakeCheckoutCreateRequest,
     SupporterItemResponse,
     SupportersDashboardResponse,
     TokenResponse,
+    UpdateProfileRequest,
     UploadFileResponse,
     UserLoginRequest,
     UserMeResponse,
     UserRegisterRequest,
+    VerifyOtpRequest,
 )
 
 
@@ -157,6 +166,76 @@ class AuthService:
             expires_in=60 * 24 * 7 * 60,
         )
 
+    async def request_otp(self, dto: RequestOtpRequest) -> RequestOtpResponse:
+        otp_repo = OtpRepository(self.session)
+        # Generar código numérico de 6 dígitos
+        code = f"{secrets.randbelow(900000) + 100000}"
+        expires_at = datetime.now() + timedelta(minutes=15)
+        metadata = {
+            "name": dto.name,
+            "athlete_handle": dto.athlete_handle,
+        }
+        await otp_repo.create(
+            email=dto.email,
+            code=code,
+            purpose="supporter_follow",
+            metadata=metadata,
+            expires_at=expires_at,
+        )
+
+        # Enviar correo HTML estilizado con el servicio SMTP del proyecto
+        from app.services.email_service import send_otp_email
+        await send_otp_email(to_email=dto.email, code=code, athlete_name=dto.name or dto.athlete_handle)
+
+        return RequestOtpResponse(
+            message=f"Código de 6 dígitos enviado a {dto.email}",
+            expires_in_seconds=900,
+            demo_code=code,
+        )
+
+    async def verify_otp(self, dto: VerifyOtpRequest) -> TokenResponse:
+        otp_repo = OtpRepository(self.session)
+        otp_record = await otp_repo.get_valid_otp(dto.email, dto.code)
+        if not otp_record:
+            raise UnauthorizedError("El código de verificación es inválido o ha expirado.")
+
+        await otp_repo.mark_used(otp_record)
+
+        # Buscar usuario o crearlo como supporter
+        user = await self.user_repo.get_by_email(dto.email)
+        metadata = otp_record.metadata_ or {}
+        name = metadata.get("name") or "Supporter"
+
+        if not user:
+            # Crear usuario supporter
+            user = User(
+                email=dto.email,
+                password_hash=get_password_hash(secrets.token_urlsafe(16)),
+                full_name=name,
+                role="supporter",
+                is_email_verified=True,
+            )
+            await self.user_repo.create(user)
+        else:
+            user.is_email_verified = True
+
+        # Si venía de seguir a un atleta, vincular el follow
+        athlete_handle = metadata.get("athlete_handle")
+        if athlete_handle:
+            athlete = await self.athlete_repo.get_by_handle(athlete_handle)
+            if athlete and athlete.user_id != user.id:
+                follow_repo = FollowRepository(self.session)
+                await follow_repo.follow(supporter_id=user.id, athlete_id=athlete.id)
+
+        access_token = create_access_token(user.id)
+        refresh_token = create_refresh_token(user.id)
+
+        return TokenResponse(
+            access_token=access_token,
+            refresh_token=refresh_token,
+            expires_in=60 * 24 * 7 * 60,
+        )
+
     async def get_me(self, user: User) -> UserMeResponse:
         athlete_handle = user.athlete_profile.handle if user.athlete_profile else None
         referral_code = user.athlete_profile.referral_code if user.athlete_profile else None
@@ -171,6 +250,91 @@ class AuthService:
             athlete_handle=athlete_handle,
             referral_code=referral_code,
         )
+
+    async def update_profile(self, user: User, dto: UpdateProfileRequest) -> UserMeResponse:
+        if dto.full_name:
+            user.full_name = dto.full_name
+        if dto.avatar_url is not None:
+            user.avatar_url = dto.avatar_url
+        if dto.password:
+            user.password_hash = get_password_hash(dto.password)
+
+        await self.session.flush()
+        return await self.get_me(user)
+
+
+class SupporterService:
+    def __init__(self, session: AsyncSession):
+        self.session = session
+        self.follow_repo = FollowRepository(session)
+        self.athlete_repo = AthleteRepository(session)
+
+    async def get_following(self, supporter_id: int) -> list[FollowedAthleteResponse]:
+        athletes = await self.follow_repo.get_followed_athletes(supporter_id)
+        res = []
+        for a in athletes:
+            name = a.user.full_name if a.user else a.handle
+            avatar = a.user.avatar_url if a.user else None
+            res.append(FollowedAthleteResponse(
+                id=a.id,
+                name=name,
+                handle=a.handle,
+                avatar_url=avatar,
+                bio=a.bio,
+            ))
+        return res
+
+    async def get_feed(self, supporter_id: int, page: int = 1, page_size: int = 10) -> PaginatedResponse[PostResponse]:
+        posts, total = await self.follow_repo.get_feed_posts(supporter_id, page=page, page_size=page_size)
+        items = []
+        for p in posts:
+            author_name = p.athlete.user.full_name if p.athlete and p.athlete.user else "Atleta"
+            author_handle = p.athlete.handle if p.athlete else ""
+            author_avatar = p.athlete.user.avatar_url if p.athlete and p.athlete.user else None
+            
+            items.append(PostResponse(
+                id=p.id,
+                athlete_id=p.athlete_id,
+                title=p.title,
+                content_html=p.content_html,
+                access_type=p.access_type,
+                minimum_tier_id=p.minimum_tier_id,
+                likes_count=p.likes_count,
+                published_at=p.published_at,
+                author_name=author_name,
+                author_handle=author_handle,
+                author_avatar_url=author_avatar,
+            ))
+        total_pages = (total + page_size - 1) // page_size if total > 0 else 1
+        return PaginatedResponse(
+            items=items,
+            total=total,
+            page=page,
+            page_size=page_size,
+            total_pages=total_pages,
+        )
+
+    async def check_following(self, supporter_id: int, handle: str) -> dict:
+        athlete = await self.athlete_repo.get_by_handle(handle)
+        if not athlete:
+            return {"following": False}
+        is_f = await self.follow_repo.is_following(supporter_id, athlete.id)
+        return {"following": is_f}
+
+    async def follow_athlete(self, supporter_id: int, handle: str) -> dict:
+        athlete = await self.athlete_repo.get_by_handle(handle)
+        if not athlete:
+            raise EntityNotFoundError("Atleta", "handle", handle)
+        await self.follow_repo.follow(supporter_id, athlete.id)
+        return {"message": f"Ahora sigues a @{handle}", "following": True}
+
+    async def unfollow_athlete(self, supporter_id: int, handle: str) -> dict:
+        athlete = await self.athlete_repo.get_by_handle(handle)
+        if not athlete:
+            raise EntityNotFoundError("Atleta", "handle", handle)
+        await self.follow_repo.unfollow(supporter_id, athlete.id)
+        return {"message": f"Has dejado de seguir a @{handle}", "following": False}
+
 
 
 class AthleteService:
@@ -543,6 +707,70 @@ class CheckoutService:
             gross_amount=service.price,
             currency=dto.currency,
         )
+
+
+class SupporterService:
+    def __init__(self, session: AsyncSession):
+        self.session = session
+        self.follow_repo = FollowRepository(session)
+        self.athlete_repo = AthleteRepository(session)
+
+    async def get_feed(self, supporter_id: int, page: int = 1, page_size: int = 10) -> PaginatedResponse[PostResponse]:
+        posts, total = await self.follow_repo.get_feed_posts(supporter_id, page=page, page_size=page_size)
+        total_pages = (total + page_size - 1) // page_size if total > 0 else 1
+
+        items = []
+        for p in posts:
+            author_name = None
+            author_handle = None
+            if p.athlete:
+                author_handle = p.athlete.handle
+                if p.athlete.user:
+                    author_name = p.athlete.user.full_name
+
+            items.append(
+                PostResponse(
+                    id=p.id,
+                    title=p.title,
+                    content_html=p.content_html,
+                    access_type=p.access_type,
+                    likes_count=p.likes_count,
+                    published_at=p.published_at,
+                    is_members_only=(p.access_type == "members_only"),
+                    author_name=author_name,
+                    author_handle=author_handle,
+                )
+            )
+
+        return PaginatedResponse[PostResponse](
+            items=items,
+            total=total,
+            page=page,
+            page_size=page_size,
+            total_pages=total_pages,
+        )
+
+    async def get_following(self, supporter_id: int) -> list[FollowedAthleteResponse]:
+        athletes = await self.follow_repo.get_followed_athletes(supporter_id)
+        return [
+            FollowedAthleteResponse(
+                id=a.id,
+                name=a.user.full_name if a.user else a.handle,
+                handle=a.handle,
+                avatar_url=a.user.avatar_url if a.user else a.avatar_url,
+                bio=a.bio,
+                primary_sport=None,
+            )
+            for a in athletes
+        ]
+
+    async def follow_athlete(self, supporter_id: int, handle: str) -> dict:
+        profile = await self.athlete_repo.get_by_handle(handle)
+        if not profile:
+            raise EntityNotFoundError("Atleta", handle)
+
+        await self.follow_repo.follow(supporter_id=supporter_id, athlete_id=profile.id)
+        return {"message": f"Ahora sigues a @{handle}", "following": True}
 
 
 class StorageService:

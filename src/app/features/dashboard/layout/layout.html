@@ -69,9 +69,9 @@
           Home
         </a>
 
-        <!-- View page -->
+        <!-- View page (Dinámico con el handle del atleta autenticado) -->
         <a
-          routerLink="/sofifit"
+          [routerLink]="['/', profile()?.handle || 'me']"
           target="_blank"
           class="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-white/5 hover:text-gray-900 dark:hover:text-white transition"
         >
@@ -238,12 +238,59 @@
             </svg>
           </button>
 
-          <!-- Profile badge / User button -->
-          <div class="flex items-center gap-2 bg-gray-50 dark:bg-white/5 border border-gray-200/80 dark:border-white/10 rounded-full py-1 pl-1 pr-3 cursor-pointer hover:bg-gray-100 dark:hover:bg-white/10 transition">
-            <div class="h-7 w-7 rounded-full bg-gray-900 text-[#c9ff3d] grid place-items-center text-[10px] font-black">
-              SR
-            </div>
-            <span class="text-xs font-bold text-gray-700 dark:text-gray-200">Sofía R.</span>
+          <!-- Profile badge / User button Dinámico -->
+          <div class="relative">
+            <button
+              type="button"
+              (click)="toggleUserMenu()"
+              class="flex items-center gap-2 bg-gray-50 dark:bg-white/5 border border-gray-200/80 dark:border-white/10 rounded-full py-1 pl-1 pr-3 cursor-pointer hover:bg-gray-100 dark:hover:bg-white/10 transition"
+            >
+              <div class="h-7 w-7 rounded-full bg-gray-900 dark:bg-white/15 text-[#c9ff3d] grid place-items-center text-[10px] font-black">
+                {{ (profile()?.full_name || 'Atleta').slice(0, 2).toUpperCase() }}
+              </div>
+              <span class="text-xs font-bold text-gray-700 dark:text-gray-200 max-w-[120px] truncate">
+                {{ profile()?.full_name || profile()?.handle || 'Mi Perfil' }}
+              </span>
+            </button>
+
+            <!-- Dropdown Menu de Atleta -->
+            @if (userMenuOpen()) {
+              <div class="absolute right-0 mt-2 w-52 bg-white dark:bg-[#121614] rounded-2xl shadow-xl border border-gray-200/80 dark:border-white/10 py-2 z-50 animate-in fade-in zoom-in-95 duration-100">
+                <div class="px-4 py-2 border-b border-gray-100 dark:border-white/5">
+                  <p class="text-xs font-bold text-gray-500 dark:text-gray-400">Cuenta de Atleta</p>
+                  <p class="text-xs font-black text-gray-950 dark:text-white truncate">
+                    &#64;{{ profile()?.handle }}
+                  </p>
+                </div>
+
+                <a
+                  [routerLink]="['/', profile()?.handle || 'me']"
+                  target="_blank"
+                  (click)="userMenuOpen.set(false)"
+                  class="block px-4 py-2 text-xs font-bold text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-white/5"
+                >
+                  Ver mi página pública ↗
+                </a>
+
+                <a
+                  routerLink="/dashboard/settings"
+                  (click)="userMenuOpen.set(false)"
+                  class="block px-4 py-2 text-xs font-bold text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-white/5"
+                >
+                  Ajustes de cuenta
+                </a>
+
+                <div class="border-t border-gray-100 dark:border-white/5 mt-1 pt-1">
+                  <button
+                    type="button"
+                    (click)="logout()"
+                    class="w-full text-left px-4 py-2 text-xs font-bold text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20 transition cursor-pointer"
+                  >
+                    Cerrar sesión
+                  </button>
+                </div>
+              </div>
+            }
           </div>
         </div>
       </header>

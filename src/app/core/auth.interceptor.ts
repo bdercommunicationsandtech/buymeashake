@@ -18,7 +18,9 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
 
   return next(authReq).pipe(
     catchError((error) => {
-      if (error.status === 401 && !req.url.includes('/auth/login')) {
+      // Solo limpiar token si es un endpoint protegido del dashboard
+      const isDashboardRoute = req.url.includes('/dashboard/') || req.url.includes('/auth/me');
+      if (error.status === 401 && isDashboardRoute) {
         localStorage.removeItem('access_token');
         localStorage.removeItem('refresh_token');
         router.navigate(['/auth/login']);

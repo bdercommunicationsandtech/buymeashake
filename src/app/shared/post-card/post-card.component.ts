@@ -9,14 +9,14 @@ export interface PostItem {
   content?: string;
   authorName: string;
   authorHandle: string;
-  authorAvatar?: string;
+  authorAvatar?: string | null;
   publishedAt: string;
   likesCount: number;
   commentsCount: number;
   isMembersOnly: boolean;
-  requiredTierName?: string;
-  mediaType?: 'article' | 'video' | 'audio';
-  coverImageUrl?: string;
+  requiredTierName?: string | null;
+  mediaType?: 'article' | 'video' | 'audio' | null;
+  coverImageUrl?: string | null;
   isUnlocked?: boolean;
 }
 

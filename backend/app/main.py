@@ -4,9 +4,20 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
+from contextlib import asynccontextmanager
+
 from app.api.v1.api import api_router
 from app.core.config import settings
+from app.core.database import Base, engine
 from app.core.exceptions import register_exception_handlers
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Auto-crear nuevas tablas añadidas (athlete_follows, email_verifications, etc.)
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+    yield
 
 
 def create_application() -> FastAPI:
@@ -16,6 +27,7 @@ def create_application() -> FastAPI:
         openapi_url=f"{settings.API_V1_STR}/openapi.json",
         docs_url=f"{settings.API_V1_STR}/docs",
         redoc_url=f"{settings.API_V1_STR}/redoc",
+        lifespan=lifespan,
     )
 
     app.add_middleware(

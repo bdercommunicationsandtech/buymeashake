@@ -1,9 +1,11 @@
 import { Component, computed, effect, inject, input, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { CheckoutService } from '../../core/checkout.service';
 import { ExploreService } from '../../core/explore.service';
 import { PaymentService } from '../../core/payment.service';
+import { AuthService } from '../../core/auth.service';
+import { SupporterService } from '../../core/supporter.service';
 import {
   Activity,
   ACTIVITIES,
@@ -23,6 +25,7 @@ import {
   IconSoccerComponent,
 } from '../../shared/icons';
 import { PostCardComponent, PostItem } from '../../shared/post-card/post-card.component';
+import { FollowModalComponent } from '../../shared/follow-modal/follow-modal.component';
 import { CreatorProfile } from '../../core/api.models';
 
 export interface CreatorProduct {
@@ -92,13 +95,17 @@ export interface CreatorView {
     IconPackageComponent,
     IconCalendarComponent,
     PostCardComponent,
+    FollowModalComponent,
   ],
   templateUrl: './creator.html',
 })
 export class Creator {
+  private readonly router = inject(Router);
   private readonly checkout = inject(CheckoutService);
   private readonly exploreService = inject(ExploreService);
   private readonly paymentService = inject(PaymentService);
+  private readonly authService = inject(AuthService);
+  private readonly supporterService = inject(SupporterService);
 
   readonly username = input.required<string>();
 
@@ -108,8 +115,74 @@ export class Creator {
   readonly supporters = RECENT_SUPPORTERS;
   readonly quickShakes = QUICK_SHAKES;
 
+  readonly followModalOpen = signal(false);
+  readonly isFollowing = signal(false);
+  readonly isTogglingFollow = signal(false);
+
   readonly activeTab = signal<'shakes' | 'memberships' | 'shop' | 'booking' | 'posts'>('shakes');
   readonly posts = signal<PostItem[]>([]);
+
+  openFollow(): void {
+    const handle = this.creatorView()?.handle || this.username();
+
+    // Si el usuario ya está autenticado, seguir/dejar de seguir con 1 clic directo sin modal
+    if (this.authService.isAuthenticated()) {
+      if (this.isTogglingFollow()) return;
+      this.isTogglingFollow.set(true);
+
+      if (this.isFollowing()) {
+        this.supporterService.unfollowAthlete(handle).subscribe({
+          next: () => {
+            this.isFollowing.set(false);
+            this.isTogglingFollow.set(false);
+          },
+          error: () => this.isTogglingFollow.set(false),
+        });
+      } else {
+        this.supporterService.followAthlete(handle).subscribe({
+          next: () => {
+            this.isFollowing.set(true);
+            this.isTogglingFollow.set(false);
+          },
+          error: () => this.isTogglingFollow.set(false),
+        });
+      }
+      return;
+    }
+
+    // Si es visitante no registrado, abrir modal de registro / OTP
+    this.followModalOpen.set(true);
+  }
+
+  closeFollow(): void {
+    this.followModalOpen.set(false);
+  }
+
+  onFollowSuccess(data: { email: string; name: string }): void {
+    this.isFollowing.set(true);
+    // Redirige al portal del supporter (studio.buymeacoffee.com/home style)
+    this.router.navigate(['/fan/home'], {
+      queryParams: { followed: this.creatorView()?.handle || this.username() },
+    });
+  }
+
+  sharePage(): void {
+    const url = window.location.href;
+    const name = this.creatorView()?.name || this.username();
+    if (navigator.share) {
+      navigator.share({
+        title: `Apoya a ${name} en Buy Me a Shake`,
+        text: `¡Invítale un Shake a ${name} para apoyar su carrera deportiva!`,
+        url,
+      }).catch(() => {
+        // Ignorar cancelaciones de usuario
+      });
+    } else if (navigator.clipboard) {
+      navigator.clipboard.writeText(url).then(() => {
+        alert('¡Enlace copiado al portapapeles!');
+      });
+    }
+  }
 
   readonly bookingServices = signal<CreatorBookingService[]>([]);
 
@@ -235,6 +308,14 @@ export class Creator {
         );
         this.loading.set(false);
         this.loadPosts(handle);
+
+        // Si el usuario está autenticado, consultar si ya sigue a este atleta
+        if (this.authService.isAuthenticated()) {
+          this.supporterService.checkFollowStatus(handle).subscribe({
+            next: (res) => this.isFollowing.set(res.following),
+            error: () => this.isFollowing.set(false),
+          });
+        }
       },
       error: () => {
         this.error.set('No encontramos este perfil de atleta.');

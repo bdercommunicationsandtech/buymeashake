@@ -49,9 +49,34 @@
           </div>
         </div>
 
-        <div class="flex gap-2.5 pb-1">
+        <div class="flex items-center gap-2.5 pb-1">
+          <!-- Botón Seguir Atleta (Supporter follow) -->
           <button
             type="button"
+            (click)="openFollow()"
+            class="inline-flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-sm font-black transition shadow-sm active:scale-95"
+            [class]="
+              isFollowing()
+                ? 'bg-emerald-500/15 text-emerald-600 dark:text-[#c9ff3d] border border-emerald-500/30'
+                : 'bg-[#c9ff3d] hover:bg-[#bbf033] text-gray-950 shadow-md shadow-[#c9ff3d]/15'
+            "
+          >
+            @if (isFollowing()) {
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+              </svg>
+              <span>Siguiendo</span>
+            } @else {
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" />
+              </svg>
+              <span>Seguir</span>
+            }
+          </button>
+
+          <button
+            type="button"
+            (click)="sharePage()"
             class="inline-flex items-center gap-2 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-white/5 px-4 py-2.5 text-sm font-bold text-gray-700 dark:text-gray-200 shadow-sm transition hover:bg-gray-50 dark:hover:bg-white/10"
           >
             <svg class="w-4 h-4 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -531,4 +556,13 @@
     </aside>
   </main>
   }
+
+  <!-- Modal de Seguir Atleta (Supporter OTP Flow) -->
+  <app-follow-modal
+    [open]="followModalOpen()"
+    [athleteName]="creatorView()?.name || username()"
+    [athleteHandle]="creatorView()?.handle || username()"
+    (onClose)="closeFollow()"
+    (onFollowSuccess)="onFollowSuccess($event)"
+  />
 </div>

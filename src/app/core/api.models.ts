@@ -1,3 +1,29 @@
+export interface RequestOtpPayload {
+  email: string;
+  name?: string;
+  athlete_handle?: string;
+}
+
+export interface VerifyOtpPayload {
+  email: string;
+  code: string;
+}
+
+export interface RequestOtpResponse {
+  message: string;
+  expires_in_seconds: number;
+  demo_code?: string;
+}
+
+export interface FollowedAthlete {
+  id: number;
+  name: string;
+  handle: string;
+  avatar_url: string | null;
+  bio: string | null;
+  primary_sport: string | null;
+}
+
 export interface UserRegisterPayload {
   email: string;
   password: string;
@@ -206,6 +232,26 @@ export interface PaymentIntentResult {
   transaction_uuid: string;
   gross_amount: number;
   currency: string;
+}
+
+export interface PaginatedResponse<T> {
+  items: T[];
+  total: number;
+  page: number;
+  page_size: number;
+  total_pages: number;
+}
+
+export interface PostResponse {
+  id: number;
+  title: string;
+  content_html: string;
+  access_type: string;
+  likes_count: number;
+  published_at: string;
+  is_members_only: boolean;
+  author_name?: string | null;
+  author_handle?: string | null;
 }
 
 export interface PostItemDto {

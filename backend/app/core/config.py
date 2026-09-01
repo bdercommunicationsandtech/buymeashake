@@ -66,6 +66,18 @@ class Settings(BaseSettings):
     STRIPE_WEBHOOK_SECRET: str = "whsec_placeholder"
     PLATFORM_FEE_PERCENTAGE: float = 0.05  # 5% comisión plataforma
 
+    # SMTP / Email Service (Mismo patrón que Buyer1 / Bder)
+    SMTP_HOST: str = Field(default="smtp.gmail.com", validation_alias=AliasChoices("SMTP_HOST", "MAIL_HOST"))
+    SMTP_PORT: int = Field(default=587, validation_alias=AliasChoices("SMTP_PORT", "MAIL_PORT"))
+    SMTP_USER: str | None = Field(default=None, validation_alias=AliasChoices("SMTP_USER", "MAIL_USERNAME"))
+    SMTP_PASSWORD: str | None = Field(default=None, validation_alias=AliasChoices("SMTP_PASSWORD", "MAIL_PASSWORD"))
+    SMTP_TLS: bool = True
+    EMAILS_FROM_EMAIL: str = Field(
+        default="bdercommunications@gmail.com",
+        validation_alias=AliasChoices("EMAILS_FROM_EMAIL", "SMTP_FROM", "MAIL_FROM_ADDRESS"),
+    )
+    EMAILS_FROM_NAME: str = "Buymeashake.fit"
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",

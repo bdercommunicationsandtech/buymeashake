@@ -27,19 +27,41 @@
 
   <div class="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
     <div class="bg-white dark:bg-[#121614] py-8 px-6 shadow-sm sm:rounded-3xl sm:px-10 border border-gray-200/80 dark:border-white/10">
-      <form class="space-y-6" (ngSubmit)="onSubmit()">
-        
-        @if (errorMessage()) {
-          <div class="rounded-xl bg-red-50 dark:bg-red-950/40 p-3.5 border border-red-200 dark:border-red-900 text-xs font-bold text-red-600 dark:text-red-400">
-            {{ errorMessage() }}
-          </div>
-        }
+      
+      <!-- Pestañas de Modo de Login (Contraseña vs Código de Correo) -->
+      <div class="grid grid-cols-2 p-1 bg-gray-100 dark:bg-white/5 rounded-2xl mb-6 text-xs font-black">
+        <button
+          type="button"
+          (click)="setLoginMode('password')"
+          class="py-2.5 rounded-xl transition"
+          [class]="loginMode() === 'password' ? 'bg-white dark:bg-[#191c1d] text-gray-950 dark:text-white shadow-xs' : 'text-gray-500 hover:text-gray-900 dark:hover:text-white'"
+        >
+          🔑 Con Contraseña
+        </button>
+        <button
+          type="button"
+          (click)="setLoginMode('otp')"
+          class="py-2.5 rounded-xl transition"
+          [class]="loginMode() === 'otp' ? 'bg-[#c9ff3d] text-gray-950 shadow-xs' : 'text-gray-500 hover:text-gray-900 dark:hover:text-white'"
+        >
+          ✉️ Código Rápido
+        </button>
+      </div>
 
-        <div>
-          <label for="email" class="block text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 mb-1.5">
-            Correo electrónico
-          </label>
-          <div class="mt-1">
+      <!-- MODO 1: CONTRASEÑA -->
+      @if (loginMode() === 'password') {
+        <form class="space-y-5" (ngSubmit)="onSubmit()">
+          
+          @if (errorMessage()) {
+            <div class="rounded-xl bg-red-50 dark:bg-red-950/40 p-3.5 border border-red-200 dark:border-red-900 text-xs font-bold text-red-600 dark:text-red-400">
+              {{ errorMessage() }}
+            </div>
+          }
+
+          <div>
+            <label for="email" class="block text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 mb-1.5">
+              Correo electrónico
+            </label>
             <input
               id="email"
               name="email"
@@ -51,13 +73,11 @@
               class="block w-full px-4 py-3 border border-gray-300 dark:border-white/15 rounded-xl shadow-xs bg-white dark:bg-[#191c1d] text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:border-gray-900 dark:focus:border-[#c9ff3d] text-sm font-semibold transition"
             >
           </div>
-        </div>
 
-        <div>
-          <label for="password" class="block text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 mb-1.5">
-            Contraseña
-          </label>
-          <div class="mt-1">
+          <div>
+            <label for="password" class="block text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 mb-1.5">
+              Contraseña
+            </label>
             <input
               id="password"
               name="password"
@@ -69,18 +89,93 @@
               class="block w-full px-4 py-3 border border-gray-300 dark:border-white/15 rounded-xl shadow-xs bg-white dark:bg-[#191c1d] text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:border-gray-900 dark:focus:border-[#c9ff3d] text-sm font-semibold transition"
             >
           </div>
-        </div>
 
-        <div>
-          <button
-            type="submit"
-            [disabled]="loading()"
-            class="w-full flex justify-center py-3.5 px-4 border border-transparent rounded-xl shadow-sm text-sm font-black text-gray-950 bg-[#c9ff3d] hover:bg-[#bbf033] focus:outline-none transition active:scale-[0.99] disabled:opacity-50 cursor-pointer"
-          >
-            {{ loading() ? 'Iniciando sesión...' : 'Iniciar Sesión' }}
-          </button>
+          <div>
+            <button
+              type="submit"
+              [disabled]="loading()"
+              class="w-full flex justify-center py-3.5 px-4 border border-transparent rounded-xl shadow-sm text-sm font-black text-gray-950 bg-[#c9ff3d] hover:bg-[#bbf033] focus:outline-none transition active:scale-[0.99] disabled:opacity-50 cursor-pointer"
+            >
+              {{ loading() ? 'Iniciando sesión...' : 'Iniciar Sesión' }}
+            </button>
+          </div>
+        </form>
+      }
+
+      <!-- MODO 2: MAGIC OTP CÓDIGO RÁPIDO -->
+      @if (loginMode() === 'otp') {
+        <div class="space-y-5">
+          
+          @if (errorMessage()) {
+            <div class="rounded-xl bg-red-50 dark:bg-red-950/40 p-3.5 border border-red-200 dark:border-red-900 text-xs font-bold text-red-600 dark:text-red-400">
+              {{ errorMessage() }}
+            </div>
+          }
+
+          @if (otpStep() === 'email') {
+            <div>
+              <label class="block text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 mb-1.5">
+                Tu Correo de Supporter / Atleta
+              </label>
+              <input
+                type="email"
+                [(ngModel)]="email"
+                required
+                placeholder="tu@correo.com"
+                class="block w-full px-4 py-3 border border-gray-300 dark:border-white/15 rounded-xl shadow-xs bg-white dark:bg-[#191c1d] text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:border-gray-900 dark:focus:border-[#c9ff3d] text-sm font-semibold transition"
+              >
+              <p class="text-[11px] text-gray-400 mt-2 font-medium">
+                Te enviaremos un código de 6 dígitos a tu bandeja para ingresar al instante.
+              </p>
+            </div>
+
+            <button
+              type="button"
+              (click)="sendLoginOtp()"
+              [disabled]="!email.trim() || loading()"
+              class="w-full flex justify-center py-3.5 px-4 border border-transparent rounded-xl shadow-sm text-sm font-black text-gray-950 bg-[#c9ff3d] hover:bg-[#bbf033] focus:outline-none transition active:scale-[0.99] disabled:opacity-50 cursor-pointer"
+            >
+              {{ loading() ? 'Enviando código...' : 'Enviar Código de Acceso' }}
+            </button>
+          }
+
+          @if (otpStep() === 'verify') {
+            <div class="text-center space-y-4">
+              <p class="text-xs text-gray-500 dark:text-gray-400">
+                Ingresa el código enviado a <strong class="text-gray-900 dark:text-white">{{ email }}</strong>
+              </p>
+
+              <input
+                type="text"
+                maxlength="6"
+                inputmode="numeric"
+                [(ngModel)]="otpCode"
+                (input)="onOtpInput($any($event.target).value)"
+                placeholder="123456"
+                class="block w-full text-center py-3.5 tracking-[8px] font-display text-2xl font-black border border-gray-300 dark:border-white/15 rounded-xl bg-white dark:bg-[#191c1d] text-gray-900 dark:text-white focus:outline-none focus:border-[#c9ff3d]"
+              >
+
+              <button
+                type="button"
+                (click)="verifyLoginOtp()"
+                [disabled]="otpCode.length < 6 || loading()"
+                class="w-full flex justify-center py-3.5 px-4 border border-transparent rounded-xl shadow-sm text-sm font-black text-gray-950 bg-[#c9ff3d] hover:bg-[#bbf033] focus:outline-none transition active:scale-[0.99] disabled:opacity-50 cursor-pointer"
+              >
+                {{ loading() ? 'Verificando...' : 'Acceder a mi Cuenta' }}
+              </button>
+
+              <button
+                type="button"
+                (click)="otpStep.set('email')"
+                class="text-xs font-bold text-gray-400 hover:text-gray-900 dark:hover:text-white"
+              >
+                ← Cambiar correo
+              </button>
+            </div>
+          }
+
         </div>
-      </form>
+      }
 
       <div class="mt-6">
         <div class="relative">

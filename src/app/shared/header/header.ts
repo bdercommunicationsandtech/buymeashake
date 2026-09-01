@@ -2,6 +2,7 @@ import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { ThemeService } from '../../core/theme.service';
+import { AuthService } from '../../core/auth.service';
 
 @Component({
   selector: 'app-header',
@@ -11,10 +12,11 @@ import { ThemeService } from '../../core/theme.service';
 })
 export class Header {
   readonly themeService = inject(ThemeService);
+  readonly authService = inject(AuthService);
+  private readonly router = inject(Router);
+
   readonly menuOpen = signal(false);
   readonly searchQuery = signal('');
-
-  constructor(private router: Router) {}
 
   readonly links = [
     { path: '/explore', label: 'Explorar atletas' },
@@ -39,5 +41,18 @@ export class Header {
     } else {
       this.router.navigate(['/explore']);
     }
+  }
+
+  goToMyPanel(): void {
+    const user = this.authService.currentUser();
+    if (user?.role === 'supporter') {
+      this.router.navigate(['/fan/home']);
+    } else {
+      this.router.navigate(['/dashboard/home']);
+    }
+  }
+
+  logout(): void {
+    this.authService.logout();
   }
 }

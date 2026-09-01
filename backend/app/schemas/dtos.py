@@ -34,6 +34,38 @@ class UserLoginRequest(BaseModel):
     password: str
 
 
+class RequestOtpRequest(BaseModel):
+    email: EmailStr
+    name: str | None = None
+    athlete_handle: str | None = None
+
+
+class VerifyOtpRequest(BaseModel):
+    email: EmailStr
+    code: str = Field(min_length=4, max_length=10)
+
+
+class UpdateProfileRequest(BaseModel):
+    full_name: str | None = None
+    password: str | None = Field(default=None, min_length=8)
+    avatar_url: str | None = None
+
+
+class RequestOtpResponse(BaseModel):
+    message: str
+    expires_in_seconds: int = 900
+    demo_code: str | None = None
+
+
+class FollowedAthleteResponse(BaseModel):
+    id: int
+    name: str
+    handle: str
+    avatar_url: str | None = None
+    bio: str | None = None
+    primary_sport: str | None = None
+
+
 class TokenResponse(BaseModel):
     access_token: str
     refresh_token: str
@@ -56,6 +88,7 @@ class UserMeResponse(BaseModel):
     is_email_verified: bool
     athlete_handle: str | None = None
     referral_code: str | None = None
+
 
 
 # ==============================================================================
@@ -363,6 +396,8 @@ class PostResponse(BaseModel):
     likes_count: int
     published_at: datetime
     is_members_only: bool = False
+    author_name: str | None = None
+    author_handle: str | None = None
 
 
 # Supporters (transacciones shake)

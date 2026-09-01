@@ -6,11 +6,13 @@ from sqlalchemy.orm import selectinload
 
 from app.models.entities import (
     AppVersion,
+    AthleteFollow,
     AthleteProfile,
     BookingAppointment,
     BookingAvailability,
     BookingService,
     DigitalProduct,
+    EmailVerification,
     Goal,
     LookupGroup,
     LookupItem,
@@ -484,3 +486,110 @@ class SupporterRepository:
             "currency": "USD",
             "items": items,
         }
+
+
+class OtpRepository:
+    def __init__(self, session: AsyncSession):
+        self.session = session
+
+    async def create(self, email: str, code: str, purpose: str, metadata: dict | None, expires_at: datetime) -> EmailVerification:
+        record = EmailVerification(
+            email=email,
+            code=code,
+            purpose=purpose,
+            metadata_=metadata,
+            expires_at=expires_at,
+            is_used=False,
+        )
+        self.session.add(record)
+        await self.session.flush()
+        return record
+
+    async def get_valid_otp(self, email: str, code: str) -> EmailVerification | None:
+        query = (
+            select(EmailVerification)
+            .where(
+                EmailVerification.email == email,
+                EmailVerification.code == code,
+                EmailVerification.is_used == False,
+                EmailVerification.expires_at >= datetime.now(),
+            )
+            .order_by(EmailVerification.created_at.desc())
+        )
+        result = await self.session.execute(query)
+        return result.scalar_one_or_none()
+
+    async def mark_used(self, otp_record: EmailVerification) -> None:
+        otp_record.is_used = True
+        await self.session.flush()
+
+
+class FollowRepository:
+    def __init__(self, session: AsyncSession):
+        self.session = session
+
+    async def follow(self, supporter_id: int, athlete_id: int) -> AthleteFollow:
+        # Verifica si ya sigue
+        query = select(AthleteFollow).where(
+            AthleteFollow.supporter_id == supporter_id,
+            AthleteFollow.athlete_id == athlete_id,
+        )
+        existing = (await self.session.execute(query)).scalar_one_or_none()
+        if existing:
+            return existing
+
+        new_follow = AthleteFollow(supporter_id=supporter_id, athlete_id=athlete_id)
+        self.session.add(new_follow)
+        await self.session.flush()
+        return new_follow
+
+    async def get_followed_athletes(self, supporter_id: int) -> list[AthleteProfile]:
+        query = (
+            select(AthleteProfile)
+            .join(AthleteFollow, AthleteFollow.athlete_id == AthleteProfile.id)
+            .options(selectinload(AthleteProfile.user))
+            .where(AthleteFollow.supporter_id == supporter_id)
+            .order_by(AthleteFollow.created_at.desc())
+        )
+        result = await self.session.execute(query)
+        return list(result.scalars().all())
+
+    async def get_feed_posts(self, supporter_id: int, page: int = 1, page_size: int = 10) -> tuple[list[Post], int]:
+        # Subquery de athlete_ids que sigue
+        subq = select(AthleteFollow.athlete_id).where(AthleteFollow.supporter_id == supporter_id)
+        
+        count_q = select(func.count(Post.id)).where(Post.athlete_id.in_(subq))
+        total = (await self.session.execute(count_q)).scalar() or 0
+
+        offset = (page - 1) * page_size
+        posts_q = (
+            select(Post)
+            .options(selectinload(Post.athlete).selectinload(AthleteProfile.user))
+            .where(Post.athlete_id.in_(subq))
+            .order_by(Post.published_at.desc())
+            .offset(offset)
+            .limit(page_size)
+        )
+        posts = (await self.session.execute(posts_q)).scalars().all()
+        return list(posts), total
+
+    async def is_following(self, supporter_id: int, athlete_id: int) -> bool:
+        query = select(AthleteFollow.id).where(
+            AthleteFollow.supporter_id == supporter_id,
+            AthleteFollow.athlete_id == athlete_id,
+        )
+        res = (await self.session.execute(query)).scalar_one_or_none()
+        return res is not None
+
+    async def unfollow(self, supporter_id: int, athlete_id: int) -> bool:
+        query = select(AthleteFollow).where(
+            AthleteFollow.supporter_id == supporter_id,
+            AthleteFollow.athlete_id == athlete_id,
+        )
+        existing = (await self.session.execute(query)).scalar_one_or_none()
+        if existing:
+            await self.session.delete(existing)
+            await self.session.flush()
+            return True
+        return False
+

@@ -15,7 +15,7 @@ from sqlalchemy import (
     Time,
     func,
 )
-from sqlalchemy.dialects.mysql import JSON, LONGTEXT
+from sqlalchemy.dialects.mysql import BIGINT, JSON, LONGTEXT
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.database import Base
@@ -313,3 +313,33 @@ class Notification(Base):
     action_url: Mapped[str | None] = mapped_column(String(255), nullable=True)
     is_read: Mapped[bool] = mapped_column(Boolean, default=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+
+
+# ==============================================================================
+# MÓDULO 6: SEGUIDORES (FOLLOWS) & VERIFICACIÓN OTP
+# ==============================================================================
+
+class AthleteFollow(Base):
+    __tablename__ = "athlete_follows"
+
+    id: Mapped[int] = mapped_column(BIGINT(unsigned=True), primary_key=True, autoincrement=True)
+    supporter_id: Mapped[int] = mapped_column(BIGINT(unsigned=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    athlete_id: Mapped[int] = mapped_column(BIGINT(unsigned=True), ForeignKey("athlete_profiles.id", ondelete="CASCADE"), nullable=False, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+
+    supporter: Mapped[User] = relationship("User")
+    athlete: Mapped[AthleteProfile] = relationship("AthleteProfile")
+
+
+class EmailVerification(Base):
+    __tablename__ = "email_verifications"
+
+    id: Mapped[int] = mapped_column(BIGINT(unsigned=True), primary_key=True, autoincrement=True)
+    email: Mapped[str] = mapped_column(String(191), nullable=False, index=True)
+    code: Mapped[str] = mapped_column(String(10), nullable=False)
+    purpose: Mapped[str] = mapped_column(String(50), default="supporter_follow")
+    metadata_: Mapped[dict[str, Any] | None] = mapped_column("metadata", JSON, nullable=True)
+    expires_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+    is_used: Mapped[bool] = mapped_column(Boolean, default=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+

@@ -6,6 +6,7 @@ import {
   AthleteLeaderboardItem,
   CreatorProfile,
   LookupGroupDto,
+  PostItemDto,
 } from './api.models';
 
 @Injectable({
@@ -22,6 +23,10 @@ export class ExploreService {
 
   getCreatorProfile(handle: string): Observable<CreatorProfile> {
     return this.http.get<CreatorProfile>(`${this.apiUrl}/creators/${handle}`);
+  }
+
+  getCreatorPosts(handle: string): Observable<PostItemDto[]> {
+    return this.http.get<PostItemDto[]>(`${this.apiUrl}/creators/${handle}/posts`);
   }
 
   getSystemLookups(): Observable<LookupGroupDto[]> {

@@ -1,1 +1,37 @@
-<p>goals works!</p>
+<div class="space-y-6 max-w-3xl">
+  <div class="flex items-center justify-between gap-4">
+    <h1 class="text-2xl font-black text-gray-900">Metas & Campañas</h1>
+    <a routerLink="/dashboard/settings" class="text-sm font-bold text-emerald-600 hover:underline">Ajustes</a>
+  </div>
+
+  @if (loading()) {
+    <p class="text-sm text-gray-500">Cargando metas…</p>
+  } @else {
+    <div class="bg-white rounded-3xl border border-gray-200 p-6 space-y-4">
+      <h2 class="text-sm font-black text-gray-900">Nueva meta</h2>
+      <input class="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm" placeholder="Título de la campaña" [ngModel]="goalTitle()" (ngModelChange)="goalTitle.set($event)" />
+      <input type="number" min="1" class="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm" placeholder="Meta en USD" [ngModel]="goalTarget()" (ngModelChange)="goalTarget.set(+$event)" />
+      <button type="button" (click)="createGoal()" [disabled]="saving()" class="rounded-xl bg-black text-white px-4 py-2 text-sm font-bold disabled:opacity-50">
+        {{ saving() ? 'Creando…' : 'Crear meta' }}
+      </button>
+    </div>
+
+    <div class="space-y-3">
+      @for (goal of goals(); track goal.id) {
+        <div class="bg-white rounded-2xl border border-gray-200 p-5">
+          <div class="flex items-start justify-between gap-3">
+            <div>
+              <p class="font-black text-gray-900">{{ goal.title }}</p>
+              <p class="text-xs text-gray-500 mt-1">${{ goal.raised_amount }} / ${{ goal.target_amount }} {{ goal.currency }}</p>
+            </div>
+            @if (goal.is_active) {
+              <span class="text-[10px] font-bold uppercase tracking-wider bg-emerald-100 text-emerald-700 px-2 py-1 rounded-full">Activa</span>
+            }
+          </div>
+        </div>
+      } @empty {
+        <p class="text-sm text-gray-500">Aún no tienes metas. Crea la primera arriba.</p>
+      }
+    </div>
+  }
+</div>

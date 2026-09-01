@@ -14,6 +14,8 @@ export interface CheckoutDraft {
   readonly message: string;
   readonly activity: ActivityId;
   readonly downloadUrl?: string;
+  readonly paymentClientSecret?: string;
+  readonly transactionUuid?: string;
   readonly bookingDetails?: {
     date: string;
     time: string;
@@ -33,6 +35,8 @@ export interface CheckoutRequest {
   readonly unitPrice?: number;
   readonly currency?: 'USD' | 'MXN';
   readonly downloadUrl?: string;
+  readonly paymentClientSecret?: string;
+  readonly transactionUuid?: string;
   readonly bookingDetails?: {
     date: string;
     time: string;
@@ -75,6 +79,8 @@ export class CheckoutService {
       message: request.message?.trim() ?? '',
       activity: request.activity ?? 'shaker',
       downloadUrl: request.downloadUrl,
+      paymentClientSecret: request.paymentClientSecret,
+      transactionUuid: request.transactionUuid,
       bookingDetails: request.bookingDetails,
     });
     this._paid.set(false);

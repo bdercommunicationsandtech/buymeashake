@@ -12,34 +12,38 @@
     </a>
   </div>
 
+  @if (loading()) {
+    <p class="text-sm text-gray-500">Cargando publicaciones…</p>
+  }
+
   <div class="space-y-4">
-    @for (post of posts(); track post.title) {
+    @for (post of posts(); track post.id) {
       <article class="bg-white rounded-3xl p-6 sm:p-7 border border-gray-200/80 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div class="space-y-2">
           <div class="flex items-center gap-2">
             <span
               class="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md flex items-center gap-1"
               [class]="
-                post.type === 'members-only'
+                post.is_members_only
                   ? 'bg-amber-50 text-amber-700 border border-amber-200'
                   : 'bg-gray-100 text-gray-700'
               "
             >
-              @if (post.type === 'members-only') {
+              @if (post.is_members_only) {
                 <app-icon-lock size="11" />
               }
-              <span>{{ post.type === 'members-only' ? 'Exclusivo Miembros' : 'Público' }}</span>
+              <span>{{ post.is_members_only ? 'Exclusivo Miembros' : 'Público' }}</span>
             </span>
-            <span class="text-xs text-gray-400 font-medium">{{ post.date }}</span>
+            <span class="text-xs text-gray-400 font-medium">{{ formatDate(post.published_at) }}</span>
           </div>
           <h2 class="text-base font-black text-gray-900">{{ post.title }}</h2>
-          <p class="text-xs text-gray-600 line-clamp-2 max-w-xl">{{ post.excerpt }}</p>
+          <p class="text-xs text-gray-600 line-clamp-2 max-w-xl">{{ excerpt(post) }}</p>
         </div>
 
         <div class="flex items-center gap-3 shrink-0">
           <span class="text-xs font-bold text-gray-500 flex items-center gap-1">
             <app-icon-button-support size="13" customClass="text-red-500" />
-            <span>{{ post.likes }}</span>
+            <span>{{ post.likes_count }}</span>
           </span>
           <button type="button" class="text-xs font-bold text-gray-700 hover:text-black border border-gray-200 rounded-xl px-3 py-1.5 transition">
             Editar

@@ -1,15 +1,8 @@
-import { Component, signal } from '@angular/core';
+import { Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { IconShakerComponent } from '../../../shared/icons';
-
-export interface ReferredAthlete {
-  name: string;
-  handle: string;
-  joinedDate: string;
-  shakesCount: number;
-  earnedAmount: number;
-  status: 'Activo' | 'Pendiente';
-}
+import { DashboardService } from '../../../core/dashboard.service';
+import { ReferralDashboardData } from '../../../core/api.models';
 
 @Component({
   selector: 'app-dashboard-referrals',
@@ -17,39 +10,27 @@ export interface ReferredAthlete {
   imports: [CommonModule, IconShakerComponent],
   templateUrl: './referrals.html',
 })
-export class DashboardReferrals {
-  readonly referralLink = signal('https://buymeashake.fit/join?ref=sofifit');
-  readonly copied = signal(false);
+export class DashboardReferrals implements OnInit {
+  private readonly dashboardService = inject(DashboardService);
 
-  readonly referredAthletes = signal<ReferredAthlete[]>([
-    {
-      name: 'Carlos Mendoza',
-      handle: 'carlos_lift',
-      joinedDate: '12 Ago 2026',
-      shakesCount: 42,
-      earnedAmount: 18.5,
-      status: 'Activo',
-    },
-    {
-      name: 'Laura Gómez',
-      handle: 'laurarunner',
-      joinedDate: '24 Jul 2026',
-      shakesCount: 88,
-      earnedAmount: 38.0,
-      status: 'Activo',
-    },
-    {
-      name: 'Martín Silva',
-      handle: 'martinsilvafit',
-      joinedDate: '15 Jul 2026',
-      shakesCount: 0,
-      earnedAmount: 0.0,
-      status: 'Pendiente',
-    },
-  ]);
+  readonly loading = signal(true);
+  readonly copied = signal(false);
+  readonly data = signal<ReferralDashboardData | null>(null);
+
+  ngOnInit(): void {
+    this.dashboardService.getReferrals().subscribe({
+      next: (res) => {
+        this.data.set(res);
+        this.loading.set(false);
+      },
+      error: () => this.loading.set(false),
+    });
+  }
 
   copyLink(): void {
-    navigator.clipboard?.writeText(this.referralLink());
+    const link = this.data()?.referral_link;
+    if (!link) return;
+    navigator.clipboard?.writeText(link);
     this.copied.set(true);
     setTimeout(() => this.copied.set(false), 2500);
   }

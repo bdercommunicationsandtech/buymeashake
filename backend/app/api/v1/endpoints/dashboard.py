@@ -14,7 +14,10 @@ from app.schemas.dtos import (
     GoalResponse,
     MembershipTierCreateRequest,
     MembershipTierResponse,
+    PostCreateRequest,
+    PostResponse,
     ReferralDashboardResponse,
+    SupportersDashboardResponse,
 )
 from app.services.core_services import DashboardService
 
@@ -166,3 +169,34 @@ async def get_my_referrals_dashboard(
     """Obtiene estadísticas del programa de referidos, atletas invitados y comisiones generadas."""
     service = DashboardService(session)
     return await service.get_referrals(athlete)
+
+
+@router.get("/dashboard/posts", response_model=list[PostResponse])
+async def get_my_posts(
+    athlete: CurrentAthlete,
+    session: DatabaseSession,
+) -> list[PostResponse]:
+    """Lista las publicaciones del atleta."""
+    service = DashboardService(session)
+    return await service.get_posts(athlete)
+
+
+@router.post("/dashboard/posts", response_model=PostResponse, status_code=status.HTTP_201_CREATED)
+async def create_my_post(
+    dto: PostCreateRequest,
+    athlete: CurrentAthlete,
+    session: DatabaseSession,
+) -> PostResponse:
+    """Crea una nueva publicación."""
+    service = DashboardService(session)
+    return await service.create_post(athlete, dto)
+
+
+@router.get("/dashboard/supporters", response_model=SupportersDashboardResponse)
+async def get_my_supporters(
+    athlete: CurrentAthlete,
+    session: DatabaseSession,
+) -> SupportersDashboardResponse:
+    """Resumen y listado de apoyos one-time (shakes)."""
+    service = DashboardService(session)
+    return await service.get_supporters(athlete)

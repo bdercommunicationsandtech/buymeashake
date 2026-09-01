@@ -12,7 +12,10 @@ import {
   GoalCreatePayload,
   GoalItem,
   MembershipTierItem,
+  PostCreatePayload,
+  PostItemDto,
   ReferralDashboardData,
+  SupportersDashboardDto,
   UploadFileResult,
 } from './api.models';
 
@@ -82,6 +85,16 @@ export class DashboardService {
     formData.append('file', file);
     return this.http.post<UploadFileResult>(`${environment.apiUrl}/uploads/product`, formData);
   }
+
+  getPosts(): Observable<PostItemDto[]> {
+    return this.http.get<PostItemDto[]>(`${this.apiUrl}/posts`);
+  }
+
+  createPost(payload: PostCreatePayload): Observable<PostItemDto> {
+    return this.http.post<PostItemDto>(`${this.apiUrl}/posts`, payload);
+  }
+
+  getSupporters(): Observable<SupportersDashboardDto> {
+    return this.http.get<SupportersDashboardDto>(`${this.apiUrl}/supporters`);
+  }
 }
-
-

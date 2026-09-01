@@ -2,6 +2,7 @@ import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { ExploreService } from '../../core/explore.service';
+import { LookupService } from '../../core/lookup.service';
 import { IconShakerComponent, IconTrophyComponent } from '../../shared/icons';
 
 export interface AthleteProfile {
@@ -25,100 +26,59 @@ export interface AthleteProfile {
 })
 export class Explore implements OnInit {
   private readonly exploreService = inject(ExploreService);
+  private readonly lookupService = inject(LookupService);
 
   readonly selectedCategory = signal<string>('Todos');
   readonly searchQuery = signal<string>('');
   readonly loading = signal(false);
 
-  readonly categories = [
-    'Todos',
-    'Fuerza & Levantamiento',
-    'CrossFit',
-    'Running & Atletismo',
-    'Ciclismo & Ruta',
-    'Artes Marciales & Boxeo',
-    'Deportes Acuáticos',
-    'Fútbol & Colectivos',
-    'Movilidad & Yoga',
-    'Calistenia',
-  ];
+  readonly categories = signal<string[]>(['Todos']);
 
-  readonly athletes = signal<AthleteProfile[]>([
-    {
-      id: '1',
-      name: 'Sofía Ramírez',
-      handle: 'sofifit',
-      initials: 'SR',
-      sport: 'Fuerza & Levantamiento',
-      bio: 'Entrenadora y competidora de Powerlifting. Rumbo al campeonato Panamericano 2026.',
-      shakesThisMonth: 342,
-      totalRaised: 1890,
-      rank: 1,
-      avatarBg: 'bg-emerald-500',
-    },
-    {
-      id: '2',
-      name: 'Mateo Vargas',
-      handle: 'mateorun',
-      initials: 'MV',
-      sport: 'Running & Atletismo',
-      bio: 'Maratonista elite (2:18 PR). Entrenando para el Maratón de Valencia.',
-      shakesThisMonth: 280,
-      totalRaised: 1400,
-      rank: 2,
-      avatarBg: 'bg-blue-500',
-    },
-    {
-      id: '3',
-      name: 'Camila Torres',
-      handle: 'camifit',
-      initials: 'CT',
-      sport: 'CrossFit',
-      bio: 'Atleta Semifinalista CrossFit Games & Coach de halterofilia.',
-      shakesThisMonth: 215,
-      totalRaised: 1075,
-      rank: 3,
-      avatarBg: 'bg-indigo-500',
-    },
-    {
-      id: '4',
-      name: 'Lucas Benítez',
-      handle: 'lucasbjj',
-      initials: 'LB',
-      sport: 'Artes Marciales & Boxeo',
-      bio: 'Cinturón negro de Brazilian Jiu-Jitsu. Preparación para el Mundial IBJJF.',
-      shakesThisMonth: 160,
-      totalRaised: 800,
-      rank: 4,
-      avatarBg: 'bg-purple-500',
-    },
-  ]);
+  readonly athletes = signal<AthleteProfile[]>([]);
 
   ngOnInit(): void {
+    this.loadDisciplines();
     this.fetchLeaderboard();
   }
 
+  loadDisciplines(): void {
+    this.lookupService.getSportDisciplines().subscribe({
+      next: (items) => {
+        const labels = items.map((i) => i.label);
+        this.categories.set(['Todos', ...labels]);
+      },
+      error: () => {},
+    });
+  }
+
   fetchLeaderboard(): void {
+    this.loading.set(true);
     this.exploreService.getMonthlyLeaderboard(10).subscribe({
       next: (items) => {
-        if (items && items.length > 0) {
-          const mapped: AthleteProfile[] = items.map((it) => ({
-            id: String(it.athlete_id),
-            name: it.athlete_name,
-            handle: it.handle,
-            initials: it.athlete_name.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase(),
-            sport: it.primary_sport,
-            bio: 'Atleta oficial en buymeashake.fit',
-            shakesThisMonth: it.total_shakes_this_month,
-            totalRaised: Number(it.total_raised_this_month),
-            rank: it.ranking_position,
-            avatarBg: it.ranking_position === 1 ? 'bg-amber-500' : it.ranking_position === 2 ? 'bg-slate-400' : 'bg-amber-700',
-          }));
-          this.athletes.set(mapped);
-        }
+        this.loading.set(false);
+        if (!items?.length) return;
+
+        const mapped: AthleteProfile[] = items.map((it) => ({
+          id: String(it.athlete_id),
+          name: it.athlete_name,
+          handle: it.handle,
+          initials: it.athlete_name.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase(),
+          sport: it.primary_sport,
+          bio: 'Atleta oficial en buymeashake.fit',
+          shakesThisMonth: it.total_shakes_this_month,
+          totalRaised: Number(it.total_raised_this_month),
+          rank: it.ranking_position,
+          avatarBg:
+            it.ranking_position === 1
+              ? 'bg-amber-500'
+              : it.ranking_position === 2
+                ? 'bg-slate-400'
+                : 'bg-amber-700',
+        }));
+        this.athletes.set(mapped);
       },
       error: () => {
-        // En caso de que el backend no tenga atletas aún, conserva los datos demo
+        this.loading.set(false);
       },
     });
   }
@@ -129,13 +89,9 @@ export class Explore implements OnInit {
       .slice(0, 10);
   });
 
-  readonly topPodium = computed(() => {
-    return this.athletes().slice(0, 3);
-  });
+  readonly topPodium = computed(() => this.athletes().slice(0, 3));
 
-  readonly topRemaining = computed(() => {
-    return this.athletes().slice(3, 10);
-  });
+  readonly topRemaining = computed(() => this.athletes().slice(3, 10));
 
   readonly filteredAthletes = computed(() => {
     const category = this.selectedCategory();
@@ -143,7 +99,7 @@ export class Explore implements OnInit {
 
     return this.athletes().filter((athlete) => {
       const matchesCategory =
-        category === 'Todos' || athlete.sport === category;
+        category === 'Todos' || athlete.sport.includes(category) || category.includes(athlete.sport);
       const matchesQuery =
         !query ||
         athlete.name.toLowerCase().includes(query) ||

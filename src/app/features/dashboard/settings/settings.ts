@@ -2,7 +2,8 @@ import { Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DashboardService } from '../../../core/dashboard.service';
-import { AthleteProfileFull } from '../../../core/api.models';
+import { LookupService } from '../../../core/lookup.service';
+import { AthleteProfileFull, LookupItemDto } from '../../../core/api.models';
 
 @Component({
   selector: 'app-dashboard-settings',
@@ -12,6 +13,7 @@ import { AthleteProfileFull } from '../../../core/api.models';
 })
 export class DashboardSettings implements OnInit {
   private readonly dashboardService = inject(DashboardService);
+  private readonly lookupService = inject(LookupService);
 
   readonly Math = Math;
 
@@ -40,19 +42,13 @@ export class DashboardSettings implements OnInit {
   readonly activeGoal = signal<{ title: string; target: number; raised: number } | null>(null);
   readonly goalSaved = signal(false);
 
-  readonly sports = [
-    { code: 101, label: 'Fuerza & Levantamiento' },
-    { code: 102, label: 'CrossFit & Funcional' },
-    { code: 103, label: 'Running & Atletismo' },
-    { code: 104, label: 'Ciclismo & Ruta' },
-    { code: 105, label: 'Artes Marciales & Boxeo' },
-    { code: 106, label: 'Deportes Acuáticos' },
-    { code: 107, label: 'Fútbol & Colectivos' },
-    { code: 108, label: 'Movilidad & Yoga' },
-    { code: 109, label: 'Calistenia' },
-  ];
+  readonly sports = signal<LookupItemDto[]>([]);
 
   ngOnInit(): void {
+    this.lookupService.getSportDisciplines().subscribe({
+      next: (items) => this.sports.set(items),
+      error: () => {},
+    });
     this.loadProfile();
     this.loadGoals();
   }

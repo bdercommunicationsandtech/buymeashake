@@ -3,7 +3,7 @@ from typing import Annotated
 from fastapi import APIRouter, Query
 
 from app.api.dependencies import DatabaseSession
-from app.schemas.dtos import AthleteLeaderboardItemResponse, CreatorPublicProfileResponse
+from app.schemas.dtos import AthleteLeaderboardItemResponse, CreatorPublicProfileResponse, PostResponse
 from app.services.core_services import AthleteService
 
 router = APIRouter()
@@ -24,3 +24,10 @@ async def get_creator_profile(handle: str, session: DatabaseSession) -> CreatorP
     """Retorna el perfil público completo de un atleta, su meta activa y servicios 1-a-1."""
     service = AthleteService(session)
     return await service.get_by_handle(handle)
+
+
+@router.get("/creators/{handle}/posts", response_model=list[PostResponse])
+async def get_creator_posts(handle: str, session: DatabaseSession) -> list[PostResponse]:
+    """Retorna las publicaciones públicas del atleta."""
+    service = AthleteService(session)
+    return await service.get_public_posts(handle)

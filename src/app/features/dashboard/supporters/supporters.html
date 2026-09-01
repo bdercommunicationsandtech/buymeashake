@@ -61,7 +61,8 @@
 
       </div>
 
-      <!-- Empty state con corazón -->
+      <!-- Empty state o lista -->
+      @if (items().length === 0) {
       <div class="border-t border-gray-100 pt-12 pb-8 text-center">
         <div class="h-12 w-12 rounded-full bg-gray-50 border border-gray-200/60 grid place-items-center mx-auto text-gray-400 mb-4">
           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -73,6 +74,25 @@
           Share your page on social media to help them find you.
         </p>
       </div>
+      } @else {
+      <div class="border-t border-gray-100 pt-6 divide-y divide-gray-100">
+        @for (item of items(); track item.id) {
+          <div class="py-4 flex items-center justify-between gap-4">
+            <div>
+              <p class="text-sm font-bold text-gray-900">{{ item.supporter_name }}</p>
+              @if (item.supporter_message) {
+                <p class="text-xs text-gray-500 mt-1">"{{ item.supporter_message }}"</p>
+              }
+              <p class="text-[11px] text-gray-400 mt-1">{{ item.created_at | date:'medium' }}</p>
+            </div>
+            <div class="text-right">
+              <p class="text-sm font-black text-gray-900">{{ item.shakes_count }} shakes</p>
+              <p class="text-xs text-emerald-600 font-bold">${{ item.gross_amount }} {{ item.currency }}</p>
+            </div>
+          </div>
+        }
+      </div>
+      }
     </div>
   } @else {
     <!-- Pestaña de Settings de Supporters -->
@@ -87,18 +107,18 @@
           <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Precio por Shake</label>
           <div class="flex rounded-xl border border-gray-300 overflow-hidden">
             <span class="bg-gray-50 px-3.5 py-2.5 text-sm font-bold text-gray-500 border-r border-gray-200">$</span>
-            <input type="number" value="3" class="flex-1 px-3 py-2 text-sm font-bold outline-none"/>
+            <input type="number" class="flex-1 px-3 py-2 text-sm font-bold outline-none" [ngModel]="shakePrice()" (ngModelChange)="shakePrice.set(+$event)" />
             <span class="bg-gray-50 px-3.5 py-2.5 text-xs font-bold text-gray-500 border-l border-gray-200">USD</span>
           </div>
         </div>
 
         <div>
           <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Mensaje de agradecimiento predeterminado</label>
-          <textarea rows="3" class="w-full rounded-xl border border-gray-300 p-3 text-sm outline-none focus:border-black">¡Muchas gracias por invitarme un shake! Me ayuda a seguir entrenando y creando contenido.</textarea>
+          <textarea rows="3" class="w-full rounded-xl border border-gray-300 p-3 text-sm outline-none focus:border-black" [ngModel]="thankMessage()" (ngModelChange)="thankMessage.set($event)"></textarea>
         </div>
 
-        <button type="button" class="rounded-xl bg-black text-white px-5 py-2.5 text-xs font-bold hover:bg-gray-800 transition">
-          Guardar cambios
+        <button type="button" (click)="saveSettings()" [disabled]="savingSettings()" class="rounded-xl bg-black text-white px-5 py-2.5 text-xs font-bold hover:bg-gray-800 transition disabled:opacity-50">
+          {{ savingSettings() ? 'Guardando…' : 'Guardar cambios' }}
         </button>
       </div>
     </div>

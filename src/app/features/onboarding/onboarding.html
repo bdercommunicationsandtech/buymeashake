@@ -1,1 +1,49 @@
-<p>onboarding works!</p>
+<div class="mx-auto max-w-lg px-5 py-12">
+  <h1 class="text-2xl font-black text-gray-900">Configura tu perfil</h1>
+  <p class="mt-2 text-sm text-gray-500">Completa tu bio y precio de shake para que tus fans te encuentren.</p>
+
+  @if (loading()) {
+    <p class="mt-8 text-sm text-gray-500">Cargando…</p>
+  } @else {
+    <form class="mt-8 space-y-4" (ngSubmit)="saveAndContinue()">
+      <div>
+        <label class="text-xs font-bold text-gray-500">Nombre</label>
+        <input class="mt-1 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm" [ngModel]="fullName()" (ngModelChange)="fullName.set($event)" name="fullName" />
+      </div>
+      <div>
+        <label class="text-xs font-bold text-gray-500">@handle</label>
+        <input class="mt-1 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm bg-gray-50" [value]="handle()" readonly />
+      </div>
+      <div>
+        <label class="text-xs font-bold text-gray-500">Ciudad</label>
+        <input class="mt-1 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm" [ngModel]="city()" (ngModelChange)="city.set($event)" name="city" />
+      </div>
+      <div>
+        <label class="text-xs font-bold text-gray-500">Disciplina principal</label>
+        <select class="mt-1 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm" [ngModel]="primarySportCode()" (ngModelChange)="primarySportCode.set(+$event)" name="sport">
+          @for (sport of sports(); track sport.code) {
+            <option [value]="sport.code">{{ sport.label }}</option>
+          }
+        </select>
+      </div>
+      <div>
+        <label class="text-xs font-bold text-gray-500">Bio</label>
+        <textarea class="mt-1 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm" rows="4" [ngModel]="bio()" (ngModelChange)="bio.set($event)" name="bio"></textarea>
+      </div>
+      <div>
+        <label class="text-xs font-bold text-gray-500">Precio por shake (USD)</label>
+        <input type="number" min="1" class="mt-1 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm" [ngModel]="shakePrice()" (ngModelChange)="shakePrice.set(+$event)" name="shakePrice" />
+      </div>
+
+      @if (errorMessage()) {
+        <p class="text-sm font-semibold text-red-600">{{ errorMessage() }}</p>
+      }
+
+      <button type="submit" [disabled]="saving()" class="w-full rounded-xl bg-black text-white py-3 text-sm font-bold disabled:opacity-50">
+        {{ saving() ? 'Guardando…' : 'Ir al dashboard' }}
+      </button>
+    </form>
+  }
+
+  <a routerLink="/dashboard/home" class="mt-6 block text-center text-sm text-gray-500 hover:underline">Omitir por ahora</a>
+</div>

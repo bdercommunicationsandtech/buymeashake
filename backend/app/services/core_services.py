@@ -17,6 +17,7 @@ from app.models.entities import (
     DigitalProduct,
     Goal,
     MembershipTier,
+    Post,
     Transaction,
     User,
 )
@@ -28,8 +29,10 @@ from app.repositories.base_repos import (
     GoalRepository,
     LookupRepository,
     MembershipRepository,
+    PostRepository,
     ReferralRepository,
     ShopRepository,
+    SupporterRepository,
     UserRepository,
 )
 from app.schemas.dtos import (
@@ -53,9 +56,13 @@ from app.schemas.dtos import (
     MembershipTierCreateRequest,
     MembershipTierResponse,
     PaymentIntentResponse,
+    PostCreateRequest,
+    PostResponse,
     ReferralDashboardResponse,
     RefreshTokenRequest,
     ShakeCheckoutCreateRequest,
+    SupporterItemResponse,
+    SupportersDashboardResponse,
     TokenResponse,
     UploadFileResponse,
     UserLoginRequest,
@@ -215,6 +222,26 @@ class AthleteService:
         raw_items = await self.athlete_repo.get_monthly_leaderboard(limit)
         return [AthleteLeaderboardItemResponse(**item) for item in raw_items]
 
+    async def get_public_posts(self, handle: str) -> list[PostResponse]:
+        profile = await self.athlete_repo.get_by_handle(handle)
+        if not profile:
+            raise EntityNotFoundError("Atleta", handle)
+
+        post_repo = PostRepository(self.session)
+        posts = await post_repo.get_public_by_athlete_id(profile.id)
+        return [
+            PostResponse(
+                id=p.id,
+                title=p.title,
+                content_html=p.content_html,
+                access_type=p.access_type,
+                likes_count=p.likes_count,
+                published_at=p.published_at,
+                is_members_only=p.access_type == "members_only",
+            )
+            for p in posts
+        ]
+
 
 class DashboardService:
     def __init__(self, session: AsyncSession):
@@ -227,6 +254,8 @@ class DashboardService:
         self.shop_repo = ShopRepository(session)
         self.booking_repo = BookingRepository(session)
         self.referral_repo = ReferralRepository(session)
+        self.post_repo = PostRepository(session)
+        self.supporter_repo = SupporterRepository(session)
 
     async def get_metrics(self, athlete: AthleteProfile) -> DashboardMetricsResponse:
         metrics_dict = await self.dash_repo.get_metrics_30d(athlete.id)
@@ -374,6 +403,50 @@ class DashboardService:
     async def get_referrals(self, athlete: AthleteProfile) -> ReferralDashboardResponse:
         data = await self.referral_repo.get_referral_summary(athlete.id, athlete.referral_code)
         return ReferralDashboardResponse(**data)
+
+    async def get_posts(self, athlete: AthleteProfile) -> list[PostResponse]:
+        posts = await self.post_repo.get_by_athlete_id(athlete.id)
+        return [
+            PostResponse(
+                id=p.id,
+                title=p.title,
+                content_html=p.content_html,
+                access_type=p.access_type,
+                likes_count=p.likes_count,
+                published_at=p.published_at,
+                is_members_only=p.access_type == "members_only",
+            )
+            for p in posts
+        ]
+
+    async def create_post(self, athlete: AthleteProfile, dto: PostCreateRequest) -> PostResponse:
+        post = Post(
+            athlete_id=athlete.id,
+            title=dto.title,
+            content_html=dto.content_html,
+            access_type=dto.access_type,
+        )
+        created = await self.post_repo.create(post)
+        return PostResponse(
+            id=created.id,
+            title=created.title,
+            content_html=created.content_html,
+            access_type=created.access_type,
+            likes_count=created.likes_count,
+            published_at=created.published_at,
+            is_members_only=created.access_type == "members_only",
+        )
+
+    async def get_supporters(self, athlete: AthleteProfile) -> SupportersDashboardResponse:
+        data = await self.supporter_repo.get_dashboard_summary(athlete.id)
+        items = [SupporterItemResponse(**item) for item in data["items"]]
+        return SupportersDashboardResponse(
+            supporter_count=data["supporter_count"],
+            last_30_days_total=data["last_30_days_total"],
+            all_time_total=data["all_time_total"],
+            currency=data["currency"],
+            items=items,
+        )
 
 
 class SystemService:

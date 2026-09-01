@@ -112,7 +112,7 @@
             [value]="primarySportCode()"
             (change)="primarySportCode.set(+$any($event.target).value)"
           >
-            @for (sport of sports; track sport.code) {
+            @for (sport of sports(); track sport.code) {
               <option [value]="sport.code">{{ sport.label }}</option>
             }
           </select>

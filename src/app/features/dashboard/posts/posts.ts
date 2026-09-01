@@ -1,15 +1,9 @@
-import { Component, signal } from '@angular/core';
+import { Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { IconButtonSupportComponent, IconLockComponent } from '../../../shared/icons';
-
-export interface CreatorPost {
-  title: string;
-  excerpt: string;
-  date: string;
-  likes: number;
-  type: 'public' | 'members-only';
-}
+import { DashboardService } from '../../../core/dashboard.service';
+import { PostItemDto } from '../../../core/api.models';
 
 @Component({
   selector: 'app-dashboard-posts',
@@ -17,26 +11,33 @@ export interface CreatorPost {
   imports: [CommonModule, RouterLink, IconLockComponent, IconButtonSupportComponent],
   templateUrl: './posts.html',
 })
-export class DashboardPosts {
-  readonly showCreateModal = signal(false);
-  readonly postType = signal<'public' | 'members-only'>('public');
+export class DashboardPosts implements OnInit {
+  private readonly dashboardService = inject(DashboardService);
 
-  readonly posts = signal<CreatorPost[]>([
-    {
-      title: 'Semana de Descarga: Por qué es clave para ganar fuerza',
-      excerpt: 'Muchos cometen el error de entrenar al fallo 52 semanas al año. Aquí te explico mi protocolo de deload...',
-      date: 'Hace 3 días',
-      likes: 28,
-      type: 'public',
-    },
-    {
-      title: 'Rutina exclusiva de movilidad para sentadilla profunda',
-      excerpt: 'Bloque completo de 15 minutos para tobillos y cadera antes de día pesado de piernas.',
-      date: 'Hace 1 semana',
-      likes: 45,
-      type: 'members-only',
-    },
-  ]);
+  readonly loading = signal(true);
+  readonly showCreateModal = signal(false);
+  readonly posts = signal<PostItemDto[]>([]);
+
+  ngOnInit(): void {
+    this.dashboardService.getPosts().subscribe({
+      next: (items) => {
+        this.posts.set(items);
+        this.loading.set(false);
+      },
+      error: () => this.loading.set(false),
+    });
+  }
+
+  excerpt(post: PostItemDto): string {
+    const text = post.content_html.replace(/<[^>]+>/g, '').trim();
+    return text.length > 120 ? `${text.slice(0, 120)}…` : text;
+  }
+
+  formatDate(value: string): string {
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return value;
+    return date.toLocaleDateString('es-MX', { day: 'numeric', month: 'short', year: 'numeric' });
+  }
 
   openCreate(): void {
     this.showCreateModal.set(true);

@@ -285,9 +285,22 @@ export class DashboardPostNew {
     if (!this.title().trim()) return;
 
     this.isPublishing.set(true);
-    setTimeout(() => {
-      this.isPublishing.set(false);
-      this.router.navigate(['/dashboard/posts']);
-    }, 800);
+    const html = this.content().trim().startsWith('<')
+      ? this.content()
+      : `<p>${this.content().replace(/\n/g, '</p><p>')}</p>`;
+
+    this.dashboardService
+      .createPost({
+        title: this.title().trim(),
+        content_html: html,
+        access_type: this.audience() === 'members' ? 'members_only' : 'public',
+      })
+      .subscribe({
+        next: () => {
+          this.isPublishing.set(false);
+          this.router.navigate(['/dashboard/posts']);
+        },
+        error: () => this.isPublishing.set(false),
+      });
   }
 }

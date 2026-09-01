@@ -346,3 +346,41 @@ class UploadFileResponse(BaseModel):
     size_bytes: int
 
 
+# Publicaciones (Posts)
+class PostCreateRequest(BaseModel):
+    title: str = Field(min_length=3, max_length=255)
+    content_html: str = Field(min_length=1)
+    access_type: str = Field(default="public", pattern="^(public|members_only)$")
+
+
+class PostResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    title: str
+    content_html: str
+    access_type: str
+    likes_count: int
+    published_at: datetime
+    is_members_only: bool = False
+
+
+# Supporters (transacciones shake)
+class SupporterItemResponse(BaseModel):
+    id: int
+    supporter_name: str
+    shakes_count: int
+    gross_amount: Decimal
+    currency: str
+    supporter_message: str | None
+    is_anonymous: bool
+    created_at: datetime
+
+
+class SupportersDashboardResponse(BaseModel):
+    supporter_count: int
+    last_30_days_total: Decimal
+    all_time_total: Decimal
+    currency: str = "USD"
+    items: list[SupporterItemResponse]
+

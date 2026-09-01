@@ -1,9 +1,20 @@
-import { ApplicationConfig, provideBrowserGlobalErrorListeners } from '@angular/core';
+import { ApplicationConfig, APP_INITIALIZER, provideBrowserGlobalErrorListeners } from '@angular/core';
 import { provideHttpClient, withFetch, withInterceptors } from '@angular/common/http';
 import { provideRouter, withComponentInputBinding, withInMemoryScrolling } from '@angular/router';
+import { catchError, firstValueFrom, of } from 'rxjs';
 
 import { routes } from './app.routes';
 import { authInterceptor } from './core/auth.interceptor';
+import { AuthService } from './core/auth.service';
+
+function initializeAuth(auth: AuthService): () => Promise<void> {
+  return () => {
+    if (!localStorage.getItem('access_token')) {
+      return Promise.resolve();
+    }
+    return firstValueFrom(auth.loadMe().pipe(catchError(() => of(null)))).then(() => undefined);
+  };
+}
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -14,5 +25,11 @@ export const appConfig: ApplicationConfig = {
       withComponentInputBinding(),
       withInMemoryScrolling({ scrollPositionRestoration: 'top', anchorScrolling: 'enabled' })
     ),
+    {
+      provide: APP_INITIALIZER,
+      useFactory: initializeAuth,
+      deps: [AuthService],
+      multi: true,
+    },
   ],
 };

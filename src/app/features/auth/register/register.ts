@@ -1,8 +1,10 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/auth.service';
+import { LookupService } from '../../../core/lookup.service';
+import { LookupItemDto } from '../../../core/api.models';
 
 @Component({
   selector: 'app-register',
@@ -13,6 +15,7 @@ import { AuthService } from '../../../core/auth.service';
 export class Register {
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
+  private readonly lookupService = inject(LookupService);
 
   readonly handle = signal('');
   readonly name = signal('');
@@ -23,17 +26,19 @@ export class Register {
   readonly loading = signal(false);
   readonly errorMessage = signal<string | null>(null);
 
-  readonly sports = [
-    { code: 101, label: 'Fuerza & Levantamiento' },
-    { code: 102, label: 'CrossFit & Funcional' },
-    { code: 103, label: 'Running & Atletismo' },
-    { code: 104, label: 'Ciclismo & Ruta' },
-    { code: 105, label: 'Artes Marciales & Boxeo' },
-    { code: 106, label: 'Deportes Acuáticos' },
-    { code: 107, label: 'Fútbol & Colectivos' },
-    { code: 108, label: 'Movilidad & Yoga' },
-    { code: 109, label: 'Calistenia' },
-  ];
+  readonly sports = signal<LookupItemDto[]>([]);
+
+  ngOnInit(): void {
+    this.lookupService.getSportDisciplines().subscribe({
+      next: (items) => {
+        this.sports.set(items);
+        if (items.length > 0) {
+          this.selectedSportCode.set(items[0].code);
+        }
+      },
+      error: () => {},
+    });
+  }
 
   onHandleInput(val: string): void {
     this.handle.set(val.toLowerCase().replace(/[^a-z0-9_]/g, ''));
@@ -53,23 +58,27 @@ export class Register {
     this.loading.set(true);
     this.errorMessage.set(null);
 
-    this.auth.register({
-      email: this.email(),
-      password: this.password(),
-      full_name: this.name(),
-      role: 'athlete',
-      handle: this.handle(),
-      primary_sport_code: this.selectedSportCode(),
-    }).subscribe({
-      next: () => {
-        this.loading.set(false);
-        this.router.navigate(['/dashboard/home']);
-      },
-      error: (err) => {
-        this.loading.set(false);
-        const msg = err.error?.error?.message || 'Error al crear la cuenta. Verifica que el correo o @handle no estén en uso.';
-        this.errorMessage.set(msg);
-      },
-    });
+    this.auth
+      .register({
+        email: this.email(),
+        password: this.password(),
+        full_name: this.name(),
+        role: 'athlete',
+        handle: this.handle(),
+        primary_sport_code: this.selectedSportCode(),
+      })
+      .subscribe({
+        next: () => {
+          this.loading.set(false);
+          this.router.navigate(['/onboarding']);
+        },
+        error: (err) => {
+          this.loading.set(false);
+          const msg =
+            err.error?.error?.message ||
+            'Error al crear la cuenta. Verifica que el correo o @handle no estén en uso.';
+          this.errorMessage.set(msg);
+        },
+      });
   }
 }

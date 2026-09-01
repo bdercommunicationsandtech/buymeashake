@@ -15,6 +15,7 @@ from app.models.entities import (
     LookupGroup,
     LookupItem,
     MembershipTier,
+    Post,
     Subscription,
     TierBenefit,
     Transaction,
@@ -390,3 +391,96 @@ class AppVersionRepository:
         )
         result = await self.session.execute(query)
         return result.scalar_one_or_none()
+
+
+class PostRepository:
+    def __init__(self, session: AsyncSession):
+        self.session = session
+
+    async def get_by_athlete_id(self, athlete_id: int) -> list[Post]:
+        query = (
+            select(Post)
+            .where(Post.athlete_id == athlete_id)
+            .order_by(Post.published_at.desc())
+        )
+        result = await self.session.execute(query)
+        return list(result.scalars().all())
+
+    async def get_public_by_athlete_id(self, athlete_id: int) -> list[Post]:
+        query = (
+            select(Post)
+            .where(Post.athlete_id == athlete_id, Post.access_type == "public")
+            .order_by(Post.published_at.desc())
+        )
+        result = await self.session.execute(query)
+        return list(result.scalars().all())
+
+    async def create(self, post: Post) -> Post:
+        self.session.add(post)
+        await self.session.flush()
+        return post
+
+
+class SupporterRepository:
+    def __init__(self, session: AsyncSession):
+        self.session = session
+
+    async def get_dashboard_summary(self, athlete_id: int) -> dict:
+        since_date = datetime.now() - timedelta(days=30)
+        base_filter = (
+            Transaction.athlete_id == athlete_id,
+            Transaction.status_code == 302,
+            Transaction.transaction_type_code == 201,
+        )
+
+        items_query = (
+            select(
+                Transaction.id,
+                User.full_name,
+                Transaction.shakes_count,
+                Transaction.gross_amount,
+                Transaction.currency,
+                Transaction.supporter_message,
+                Transaction.is_anonymous,
+                Transaction.created_at,
+            )
+            .join(User, Transaction.supporter_id == User.id)
+            .where(*base_filter)
+            .order_by(Transaction.created_at.desc())
+            .limit(50)
+        )
+        rows = (await self.session.execute(items_query)).all()
+
+        count_query = select(func.count(Transaction.id)).where(*base_filter)
+        supporter_count = (await self.session.execute(count_query)).scalar() or 0
+
+        last_30_query = select(func.coalesce(func.sum(Transaction.gross_amount), 0)).where(
+            *base_filter,
+            Transaction.created_at >= since_date,
+        )
+        last_30_total = (await self.session.execute(last_30_query)).scalar() or Decimal("0")
+
+        all_time_query = select(func.coalesce(func.sum(Transaction.gross_amount), 0)).where(*base_filter)
+        all_time_total = (await self.session.execute(all_time_query)).scalar() or Decimal("0")
+
+        items = []
+        for row in rows:
+            name = "Anónimo" if row.is_anonymous else row.full_name
+            items.append({
+                "id": row.id,
+                "supporter_name": name,
+                "shakes_count": int(row.shakes_count or 0),
+                "gross_amount": row.gross_amount or Decimal("0"),
+                "currency": row.currency,
+                "supporter_message": row.supporter_message,
+                "is_anonymous": row.is_anonymous,
+                "created_at": row.created_at,
+            })
+
+        return {
+            "supporter_count": int(supporter_count),
+            "last_30_days_total": last_30_total,
+            "all_time_total": all_time_total,
+            "currency": "USD",
+            "items": items,
+        }

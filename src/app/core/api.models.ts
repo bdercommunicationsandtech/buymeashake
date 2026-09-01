@@ -193,4 +193,53 @@ export interface UploadFileResult {
   size_bytes: number;
 }
 
+export interface ShakeCheckoutPayload {
+  athlete_handle: string;
+  shakes_count: number;
+  currency?: string;
+  supporter_message?: string;
+  is_anonymous?: boolean;
+}
+
+export interface PaymentIntentResult {
+  client_secret: string;
+  transaction_uuid: string;
+  gross_amount: number;
+  currency: string;
+}
+
+export interface PostItemDto {
+  id: number;
+  title: string;
+  content_html: string;
+  access_type: string;
+  likes_count: number;
+  published_at: string;
+  is_members_only: boolean;
+}
+
+export interface PostCreatePayload {
+  title: string;
+  content_html: string;
+  access_type?: 'public' | 'members_only';
+}
+
+export interface SupporterItemDto {
+  id: number;
+  supporter_name: string;
+  shakes_count: number;
+  gross_amount: number;
+  currency: string;
+  supporter_message: string | null;
+  is_anonymous: boolean;
+  created_at: string;
+}
+
+export interface SupportersDashboardDto {
+  supporter_count: number;
+  last_30_days_total: number;
+  all_time_total: number;
+  currency: string;
+  items: SupporterItemDto[];
+}
 

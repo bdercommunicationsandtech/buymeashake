@@ -1,10 +1,12 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, effect, inject, input, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RouterLink } from '@angular/router';
 import { CheckoutService } from '../../core/checkout.service';
+import { ExploreService } from '../../core/explore.service';
+import { PaymentService } from '../../core/payment.service';
 import {
   Activity,
   ACTIVITIES,
-  DEMO_CREATOR,
   QUICK_SHAKES,
   RECENT_SUPPORTERS,
   SHAKE_PRICE,
@@ -21,6 +23,7 @@ import {
   IconSoccerComponent,
 } from '../../shared/icons';
 import { PostCardComponent, PostItem } from '../../shared/post-card/post-card.component';
+import { CreatorProfile } from '../../core/api.models';
 
 export interface CreatorProduct {
   title: string;
@@ -54,11 +57,31 @@ export interface CalendarDay {
   dayName: string;
 }
 
+export interface CreatorView {
+  handle: string;
+  name: string;
+  role: string;
+  city: string;
+  bio: string;
+  initials: string;
+  goalTitle: string;
+  goalTarget: number;
+  goalRaised: number;
+  supporters: number;
+  disciplines: string[];
+  shakePrice: number;
+  currency: 'USD' | 'MXN';
+  coverImageUrl: string | null;
+  avatarUrl: string | null;
+  isVerified: boolean;
+}
+
 @Component({
   selector: 'app-creator',
   standalone: true,
   imports: [
     CommonModule,
+    RouterLink,
     IconShakerComponent,
     IconDumbbellComponent,
     IconSoccerComponent,
@@ -74,131 +97,21 @@ export interface CalendarDay {
 })
 export class Creator {
   private readonly checkout = inject(CheckoutService);
+  private readonly exploreService = inject(ExploreService);
+  private readonly paymentService = inject(PaymentService);
 
-  readonly creator = DEMO_CREATOR;
+  readonly username = input.required<string>();
+
+  readonly creatorView = signal<CreatorView | null>(null);
+  readonly loading = signal(true);
+  readonly error = signal<string | null>(null);
   readonly supporters = RECENT_SUPPORTERS;
   readonly quickShakes = QUICK_SHAKES;
-  readonly shakePrice = SHAKE_PRICE;
 
   readonly activeTab = signal<'shakes' | 'memberships' | 'shop' | 'booking' | 'posts'>('shakes');
+  readonly posts = signal<PostItem[]>([]);
 
-  readonly posts = signal<PostItem[]>([
-    {
-      id: 'p1',
-      title: 'Semana de Descarga (Deload): Por qué es clave para ganar fuerza y evitar fatiga',
-      excerpt: 'Muchos cometen el error de entrenar al fallo 52 semanas consecutivas. Aquí te explico mi protocolo exacto de volumen y RPE para descargar sin perder masa muscular...',
-      authorName: 'Sofía Ramírez',
-      authorHandle: 'sofifit',
-      publishedAt: 'Hace 2 días',
-      likesCount: 38,
-      commentsCount: 9,
-      isMembersOnly: false,
-      coverImageUrl: 'https://images.unsplash.com/photo-1517838277536-f5f99be501cd?q=80&w=1200&auto=format&fit=crop',
-    },
-    {
-      id: 'p2',
-      title: 'Rutina exclusiva de movilidad para sentadilla profunda y calentamiento de cadera',
-      excerpt: 'Bloque completo de 15 minutos paso a paso para mejorar la dorsiflexión de tobillo y la apertura de cadera antes de sesiones pesadas...',
-      authorName: 'Sofía Ramírez',
-      authorHandle: 'sofifit',
-      publishedAt: 'Hace 5 días',
-      likesCount: 64,
-      commentsCount: 14,
-      isMembersOnly: true,
-      requiredTierName: 'Comunidad Pro',
-      coverImageUrl: 'https://images.unsplash.com/photo-1574680096145-d05b474e2155?q=80&w=1200&auto=format&fit=crop',
-      isUnlocked: false,
-    },
-    {
-      id: 'p3',
-      title: 'Mi preparación nutricional y suplementación rumbo al Campeonato Nacional',
-      excerpt: 'Desglose gramo por gramo de mis macronutrientes actuales, timing de creatina, cafeína y electrolitos en días de doble sesión...',
-      authorName: 'Sofía Ramírez',
-      authorHandle: 'sofifit',
-      publishedAt: 'Hace 1 semana',
-      likesCount: 92,
-      commentsCount: 21,
-      isMembersOnly: true,
-      requiredTierName: 'Atleta Elite',
-      coverImageUrl: 'https://images.unsplash.com/photo-1541534741688-6078c6bfb5c5?q=80&w=1200&auto=format&fit=crop',
-      isUnlocked: false,
-    },
-  ]);
-
-  likePost(postId: string): void {
-    this.posts.update((list) =>
-      list.map((p) => (p.id === postId ? { ...p, likesCount: p.likesCount + 1 } : p))
-    );
-  }
-
-  unlockPost(post: PostItem): void {
-    this.setTab('memberships');
-  }
-
-  readonly shakes = signal(3);
-  readonly message = signal('');
-  readonly activity = signal<Activity>(ACTIVITIES[0]);
-  readonly currency = signal<'USD' | 'MXN'>('USD');
-
-  // --- CALENDLY-STYLE 1-ON-1 BOOKING STATE ---
-  readonly selectedService = signal<CreatorBookingService | null>(null);
-  readonly selectedDate = signal<string>('2026-09-03');
-  readonly selectedTimeSlot = signal<string>('18:00');
-  readonly bookingStep = signal<'select-service' | 'select-time' | 'confirm'>('select-service');
-
-  readonly availableTimeSlots = signal<string[]>([
-    '09:00 AM',
-    '10:30 AM',
-    '12:00 PM',
-    '04:00 PM',
-    '05:30 PM',
-    '07:00 PM',
-  ]);
-
-  readonly calendarDays = signal<CalendarDay[]>([
-    { dayNumber: 1, dateStr: '2026-09-01', isAvailable: false, isPast: true, dayName: 'Mar' },
-    { dayNumber: 2, dateStr: '2026-09-02', isAvailable: false, isPast: true, dayName: 'Mié' },
-    { dayNumber: 3, dateStr: '2026-09-03', isAvailable: true, isPast: false, dayName: 'Jue' },
-    { dayNumber: 4, dateStr: '2026-09-04', isAvailable: true, isPast: false, dayName: 'Vie' },
-    { dayNumber: 5, dateStr: '2026-09-05', isAvailable: true, isPast: false, dayName: 'Sáb' },
-    { dayNumber: 6, dateStr: '2026-09-06', isAvailable: false, isPast: false, dayName: 'Dom' },
-    { dayNumber: 7, dateStr: '2026-09-07', isAvailable: true, isPast: false, dayName: 'Lun' },
-    { dayNumber: 8, dateStr: '2026-09-08', isAvailable: true, isPast: false, dayName: 'Mar' },
-    { dayNumber: 9, dateStr: '2026-09-09', isAvailable: true, isPast: false, dayName: 'Mié' },
-    { dayNumber: 10, dateStr: '2026-09-10', isAvailable: true, isPast: false, dayName: 'Jue' },
-    { dayNumber: 11, dateStr: '2026-09-11', isAvailable: true, isPast: false, dayName: 'Vie' },
-    { dayNumber: 12, dateStr: '2026-09-12', isAvailable: false, isPast: false, dayName: 'Sáb' },
-  ]);
-
-  readonly bookingServices: CreatorBookingService[] = [
-    {
-      id: 'srv_1',
-      title: 'Charla 1-a-1 & Conocer al Atleta',
-      duration: '30 min',
-      price: 25.0,
-      description: 'Espacio para conversar sobre mi trayectoria, mentalidad deportiva, consejos y motivación.',
-      platform: 'Google Meet',
-      category: 'Conocer al Atleta',
-    },
-    {
-      id: 'srv_2',
-      title: 'Revisión de Técnica de Levantamiento',
-      duration: '45 min',
-      price: 40.0,
-      description: 'Analizamos tus videos de sentadilla, banca o peso muerto y corregimos biomecánica en vivo.',
-      platform: 'Google Meet',
-      category: 'Asesoría de Técnica',
-    },
-    {
-      id: 'srv_3',
-      title: 'Asesoría de Programación & Periodización',
-      duration: '60 min',
-      price: 60.0,
-      description: 'Estructuración de tu bloque de entrenamiento, selección de ejercicios y gestión de fatiga.',
-      platform: 'Google Meet',
-      category: 'Consultoría Deportiva',
-    },
-  ];
+  readonly bookingServices = signal<CreatorBookingService[]>([]);
 
   readonly products: CreatorProduct[] = [
     {
@@ -230,26 +143,166 @@ export class Creator {
     },
   ];
 
-  readonly currentPrice = computed(() => this.currency() === 'USD' ? SHAKE_PRICE : 50);
+  readonly shakes = signal(3);
+  readonly message = signal('');
+  readonly activity = signal<Activity>(ACTIVITIES[0]);
+  readonly currency = signal<'USD' | 'MXN'>('USD');
+
+  readonly selectedService = signal<CreatorBookingService | null>(null);
+  readonly selectedDate = signal<string>('2026-09-03');
+  readonly selectedTimeSlot = signal<string>('18:00');
+  readonly bookingStep = signal<'select-service' | 'select-time' | 'confirm'>('select-service');
+
+  readonly availableTimeSlots = signal<string[]>([
+    '09:00 AM', '10:30 AM', '12:00 PM', '04:00 PM', '05:30 PM', '07:00 PM',
+  ]);
+
+  readonly calendarDays = signal<CalendarDay[]>([
+    { dayNumber: 3, dateStr: '2026-09-03', isAvailable: true, isPast: false, dayName: 'Jue' },
+    { dayNumber: 4, dateStr: '2026-09-04', isAvailable: true, isPast: false, dayName: 'Vie' },
+    { dayNumber: 5, dateStr: '2026-09-05', isAvailable: true, isPast: false, dayName: 'Sáb' },
+    { dayNumber: 7, dateStr: '2026-09-07', isAvailable: true, isPast: false, dayName: 'Lun' },
+  ]);
+
+  readonly coverStyle = computed(() => {
+    const url = this.creatorView()?.coverImageUrl;
+    if (url) {
+      return `url('${url}')`;
+    }
+    return "url('https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=2000&auto=format&fit=crop')";
+  });
+
+  readonly shakePrice = computed(() => this.creatorView()?.shakePrice ?? SHAKE_PRICE);
+
+  readonly currentPrice = computed(() => {
+    const base = this.shakePrice();
+    return this.currency() === 'USD' ? base : Math.round(base * 16);
+  });
+
   readonly amount = computed(() => this.shakes() * this.currentPrice());
 
-  readonly goalPercent = computed(() =>
-    Math.round(Math.min((this.creator.goalRaised / this.creator.goalTarget) * 100, 100))
-  );
+  readonly goalPercent = computed(() => {
+    const c = this.creatorView();
+    if (!c?.goalTarget) return 0;
+    return Math.round(Math.min((c.goalRaised / c.goalTarget) * 100, 100));
+  });
 
-  readonly goalWithSupport = computed(() =>
-    Math.min(this.creator.goalRaised + this.amount(), this.creator.goalTarget)
-  );
+  readonly previewPercent = computed(() => {
+    const c = this.creatorView();
+    if (!c?.goalTarget) return 0;
+    return Math.round(Math.min(((c.goalRaised + this.amount()) / c.goalTarget) * 100, 100));
+  });
 
-  readonly previewPercent = computed(() =>
-    Math.round(
-      Math.min(((this.creator.goalRaised + this.amount()) / this.creator.goalTarget) * 100, 100)
-    )
-  );
+  readonly remaining = computed(() => {
+    const c = this.creatorView();
+    if (!c) return 0;
+    return Math.max(c.goalTarget - c.goalRaised, 0);
+  });
 
-  readonly remaining = computed(() =>
-    Math.max(this.creator.goalTarget - this.creator.goalRaised, 0)
-  );
+  readonly goalWithSupport = computed(() => {
+    const c = this.creatorView();
+    if (!c) return 0;
+    return c.goalRaised + this.amount();
+  });
+
+  constructor() {
+    effect(() => {
+      const handle = this.username();
+      if (handle) {
+        this.loadCreator(handle);
+      }
+    });
+  }
+
+  private loadCreator(handle: string): void {
+    this.loading.set(true);
+    this.error.set(null);
+
+    this.exploreService.getCreatorProfile(handle).subscribe({
+      next: (profile) => {
+        this.creatorView.set(this.mapProfile(profile));
+        this.currency.set((profile.currency as 'USD' | 'MXN') || 'USD');
+        this.bookingServices.set(
+          profile.booking_services.map((s) => ({
+            id: String(s.id),
+            title: s.title,
+            duration: `${s.duration_minutes} min`,
+            price: Number(s.price),
+            description: s.description || '',
+            platform: s.platform,
+            category: 'Asesoría de Técnica',
+          })),
+        );
+        this.loading.set(false);
+        this.loadPosts(handle);
+      },
+      error: () => {
+        this.error.set('No encontramos este perfil de atleta.');
+        this.loading.set(false);
+      },
+    });
+  }
+
+  private loadPosts(handle: string): void {
+    this.exploreService.getCreatorPosts(handle).subscribe({
+      next: (items) => {
+        const c = this.creatorView();
+        if (!c) return;
+        this.posts.set(
+          items.map((p) => ({
+            id: String(p.id),
+            title: p.title,
+            excerpt: p.content_html.replace(/<[^>]+>/g, '').slice(0, 180),
+            authorName: c.name,
+            authorHandle: c.handle,
+            publishedAt: new Date(p.published_at).toLocaleDateString('es-MX'),
+            likesCount: p.likes_count,
+            commentsCount: 0,
+            isMembersOnly: p.is_members_only,
+          })),
+        );
+      },
+      error: () => {},
+    });
+  }
+
+  private mapProfile(profile: CreatorProfile): CreatorView {
+    const goalTarget = Number(profile.active_goal_target ?? 0);
+    const goalRaised = Number(profile.active_goal_raised ?? 0);
+    return {
+      handle: profile.handle,
+      name: profile.name,
+      role: profile.primary_sport,
+      city: profile.city || 'México',
+      bio: profile.bio || 'Atleta oficial en buymeashake.fit',
+      initials: profile.name
+        .split(' ')
+        .map((n) => n[0])
+        .join('')
+        .slice(0, 2)
+        .toUpperCase(),
+      goalTitle: profile.active_goal_title || 'Meta deportiva activa',
+      goalTarget: goalTarget || 1000,
+      goalRaised: goalRaised,
+      supporters: 0,
+      disciplines: [profile.primary_sport],
+      shakePrice: Number(profile.shake_price) || SHAKE_PRICE,
+      currency: (profile.currency as 'USD' | 'MXN') || 'USD',
+      coverImageUrl: profile.cover_image_url,
+      avatarUrl: profile.avatar_url,
+      isVerified: profile.is_verified,
+    };
+  }
+
+  likePost(postId: string): void {
+    this.posts.update((list) =>
+      list.map((p) => (p.id === postId ? { ...p, likesCount: p.likesCount + 1 } : p)),
+    );
+  }
+
+  unlockPost(_post: PostItem): void {
+    this.setTab('memberships');
+  }
 
   setTab(tab: 'shakes' | 'memberships' | 'shop' | 'booking' | 'posts'): void {
     this.activeTab.set(tab);
@@ -273,7 +326,6 @@ export class Creator {
     this.activity.set(activity);
   }
 
-  // --- CALENDLY WORKFLOW METHODS ---
   selectServiceToBook(service: CreatorBookingService): void {
     this.selectedService.set(service);
     this.bookingStep.set('select-time');
@@ -294,13 +346,14 @@ export class Creator {
 
   confirmBookingCheckout(): void {
     const srv = this.selectedService();
-    if (!srv) return;
+    const c = this.creatorView();
+    if (!srv || !c) return;
 
     this.checkout.start({
       type: 'booking',
       title: srv.title,
-      creatorName: this.creator.name,
-      creatorHandle: this.creator.handle,
+      creatorName: c.name,
+      creatorHandle: c.handle,
       shakes: 1,
       unitPrice: srv.price,
       currency: this.currency(),
@@ -316,26 +369,32 @@ export class Creator {
   }
 
   buyProduct(product: CreatorProduct): void {
+    const c = this.creatorView();
+    if (!c) return;
+
     this.checkout.start({
       type: 'product',
       title: product.title,
-      creatorName: this.creator.name,
-      creatorHandle: this.creator.handle,
+      creatorName: c.name,
+      creatorHandle: c.handle,
       shakes: 1,
       unitPrice: product.price,
       currency: this.currency(),
       message: `Compra de producto digital: ${product.title}`,
       activity: this.activity().id,
-      downloadUrl: 'https://buymeashake.fit/downloads/guia-hipertrofia-12-semanas.pdf',
+      downloadUrl: 'https://buymeashake.fit/downloads/demo.pdf',
     });
   }
 
   joinTier(tier: CreatorTier): void {
+    const c = this.creatorView();
+    if (!c) return;
+
     this.checkout.start({
       type: 'membership',
       title: tier.name,
-      creatorName: this.creator.name,
-      creatorHandle: this.creator.handle,
+      creatorName: c.name,
+      creatorHandle: c.handle,
       shakes: 1,
       unitPrice: tier.price,
       currency: this.currency(),
@@ -345,15 +404,43 @@ export class Creator {
   }
 
   support(): void {
-    this.checkout.start({
-      type: 'shake',
-      creatorName: this.creator.name,
-      creatorHandle: this.creator.handle,
-      shakes: this.shakes(),
-      message: this.message(),
-      activity: this.activity().id,
-      currency: this.currency(),
-      unitPrice: this.currentPrice(),
-    });
+    const c = this.creatorView();
+    if (!c) return;
+
+    this.paymentService
+      .createShakeIntent({
+        athlete_handle: c.handle,
+        shakes_count: this.shakes(),
+        currency: this.currency(),
+        supporter_message: this.message(),
+      })
+      .subscribe({
+        next: (intent) => {
+          this.checkout.start({
+            type: 'shake',
+            creatorName: c.name,
+            creatorHandle: c.handle,
+            shakes: this.shakes(),
+            message: this.message(),
+            activity: this.activity().id,
+            currency: this.currency(),
+            unitPrice: this.currentPrice(),
+            paymentClientSecret: intent.client_secret,
+            transactionUuid: intent.transaction_uuid,
+          });
+        },
+        error: () => {
+          this.checkout.start({
+            type: 'shake',
+            creatorName: c.name,
+            creatorHandle: c.handle,
+            shakes: this.shakes(),
+            message: this.message(),
+            activity: this.activity().id,
+            currency: this.currency(),
+            unitPrice: this.currentPrice(),
+          });
+        },
+      });
   }
 }

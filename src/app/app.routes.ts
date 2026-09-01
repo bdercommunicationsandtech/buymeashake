@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+import { authGuard } from './core/auth.guard';
 
 export const routes: Routes = [
   // 1. Flujo Público
@@ -27,12 +28,14 @@ export const routes: Routes = [
   {
     path: 'onboarding',
     title: 'Configura tu perfil — buymeashake',
+    canActivate: [authGuard],
     loadComponent: () => import('./features/onboarding/onboarding').then((m) => m.Onboarding),
   },
 
   // 3. Panel de Control del Creador (Dashboard)
   {
     path: 'dashboard',
+    canActivate: [authGuard],
     loadComponent: () => import('./features/dashboard/layout/layout').then((m) => m.DashboardLayout),
     children: [
       { path: '', redirectTo: 'home', pathMatch: 'full' },
@@ -85,6 +88,11 @@ export const routes: Routes = [
         path: 'payouts',
         title: 'Retiros y Pagos Stripe — Dashboard',
         loadComponent: () => import('./features/dashboard/payouts/payouts').then((m) => m.DashboardPayouts),
+      },
+      {
+        path: 'goals',
+        title: 'Metas — Dashboard',
+        loadComponent: () => import('./features/dashboard/goals/goals').then((m) => m.DashboardGoals),
       },
       {
         path: 'settings',

@@ -57,6 +57,11 @@ export const routes: Routes = [
         loadComponent: () => import('./features/dashboard/shop/shop').then((m) => m.DashboardShop),
       },
       {
+        path: 'posts/new',
+        title: 'Nueva Publicación — Dashboard',
+        loadComponent: () => import('./features/dashboard/posts/post-new/post-new').then((m) => m.DashboardPostNew),
+      },
+      {
         path: 'posts',
         title: 'Publicaciones — Dashboard',
         loadComponent: () => import('./features/dashboard/posts/posts').then((m) => m.DashboardPosts),

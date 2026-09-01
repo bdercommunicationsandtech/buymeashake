@@ -4,25 +4,144 @@
 
     <div class="sheet">
       @if (checkout.paid()) {
-        <!-- ----------------------------------------- Confirmación -->
-        <div class="done">
-          <div class="done-mark">
-            <svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M4 12.5l5 5L20 6.5" />
+        <!-- ----------------------------------------- PANTALLA POST-PAGO EXITOSA -->
+        <div class="done space-y-5 p-6 sm:p-10 text-center">
+          
+          <!-- Icono de Celebración con Shaker verde -->
+          <div class="mx-auto h-20 w-20 rounded-3xl bg-[#c9ff3d]/15 border border-[#c9ff3d]/30 flex items-center justify-center text-[#c9ff3d] shadow-lg shadow-[#c9ff3d]/10 animate-bounce">
+            <svg viewBox="0 0 32 32" width="40" height="40" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linejoin="round">
+              <rect x="12" y="4" width="8" height="4" rx="2" fill="currentColor" stroke="none" />
+              <path d="M10 10h12l-1.4 16a4 4 0 0 1-4 3.6h-1.2a4 4 0 0 1-4-3.6z" />
+              <path d="M11 20h10" stroke-linecap="round" />
             </svg>
           </div>
-          <h2>Pago de prueba listo</h2>
-          <p class="done-amount">${{ checkout.total() }}.00 {{ checkout.draft()?.currency }}</p>
-          <p class="done-copy">
-            {{ checkout.draft()?.shakes }} shake(s) para
-            <strong>{{ checkout.draft()?.creatorName }}</strong>. En el producto real Stripe
-            confirmaría el cargo y enviaría el recibo por correo.
+
+          <div>
+            <span class="inline-block text-[11px] font-black uppercase tracking-widest text-emerald-600 dark:text-[#c9ff3d] bg-emerald-50 dark:bg-white/5 px-3 py-1 rounded-full mb-2">
+              ¡Pago Confirmado!
+            </span>
+            <h2 class="text-2xl sm:text-3xl font-black text-gray-950 dark:text-white tracking-tight">
+              @switch (checkout.draft()?.type) {
+                @case ('product') {
+                  ¡Tu guía ya está disponible!
+                }
+                @case ('booking') {
+                  ¡Cita agendada con éxito!
+                }
+                @case ('membership') {
+                  ¡Bienvenido al Squad!
+                }
+                @default {
+                  ¡Gracias por impulsar mi camino!
+                }
+              }
+            </h2>
+            <p class="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-1">
+              Recibo enviado a <strong class="text-gray-900 dark:text-white">{{ email() }}</strong>
+            </p>
+          </div>
+
+          <!-- Tarjeta de Detalle del Pedido -->
+          <div class="rounded-2xl border border-gray-200/80 dark:border-white/10 bg-gray-50/70 dark:bg-white/5 p-4 sm:p-5 text-left space-y-3">
+            <div class="flex items-center justify-between text-xs pb-3 border-b border-gray-200/60 dark:border-white/10">
+              <span class="font-bold text-gray-500">Atleta</span>
+              <span class="font-black text-gray-900 dark:text-white">{{ checkout.draft()?.creatorName }} (&#64;{{ checkout.draft()?.creatorHandle }})</span>
+            </div>
+
+            <!-- Caso 1: Shakes -->
+            @if (checkout.draft()?.type === 'shake') {
+              <div class="flex items-center justify-between text-xs">
+                <span class="font-bold text-gray-500">Aporte</span>
+                <span class="font-black text-gray-900 dark:text-white">{{ checkout.draft()?.shakes }} Shake(s)</span>
+              </div>
+              @if (checkout.draft()?.message) {
+                <div class="text-xs pt-1">
+                  <span class="font-bold text-gray-500">Tu mensaje:</span>
+                  <p class="italic text-gray-700 dark:text-gray-300 mt-0.5">“{{ checkout.draft()?.message }}”</p>
+                </div>
+              }
+            }
+
+            <!-- Caso 2: Producto / PDF -->
+            @if (checkout.draft()?.type === 'product') {
+              <div class="space-y-2">
+                <div class="flex items-center justify-between text-xs">
+                  <span class="font-bold text-gray-500">Producto</span>
+                  <span class="font-black text-gray-900 dark:text-white">{{ checkout.draft()?.title }}</span>
+                </div>
+                <a
+                  [href]="checkout.draft()?.downloadUrl || '#'"
+                  target="_blank"
+                  class="w-full mt-2 rounded-xl bg-[#c9ff3d] hover:bg-[#bbf033] text-gray-950 py-3 text-xs font-black transition flex items-center justify-center gap-2 shadow-sm"
+                >
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                  </svg>
+                  <span>Descargar Guía en PDF</span>
+                </a>
+              </div>
+            }
+
+            <!-- Caso 3: Asesoría 1-a-1 -->
+            @if (checkout.draft()?.type === 'booking') {
+              <div class="space-y-2.5 text-xs">
+                <div class="flex items-center justify-between">
+                  <span class="font-bold text-gray-500">Servicio</span>
+                  <span class="font-black text-gray-900 dark:text-white">{{ checkout.draft()?.title }}</span>
+                </div>
+                <div class="flex items-center justify-between">
+                  <span class="font-bold text-gray-500">Fecha & Hora</span>
+                  <span class="font-black text-emerald-600 dark:text-[#c9ff3d]">
+                    {{ checkout.draft()?.bookingDetails?.date }} a las {{ checkout.draft()?.bookingDetails?.time }}
+                  </span>
+                </div>
+                <a
+                  [href]="checkout.draft()?.bookingDetails?.meetingLink || '#'"
+                  target="_blank"
+                  class="w-full mt-2 rounded-xl bg-gray-950 dark:bg-white text-white dark:text-gray-950 py-3 text-xs font-black transition flex items-center justify-center gap-2"
+                >
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+                  </svg>
+                  <span>Abrir Enlace de Google Meet</span>
+                </a>
+              </div>
+            }
+
+            <!-- Caso 4: Membresía -->
+            @if (checkout.draft()?.type === 'membership') {
+              <div class="space-y-2 text-xs">
+                <div class="flex items-center justify-between">
+                  <span class="font-bold text-gray-500">Nivel de Membresía</span>
+                  <span class="font-black text-gray-900 dark:text-white">{{ checkout.draft()?.title }}</span>
+                </div>
+                <div class="p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-[11px] font-medium text-emerald-800 dark:text-emerald-300">
+                  Ya puedes ver todas las publicaciones bloqueadas y rutinas exclusivas en el perfil de {{ checkout.draft()?.creatorName }}.
+                </div>
+              </div>
+            }
+
+            <!-- Total Pagado -->
+            <div class="pt-2 border-t border-gray-200/60 dark:border-white/10 flex items-center justify-between text-sm">
+              <span class="font-black text-gray-900 dark:text-white">Total Pagado</span>
+              <span class="font-black text-lg text-emerald-600 dark:text-[#c9ff3d]">${{ checkout.total() }}.00 {{ checkout.draft()?.currency }}</span>
+            </div>
+          </div>
+
+          <!-- Botones de Acción -->
+          <div class="pt-2 flex flex-col sm:flex-row gap-3">
+            <button
+              type="button"
+              (click)="close()"
+              class="flex-1 rounded-2xl bg-gray-950 dark:bg-white text-white dark:text-gray-950 py-3.5 text-xs font-black transition hover:opacity-90 active:scale-95"
+            >
+              Volver a la Página del Atleta
+            </button>
+          </div>
+
+          <p class="text-[11px] text-gray-400">
+            Transacción procesada de forma segura por Stripe Payments.
           </p>
-          @if (checkout.draft()?.message) {
-            <p class="done-note">“{{ checkout.draft()?.message }}”</p>
-          }
-          <button type="button" class="pay-btn" (click)="close()">Volver al prototipo</button>
-          <p class="test-note">Ningún cargo real fue procesado.</p>
         </div>
       } @else {
         <div class="grid-panels">

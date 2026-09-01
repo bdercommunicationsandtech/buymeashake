@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Shop - Buymeashake.fit</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;900&amp;family=Inter:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-tertiary": "#21323e",
+                        "outline": "#8e9379",
+                        "primary-fixed": "#c3f400",
+                        "on-primary-fixed": "#161e00",
+                        "on-secondary-fixed-variant": "#474646",
+                        "on-primary": "#283500",
+                        "deep-charcoal": "#121212",
+                        "secondary": "#c8c6c5",
+                        "primary-fixed-dim": "#abd600",
+                        "on-tertiary-fixed": "#0b1d29",
+                        "surface-container-low": "#191c1d",
+                        "on-error-container": "#ffdad6",
+                        "surface-dim": "#111415",
+                        "on-primary-container": "#556d00",
+                        "on-secondary-fixed": "#1c1b1b",
+                        "secondary-fixed-dim": "#c8c6c5",
+                        "secondary-fixed": "#e5e2e1",
+                        "inverse-primary": "#506600",
+                        "tertiary-container": "#d2e5f5",
+                        "iron-grey": "#1F1F1F",
+                        "tertiary-fixed": "#d2e5f5",
+                        "on-primary-fixed-variant": "#3c4d00",
+                        "primary-container": "#c3f400",
+                        "surface-tint": "#abd600",
+                        "on-surface-variant": "#c4c9ac",
+                        "secondary-container": "#4a4949",
+                        "stadium-white": "#FFFFFF",
+                        "surface-variant": "#323536",
+                        "surface-container-highest": "#323536",
+                        "primary": "#ffffff",
+                        "surface-container-lowest": "#0c0f10",
+                        "on-tertiary-container": "#556774",
+                        "surface-container-high": "#282a2b",
+                        "tertiary": "#ffffff",
+                        "surface": "#111415",
+                        "burn-red": "#FF3B30",
+                        "surface-container": "#1d2021",
+                        "on-surface": "#e1e3e4",
+                        "inverse-surface": "#e1e3e4",
+                        "on-secondary-container": "#bab8b7",
+                        "error": "#ffb4ab",
+                        "error-container": "#93000a",
+                        "outline-variant": "#444933",
+                        "inverse-on-surface": "#2e3132",
+                        "tertiary-fixed-dim": "#b6c9d8",
+                        "surface-bright": "#373a3b",
+                        "on-error": "#690005",
+                        "background": "#111415",
+                        "on-background": "#e1e3e4",
+                        "on-secondary": "#313030",
+                        "action-green": "#CCFF00",
+                        "recovery-blue": "#00D1FF",
+                        "on-tertiary-fixed-variant": "#374956"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "margin-mobile": "16px",
+                        "margin-desktop": "40px",
+                        "gutter": "24px",
+                        "base": "8px",
+                        "container-max": "1200px"
+                    },
+                    "fontFamily": {
+                        "display-lg-mobile": ["Montserrat"],
+                        "body-lg": ["Inter"],
+                        "display-lg": ["Montserrat"],
+                        "body-md": ["Inter"],
+                        "caption": ["Inter"],
+                        "headline-md": ["Montserrat"],
+                        "headline-lg": ["Montserrat"],
+                        "label-bold": ["Inter"]
+                    },
+                    "fontSize": {
+                        "display-lg-mobile": ["36px", { "lineHeight": "42px", "letterSpacing": "-0.02em", "fontWeight": "900" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "display-lg": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "900" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "caption": ["12px", { "lineHeight": "16px", "fontWeight": "500" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "700" }],
+                        "headline-lg": ["32px", { "lineHeight": "40px", "fontWeight": "700" }],
+                        "label-bold": ["14px", { "lineHeight": "20px", "letterSpacing": "0.05em", "fontWeight": "700" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .material-symbols-outlined.fill {
+            font-variation-settings: 'FILL' 1;
+        }
+    </style>
+</head>
+<body class="bg-deep-charcoal text-stadium-white min-h-screen flex flex-col font-body-md">
+<!-- TopAppBar -->
+<header class="bg-deep-charcoal dark:bg-deep-charcoal border-b border-iron-grey shadow-[0_0_15px_rgba(204,255,0,0.1)] fixed top-0 w-full z-50">
+<div class="flex justify-between items-center px-margin-mobile md:px-margin-desktop py-4 max-w-container-max mx-auto">
+<a class="font-display-lg-mobile md:font-display-lg text-display-lg-mobile md:text-display-lg text-action-green tracking-tighter" href="#">Buymeashake.fit</a>
+<nav class="hidden md:flex gap-gutter items-center">
+<a class="text-stadium-white opacity-80 hover:opacity-100 hover:text-action-green transition-colors duration-200 font-label-bold text-label-bold active:scale-95 transition-transform" href="#">How it works</a>
+<a class="text-stadium-white opacity-80 hover:opacity-100 hover:text-action-green transition-colors duration-200 font-label-bold text-label-bold active:scale-95 transition-transform" href="#">Athletes</a>
+<a class="text-action-green font-bold border-b-2 border-action-green pb-1 font-label-bold text-label-bold active:scale-95 transition-transform" href="#">Shop</a>
+</nav>
+<div class="flex items-center gap-base">
+<button class="hidden md:block text-stadium-white opacity-80 hover:opacity-100 font-label-bold text-label-bold hover:text-action-green transition-colors duration-200">Login</button>
+<button class="bg-action-green text-deep-charcoal font-label-bold text-label-bold px-4 py-2 rounded font-bold hover:bg-primary-fixed-dim transition-colors duration-200 active:scale-95">Sign Up</button>
+</div>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="flex-grow pt-24 pb-12 px-margin-mobile md:px-margin-desktop max-w-container-max mx-auto w-full">
+<!-- Header Section -->
+<div class="mb-12 text-center">
+<h1 class="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg mb-2">Athlete Shop</h1>
+<p class="font-body-md text-body-md text-on-surface-variant max-w-2xl mx-auto">Fuel your grind with premium guides, custom plans, and exclusive merch directly from top athletes.</p>
+</div>
+<!-- Bento Grid Layout for Products -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+<!-- Product Card 1 (eBook) -->
+<div class="bg-iron-grey rounded-xl overflow-hidden border border-[#333333] hover:border-action-green/30 transition-all duration-300 flex flex-col relative group">
+<div class="relative h-48 w-full bg-surface-container-high overflow-hidden">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="A highly detailed, professional rendering of a digital eBook cover titled '12-Week Transformation Guide'. The cover features a stark, high-contrast dark mode aesthetic with bold neon green typography. Set against a deep charcoal background with subtle geometric grid patterns, the overall mood is intense, disciplined, and modern." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDdsRyRRRuBaKAPiFoWrhrRFt-ulVkIQ9nwQxiUl65YuATIkJq3fpxtNs0N2zLbS_gNU-Y5GjaHGoklwCUiZPQqfJEfnkcffL15Qtr7C1whXQ-e4M2j8J7uQwKeyH0ZV7ogr9r6BgDmv9svCh7peuFYjOks9l6i1F2BnERcN1yRO17xJ4pclAIBGQ3H-JBqa4cdUz339ohsam4yEN_YiQs-JmCMESrKJ96Llgkd2wzEB2VHuRoaolUM"/>
+<div class="absolute top-4 left-4 bg-deep-charcoal/80 backdrop-blur-sm px-3 py-1 rounded-full border border-[#333333] flex items-center gap-1">
+<span class="material-symbols-outlined text-action-green text-sm">book</span>
+<span class="font-caption text-caption text-stadium-white">eBook</span>
+</div>
+</div>
+<div class="p-6 flex flex-col flex-grow">
+<div class="flex justify-between items-start mb-2">
+<h2 class="font-headline-md text-headline-md text-stadium-white line-clamp-2">12-Week Transformation Guide</h2>
+<span class="font-headline-md text-headline-md text-action-green ml-2">$49</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant mb-4 flex-grow">A comprehensive, phase-based digital training program designed for maximum hypertrophy and strength gains.</p>
+<div class="flex items-center justify-between mt-auto pt-4 border-t border-[#333333]">
+<div class="flex flex-col">
+<div class="flex items-center gap-1 text-action-green">
+<span class="material-symbols-outlined fill text-sm">star</span>
+<span class="font-label-bold text-label-bold text-stadium-white">4.9</span>
+<span class="font-caption text-caption text-on-surface-variant">(124)</span>
+</div>
+<span class="font-caption text-caption text-on-surface-variant mt-1">1.2k+ Sales</span>
+</div>
+<button class="bg-action-green text-deep-charcoal font-label-bold text-label-bold px-6 py-3 rounded font-bold hover:bg-primary-fixed-dim transition-colors duration-200 active:scale-95 shadow-[0_0_10px_rgba(204,255,0,0.2)] hover:shadow-[0_0_15px_rgba(204,255,0,0.4)] flex items-center gap-2">
+<span>Get it</span>
+<span class="material-symbols-outlined text-[20px]">bolt</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Product Card 2 (Consultation) - Featured/Spans 2 cols on md, 1 on lg -->
+<div class="bg-iron-grey rounded-xl overflow-hidden border border-[#333333] hover:border-action-green/30 transition-all duration-300 flex flex-col relative group md:col-span-2 lg:col-span-1">
+<div class="relative h-48 w-full bg-surface-container-high overflow-hidden">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="A highly detailed cinematic shot of a sleek, modern digital interface displaying macro-nutrient charts and graphs. The screen is framed in a dark studio setting with moody lighting. Bright action-green highlights illuminate key data points against a deep iron grey background, conveying precision, premium consultation, and high performance." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCzlD7smiJE02-UsALPBgqk2J6WIKXjJ16IknUAClFioxOxRKk1q3Jy61IgAyZ5gGNCKktDOk-qfAGZQMIO-781XqVyZ561c1y9_lru9HdwFnRLLgV8wotWRJMqTSojQEY-GfSIEBtdzLshiXA4D6i_7KKNXTzXSA6Aw0S2pUp296n2jWvrNkLv6uWEWtBqJb7T9Wwm9ki2ZyBY5geImgYba5X4mvCrMnACVj6AIEQqBs-mTMeyFzE2"/>
+<div class="absolute top-4 left-4 bg-deep-charcoal/80 backdrop-blur-sm px-3 py-1 rounded-full border border-[#333333] flex items-center gap-1">
+<span class="material-symbols-outlined text-action-green text-sm">psychology</span>
+<span class="font-caption text-caption text-stadium-white">Consultation</span>
+</div>
+<div class="absolute top-4 right-4 bg-action-green text-deep-charcoal px-3 py-1 rounded font-label-bold text-label-bold text-xs uppercase tracking-wider font-bold">
+                        Bestseller
+                    </div>
+</div>
+<div class="p-6 flex flex-col flex-grow">
+<div class="flex justify-between items-start mb-2">
+<h2 class="font-headline-md text-headline-md text-stadium-white line-clamp-2">Custom Macro Plan</h2>
+<span class="font-headline-md text-headline-md text-action-green ml-2">$99</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant mb-4 flex-grow">A personalized nutritional roadmap tailored to your exact metabolic needs and specific performance goals.</p>
+<div class="flex items-center justify-between mt-auto pt-4 border-t border-[#333333]">
+<div class="flex flex-col">
+<div class="flex items-center gap-1 text-action-green">
+<span class="material-symbols-outlined fill text-sm">star</span>
+<span class="font-label-bold text-label-bold text-stadium-white">5.0</span>
+<span class="font-caption text-caption text-on-surface-variant">(342)</span>
+</div>
+<span class="font-caption text-caption text-on-surface-variant mt-1">3.5k+ Sales</span>
+</div>
+<button class="bg-action-green text-deep-charcoal font-label-bold text-label-bold px-6 py-3 rounded font-bold hover:bg-primary-fixed-dim transition-colors duration-200 active:scale-95 shadow-[0_0_10px_rgba(204,255,0,0.2)] hover:shadow-[0_0_15px_rgba(204,255,0,0.4)] flex items-center gap-2">
+<span>Get it</span>
+<span class="material-symbols-outlined text-[20px]">bolt</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Product Card 3 (Merch) -->
+<div class="bg-iron-grey rounded-xl overflow-hidden border border-[#333333] hover:border-action-green/30 transition-all duration-300 flex flex-col relative group">
+<div class="relative h-48 w-full bg-surface-container-high overflow-hidden">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="A highly detailed product photography shot of a premium, matte black shaker bottle featuring a vibrant neon green lid. The shaker is resting on an iron grey gym floor surface. Dramatic, directional studio lighting casts sharp shadows, highlighting the sleek, modern design and the bold athletic aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAej5QHzqhZaU3sumGRWBF41svKtCejhslDSmTwT5JxKU7uEUd2Hw3we6QUrXGAXfIcE75B24Fv9dwAxZGMyi07i6Ze--FeenCRKJA5bvh9dboeC8jThT7liuytmMsuFkDVI35n_AoFnaR8DxfnXKmlrw3eFpEmKdIzvz3VIqeg59NJApIWtyDamfa-muz0P4vtd9OujZRv29HyUCROex84I9ik7-0-nQEw4XBcP1gJTnI4fS0ISFcQ"/>
+<div class="absolute top-4 left-4 bg-deep-charcoal/80 backdrop-blur-sm px-3 py-1 rounded-full border border-[#333333] flex items-center gap-1">
+<span class="material-symbols-outlined text-action-green text-sm">inventory_2</span>
+<span class="font-caption text-caption text-stadium-white">Physical</span>
+</div>
+</div>
+<div class="p-6 flex flex-col flex-grow">
+<div class="flex justify-between items-start mb-2">
+<h2 class="font-headline-md text-headline-md text-stadium-white line-clamp-2">Limited Edition Shaker</h2>
+<span class="font-headline-md text-headline-md text-action-green ml-2">$25</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant mb-4 flex-grow">Matte black, insulated stainless steel shaker with a secure leak-proof neon cap. Built for the grind.</p>
+<div class="flex items-center justify-between mt-auto pt-4 border-t border-[#333333]">
+<div class="flex flex-col">
+<div class="flex items-center gap-1 text-action-green">
+<span class="material-symbols-outlined fill text-sm">star</span>
+<span class="font-label-bold text-label-bold text-stadium-white">4.8</span>
+<span class="font-caption text-caption text-on-surface-variant">(89)</span>
+</div>
+<span class="font-caption text-caption text-on-surface-variant mt-1">800+ Sales</span>
+</div>
+<button class="bg-action-green text-deep-charcoal font-label-bold text-label-bold px-6 py-3 rounded font-bold hover:bg-primary-fixed-dim transition-colors duration-200 active:scale-95 shadow-[0_0_10px_rgba(204,255,0,0.2)] hover:shadow-[0_0_15px_rgba(204,255,0,0.4)] flex items-center gap-2">
+<span>Get it</span>
+<span class="material-symbols-outlined text-[20px]">bolt</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Footer -->
+<footer class="bg-deep-charcoal dark:bg-deep-charcoal border-t border-iron-grey w-full py-12 mt-auto">
+<div class="flex flex-col md:flex-row justify-between items-center px-margin-mobile md:px-margin-desktop gap-gutter max-w-container-max mx-auto">
+<div class="font-headline-md text-headline-md text-stadium-white text-center md:text-left mb-4 md:mb-0">
+                Buymeashake.fit
+            </div>
+<div class="flex flex-wrap justify-center gap-4 md:gap-gutter">
+<a class="text-on-surface-variant hover:text-stadium-white transition-colors font-caption text-caption" href="#">Terms of Service</a>
+<a class="text-on-surface-variant hover:text-stadium-white transition-colors font-caption text-caption" href="#">Privacy Policy</a>
+<a class="text-on-surface-variant hover:text-stadium-white transition-colors font-caption text-caption" href="#">Contact Support</a>
+<a class="text-on-surface-variant hover:text-stadium-white transition-colors font-caption text-caption" href="#">Brand Assets</a>
+</div>
+<div class="text-on-surface-variant dark:text-on-surface-variant font-caption text-caption mt-4 md:mt-0 text-center md:text-right">
+                © 2024 Buymeashake.fit. Fueling the grind.
+            </div>
+</div>
+</footer>
+</body></html>

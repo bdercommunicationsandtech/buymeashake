@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Buymeashake.fit - Fueling the grind.</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;900&amp;family=Inter:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-secondary-fixed-variant": "#474646",
+                        "on-background": "#e1e3e4",
+                        "surface-container-lowest": "#0c0f10",
+                        "error-container": "#93000a",
+                        "on-tertiary-fixed-variant": "#374956",
+                        "inverse-primary": "#506600",
+                        "burn-red": "#FF3B30",
+                        "surface-dim": "#111415",
+                        "surface-container-high": "#282a2b",
+                        "on-error": "#690005",
+                        "on-primary-fixed-variant": "#3c4d00",
+                        "inverse-on-surface": "#2e3132",
+                        "on-secondary": "#313030",
+                        "surface-container-low": "#191c1d",
+                        "on-primary-container": "#556d00",
+                        "secondary-container": "#4a4949",
+                        "primary-fixed": "#c3f400",
+                        "action-green": "#CCFF00",
+                        "primary-container": "#c3f400",
+                        "on-error-container": "#ffdad6",
+                        "tertiary-container": "#d2e5f5",
+                        "primary-fixed-dim": "#abd600",
+                        "secondary": "#c8c6c5",
+                        "deep-charcoal": "#121212",
+                        "outline": "#8e9379",
+                        "iron-grey": "#1F1F1F",
+                        "on-surface-variant": "#c4c9ac",
+                        "secondary-fixed-dim": "#c8c6c5",
+                        "recovery-blue": "#00D1FF",
+                        "error": "#ffb4ab",
+                        "background": "#111415",
+                        "on-tertiary-container": "#556774",
+                        "surface-container-highest": "#323536",
+                        "tertiary-fixed-dim": "#b6c9d8",
+                        "on-primary": "#283500",
+                        "stadium-white": "#FFFFFF",
+                        "on-primary-fixed": "#161e00",
+                        "secondary-fixed": "#e5e2e1",
+                        "surface-bright": "#373a3b",
+                        "inverse-surface": "#e1e3e4",
+                        "on-secondary-fixed": "#1c1b1b",
+                        "surface": "#111415",
+                        "surface-container": "#1d2021",
+                        "tertiary": "#ffffff",
+                        "tertiary-fixed": "#d2e5f5",
+                        "surface-tint": "#abd600",
+                        "on-tertiary-fixed": "#0b1d29",
+                        "on-tertiary": "#21323e",
+                        "surface-variant": "#323536",
+                        "primary": "#ffffff",
+                        "outline-variant": "#444933",
+                        "on-secondary-container": "#bab8b7",
+                        "on-surface": "#e1e3e4"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "margin-desktop": "40px",
+                        "container-max": "1200px",
+                        "gutter": "24px",
+                        "base": "8px",
+                        "margin-mobile": "16px"
+                    },
+                    "fontFamily": {
+                        "headline-lg": ["Montserrat"],
+                        "label-bold": ["Inter"],
+                        "body-md": ["Inter"],
+                        "display-lg-mobile": ["Montserrat"],
+                        "body-lg": ["Inter"],
+                        "caption": ["Inter"],
+                        "display-lg": ["Montserrat"],
+                        "headline-md": ["Montserrat"]
+                    },
+                    "fontSize": {
+                        "headline-lg": ["32px", { "lineHeight": "40px", "fontWeight": "700" }],
+                        "label-bold": ["14px", { "lineHeight": "20px", "letterSpacing": "0.05em", "fontWeight": "700" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "display-lg-mobile": ["36px", { "lineHeight": "42px", "letterSpacing": "-0.02em", "fontWeight": "900" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "caption": ["12px", { "lineHeight": "16px", "fontWeight": "500" }],
+                        "display-lg": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "900" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "700" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .pulse-hover:hover {
+            animation: pulse-border 1.5s infinite;
+        }
+        @keyframes pulse-border {
+            0% { box-shadow: 0 0 0 0 rgba(204, 255, 0, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(204, 255, 0, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(204, 255, 0, 0); }
+        }
+    </style>
+</head>
+<body class="bg-deep-charcoal text-on-surface antialiased flex flex-col min-h-screen pt-[88px]">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 bg-deep-charcoal border-b border-iron-grey shadow-[0_0_15px_rgba(204,255,0,0.1)]">
+<div class="flex justify-between items-center px-margin-desktop py-4 max-w-container-max mx-auto md:px-margin-desktop px-margin-mobile">
+<a class="font-display-lg text-display-lg text-action-green tracking-tighter text-2xl md:text-[32px]" href="#">Buymeashake.fit</a>
+<nav class="hidden md:flex gap-8">
+<a class="text-action-green font-bold border-b-2 border-action-green pb-1 font-label-bold text-label-bold uppercase" href="#">How it works</a>
+<a class="text-stadium-white opacity-80 hover:opacity-100 hover:text-action-green transition-colors duration-200 font-label-bold text-label-bold uppercase" href="#">Athletes</a>
+<a class="text-stadium-white opacity-80 hover:opacity-100 hover:text-action-green transition-colors duration-200 font-label-bold text-label-bold uppercase" href="#">Feed</a>
+</nav>
+<div class="flex items-center gap-4">
+<a class="hidden md:block text-stadium-white opacity-80 hover:opacity-100 hover:text-action-green transition-colors duration-200 font-label-bold text-label-bold uppercase" href="#">Login</a>
+<a class="bg-action-green text-deep-charcoal px-6 py-2 rounded font-label-bold text-label-bold uppercase pulse-hover active:scale-95 transition-transform" href="#">Sign Up</a>
+</div>
+</div>
+</header>
+<!-- Main Content -->
+<main class="flex-grow">
+<!-- Hero Section -->
+<section class="relative min-h-[819px] flex items-center px-margin-mobile md:px-margin-desktop">
+<div class="absolute inset-0 z-0">
+<div class="bg-cover bg-center w-full h-full opacity-40" data-alt="A high-contrast, professional photography shot of an elite athlete in a dark, atmospheric gym setting. The lighting is dramatic, emphasizing sweat and muscular definition, with subtle neon green backlighting cutting through the deep charcoal shadows. The mood is intense, focused, and powerful, perfectly aligning with a premium fitness brand aesthetic." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuD1hKwxbSw6lxUZnr5Z9Jk0LutFNxudVBRFKexNcMJtiOALcfT9rmCoS5HRG2VlMsUDyfR2WbERPMF9q81vD8JQZTAsS_qOb2pxYu9q1i5jGHy76dVOOz3-vxg2c_1cwI6YAdm39XfDkwjbnTVoIbC8MKcD6z3VPcah3Ytd-C6S_u-VLDBen8UlG95FguxJWErPknl4uZy4LCwZx36JRsso6jw-owtpPdUG8gU8kqupyVr4nhG_4OpN')"></div>
+<div class="absolute inset-0 bg-gradient-to-t from-deep-charcoal via-deep-charcoal/80 to-transparent"></div>
+</div>
+<div class="relative z-10 max-w-container-max mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-gutter">
+<div class="col-span-1 lg:col-span-8 flex flex-col justify-center items-start pt-12 md:pt-0">
+<h1 class="font-display-lg-mobile text-display-lg-mobile md:font-display-lg md:text-display-lg text-stadium-white mb-6">
+                        Monetiza tu esfuerzo. <br/>
+<span class="text-action-green">Recibe Shakers de tus fans.</span>
+</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant mb-10 max-w-2xl">
+                        La plataforma de apoyo directo para atletas, coaches y creadores fitness. Convierte tu sudor en ingresos recurrentes y construye una comunidad que respalde tu progreso.
+                    </p>
+<div class="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
+<button class="bg-action-green text-deep-charcoal px-8 py-4 rounded font-label-bold text-label-bold uppercase pulse-hover flex items-center justify-center gap-2">
+                            Empezar gratis
+                            <span class="material-symbols-outlined" data-icon="arrow_forward">arrow_forward</span>
+</button>
+<button class="border border-iron-grey bg-iron-grey/50 text-stadium-white hover:bg-iron-grey px-8 py-4 rounded font-label-bold text-label-bold uppercase transition-colors flex items-center justify-center gap-2">
+                            Explorar Atletas
+                        </button>
+</div>
+</div>
+</div>
+</section>
+<!-- How it works (Bento Grid) -->
+<section class="py-24 px-margin-mobile md:px-margin-desktop bg-deep-charcoal">
+<div class="max-w-container-max mx-auto">
+<div class="text-center mb-16">
+<h2 class="font-headline-lg text-headline-lg text-stadium-white mb-4">El camino al patrocinio</h2>
+<p class="font-body-md text-body-md text-on-surface-variant max-w-xl mx-auto">Tres simples pasos para empezar a financiar tu carrera deportiva o contenido fitness.</p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-gutter">
+<!-- Step 1 -->
+<div class="bg-iron-grey border border-[#333333] rounded-lg p-6 relative overflow-hidden group">
+<div class="absolute top-0 right-0 p-4 opacity-10 font-display-lg text-display-lg text-action-green transition-transform group-hover:scale-110">01</div>
+<div class="w-12 h-12 bg-surface-container-highest rounded flex items-center justify-center mb-6 border border-[#333333]">
+<span class="material-symbols-outlined text-action-green" data-icon="person_add">person_add</span>
+</div>
+<h3 class="font-headline-md text-headline-md text-stadium-white mb-3">Crea tu perfil</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">
+                            Configura tu página en minutos. Sube tus mejores fotos, establece tus metas y define qué recompensas ofreces a tus mayores seguidores.
+                        </p>
+</div>
+<!-- Step 2 -->
+<div class="bg-iron-grey border border-[#333333] rounded-lg p-6 relative overflow-hidden group md:-translate-y-4">
+<div class="absolute top-0 right-0 p-4 opacity-10 font-display-lg text-display-lg text-action-green transition-transform group-hover:scale-110">02</div>
+<div class="w-12 h-12 bg-surface-container-highest rounded flex items-center justify-center mb-6 border border-[#333333]">
+<span class="material-symbols-outlined text-action-green" data-icon="share">share</span>
+</div>
+<h3 class="font-headline-md text-headline-md text-stadium-white mb-3">Comparte con tu comunidad</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">
+                            Añade tu enlace a Instagram, TikTok o YouTube. Deja que tus fans sepan dónde pueden apoyarte directamente.
+                        </p>
+</div>
+<!-- Step 3 -->
+<div class="bg-iron-grey border border-[#333333] rounded-lg p-6 relative overflow-hidden group">
+<div class="absolute top-0 right-0 p-4 opacity-10 font-display-lg text-display-lg text-action-green transition-transform group-hover:scale-110">03</div>
+<div class="w-12 h-12 bg-surface-container-highest rounded flex items-center justify-center mb-6 border border-[#333333]">
+<span class="material-symbols-outlined text-action-green" data-icon="bolt">bolt</span>
+</div>
+<h3 class="font-headline-md text-headline-md text-stadium-white mb-3">Recibe Shakers</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">
+                            Tus seguidores pueden invitarte a un 'Shaker' para financiar tus suplementos, equipo o viajes a competiciones. Retira tus fondos cuando quieras.
+                        </p>
+</div>
+</div>
+</div>
+</section>
+<!-- Call to Action Banner -->
+<section class="py-24 px-margin-mobile md:px-margin-desktop bg-iron-grey border-y border-[#333333]">
+<div class="max-w-container-max mx-auto text-center">
+<h2 class="font-display-lg-mobile text-display-lg-mobile md:font-display-lg md:text-display-lg text-stadium-white mb-6">
+                    El sudor es tuyo. <span class="text-action-green">El apoyo también.</span>
+</h2>
+<button class="mt-8 bg-action-green text-deep-charcoal px-10 py-4 rounded font-label-bold text-label-bold uppercase pulse-hover mx-auto">
+                    Crear mi cuenta gratis
+                </button>
+</div>
+</section>
+</main>
+<!-- Footer -->
+<footer class="bg-deep-charcoal border-t border-iron-grey w-full py-12">
+<div class="flex flex-col md:flex-row justify-between items-center px-margin-desktop px-margin-mobile gap-gutter max-w-container-max mx-auto">
+<div class="font-headline-md text-headline-md text-stadium-white mb-6 md:mb-0">
+                Buymeashake.fit
+            </div>
+<div class="flex flex-wrap justify-center gap-6 mb-6 md:mb-0">
+<a class="font-caption text-caption text-on-surface-variant hover:text-stadium-white transition-colors" href="#">Terms of Service</a>
+<a class="font-caption text-caption text-on-surface-variant hover:text-stadium-white transition-colors" href="#">Privacy Policy</a>
+<a class="font-caption text-caption text-on-surface-variant hover:text-stadium-white transition-colors" href="#">Contact Support</a>
+<a class="font-caption text-caption text-on-surface-variant hover:text-stadium-white transition-colors" href="#">Brand Assets</a>
+</div>
+<div class="font-caption text-caption text-on-surface-variant">
+                © 2024 Buymeashake.fit. Fueling the grind.
+            </div>
+</div>
+</footer>
+</body></html>

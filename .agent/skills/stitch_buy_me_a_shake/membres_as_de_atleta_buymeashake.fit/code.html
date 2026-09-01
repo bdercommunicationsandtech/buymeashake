@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Memberships - Buymeashake.fit</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;900&amp;family=Inter:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                            "on-tertiary": "#21323e",
+                            "outline": "#8e9379",
+                            "primary-fixed": "#c3f400",
+                            "on-primary-fixed": "#161e00",
+                            "on-secondary-fixed-variant": "#474646",
+                            "on-primary": "#283500",
+                            "deep-charcoal": "#121212",
+                            "secondary": "#c8c6c5",
+                            "primary-fixed-dim": "#abd600",
+                            "on-tertiary-fixed": "#0b1d29",
+                            "surface-container-low": "#191c1d",
+                            "on-error-container": "#ffdad6",
+                            "surface-dim": "#111415",
+                            "on-primary-container": "#556d00",
+                            "on-secondary-fixed": "#1c1b1b",
+                            "secondary-fixed-dim": "#c8c6c5",
+                            "secondary-fixed": "#e5e2e1",
+                            "inverse-primary": "#506600",
+                            "tertiary-container": "#d2e5f5",
+                            "iron-grey": "#1F1F1F",
+                            "tertiary-fixed": "#d2e5f5",
+                            "on-primary-fixed-variant": "#3c4d00",
+                            "primary-container": "#c3f400",
+                            "surface-tint": "#abd600",
+                            "on-surface-variant": "#c4c9ac",
+                            "secondary-container": "#4a4949",
+                            "stadium-white": "#FFFFFF",
+                            "surface-variant": "#323536",
+                            "surface-container-highest": "#323536",
+                            "primary": "#ffffff",
+                            "surface-container-lowest": "#0c0f10",
+                            "on-tertiary-container": "#556774",
+                            "surface-container-high": "#282a2b",
+                            "tertiary": "#ffffff",
+                            "surface": "#111415",
+                            "burn-red": "#FF3B30",
+                            "surface-container": "#1d2021",
+                            "on-surface": "#e1e3e4",
+                            "inverse-surface": "#e1e3e4",
+                            "on-secondary-container": "#bab8b7",
+                            "error": "#ffb4ab",
+                            "error-container": "#93000a",
+                            "outline-variant": "#444933",
+                            "inverse-on-surface": "#2e3132",
+                            "tertiary-fixed-dim": "#b6c9d8",
+                            "surface-bright": "#373a3b",
+                            "on-error": "#690005",
+                            "background": "#111415",
+                            "on-background": "#e1e3e4",
+                            "on-secondary": "#313030",
+                            "action-green": "#CCFF00",
+                            "recovery-blue": "#00D1FF",
+                            "on-tertiary-fixed-variant": "#374956"
+                    },
+                    "borderRadius": {
+                            "DEFAULT": "0.25rem",
+                            "lg": "0.5rem",
+                            "xl": "0.75rem",
+                            "full": "9999px"
+                    },
+                    "spacing": {
+                            "margin-mobile": "16px",
+                            "margin-desktop": "40px",
+                            "gutter": "24px",
+                            "base": "8px",
+                            "container-max": "1200px"
+                    },
+                    "fontFamily": {
+                            "display-lg-mobile": ["Montserrat"],
+                            "body-lg": ["Inter"],
+                            "display-lg": ["Montserrat"],
+                            "body-md": ["Inter"],
+                            "caption": ["Inter"],
+                            "headline-md": ["Montserrat"],
+                            "headline-lg": ["Montserrat"],
+                            "label-bold": ["Inter"]
+                    },
+                    "fontSize": {
+                            "display-lg-mobile": ["36px", {"lineHeight": "42px", "letterSpacing": "-0.02em", "fontWeight": "900"}],
+                            "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                            "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "900"}],
+                            "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                            "caption": ["12px", {"lineHeight": "16px", "fontWeight": "500"}],
+                            "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "700"}],
+                            "headline-lg": ["32px", {"lineHeight": "40px", "fontWeight": "700"}],
+                            "label-bold": ["14px", {"lineHeight": "20px", "letterSpacing": "0.05em", "fontWeight": "700"}]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body { background-color: theme('colors.deep-charcoal'); color: theme('colors.on-background'); }
+        .pulse-hover:hover { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: .7; }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col font-body-md bg-deep-charcoal text-on-background antialiased selection:bg-action-green selection:text-deep-charcoal">
+<!-- SideNavBar -->
+<nav class="hidden lg:flex flex-col fixed left-0 top-0 h-full w-64 bg-iron-grey dark:bg-iron-grey border-r border-deep-charcoal z-40">
+<div class="p-6 pb-8 border-b border-deep-charcoal">
+<h1 class="font-headline-lg text-headline-lg text-action-green tracking-tighter mb-6">Buymeashake.fit</h1>
+<div class="flex items-center gap-4">
+<img class="w-12 h-12 rounded-full object-cover border border-deep-charcoal" data-alt="A high-contrast black and white professional headshot of an elite athlete looking intensely at the camera, lit from the side to highlight muscle definition. The athlete is sweating slightly, suggesting a recent workout, set against a completely dark background. The image style is gritty and highly detailed, perfectly matching a dark-mode athletic aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBjDY2hpGk8CZ9Xlgc_aXDTb6LkkWoNwkfjVp81eXoGPDcNQRQZNMPLPlakzuxyerg9tCtEdJEv7lGqbcVjrc6-zXTleui0LcYsfeNbJL27mZXmamc67PJ22ovXsJ1NmLfemaWdXsd8woc61lDvrQw-Vm_XJA-FVDI8P5fX-pqEQpTpM7sqgwHPmkj7aijbWuoV4Omi6x7FCKdfPDyhL6luqJHIWCd7NCK2l4884lYtfsaE_yMFn10M"/>
+<div>
+<div class="font-label-bold text-label-bold text-stadium-white">Pro Athlete</div>
+<div class="font-caption text-caption text-on-surface-variant">Elite Tier</div>
+</div>
+</div>
+</div>
+<div class="flex-1 py-6 flex flex-col gap-2">
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-high hover:bg-surface-container-highest transition-all group font-label-bold text-label-bold" href="#">
+<span class="material-symbols-outlined group-hover:text-action-green transition-colors">dashboard</span>
+                Dashboard
+            </a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-high hover:bg-surface-container-highest transition-all group font-label-bold text-label-bold" href="#">
+<span class="material-symbols-outlined group-hover:text-action-green transition-colors">bolt</span>
+                Activity
+            </a>
+<a class="flex items-center gap-3 px-4 py-3 bg-deep-charcoal text-action-green border-l-4 border-action-green active:translate-x-1 transition-transform font-label-bold text-label-bold" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">group</span>
+                Supporters
+            </a>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-high hover:bg-surface-container-highest transition-all group font-label-bold text-label-bold" href="#">
+<span class="material-symbols-outlined group-hover:text-action-green transition-colors">settings</span>
+                Settings
+            </a>
+</div>
+<div class="p-6 border-t border-deep-charcoal">
+<button class="w-full py-3 px-4 bg-iron-grey border border-stadium-white text-stadium-white font-label-bold text-label-bold rounded hover:bg-surface-container-high transition-colors">
+                Share Profile
+            </button>
+</div>
+</nav>
+<!-- Main Content Area -->
+<main class="flex-1 lg:ml-64 p-margin-mobile md:p-margin-desktop w-full max-w-container-max mx-auto pb-24">
+<!-- Header Section -->
+<header class="mb-12">
+<h2 class="font-display-lg-mobile md:font-display-lg text-display-lg-mobile md:text-display-lg text-stadium-white mb-4">Memberships</h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl">Create exclusive tiers for your most dedicated supporters. Offer structured training, direct access, and behind-the-scenes content to build a sustainable athletic career.</p>
+</header>
+<!-- Stats Overview Bento -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-gutter mb-16">
+<div class="bg-iron-grey rounded-xl p-6 border border-deep-charcoal relative overflow-hidden group">
+<div class="absolute inset-0 bg-gradient-to-br from-action-green/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+<div class="relative z-10">
+<div class="flex items-center justify-between mb-4">
+<span class="font-label-bold text-label-bold text-on-surface-variant uppercase tracking-wider">Active Members</span>
+<span class="material-symbols-outlined text-action-green">group</span>
+</div>
+<div class="font-headline-lg text-headline-lg text-stadium-white mb-1">142</div>
+<div class="flex items-center gap-1 text-action-green font-caption text-caption">
+<span class="material-symbols-outlined text-[16px]">trending_up</span>
+<span>+12 this month</span>
+</div>
+</div>
+</div>
+<div class="bg-iron-grey rounded-xl p-6 border border-deep-charcoal relative overflow-hidden group">
+<div class="absolute inset-0 bg-gradient-to-br from-action-green/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+<div class="relative z-10">
+<div class="flex items-center justify-between mb-4">
+<span class="font-label-bold text-label-bold text-on-surface-variant uppercase tracking-wider">Monthly MRR</span>
+<span class="material-symbols-outlined text-action-green">payments</span>
+</div>
+<div class="font-headline-lg text-headline-lg text-stadium-white mb-1">$1,850</div>
+<div class="flex items-center gap-1 text-action-green font-caption text-caption">
+<span class="material-symbols-outlined text-[16px]">trending_up</span>
+<span>+$150 this month</span>
+</div>
+</div>
+</div>
+<div class="bg-iron-grey rounded-xl p-6 border border-deep-charcoal relative overflow-hidden group md:col-span-1">
+<div class="absolute inset-0 bg-gradient-to-br from-action-green/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+<div class="relative z-10 flex flex-col h-full justify-between">
+<div>
+<div class="flex items-center justify-between mb-4">
+<span class="font-label-bold text-label-bold text-on-surface-variant uppercase tracking-wider">Next Goal</span>
+<span class="material-symbols-outlined text-action-green">flag</span>
+</div>
+<div class="font-body-md text-body-md text-stadium-white mb-3">New Training Gear ($2000)</div>
+</div>
+<div>
+<div class="w-full bg-deep-charcoal rounded-full h-2.5 mb-2 border border-surface-container-high">
+<div class="bg-action-green h-2.5 rounded-full shadow-[0_0_8px_rgba(204,255,0,0.5)]" style="width: 92%"></div>
+</div>
+<div class="flex justify-between font-caption text-caption text-on-surface-variant">
+<span>$1,850</span>
+<span>$2,000</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Membership Tiers Section -->
+<div class="flex items-center justify-between mb-8">
+<h3 class="font-headline-md text-headline-md text-stadium-white">Active Tiers</h3>
+<button class="flex items-center gap-2 bg-iron-grey border border-action-green text-action-green px-4 py-2 rounded hover:bg-action-green/10 transition-colors font-label-bold text-label-bold">
+<span class="material-symbols-outlined text-[18px]">add</span>
+                New Tier
+            </button>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+<!-- Tier 1 -->
+<div class="bg-iron-grey rounded-xl border border-deep-charcoal flex flex-col relative overflow-hidden group hover:border-surface-variant transition-colors">
+<div class="p-6 border-b border-deep-charcoal">
+<h4 class="font-headline-md text-headline-md text-stadium-white mb-2">Pro Recovery</h4>
+<div class="flex items-baseline gap-1 mb-4">
+<span class="font-display-lg-mobile text-display-lg-mobile text-action-green">$5</span>
+<span class="font-body-md text-body-md text-on-surface-variant">/ month</span>
+</div>
+<p class="font-caption text-caption text-on-surface-variant h-12">Basic support tier. Help me recover faster and keep grinding.</p>
+</div>
+<div class="p-6 flex-1 flex flex-col">
+<ul class="flex flex-col gap-4 mb-8 flex-1">
+<li class="flex items-start gap-3">
+<span class="material-symbols-outlined text-action-green shrink-0">check_circle</span>
+<span class="font-body-md text-body-md text-stadium-white">Access to supporter-only feed</span>
+</li>
+<li class="flex items-start gap-3">
+<span class="material-symbols-outlined text-action-green shrink-0">check_circle</span>
+<span class="font-body-md text-body-md text-stadium-white">Weekly training logs</span>
+</li>
+<li class="flex items-start gap-3">
+<span class="material-symbols-outlined text-action-green shrink-0">check_circle</span>
+<span class="font-body-md text-body-md text-stadium-white">Supporter badge on profile</span>
+</li>
+</ul>
+<div class="mt-auto">
+<div class="flex items-center justify-between font-caption text-caption text-on-surface-variant mb-4 px-2 py-1 bg-deep-charcoal rounded">
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">group</span> 84 Active</span>
+<span>$420 / mo</span>
+</div>
+<button class="w-full py-3 bg-deep-charcoal text-stadium-white border border-surface-variant rounded hover:bg-surface-variant transition-colors font-label-bold text-label-bold">
+                            Edit Tier
+                        </button>
+</div>
+</div>
+</div>
+<!-- Tier 2 (Highlighted) -->
+<div class="bg-iron-grey rounded-xl border-2 border-action-green flex flex-col relative overflow-hidden group shadow-[0_0_20px_rgba(204,255,0,0.05)] transform md:-translate-y-4">
+<div class="absolute top-0 right-0 bg-action-green text-deep-charcoal font-label-bold text-label-bold px-3 py-1 rounded-bl-lg z-10">
+                    Most Popular
+                </div>
+<div class="p-6 border-b border-deep-charcoal bg-gradient-to-b from-action-green/10 to-transparent">
+<h4 class="font-headline-md text-headline-md text-stadium-white mb-2">Elite Performance</h4>
+<div class="flex items-baseline gap-1 mb-4">
+<span class="font-display-lg-mobile text-display-lg-mobile text-action-green">$15</span>
+<span class="font-body-md text-body-md text-on-surface-variant">/ month</span>
+</div>
+<p class="font-caption text-caption text-on-surface-variant h-12">Serious athletes only. Get my exact workouts and nutrition plans.</p>
+</div>
+<div class="p-6 flex-1 flex flex-col">
+<ul class="flex flex-col gap-4 mb-8 flex-1">
+<li class="flex items-start gap-3">
+<span class="material-symbols-outlined text-action-green shrink-0">check_circle</span>
+<span class="font-body-md text-body-md text-stadium-white">Everything in Pro Recovery</span>
+</li>
+<li class="flex items-start gap-3">
+<span class="material-symbols-outlined text-action-green shrink-0">check_circle</span>
+<span class="font-body-md text-body-md text-stadium-white">Monthly downloadable workout plans</span>
+</li>
+<li class="flex items-start gap-3">
+<span class="material-symbols-outlined text-action-green shrink-0">check_circle</span>
+<span class="font-body-md text-body-md text-stadium-white">Nutrition and supplement breakdown</span>
+</li>
+<li class="flex items-start gap-3">
+<span class="material-symbols-outlined text-action-green shrink-0">check_circle</span>
+<span class="font-body-md text-body-md text-stadium-white">Monthly group Q&amp;A stream</span>
+</li>
+</ul>
+<div class="mt-auto">
+<div class="flex items-center justify-between font-caption text-caption text-on-surface-variant mb-4 px-2 py-1 bg-deep-charcoal rounded">
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">group</span> 46 Active</span>
+<span>$690 / mo</span>
+</div>
+<button class="w-full py-3 bg-deep-charcoal text-stadium-white border border-surface-variant rounded hover:bg-surface-variant transition-colors font-label-bold text-label-bold">
+                            Edit Tier
+                        </button>
+</div>
+</div>
+</div>
+<!-- Tier 3 -->
+<div class="bg-iron-grey rounded-xl border border-deep-charcoal flex flex-col relative overflow-hidden group hover:border-surface-variant transition-colors">
+<div class="p-6 border-b border-deep-charcoal">
+<h4 class="font-headline-md text-headline-md text-stadium-white mb-2">Champion Tier</h4>
+<div class="flex items-baseline gap-1 mb-4">
+<span class="font-display-lg-mobile text-display-lg-mobile text-action-green">$25</span>
+<span class="font-body-md text-body-md text-on-surface-variant">/ month</span>
+</div>
+<p class="font-caption text-caption text-on-surface-variant h-12">The ultimate coaching experience. Direct access and form reviews.</p>
+</div>
+<div class="p-6 flex-1 flex flex-col">
+<ul class="flex flex-col gap-4 mb-8 flex-1">
+<li class="flex items-start gap-3">
+<span class="material-symbols-outlined text-action-green shrink-0">check_circle</span>
+<span class="font-body-md text-body-md text-stadium-white">Everything in Elite Performance</span>
+</li>
+<li class="flex items-start gap-3">
+<span class="material-symbols-outlined text-action-green shrink-0">check_circle</span>
+<span class="font-body-md text-body-md text-stadium-white">1-on-1 form check videos (1/mo)</span>
+</li>
+<li class="flex items-start gap-3">
+<span class="material-symbols-outlined text-action-green shrink-0">check_circle</span>
+<span class="font-body-md text-body-md text-stadium-white">Direct DM access for quick questions</span>
+</li>
+<li class="flex items-start gap-3">
+<span class="material-symbols-outlined text-action-green shrink-0">check_circle</span>
+<span class="font-body-md text-body-md text-stadium-white">Shoutout on social media</span>
+</li>
+</ul>
+<div class="mt-auto">
+<div class="flex items-center justify-between font-caption text-caption text-on-surface-variant mb-4 px-2 py-1 bg-deep-charcoal rounded">
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">group</span> 12 Active</span>
+<span>$300 / mo</span>
+</div>
+<button class="w-full py-3 bg-deep-charcoal text-stadium-white border border-surface-variant rounded hover:bg-surface-variant transition-colors font-label-bold text-label-bold">
+                            Edit Tier
+                        </button>
+</div>
+</div>
+</div>
+</div>
+</main>
+</body></html>

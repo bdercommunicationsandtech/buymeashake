@@ -1,12 +1,16 @@
-import { Component, signal } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
+import { ThemeService } from '../../core/theme.service';
 
 @Component({
   selector: 'app-header',
-  imports: [RouterLink, RouterLinkActive],
+  standalone: true,
+  imports: [CommonModule, RouterLink, RouterLinkActive],
   templateUrl: './header.html',
 })
 export class Header {
+  readonly themeService = inject(ThemeService);
   readonly menuOpen = signal(false);
   readonly searchQuery = signal('');
 

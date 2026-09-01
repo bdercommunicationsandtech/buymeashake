@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { authGuard } from './core/auth.guard';
+import { athleteGuard, authGuard, onboardingGuard, supporterGuard } from './core/auth.guard';
 
 export const routes: Routes = [
   // 1. Flujo Público
@@ -28,14 +28,51 @@ export const routes: Routes = [
   {
     path: 'onboarding',
     title: 'Configura tu perfil — buymeashake',
-    canActivate: [authGuard],
+    canActivate: [authGuard, onboardingGuard],
     loadComponent: () => import('./features/onboarding/onboarding').then((m) => m.Onboarding),
   },
 
-  // 3. Panel de Control del Creador (Dashboard)
+  // 3. Panel de Supporter (usuario normal)
+  {
+    path: 'supporter',
+    canActivate: [authGuard, supporterGuard],
+    loadComponent: () => import('./features/supporter/layout/layout').then((m) => m.SupporterLayout),
+    children: [
+      { path: '', redirectTo: 'home', pathMatch: 'full' },
+      {
+        path: 'home',
+        title: 'Inicio — Mi apoyo',
+        loadComponent: () => import('./features/supporter/home/supporter-home').then((m) => m.DashboardSupporterHome),
+      },
+      {
+        path: 'account',
+        title: 'Mi cuenta — Buymeashake.fit',
+        loadComponent: () => import('./features/supporter/account/supporter-account.component').then((m) => m.SupporterAccountComponent),
+      },
+    ],
+  },
+  {
+    path: 'fan/home',
+    title: 'Following Feed — Buymeashake.fit',
+    canActivate: [authGuard, supporterGuard],
+    loadComponent: () => import('./features/supporter/home/supporter-home').then((m) => m.DashboardSupporterHome),
+  },
+  {
+    path: 'fan/account',
+    title: 'My Account — Buymeashake.fit',
+    canActivate: [authGuard, supporterGuard],
+    loadComponent: () => import('./features/supporter/account/supporter-account.component').then((m) => m.SupporterAccountComponent),
+  },
+  {
+    path: 'feed',
+    redirectTo: 'supporter/home',
+    pathMatch: 'full',
+  },
+
+  // 4. Panel de Control del Creador (Dashboard)
   {
     path: 'dashboard',
-    canActivate: [authGuard],
+    canActivate: [authGuard, athleteGuard],
     loadComponent: () => import('./features/dashboard/layout/layout').then((m) => m.DashboardLayout),
     children: [
       { path: '', redirectTo: 'home', pathMatch: 'full' },
@@ -102,24 +139,7 @@ export const routes: Routes = [
     ]
   },
 
-  // 4. Portal del Supporter / Seguidor (Fiel a studio.buymeacoffee.com/home)
-  {
-    path: 'fan/home',
-    title: 'Following Feed — Buymeashake.fit',
-    loadComponent: () => import('./features/supporter/home/supporter-home').then((m) => m.DashboardSupporterHome),
-  },
-  {
-    path: 'fan/account',
-    title: 'My Account — Buymeashake.fit',
-    loadComponent: () => import('./features/supporter/account/supporter-account.component').then((m) => m.SupporterAccountComponent),
-  },
-  {
-    path: 'feed',
-    redirectTo: 'fan/home',
-    pathMatch: 'full',
-  },
-
-  // 5. Perfil Público del Creador (Catch dynamic user handles like /sofifit or /yahirruiz)
+  // 4. Perfil Público del Creador (Catch dynamic user handles like /sofifit or /yahirruiz)
   {
     path: ':username',
     title: 'Perfil de atleta — buymeashake',

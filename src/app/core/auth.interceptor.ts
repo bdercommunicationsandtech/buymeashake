@@ -1,31 +1,46 @@
-import { HttpInterceptorFn } from '@angular/common/http';
+import { HttpErrorResponse, HttpInterceptorFn } from '@angular/common/http';
 import { inject } from '@angular/core';
-import { Router } from '@angular/router';
-import { catchError, throwError } from 'rxjs';
+import { catchError, switchMap, throwError } from 'rxjs';
+import { AuthService } from './auth.service';
+
+const isAuthEndpoint = (url: string): boolean =>
+  url.includes('/auth/login') ||
+  url.includes('/auth/register') ||
+  url.includes('/auth/refresh');
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
-  const router = inject(Router);
-  const token = localStorage.getItem('access_token');
+  const auth = inject(AuthService);
+  const token = auth.getAccessToken();
 
-  let authReq = req;
-  if (token && !req.url.includes('/auth/login') && !req.url.includes('/auth/register')) {
-    authReq = req.clone({
-      setHeaders: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-  }
+  const authReq =
+    token && !isAuthEndpoint(req.url)
+      ? req.clone({ setHeaders: { Authorization: `Bearer ${token}` } })
+      : req;
 
   return next(authReq).pipe(
-    catchError((error) => {
-      // Solo limpiar token si es un endpoint protegido del dashboard
-      const isDashboardRoute = req.url.includes('/dashboard/') || req.url.includes('/auth/me');
-      if (error.status === 401 && isDashboardRoute) {
-        localStorage.removeItem('access_token');
-        localStorage.removeItem('refresh_token');
-        router.navigate(['/auth/login']);
+    catchError((error: HttpErrorResponse) => {
+      if (error.status !== 401 || isAuthEndpoint(req.url)) {
+        return throwError(() => error);
       }
-      return throwError(() => error);
+
+      const refreshToken = localStorage.getItem('refresh_token');
+      if (!refreshToken) {
+        auth.clearSession(true);
+        return throwError(() => error);
+      }
+
+      return auth.refreshAccessToken().pipe(
+        switchMap((tokens) => {
+          const retryReq = req.clone({
+            setHeaders: { Authorization: `Bearer ${tokens.access_token}` },
+          });
+          return next(retryReq);
+        }),
+        catchError((refreshError) => {
+          auth.clearSession(true);
+          return throwError(() => refreshError);
+        })
+      );
     })
   );
 };

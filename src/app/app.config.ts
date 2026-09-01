@@ -9,10 +9,20 @@ import { AuthService } from './core/auth.service';
 
 function initializeAuth(auth: AuthService): () => Promise<void> {
   return () => {
-    if (!localStorage.getItem('access_token')) {
+    auth.initialize();
+
+    if (!auth.getAccessToken()) {
       return Promise.resolve();
     }
-    return firstValueFrom(auth.loadMe().pipe(catchError(() => of(null)))).then(() => undefined);
+
+    return firstValueFrom(
+      auth.loadMe().pipe(
+        catchError(() => {
+          auth.clearSession(false);
+          return of(null);
+        })
+      )
+    ).then(() => undefined);
   };
 }
 

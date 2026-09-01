@@ -1,18 +1,18 @@
 import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router, RouterLink, RouterLinkActive } from '@angular/router';
-import { ThemeService } from '../../core/theme.service';
+import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../core/auth.service';
+import { ThemeService } from '../../core/theme.service';
 
 @Component({
   selector: 'app-header',
   standalone: true,
-  imports: [CommonModule, RouterLink, RouterLinkActive],
+  imports: [CommonModule, RouterLink],
   templateUrl: './header.html',
 })
 export class Header {
   readonly themeService = inject(ThemeService);
-  readonly authService = inject(AuthService);
+  readonly auth = inject(AuthService);
   private readonly router = inject(Router);
 
   readonly menuOpen = signal(false);
@@ -43,16 +43,12 @@ export class Header {
     }
   }
 
-  goToMyPanel(): void {
-    const user = this.authService.currentUser();
-    if (user?.role === 'supporter') {
-      this.router.navigate(['/fan/home']);
-    } else {
-      this.router.navigate(['/dashboard/home']);
-    }
+  logout(): void {
+    this.closeMenu();
+    this.auth.logout();
   }
 
-  logout(): void {
-    this.authService.logout();
+  dashboardRoute(): string {
+    return this.auth.getDefaultRoute();
   }
 }

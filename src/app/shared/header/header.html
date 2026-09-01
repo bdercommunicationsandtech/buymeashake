@@ -35,42 +35,35 @@
         aria-label="Cambiar tema"
       >
         @if (themeService.currentTheme() === 'dark') {
-          <!-- Sol (para pasar a claro) -->
           <svg class="w-4 h-4 text-[#c9ff3d]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
           </svg>
         } @else {
-          <!-- Luna (para pasar a oscuro) -->
           <svg class="w-4 h-4 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
           </svg>
         }
       </button>
 
-      @if (authService.isAuthenticated()) {
-        <!-- Botón para ir al Feed/Dashboard según su rol -->
-        <button
-          type="button"
-          (click)="goToMyPanel()"
-          class="rounded-xl bg-gray-100 dark:bg-white/10 hover:bg-gray-200 dark:hover:bg-white/15 px-3.5 py-2 text-xs font-black text-gray-950 dark:text-white transition flex items-center gap-2 cursor-pointer border border-gray-200 dark:border-white/10"
+      @if (auth.isAuthenticated()) {
+        <a
+          [routerLink]="dashboardRoute()"
+          class="hidden sm:inline-flex items-center gap-2 rounded-full bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/15 px-3 py-1.5 text-xs font-bold text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-white/10 transition"
         >
-          <span>🥤</span>
-          <span class="hidden sm:inline">
-            {{ authService.currentUser()?.role === 'supporter' ? 'Mi Feed (Siguiendo)' : 'Mi Dashboard' }}
+          <span class="h-6 w-6 rounded-full bg-gray-900 text-[#c9ff3d] grid place-items-center text-[9px] font-black">
+            {{ (auth.currentUser()?.full_name || 'U').slice(0, 2).toUpperCase() }}
           </span>
-          <span class="sm:hidden">Mi Feed</span>
-        </button>
+          <span>{{ auth.currentUser()?.full_name || (auth.currentUser()?.role === 'supporter' ? 'Mi Feed' : 'Mi cuenta') }}</span>
+        </a>
 
-        <!-- Cerrar Sesión Rápido -->
         <button
           type="button"
           (click)="logout()"
-          class="hidden sm:inline-block text-xs font-bold text-gray-500 hover:text-red-500 transition px-2 py-1.5 cursor-pointer"
+          class="hidden sm:inline-block text-xs font-bold text-gray-500 dark:text-gray-400 hover:text-red-500 dark:hover:text-red-400 transition px-2 py-1.5 cursor-pointer"
         >
           Salir
         </button>
       } @else {
-        <!-- Iniciar Sesión -->
         <a
           routerLink="/auth/login"
           class="hidden sm:inline-block text-xs font-bold text-gray-700 dark:text-gray-300 hover:text-gray-950 dark:hover:text-white transition px-2 py-1.5"
@@ -78,7 +71,6 @@
           Iniciar sesión
         </a>
 
-        <!-- Botón Principal Sign Up -->
         <a
           routerLink="/auth/register"
           class="rounded-full bg-[#c9ff3d] hover:bg-[#bbf033] px-4 sm:px-5 py-2 text-xs sm:text-sm font-black text-[#070a08] shadow-xs transition hover:shadow-sm active:scale-95 flex items-center gap-1.5"
@@ -115,20 +107,38 @@
       >
         Explorar atletas y Top 10
       </a>
-      <a
-        routerLink="/auth/login"
-        class="block rounded-xl px-3 py-2.5 text-sm font-bold text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-white/5"
-        (click)="closeMenu()"
-      >
-        Iniciar sesión
-      </a>
-      <a
-        routerLink="/auth/register"
-        class="block rounded-xl bg-gray-900 dark:bg-[#c9ff3d] text-[#c9ff3d] dark:text-gray-950 px-3 py-2.5 text-sm font-black text-center shadow-xs"
-        (click)="closeMenu()"
-      >
-        Empezar ahora gratis
-      </a>
+
+      @if (auth.isAuthenticated()) {
+        <a
+          [routerLink]="dashboardRoute()"
+          class="block rounded-xl px-3 py-2.5 text-sm font-bold text-gray-700 hover:bg-gray-50"
+          (click)="closeMenu()"
+        >
+          Mi cuenta
+        </a>
+        <button
+          type="button"
+          class="block w-full text-left rounded-xl px-3 py-2.5 text-sm font-bold text-gray-700 hover:bg-gray-50"
+          (click)="logout()"
+        >
+          Cerrar sesión
+        </button>
+      } @else {
+        <a
+          routerLink="/auth/login"
+          class="block rounded-xl px-3 py-2.5 text-sm font-bold text-gray-700 hover:bg-gray-50"
+          (click)="closeMenu()"
+        >
+          Iniciar sesión
+        </a>
+        <a
+          routerLink="/auth/register"
+          class="block rounded-xl bg-gray-900 text-[#c9ff3d] px-3 py-2.5 text-sm font-black text-center"
+          (click)="closeMenu()"
+        >
+          Empezar ahora gratis
+        </a>
+      }
     </nav>
   }
 </header>

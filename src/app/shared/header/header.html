@@ -82,7 +82,7 @@
       <!-- Botón Menú Mobile -->
       <button
         type="button"
-        class="grid h-9 w-9 place-items-center rounded-xl border border-gray-200 text-gray-700 md:hidden"
+        class="grid h-9 w-9 place-items-center rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-white/5 text-gray-700 dark:text-gray-200 md:hidden"
         (click)="toggleMenu()"
         aria-label="Abrir menú"
       >
@@ -99,10 +99,10 @@
 
   <!-- Menú desplegable móvil -->
   @if (menuOpen()) {
-    <nav class="border-t border-gray-100 bg-white px-5 py-4 space-y-2 md:hidden">
+    <nav class="border-t border-gray-100 dark:border-white/10 bg-white dark:bg-[#121614] px-5 py-4 space-y-2 md:hidden animate-in slide-in-from-top-2 duration-150">
       <a
         routerLink="/explore"
-        class="block rounded-xl px-3 py-2.5 text-sm font-bold text-gray-700 hover:bg-gray-50"
+        class="block rounded-xl px-3 py-2.5 text-sm font-bold text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-white/5"
         (click)="closeMenu()"
       >
         Explorar atletas y Top 10

@@ -11,3 +11,10 @@ export * from './icon-star';
 export * from './icon-trophy';
 export * from './icon-lock';
 export * from './icon-bolt';
+
+// Suite de Iconos Cinemáticos Animados (Smart Fit Style)
+export * from './animated-biceps';
+export * from './animated-kettlebell';
+export * from './animated-shaker';
+export * from './animated-runner';
+

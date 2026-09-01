@@ -1,4 +1,4 @@
-<div class="min-h-screen bg-gray-50 flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8 font-sans">
+<div class="min-h-screen bg-[#fafafb] dark:bg-[#090c0a] text-gray-900 dark:text-gray-100 flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8 font-sans transition-colors duration-200">
   <div class="sm:mx-auto sm:w-full sm:max-w-md">
     <!-- Logo -->
     <a routerLink="/" class="flex justify-center items-center gap-2 mb-6">
@@ -9,43 +9,43 @@
           <path d="M11 20h10" stroke-linecap="round" />
         </svg>
       </span>
-      <span class="text-2xl font-extrabold tracking-tight text-gray-900">
+      <span class="text-2xl font-black tracking-tight text-gray-950 dark:text-white">
         buymeashake
       </span>
     </a>
 
-    <h2 class="text-center text-3xl font-black text-gray-900 tracking-tight">
+    <h2 class="text-center text-3xl font-black text-gray-950 dark:text-white tracking-tight">
       Crea tu página en 1 minuto
     </h2>
-    <p class="mt-2 text-center text-sm text-gray-600">
+    <p class="mt-2 text-center text-sm text-gray-600 dark:text-gray-400">
       Empieza a recibir apoyo de tu comunidad deportiva. Sin mensualidades.
     </p>
   </div>
 
   <div class="mt-8 sm:mx-auto sm:w-full sm:max-w-lg">
-    <div class="bg-white py-8 px-6 shadow-sm sm:rounded-3xl sm:px-10 border border-gray-200/80">
+    <div class="bg-white dark:bg-[#121614] py-8 px-6 shadow-sm sm:rounded-3xl sm:px-10 border border-gray-200/80 dark:border-white/10">
       <form class="space-y-5" (ngSubmit)="submit()">
         
         @if (errorMessage()) {
-          <div class="rounded-xl bg-red-50 p-3.5 border border-red-200 text-xs font-bold text-red-600">
+          <div class="rounded-xl bg-red-50 dark:bg-red-950/40 p-3.5 border border-red-200 dark:border-red-900 text-xs font-bold text-red-600 dark:text-red-400">
             {{ errorMessage() }}
           </div>
         }
 
         <!-- Handle URL preview -->
         <div>
-          <label class="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-1">
+          <label class="block text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 mb-1.5">
             Elige tu enlace de atleta
           </label>
-          <div class="flex rounded-xl border border-gray-300 focus-within:border-gray-900 focus-within:ring-1 focus-within:ring-gray-900 overflow-hidden shadow-xs">
-            <span class="inline-flex items-center px-3.5 bg-gray-50 text-gray-500 text-xs sm:text-sm font-semibold border-r border-gray-200">
+          <div class="flex rounded-xl border border-gray-300 dark:border-white/15 bg-white dark:bg-[#191c1d] focus-within:border-gray-900 dark:focus-within:border-[#c9ff3d] overflow-hidden shadow-xs">
+            <span class="inline-flex items-center px-3.5 bg-gray-50 dark:bg-white/5 text-gray-500 dark:text-gray-400 text-xs sm:text-sm font-bold border-r border-gray-200 dark:border-white/10">
               buymeashake.fit/
             </span>
             <input
               type="text"
               required
               placeholder="tu_nombre"
-              class="flex-1 min-w-0 block w-full px-3.5 py-3 text-sm text-gray-900 placeholder-gray-400 outline-none font-semibold"
+              class="flex-1 min-w-0 block w-full px-3.5 py-3 text-sm text-gray-900 dark:text-white placeholder-gray-400 bg-white dark:bg-[#191c1d] outline-none font-bold"
               [value]="handle()"
               (input)="onHandleInput($any($event.target).value)"
             />
@@ -54,14 +54,14 @@
 
         <!-- Nombre completo -->
         <div>
-          <label class="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-1">
+          <label class="block text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 mb-1.5">
             Nombre o Alias de Atleta / Coach
           </label>
           <input
             type="text"
             required
             placeholder="Ej. Sofía Ramírez"
-            class="appearance-none block w-full px-4 py-3 border border-gray-300 rounded-xl shadow-xs placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-gray-900 focus:border-gray-900 text-sm font-medium"
+            class="block w-full px-4 py-3 border border-gray-300 dark:border-white/15 rounded-xl shadow-xs bg-white dark:bg-[#191c1d] text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:border-gray-900 dark:focus:border-[#c9ff3d] text-sm font-semibold"
             [value]="name()"
             (input)="name.set($any($event.target).value)"
           />
@@ -69,30 +69,30 @@
 
         <!-- Disciplina principal -->
         <div>
-          <label class="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-1">
+          <label class="block text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 mb-1.5">
             Disciplina o Deporte Principal
           </label>
           <select
-            class="block w-full px-4 py-3 border border-gray-300 rounded-xl shadow-xs bg-white text-sm font-medium text-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900 focus:border-gray-900"
+            class="block w-full px-4 py-3 border border-gray-300 dark:border-white/15 rounded-xl shadow-xs bg-white dark:bg-[#191c1d] text-sm font-semibold text-gray-900 dark:text-white focus:outline-none focus:border-gray-900 dark:focus:border-[#c9ff3d]"
             [value]="selectedSportCode()"
             (change)="selectedSportCode.set(+$any($event.target).value)"
           >
             @for (sport of sports(); track sport.code) {
-              <option [value]="sport.code">{{ sport.label }}</option>
+              <option [value]="sport.code" class="bg-white dark:bg-[#191c1d] text-gray-900 dark:text-white">{{ sport.label }}</option>
             }
           </select>
         </div>
 
         <!-- Correo -->
         <div>
-          <label class="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-1">
+          <label class="block text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 mb-1.5">
             Correo electrónico
           </label>
           <input
             type="email"
             required
             placeholder="atleta@ejemplo.com"
-            class="appearance-none block w-full px-4 py-3 border border-gray-300 rounded-xl shadow-xs placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-gray-900 focus:border-gray-900 text-sm"
+            class="block w-full px-4 py-3 border border-gray-300 dark:border-white/15 rounded-xl shadow-xs bg-white dark:bg-[#191c1d] text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:border-gray-900 dark:focus:border-[#c9ff3d] text-sm font-semibold"
             [value]="email()"
             (input)="email.set($any($event.target).value)"
           />
@@ -100,7 +100,7 @@
 
         <!-- Contraseña -->
         <div>
-          <label class="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-1">
+          <label class="block text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 mb-1.5">
             Contraseña
           </label>
           <input
@@ -108,7 +108,7 @@
             required
             minlength="8"
             placeholder="Mínimo 8 caracteres"
-            class="appearance-none block w-full px-4 py-3 border border-gray-300 rounded-xl shadow-xs placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-gray-900 focus:border-gray-900 text-sm"
+            class="block w-full px-4 py-3 border border-gray-300 dark:border-white/15 rounded-xl shadow-xs bg-white dark:bg-[#191c1d] text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:border-gray-900 dark:focus:border-[#c9ff3d] text-sm font-semibold"
             [value]="password()"
             (input)="password.set($any($event.target).value)"
           />
@@ -119,16 +119,16 @@
           <button
             type="submit"
             [disabled]="loading()"
-            class="w-full flex justify-center py-3.5 px-4 border border-transparent rounded-xl shadow-sm text-sm font-black text-[#070a08] bg-[#c9ff3d] hover:bg-[#bbf033] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#c9ff3d] transition active:scale-[0.99] disabled:opacity-50"
+            class="w-full flex justify-center py-3.5 px-4 border border-transparent rounded-xl shadow-sm text-sm font-black text-gray-950 bg-[#c9ff3d] hover:bg-[#bbf033] focus:outline-none transition active:scale-[0.99] disabled:opacity-50 cursor-pointer"
           >
             {{ loading() ? 'Creando tu página...' : 'Crear mi página de atleta' }}
           </button>
         </div>
 
         <!-- Link a login -->
-        <p class="text-center text-xs text-gray-500 pt-2">
+        <p class="text-center text-xs text-gray-500 dark:text-gray-400 pt-2 font-medium">
           ¿Ya tienes cuenta?
-          <a routerLink="/auth/login" class="font-bold text-gray-900 hover:underline">
+          <a routerLink="/auth/login" class="font-bold text-gray-900 dark:text-white hover:underline">
             Iniciar sesión
           </a>
         </p>

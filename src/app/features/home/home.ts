@@ -4,6 +4,10 @@ import { RouterLink } from '@angular/router';
 import { CheckoutService } from '../../core/checkout.service';
 import { SHAKE_PRICE } from '../../core/demo';
 import {
+  AnimatedBicepsComponent,
+  AnimatedKettlebellComponent,
+  AnimatedRunnerComponent,
+  AnimatedShakerComponent,
   IconButtonShareComponent,
   IconButtonSupportComponent,
   IconDumbbellComponent,
@@ -37,6 +41,10 @@ export interface FloatingAthlete {
     IconButtonShareComponent,
     IconButtonSupportComponent,
     IconStarComponent,
+    AnimatedBicepsComponent,
+    AnimatedKettlebellComponent,
+    AnimatedShakerComponent,
+    AnimatedRunnerComponent,
   ],
   templateUrl: './home.html',
 })

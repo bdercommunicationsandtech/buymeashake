@@ -1,4 +1,4 @@
-<div class="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8 font-sans">
+<div class="min-h-screen bg-[#fafafb] dark:bg-[#090c0a] text-gray-900 dark:text-gray-100 flex flex-col justify-center py-12 sm:px-6 lg:px-8 font-sans transition-colors duration-200">
   <div class="sm:mx-auto sm:w-full sm:max-w-md">
     <!-- Logo -->
     <a routerLink="/" class="flex justify-center items-center gap-2 mb-8">
@@ -9,34 +9,34 @@
           <path d="M11 20h10" stroke-linecap="round" />
         </svg>
       </span>
-      <span class="text-2xl font-extrabold tracking-tight text-gray-900">
+      <span class="text-2xl font-black tracking-tight text-gray-950 dark:text-white">
         buymeashake
       </span>
     </a>
 
-    <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">
+    <h2 class="mt-6 text-center text-3xl font-black text-gray-950 dark:text-white tracking-tight">
       ¡Hola de nuevo, atleta!
     </h2>
-    <p class="mt-2 text-center text-sm text-gray-600">
+    <p class="mt-2 text-center text-sm text-gray-600 dark:text-gray-400 font-medium">
       ¿No tienes cuenta?
-      <a routerLink="/auth/register" class="font-bold text-[#5cba7a] hover:text-[#4a9c64] transition">
+      <a routerLink="/auth/register" class="font-bold text-emerald-600 dark:text-[#c9ff3d] hover:underline transition">
         Regístrate gratis
       </a>
     </p>
   </div>
 
   <div class="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-    <div class="bg-white py-8 px-4 shadow sm:rounded-3xl sm:px-10 border border-gray-100">
+    <div class="bg-white dark:bg-[#121614] py-8 px-6 shadow-sm sm:rounded-3xl sm:px-10 border border-gray-200/80 dark:border-white/10">
       <form class="space-y-6" (ngSubmit)="onSubmit()">
         
         @if (errorMessage()) {
-          <div class="rounded-xl bg-red-50 p-3.5 border border-red-200 text-xs font-bold text-red-600">
+          <div class="rounded-xl bg-red-50 dark:bg-red-950/40 p-3.5 border border-red-200 dark:border-red-900 text-xs font-bold text-red-600 dark:text-red-400">
             {{ errorMessage() }}
           </div>
         }
 
         <div>
-          <label for="email" class="block text-sm font-bold text-gray-700">
+          <label for="email" class="block text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 mb-1.5">
             Correo electrónico
           </label>
           <div class="mt-1">
@@ -47,13 +47,14 @@
               [(ngModel)]="email"
               autocomplete="email"
               required
-              class="appearance-none block w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-[#5cba7a] focus:border-[#5cba7a] sm:text-sm transition"
+              placeholder="atleta@ejemplo.com"
+              class="block w-full px-4 py-3 border border-gray-300 dark:border-white/15 rounded-xl shadow-xs bg-white dark:bg-[#191c1d] text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:border-gray-900 dark:focus:border-[#c9ff3d] text-sm font-semibold transition"
             >
           </div>
         </div>
 
         <div>
-          <label for="password" class="block text-sm font-bold text-gray-700">
+          <label for="password" class="block text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 mb-1.5">
             Contraseña
           </label>
           <div class="mt-1">
@@ -64,7 +65,8 @@
               [(ngModel)]="password"
               autocomplete="current-password"
               required
-              class="appearance-none block w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-[#5cba7a] focus:border-[#5cba7a] sm:text-sm transition"
+              placeholder="••••••••"
+              class="block w-full px-4 py-3 border border-gray-300 dark:border-white/15 rounded-xl shadow-xs bg-white dark:bg-[#191c1d] text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:border-gray-900 dark:focus:border-[#c9ff3d] text-sm font-semibold transition"
             >
           </div>
         </div>
@@ -73,7 +75,7 @@
           <button
             type="submit"
             [disabled]="loading()"
-            class="w-full flex justify-center py-3.5 px-4 border border-transparent rounded-xl shadow-sm text-sm font-black text-[#070a08] bg-[#c9ff3d] hover:bg-[#bbf033] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#c9ff3d] transition active:scale-[0.99] disabled:opacity-50"
+            class="w-full flex justify-center py-3.5 px-4 border border-transparent rounded-xl shadow-sm text-sm font-black text-gray-950 bg-[#c9ff3d] hover:bg-[#bbf033] focus:outline-none transition active:scale-[0.99] disabled:opacity-50 cursor-pointer"
           >
             {{ loading() ? 'Iniciando sesión...' : 'Iniciar Sesión' }}
           </button>
@@ -83,32 +85,28 @@
       <div class="mt-6">
         <div class="relative">
           <div class="absolute inset-0 flex items-center">
-            <div class="w-full border-t border-gray-200"></div>
+            <div class="w-full border-t border-gray-200 dark:border-white/10"></div>
           </div>
-          <div class="relative flex justify-center text-sm">
-            <span class="px-2 bg-white text-gray-500">O continúa con</span>
+          <div class="relative flex justify-center text-xs uppercase tracking-wider font-bold">
+            <span class="px-3 bg-white dark:bg-[#121614] text-gray-400">O continúa con</span>
           </div>
         </div>
 
         <div class="mt-6 grid grid-cols-2 gap-3">
-          <div>
-            <a href="#" class="w-full inline-flex justify-center py-3 px-4 border border-gray-300 rounded-xl shadow-sm bg-white text-sm font-bold text-gray-700 hover:bg-gray-50 transition">
-              <span class="sr-only">Sign in with Google</span>
-              <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
-                 <path d="M12.48 10.92v3.28h7.84c-.24 1.84-.853 3.187-1.787 4.133-1.147 1.147-2.933 2.4-6.053 2.4-4.827 0-8.6-3.893-8.6-8.72s3.773-8.72 8.6-8.72c2.6 0 4.507 1.027 5.907 2.347l2.307-2.307C18.747 1.44 16.133 0 12.48 0 5.867 0 .307 5.387.307 12s5.56 12 12.173 12c3.573 0 6.267-1.173 8.373-3.36 2.16-2.16 2.84-5.213 2.84-7.667 0-.76-.053-1.467-.173-2.053H12.48z"/>
-              </svg>
-            </a>
-          </div>
+          <a href="#" class="inline-flex justify-center items-center gap-2 py-3 px-4 border border-gray-300 dark:border-white/15 rounded-xl shadow-xs bg-white dark:bg-white/5 text-xs font-bold text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-white/10 transition">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+               <path d="M12.48 10.92v3.28h7.84c-.24 1.84-.853 3.187-1.787 4.133-1.147 1.147-2.933 2.4-6.053 2.4-4.827 0-8.6-3.893-8.6-8.72s3.773-8.72 8.6-8.72c2.6 0 4.507 1.027 5.907 2.347l2.307-2.307C18.747 1.44 16.133 0 12.48 0 5.867 0 .307 5.387.307 12s5.56 12 12.173 12c3.573 0 6.267-1.173 8.373-3.36 2.16-2.16 2.84-5.213 2.84-7.667 0-.76-.053-1.467-.173-2.053H12.48z"/>
+            </svg>
+            <span>Google</span>
+          </a>
 
-          <div>
-            <a href="#" class="w-full inline-flex justify-center py-3 px-4 border border-gray-300 rounded-xl shadow-sm bg-white text-sm font-bold text-gray-700 hover:bg-gray-50 transition">
-              <span class="sr-only">Sign in with Apple</span>
-              <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
-                 <path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.15 2.65.81 3.4 2 3.14-1.9 4.3 2.84 1.3 4.25-.09.05-.18.12-.24.23-.9 1.63-.58 3.73.98 4.6-.2.52-.45 1.05-.75 1.55-.58.94-1.29 1.83-2.24 2.8z"/>
-                 <path d="M12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/>
-              </svg>
-            </a>
-          </div>
+          <a href="#" class="inline-flex justify-center items-center gap-2 py-3 px-4 border border-gray-300 dark:border-white/15 rounded-xl shadow-xs bg-white dark:bg-white/5 text-xs font-bold text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-white/10 transition">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+               <path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.15 2.65.81 3.4 2 3.14-1.9 4.3 2.84 1.3 4.25-.09.05-.18.12-.24.23-.9 1.63-.58 3.73.98 4.6-.2.52-.45 1.05-.75 1.55-.58.94-1.29 1.83-2.24 2.8z"/>
+               <path d="M12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/>
+            </svg>
+            <span>Apple</span>
+          </a>
         </div>
       </div>
     </div>

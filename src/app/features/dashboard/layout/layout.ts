@@ -11,6 +11,7 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 export class DashboardLayout {
   readonly publishOpen = signal(true);
   readonly userMenuOpen = signal(false);
+  readonly sidebarOpen = signal(false);
 
   togglePublish(): void {
     this.publishOpen.update((v) => !v);
@@ -18,5 +19,13 @@ export class DashboardLayout {
 
   toggleUserMenu(): void {
     this.userMenuOpen.update((v) => !v);
+  }
+
+  toggleSidebar(): void {
+    this.sidebarOpen.update((v) => !v);
+  }
+
+  closeSidebar(): void {
+    this.sidebarOpen.set(false);
   }
 }

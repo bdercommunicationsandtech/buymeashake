@@ -1,16 +1,18 @@
 import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router, RouterLink, RouterLinkActive } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
+import { AuthService } from '../../core/auth.service';
 import { ThemeService } from '../../core/theme.service';
 
 @Component({
   selector: 'app-header',
   standalone: true,
-  imports: [CommonModule, RouterLink, RouterLinkActive],
+  imports: [CommonModule, RouterLink],
   templateUrl: './header.html',
 })
 export class Header {
   readonly themeService = inject(ThemeService);
+  readonly auth = inject(AuthService);
   readonly menuOpen = signal(false);
   readonly searchQuery = signal('');
 
@@ -39,5 +41,14 @@ export class Header {
     } else {
       this.router.navigate(['/explore']);
     }
+  }
+
+  logout(): void {
+    this.closeMenu();
+    this.auth.logout();
+  }
+
+  dashboardRoute(): string {
+    return this.auth.getDefaultRoute();
   }
 }

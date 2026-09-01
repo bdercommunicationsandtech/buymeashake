@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { authGuard } from './core/auth.guard';
+import { athleteGuard, authGuard, onboardingGuard, supporterGuard } from './core/auth.guard';
 
 export const routes: Routes = [
   // 1. Flujo Público
@@ -28,14 +28,29 @@ export const routes: Routes = [
   {
     path: 'onboarding',
     title: 'Configura tu perfil — buymeashake',
-    canActivate: [authGuard],
+    canActivate: [authGuard, onboardingGuard],
     loadComponent: () => import('./features/onboarding/onboarding').then((m) => m.Onboarding),
   },
 
-  // 3. Panel de Control del Creador (Dashboard)
+  // 3. Panel de Supporter (usuario normal)
+  {
+    path: 'supporter',
+    canActivate: [authGuard, supporterGuard],
+    loadComponent: () => import('./features/supporter/layout/layout').then((m) => m.SupporterLayout),
+    children: [
+      { path: '', redirectTo: 'home', pathMatch: 'full' },
+      {
+        path: 'home',
+        title: 'Inicio — Mi apoyo',
+        loadComponent: () => import('./features/supporter/home/home').then((m) => m.SupporterHome),
+      },
+    ],
+  },
+
+  // 4. Panel de Control del Creador (Dashboard)
   {
     path: 'dashboard',
-    canActivate: [authGuard],
+    canActivate: [authGuard, athleteGuard],
     loadComponent: () => import('./features/dashboard/layout/layout').then((m) => m.DashboardLayout),
     children: [
       { path: '', redirectTo: 'home', pathMatch: 'full' },
@@ -102,7 +117,7 @@ export const routes: Routes = [
     ]
   },
 
-  // 4. Perfil Público del Creador (Catch dynamic user handles like /sofifit or /yahirruiz)
+  // 5. Perfil Público del Creador (Catch dynamic user handles like /sofifit or /yahirruiz)
   {
     path: ':username',
     title: 'Perfil de atleta — buymeashake',

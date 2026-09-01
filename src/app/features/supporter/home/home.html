@@ -1,0 +1,81 @@
+<div class="space-y-6">
+  <div class="bg-white dark:bg-[#111613] rounded-3xl p-6 border border-gray-200/80 dark:border-white/10 shadow-xs">
+    <div class="flex items-center gap-4">
+      <div class="h-14 w-14 rounded-full bg-gray-900 text-[#c9ff3d] grid place-items-center text-lg font-black shrink-0">
+        {{ (auth.currentUser()?.full_name || 'U').slice(0, 2).toUpperCase() }}
+      </div>
+      <div>
+        <h1 class="text-xl font-extrabold text-gray-900 dark:text-white">
+          Hola, {{ auth.currentUser()?.full_name || 'Supporter' }}
+        </h1>
+        <p class="text-xs text-gray-500 dark:text-gray-400 font-medium mt-0.5">
+          Gracias por apoyar a los atletas que te inspiran
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+    <div class="bg-white dark:bg-[#111613] rounded-2xl p-5 border border-gray-200/80 dark:border-white/10 shadow-xs">
+      <p class="text-xs font-semibold text-gray-500 dark:text-gray-400">Atletas apoyados</p>
+      <p class="text-3xl font-black text-gray-900 dark:text-white mt-1">{{ supportedAthletes.length }}</p>
+    </div>
+    <div class="bg-white dark:bg-[#111613] rounded-2xl p-5 border border-gray-200/80 dark:border-white/10 shadow-xs">
+      <p class="text-xs font-semibold text-gray-500 dark:text-gray-400">Shakes enviados</p>
+      <p class="text-3xl font-black text-gray-900 dark:text-white mt-1">{{ totalShakes }}</p>
+    </div>
+    <div class="bg-white dark:bg-[#111613] rounded-2xl p-5 border border-gray-200/80 dark:border-white/10 shadow-xs">
+      <p class="text-xs font-semibold text-gray-500 dark:text-gray-400">Último apoyo</p>
+      <p class="text-lg font-black text-gray-900 dark:text-white mt-1">{{ supportedAthletes[0]?.lastSupportDate || '—' }}</p>
+    </div>
+  </div>
+
+  <div>
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="text-base font-black text-gray-900 dark:text-white">Últimos atletas apoyados</h2>
+      <span class="text-[10px] font-bold uppercase tracking-wider text-amber-600 bg-amber-50 dark:bg-amber-950/40 px-2 py-1 rounded-md">
+        Vista previa
+      </span>
+    </div>
+
+    <div class="space-y-3">
+      @for (athlete of supportedAthletes; track athlete.handle) {
+        <a
+          [routerLink]="['/', athlete.handle]"
+          class="flex items-center gap-4 bg-white dark:bg-[#111613] rounded-2xl p-4 border border-gray-200/80 dark:border-white/10 shadow-xs hover:border-gray-300 dark:hover:border-white/20 hover:shadow-sm transition group"
+        >
+          <div class="h-12 w-12 rounded-xl bg-gray-900 text-[#c9ff3d] grid place-items-center text-sm font-black shrink-0">
+            {{ athlete.initials }}
+          </div>
+
+          <div class="flex-1 min-w-0">
+            <h3 class="font-extrabold text-gray-900 dark:text-white truncate group-hover:text-black dark:group-hover:text-[#c9ff3d] transition">
+              {{ athlete.name }}
+            </h3>
+            <p class="text-xs text-gray-500 dark:text-gray-400 font-medium">
+              &#64;{{ athlete.handle }} · {{ athlete.sport }}
+            </p>
+          </div>
+
+          <div class="text-right shrink-0">
+            <p class="text-sm font-black text-gray-900 dark:text-white">{{ athlete.shakesSent }} shakes</p>
+            <p class="text-[11px] text-gray-400 font-medium">{{ athlete.lastSupportDate }}</p>
+          </div>
+        </a>
+      }
+    </div>
+  </div>
+
+  <div class="bg-[#fdf4dc] dark:bg-amber-950/30 rounded-2xl p-5 border border-[#fae8b4] dark:border-amber-900/30 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div>
+      <p class="text-sm font-bold text-gray-800 dark:text-amber-100">¿Buscas nuevos atletas para apoyar?</p>
+      <p class="text-xs text-gray-600 dark:text-amber-200/80 mt-1">Explora el leaderboard y descubre talento emergente.</p>
+    </div>
+    <a
+      routerLink="/explore"
+      class="inline-flex items-center justify-center rounded-full bg-black dark:bg-[#c9ff3d] text-white dark:text-black px-5 py-2.5 text-xs font-bold hover:bg-gray-800 dark:hover:bg-[#bbf033] transition shrink-0"
+    >
+      Explorar atletas
+    </a>
+  </div>
+</div>

@@ -1,17 +1,26 @@
 from collections.abc import AsyncGenerator
+from urllib.parse import quote_plus
+
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import DeclarativeBase
 
 from app.core.config import settings
 
-# Motor asíncrono con pool de conexiones para MySQL
+# URL construida igual que buyer1/services (quote_plus + variables separadas)
+DATABASE_URL = (
+    f"mysql+aiomysql://{quote_plus(settings.USER_DB)}:{quote_plus(settings.PASSWORD)}"
+    f"@{settings.HOST}:{settings.PORT_DB}/{settings.DATABASE}"
+)
+
 engine = create_async_engine(
-    settings.ASYNC_DATABASE_URL,
+    DATABASE_URL,
     echo=(settings.ENVIRONMENT == "development"),
     pool_pre_ping=True,
-    pool_recycle=3600,
     pool_size=10,
     max_overflow=20,
+    pool_recycle=3600,
+    pool_timeout=30,
+    connect_args={"connect_timeout": 10},
 )
 
 async_session_factory = async_sessionmaker(
@@ -36,3 +45,7 @@ async def get_db_session() -> AsyncGenerator[AsyncSession, None]:
         except Exception:
             await session.rollback()
             raise
+
+
+# Alias compatible con buyer1 (get_db)
+get_db = get_db_session

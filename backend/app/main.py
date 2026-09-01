@@ -1,5 +1,8 @@
+import os
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 from app.api.v1.api import api_router
 from app.core.config import settings
@@ -15,7 +18,6 @@ def create_application() -> FastAPI:
         redoc_url=f"{settings.API_V1_STR}/redoc",
     )
 
-    # Configuración de CORS para Angular Frontend y Mobile Apps
     app.add_middleware(
         CORSMiddleware,
         allow_origins=settings.BACKEND_CORS_ORIGINS,
@@ -24,22 +26,26 @@ def create_application() -> FastAPI:
         allow_headers=["*"],
     )
 
-    # Manejadores de excepciones de dominio globales
     register_exception_handlers(app)
 
-    # Servir archivos estáticos subidos (Avatares, portadas, PDFs)
-    import os
-    from fastapi.staticfiles import StaticFiles
-    static_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "static")
-    if os.path.exists(static_dir):
-        app.mount("/static", StaticFiles(directory=static_dir), name="static")
+    static_root = os.path.join(os.path.dirname(os.path.dirname(__file__)), "static")
+    os.makedirs(os.path.join(static_root, "uploads", "images"), exist_ok=True)
+    os.makedirs(os.path.join(static_root, "uploads", "products"), exist_ok=True)
+    app.mount("/static", StaticFiles(directory=static_root), name="static")
 
-    # Routers de la API v1
     app.include_router(api_router, prefix=settings.API_V1_STR)
 
     @app.get("/health", tags=["Health"])
     async def health_check() -> dict[str, str]:
         return {"status": "ok", "service": settings.PROJECT_NAME}
+
+    @app.get("/", tags=["Root"])
+    async def read_root() -> dict[str, str]:
+        return {
+            "status": "online",
+            "service": settings.PROJECT_NAME,
+            "documentation": f"{settings.API_V1_STR}/docs",
+        }
 
     return app
 

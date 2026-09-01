@@ -57,6 +57,7 @@ from app.schemas.dtos import (
     RefreshTokenRequest,
     ShakeCheckoutCreateRequest,
     TokenResponse,
+    UploadFileResponse,
     UserLoginRequest,
     UserMeResponse,
     UserRegisterRequest,

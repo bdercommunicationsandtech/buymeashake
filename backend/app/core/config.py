@@ -1,5 +1,14 @@
-from pydantic import computed_field
+from typing import Any
+
+from pydantic import AliasChoices, Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+def _strip_wrapping_quotes(value: str) -> str:
+    value = value.strip()
+    if len(value) >= 2 and value[0] == value[-1] and value[0] in ("'", '"'):
+        return value[1:-1]
+    return value
 
 
 class Settings(BaseSettings):
@@ -11,21 +20,39 @@ class Settings(BaseSettings):
     # CORS
     BACKEND_CORS_ORIGINS: list[str] = [
         "http://localhost:4200",
+        "http://127.0.0.1:4200",
         "http://localhost:3000",
         "https://buymeashake.fit",
     ]
 
-    # Database (MySQL con aiomysql async driver)
-    DB_HOST: str = "localhost"
-    DB_PORT: int = 3306
-    DB_USER: str = "root"
-    DB_PASSWORD: str = "root"
-    DB_NAME: str = "buymeashake"
+    # Database (misma convención que buyer1/services)
+    DATABASE: str = Field(
+        default="buymeashake",
+        validation_alias=AliasChoices("DATABASE", "DB_NAME"),
+    )
+    USER_DB: str = Field(
+        default="root",
+        validation_alias=AliasChoices("USER_DB", "DB_USER"),
+    )
+    HOST: str = Field(
+        default="localhost",
+        validation_alias=AliasChoices("HOST", "DB_HOST"),
+    )
+    PASSWORD: str = Field(
+        default="root",
+        validation_alias=AliasChoices("PASSWORD", "DB_PASSWORD"),
+    )
+    PORT_DB: int = Field(
+        default=3306,
+        validation_alias=AliasChoices("PORT_DB", "DB_PORT"),
+    )
 
-    @computed_field
-    @property
-    def ASYNC_DATABASE_URL(self) -> str:
-        return f"mysql+aiomysql://{self.DB_USER}:{self.DB_PASSWORD}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
+    @field_validator("PASSWORD", mode="before")
+    @classmethod
+    def normalize_password(cls, value: Any) -> Any:
+        if isinstance(value, str):
+            return _strip_wrapping_quotes(value)
+        return value
 
     # JWT Security
     SECRET_KEY: str = "SUPER_SECRET_KEY_CHANGE_IN_PRODUCTION_982347891234"
@@ -44,6 +71,7 @@ class Settings(BaseSettings):
         env_file_encoding="utf-8",
         case_sensitive=True,
         extra="ignore",
+        populate_by_name=True,
     )
 
 

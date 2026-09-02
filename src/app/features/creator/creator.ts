@@ -291,63 +291,6 @@ export class Creator {
     });
   }
 
-  openFollow(): void {
-    const handle = this.creatorView()?.handle || this.username();
-
-    if (this.authService.isAuthenticated()) {
-      if (this.isTogglingFollow()) return;
-      this.isTogglingFollow.set(true);
-
-      if (this.isFollowing()) {
-        this.supporterService.unfollowAthlete(handle).subscribe({
-          next: () => {
-            this.isFollowing.set(false);
-            this.isTogglingFollow.set(false);
-          },
-          error: () => this.isTogglingFollow.set(false),
-        });
-      } else {
-        this.supporterService.followAthlete(handle).subscribe({
-          next: () => {
-            this.isFollowing.set(true);
-            this.isTogglingFollow.set(false);
-          },
-          error: () => this.isTogglingFollow.set(false),
-        });
-      }
-      return;
-    }
-
-    this.followModalOpen.set(true);
-  }
-
-  closeFollow(): void {
-    this.followModalOpen.set(false);
-  }
-
-  onFollowSuccess(_data: { email: string; name: string }): void {
-    this.isFollowing.set(true);
-    this.router.navigate(['/fan/home'], {
-      queryParams: { followed: this.creatorView()?.handle || this.username() },
-    });
-  }
-
-  sharePage(): void {
-    const url = window.location.href;
-    const name = this.creatorView()?.name || this.username();
-    if (navigator.share) {
-      navigator.share({
-        title: `Apoya a ${name} en Buy Me a Shake`,
-        text: `¡Invítale un Shake a ${name} para apoyar su carrera deportiva!`,
-        url,
-      }).catch(() => {});
-    } else if (navigator.clipboard) {
-      navigator.clipboard.writeText(url).then(() => {
-        alert('¡Enlace copiado al portapapeles!');
-      });
-    }
-  }
-
   scrollToSupport(mode: 'once' | 'recurring' = 'once'): void {
     this.supportMode.set(mode);
     this.scrollToId('support');

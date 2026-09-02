@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { athleteGuard, authGuard, onboardingGuard, supporterGuard } from './core/auth.guard';
+import { athleteGuard, authGuard, guestGuard, onboardingGuard, supporterGuard } from './core/auth.guard';
 
 export const routes: Routes = [
   // 1. Flujo Público
@@ -18,11 +18,13 @@ export const routes: Routes = [
   {
     path: 'auth/login',
     title: 'Iniciar sesión — buymeashake',
+    canActivate: [guestGuard],
     loadComponent: () => import('./features/auth/login/login').then((m) => m.Login),
   },
   {
     path: 'auth/register',
     title: 'Crear cuenta de atleta — buymeashake',
+    canActivate: [guestGuard],
     loadComponent: () => import('./features/auth/register/register').then((m) => m.Register),
   },
   {

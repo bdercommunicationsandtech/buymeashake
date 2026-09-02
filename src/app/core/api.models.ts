@@ -88,6 +88,10 @@ export interface CreatorProfile {
   city: string | null;
   avatar_url: string | null;
   cover_image_url: string | null;
+  instagram_url: string | null;
+  tiktok_url: string | null;
+  facebook_url: string | null;
+  twitter_url: string | null;
   shake_price: number;
   currency: string;
   is_verified: boolean;
@@ -183,6 +187,10 @@ export interface AthleteProfileFull {
   currency: string;
   avatar_url: string | null;
   cover_image_url: string | null;
+  instagram_url: string | null;
+  tiktok_url: string | null;
+  facebook_url: string | null;
+  twitter_url: string | null;
   is_verified: boolean;
   referral_code: string;
   thank_you_message?: string | null;
@@ -198,6 +206,10 @@ export interface AthleteProfileUpdatePayload {
   avatar_url?: string;
   cover_image_url?: string;
   google_analytics_id?: string;
+  instagram_url?: string | null;
+  tiktok_url?: string | null;
+  facebook_url?: string | null;
+  twitter_url?: string | null;
   thank_you_message?: string;
 }
 

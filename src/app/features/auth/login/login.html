@@ -28,6 +28,12 @@
   <div class="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
     <div class="bg-white dark:bg-[#121614] py-8 px-6 shadow-sm sm:rounded-3xl sm:px-10 border border-gray-200/80 dark:border-white/10">
       
+      @if (infoMessage()) {
+        <div class="rounded-xl bg-emerald-50 dark:bg-emerald-950/40 p-3.5 border border-emerald-200 dark:border-emerald-900 text-xs font-bold text-emerald-700 dark:text-[#c9ff3d] mb-6">
+          {{ infoMessage() }}
+        </div>
+      }
+
       <!-- Pestañas de Modo de Login (Contraseña vs Código de Correo) -->
       <div class="grid grid-cols-2 p-1 bg-gray-100 dark:bg-white/5 rounded-2xl mb-6 text-xs font-black">
         <button

@@ -4,11 +4,13 @@ import { RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/auth.service';
 import { DashboardService } from '../../../core/dashboard.service';
 import { AthleteProfileFull, DashboardMetrics } from '../../../core/api.models';
-
 @Component({
   selector: 'app-dashboard-home',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [
+    CommonModule,
+    RouterLink,
+  ],
   templateUrl: './home.html',
 })
 export class DashboardHome implements OnInit {

@@ -17,4 +17,7 @@ export * from './animated-biceps';
 export * from './animated-kettlebell';
 export * from './animated-shaker';
 export * from './animated-runner';
+export * from './animated-dumbbell';
+export * from './animated-soccer';
+export * from './animated-boxing-icon';
 

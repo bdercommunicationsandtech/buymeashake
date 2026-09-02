@@ -14,26 +14,16 @@ import {
   SHAKE_PRICE,
 } from '../../core/demo';
 import {
+  IconBoltComponent,
   IconButtonShareComponent,
   IconButtonSupportComponent,
   IconCalendarComponent,
-  IconDumbbellComponent,
-  IconKarateComponent,
-  IconPackageComponent,
-  IconRunningComponent,
   IconShakerComponent,
-  IconSoccerComponent,
+  IconTrophyComponent,
 } from '../../shared/icons';
 import { PostCardComponent, PostItem } from '../../shared/post-card/post-card.component';
 import { FollowModalComponent } from '../../shared/follow-modal/follow-modal.component';
 import { CreatorProfile } from '../../core/api.models';
-
-export interface CreatorProduct {
-  title: string;
-  type: string;
-  price: number;
-  description: string;
-}
 
 export interface CreatorTier {
   name: string;
@@ -71,12 +61,17 @@ export interface CreatorView {
   goalTarget: number;
   goalRaised: number;
   supporters: number;
+  shakesReceived: number;
   disciplines: string[];
   shakePrice: number;
   currency: 'USD' | 'MXN';
   coverImageUrl: string | null;
   avatarUrl: string | null;
   isVerified: boolean;
+  instagramUrl: string | null;
+  tiktokUrl: string | null;
+  facebookUrl: string | null;
+  twitterUrl: string | null;
 }
 
 @Component({
@@ -86,13 +81,10 @@ export interface CreatorView {
     CommonModule,
     RouterLink,
     IconShakerComponent,
-    IconDumbbellComponent,
-    IconSoccerComponent,
-    IconKarateComponent,
-    IconRunningComponent,
+    IconBoltComponent,
+    IconTrophyComponent,
     IconButtonShareComponent,
     IconButtonSupportComponent,
-    IconPackageComponent,
     IconCalendarComponent,
     PostCardComponent,
     FollowModalComponent,
@@ -119,87 +111,11 @@ export class Creator {
   readonly isFollowing = signal(false);
   readonly isTogglingFollow = signal(false);
 
-  readonly activeTab = signal<'shakes' | 'memberships' | 'shop' | 'booking' | 'posts'>('shakes');
+  readonly supportMode = signal<'once' | 'recurring'>('once');
+  readonly showBookingPanel = signal(false);
   readonly posts = signal<PostItem[]>([]);
 
-  openFollow(): void {
-    const handle = this.creatorView()?.handle || this.username();
-
-    // Si el usuario ya está autenticado, seguir/dejar de seguir con 1 clic directo sin modal
-    if (this.authService.isAuthenticated()) {
-      if (this.isTogglingFollow()) return;
-      this.isTogglingFollow.set(true);
-
-      if (this.isFollowing()) {
-        this.supporterService.unfollowAthlete(handle).subscribe({
-          next: () => {
-            this.isFollowing.set(false);
-            this.isTogglingFollow.set(false);
-          },
-          error: () => this.isTogglingFollow.set(false),
-        });
-      } else {
-        this.supporterService.followAthlete(handle).subscribe({
-          next: () => {
-            this.isFollowing.set(true);
-            this.isTogglingFollow.set(false);
-          },
-          error: () => this.isTogglingFollow.set(false),
-        });
-      }
-      return;
-    }
-
-    // Si es visitante no registrado, abrir modal de registro / OTP
-    this.followModalOpen.set(true);
-  }
-
-  closeFollow(): void {
-    this.followModalOpen.set(false);
-  }
-
-  onFollowSuccess(data: { email: string; name: string }): void {
-    this.isFollowing.set(true);
-    // Redirige al portal del supporter (studio.buymeacoffee.com/home style)
-    this.router.navigate(['/fan/home'], {
-      queryParams: { followed: this.creatorView()?.handle || this.username() },
-    });
-  }
-
-  sharePage(): void {
-    const url = window.location.href;
-    const name = this.creatorView()?.name || this.username();
-    if (navigator.share) {
-      navigator.share({
-        title: `Apoya a ${name} en Buy Me a Shake`,
-        text: `¡Invítale un Shake a ${name} para apoyar su carrera deportiva!`,
-        url,
-      }).catch(() => {
-        // Ignorar cancelaciones de usuario
-      });
-    } else if (navigator.clipboard) {
-      navigator.clipboard.writeText(url).then(() => {
-        alert('¡Enlace copiado al portapapeles!');
-      });
-    }
-  }
-
   readonly bookingServices = signal<CreatorBookingService[]>([]);
-
-  readonly products: CreatorProduct[] = [
-    {
-      title: 'Guía de Hipertrofia & Fuerza (12 Semanas)',
-      type: 'PDF',
-      price: 19.99,
-      description: 'Plan estructurado de 4 días con progresiones de sobrecarga y videos explicativos.',
-    },
-    {
-      title: 'Plantilla de Registro de Levantamientos (Notion)',
-      type: 'Plantilla',
-      price: 9.99,
-      description: 'Calculadora automática de 1RM, volumen de entrenamiento y RPE semanal.',
-    },
-  ];
 
   readonly tiers: CreatorTier[] = [
     {
@@ -287,6 +203,84 @@ export class Creator {
     });
   }
 
+  openFollow(): void {
+    const handle = this.creatorView()?.handle || this.username();
+
+    if (this.authService.isAuthenticated()) {
+      if (this.isTogglingFollow()) return;
+      this.isTogglingFollow.set(true);
+
+      if (this.isFollowing()) {
+        this.supporterService.unfollowAthlete(handle).subscribe({
+          next: () => {
+            this.isFollowing.set(false);
+            this.isTogglingFollow.set(false);
+          },
+          error: () => this.isTogglingFollow.set(false),
+        });
+      } else {
+        this.supporterService.followAthlete(handle).subscribe({
+          next: () => {
+            this.isFollowing.set(true);
+            this.isTogglingFollow.set(false);
+          },
+          error: () => this.isTogglingFollow.set(false),
+        });
+      }
+      return;
+    }
+
+    this.followModalOpen.set(true);
+  }
+
+  closeFollow(): void {
+    this.followModalOpen.set(false);
+  }
+
+  onFollowSuccess(_data: { email: string; name: string }): void {
+    this.isFollowing.set(true);
+    this.router.navigate(['/fan/home'], {
+      queryParams: { followed: this.creatorView()?.handle || this.username() },
+    });
+  }
+
+  sharePage(): void {
+    const url = window.location.href;
+    const name = this.creatorView()?.name || this.username();
+    if (navigator.share) {
+      navigator.share({
+        title: `Apoya a ${name} en Buy Me a Shake`,
+        text: `¡Invítale un Shake a ${name} para apoyar su carrera deportiva!`,
+        url,
+      }).catch(() => {});
+    } else if (navigator.clipboard) {
+      navigator.clipboard.writeText(url).then(() => {
+        alert('¡Enlace copiado al portapapeles!');
+      });
+    }
+  }
+
+  scrollToSupport(mode: 'once' | 'recurring' = 'once'): void {
+    this.supportMode.set(mode);
+    this.scrollToId('support');
+  }
+
+  scrollToAgenda(): void {
+    this.showBookingPanel.set(false);
+    this.bookingStep.set('select-service');
+    this.scrollToId('agenda');
+  }
+
+  setSupportMode(mode: 'once' | 'recurring'): void {
+    this.supportMode.set(mode);
+  }
+
+  private scrollToId(id: string): void {
+    requestAnimationFrame(() => {
+      document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  }
+
   private loadCreator(handle: string): void {
     this.loading.set(true);
     this.error.set(null);
@@ -309,7 +303,6 @@ export class Creator {
         this.loading.set(false);
         this.loadPosts(handle);
 
-        // Si el usuario está autenticado, consultar si ya sigue a este atleta
         if (this.authService.isAuthenticated()) {
           this.supporterService.checkFollowStatus(handle).subscribe({
             next: (res) => this.isFollowing.set(res.following),
@@ -350,6 +343,8 @@ export class Creator {
   private mapProfile(profile: CreatorProfile): CreatorView {
     const goalTarget = Number(profile.active_goal_target ?? 0);
     const goalRaised = Number(profile.active_goal_raised ?? 0);
+    const shakesFromSupporters = RECENT_SUPPORTERS.reduce((sum, s) => sum + s.shakes, 0);
+
     return {
       handle: profile.handle,
       name: profile.name,
@@ -365,13 +360,18 @@ export class Creator {
       goalTitle: profile.active_goal_title || 'Meta deportiva activa',
       goalTarget: goalTarget || 1000,
       goalRaised: goalRaised,
-      supporters: 0,
+      supporters: 860,
+      shakesReceived: shakesFromSupporters > 0 ? shakesFromSupporters + 1227 : 1248,
       disciplines: [profile.primary_sport],
       shakePrice: Number(profile.shake_price) || SHAKE_PRICE,
       currency: (profile.currency as 'USD' | 'MXN') || 'USD',
       coverImageUrl: profile.cover_image_url,
       avatarUrl: profile.avatar_url,
       isVerified: profile.is_verified,
+      instagramUrl: profile.instagram_url,
+      tiktokUrl: profile.tiktok_url,
+      facebookUrl: profile.facebook_url,
+      twitterUrl: profile.twitter_url,
     };
   }
 
@@ -382,11 +382,7 @@ export class Creator {
   }
 
   unlockPost(_post: PostItem): void {
-    this.setTab('memberships');
-  }
-
-  setTab(tab: 'shakes' | 'memberships' | 'shop' | 'booking' | 'posts'): void {
-    this.activeTab.set(tab);
+    this.scrollToSupport('recurring');
   }
 
   setShakes(value: number): void {
@@ -403,13 +399,10 @@ export class Creator {
     this.message.set(value.slice(0, 240));
   }
 
-  onActivityChange(activity: Activity): void {
-    this.activity.set(activity);
-  }
-
   selectServiceToBook(service: CreatorBookingService): void {
     this.selectedService.set(service);
     this.bookingStep.set('select-time');
+    this.showBookingPanel.set(true);
   }
 
   selectDate(day: CalendarDay): void {
@@ -423,6 +416,7 @@ export class Creator {
 
   backToServices(): void {
     this.bookingStep.set('select-service');
+    this.showBookingPanel.set(false);
   }
 
   confirmBookingCheckout(): void {
@@ -446,24 +440,6 @@ export class Creator {
         platform: srv.platform,
         meetingLink: 'https://meet.google.com/shk-fit-demo',
       },
-    });
-  }
-
-  buyProduct(product: CreatorProduct): void {
-    const c = this.creatorView();
-    if (!c) return;
-
-    this.checkout.start({
-      type: 'product',
-      title: product.title,
-      creatorName: c.name,
-      creatorHandle: c.handle,
-      shakes: 1,
-      unitPrice: product.price,
-      currency: this.currency(),
-      message: `Compra de producto digital: ${product.title}`,
-      activity: this.activity().id,
-      downloadUrl: 'https://buymeashake.fit/downloads/demo.pdf',
     });
   }
 

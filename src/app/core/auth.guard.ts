@@ -1,5 +1,6 @@
 import { inject } from '@angular/core';
 import { CanActivateFn, Router } from '@angular/router';
+import { catchError, map, of } from 'rxjs';
 import { AuthService } from './auth.service';
 
 export const authGuard: CanActivateFn = () => {
@@ -14,6 +15,32 @@ export const authGuard: CanActivateFn = () => {
   }
 
   return router.createUrlTree(['/auth/login']);
+};
+
+/** Evita abrir login/register si ya hay sesión activa. */
+export const guestGuard: CanActivateFn = () => {
+  const auth = inject(AuthService);
+  const router = inject(Router);
+
+  if (!auth.isAuthenticated() && !auth.getAccessToken()) {
+    return true;
+  }
+
+  if (auth.currentUser()) {
+    return router.createUrlTree([auth.getDefaultRoute()]);
+  }
+
+  if (!auth.getAccessToken()) {
+    return true;
+  }
+
+  return auth.loadMe().pipe(
+    map(() => router.createUrlTree([auth.getDefaultRoute()])),
+    catchError(() => {
+      auth.clearSession(false);
+      return of(true);
+    })
+  );
 };
 
 export const athleteGuard: CanActivateFn = () => {

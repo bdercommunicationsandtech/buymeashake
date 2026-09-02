@@ -58,8 +58,26 @@ export class AuthService {
 
     this.isAuthenticated.set(true);
     if (!this.currentUser()) {
-      this.loadMe().subscribe({ error: () => this.clearSession(false) });
+      this.loadMe().subscribe({
+        next: () => this.redirectAwayFromAuthPages(),
+        error: () => this.clearSession(false),
+      });
+      return;
     }
+
+    this.redirectAwayFromAuthPages();
+  }
+
+  /** Si la pestaña está en login/register y ya hay sesión, manda al home del rol. */
+  redirectAwayFromAuthPages(): void {
+    const url = this.router.url.split('?')[0];
+    if (!url.startsWith('/auth/login') && !url.startsWith('/auth/register')) {
+      return;
+    }
+    if (!this.currentUser()) {
+      return;
+    }
+    void this.router.navigateByUrl(this.getDefaultRoute());
   }
 
   register(payload: UserRegisterPayload): Observable<UserMe> {

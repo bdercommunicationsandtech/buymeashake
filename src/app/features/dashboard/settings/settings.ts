@@ -35,6 +35,10 @@ export class DashboardSettings implements OnInit {
   readonly avatarUrl = signal<string | null>(null);
   readonly coverImageUrl = signal<string | null>(null);
   readonly analyticsCode = signal('');
+  readonly instagramUrl = signal('');
+  readonly tiktokUrl = signal('');
+  readonly facebookUrl = signal('');
+  readonly twitterUrl = signal('');
 
   // Metas
   readonly goalTitle = signal('');
@@ -65,6 +69,10 @@ export class DashboardSettings implements OnInit {
         this.pageHandle.set(p.handle);
         this.avatarUrl.set(p.avatar_url);
         this.coverImageUrl.set(p.cover_image_url);
+        this.instagramUrl.set(p.instagram_url || '');
+        this.tiktokUrl.set(p.tiktok_url || '');
+        this.facebookUrl.set(p.facebook_url || '');
+        this.twitterUrl.set(p.twitter_url || '');
       },
       error: () => {},
     });
@@ -147,6 +155,10 @@ export class DashboardSettings implements OnInit {
       avatar_url: this.avatarUrl() || undefined,
       cover_image_url: this.coverImageUrl() || undefined,
       google_analytics_id: this.analyticsCode() || undefined,
+      instagram_url: this.instagramUrl().trim() || null,
+      tiktok_url: this.tiktokUrl().trim() || null,
+      facebook_url: this.facebookUrl().trim() || null,
+      twitter_url: this.twitterUrl().trim() || null,
     }).subscribe({
       next: () => {
         this.loading.set(false);

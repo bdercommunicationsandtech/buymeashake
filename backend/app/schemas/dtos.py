@@ -1,10 +1,38 @@
 from datetime import datetime, time
 from decimal import Decimal
 from typing import Any, Generic, TypeVar
-from pydantic import BaseModel, ConfigDict, EmailStr, Field
+from urllib.parse import urlparse
+
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, ValidationInfo, field_validator
 
 
 T = TypeVar("T")
+
+_SOCIAL_HOST_HINTS: dict[str, tuple[str, ...]] = {
+    "instagram_url": ("instagram.com", "www.instagram.com"),
+    "tiktok_url": ("tiktok.com", "www.tiktok.com", "vm.tiktok.com"),
+    "facebook_url": ("facebook.com", "www.facebook.com", "fb.com", "www.fb.com", "m.facebook.com"),
+    "twitter_url": ("twitter.com", "www.twitter.com", "x.com", "www.x.com"),
+}
+
+
+def _normalize_social_url(value: str | None, field_name: str) -> str | None:
+    if value is None:
+        return None
+    cleaned = value.strip()
+    if not cleaned:
+        return None
+    if not cleaned.startswith(("http://", "https://")):
+        cleaned = f"https://{cleaned.lstrip('/')}"
+    parsed = urlparse(cleaned)
+    host = (parsed.hostname or "").lower()
+    allowed = _SOCIAL_HOST_HINTS.get(field_name, ())
+    if allowed and host not in allowed and not any(host.endswith(f".{h.removeprefix('www.')}") for h in allowed):
+        # Allow subdomain variants like m.facebook.com already listed; reject unrelated hosts
+        base_allowed = {h.removeprefix("www.") for h in allowed}
+        if not any(host == b or host.endswith(f".{b}") for b in base_allowed):
+            raise ValueError(f"URL inválida para {field_name.replace('_url', '')}")
+    return cleaned[:255]
 
 
 class PaginatedResponse(BaseModel, Generic[T]):
@@ -161,6 +189,10 @@ class CreatorPublicProfileResponse(BaseModel):
     city: str | None
     avatar_url: str | None
     cover_image_url: str | None
+    instagram_url: str | None = None
+    tiktok_url: str | None = None
+    facebook_url: str | None = None
+    twitter_url: str | None = None
     shake_price: Decimal
     currency: str
     is_verified: bool
@@ -331,6 +363,18 @@ class AthleteProfileUpdateRequest(BaseModel):
     avatar_url: str | None = None
     cover_image_url: str | None = None
     google_analytics_id: str | None = None
+    instagram_url: str | None = Field(default=None, max_length=255)
+    tiktok_url: str | None = Field(default=None, max_length=255)
+    facebook_url: str | None = Field(default=None, max_length=255)
+    twitter_url: str | None = Field(default=None, max_length=255)
+
+    @field_validator("instagram_url", "tiktok_url", "facebook_url", "twitter_url", mode="before")
+    @classmethod
+    def validate_social_urls(cls, value: Any, info: ValidationInfo) -> str | None:
+        return _normalize_social_url(
+            value if value is None or isinstance(value, str) else str(value),
+            info.field_name or "",
+        )
 
 
 class AthleteProfileFullResponse(BaseModel):
@@ -347,6 +391,10 @@ class AthleteProfileFullResponse(BaseModel):
     currency: str
     avatar_url: str | None
     cover_image_url: str | None
+    instagram_url: str | None = None
+    tiktok_url: str | None = None
+    facebook_url: str | None = None
+    twitter_url: str | None = None
     is_verified: bool
     referral_code: str
 

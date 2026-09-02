@@ -6,6 +6,7 @@ import { catchError, firstValueFrom, of } from 'rxjs';
 import { routes } from './app.routes';
 import { authInterceptor } from './core/auth.interceptor';
 import { AuthService } from './core/auth.service';
+// import { provideNgtRenderer } from 'angular-three/dom'; // prototipo 3D inactivo
 
 function initializeAuth(auth: AuthService): () => Promise<void> {
   return () => {
@@ -29,6 +30,7 @@ function initializeAuth(auth: AuthService): () => Promise<void> {
 export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
+    // provideNgtRenderer(), // prototipo 3D inactivo — reactivar junto con <app-shaker-3d>
     provideHttpClient(withFetch(), withInterceptors([authInterceptor])),
     provideRouter(
       routes,

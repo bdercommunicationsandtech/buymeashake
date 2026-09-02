@@ -89,6 +89,10 @@ CREATE TABLE athlete_profiles (
     primary_sport_code INT UNSIGNED NULL,   -- Código entero referenciado (Ej: 101)
     city VARCHAR(100) NULL,
     cover_image_url VARCHAR(255) NULL,
+    instagram_url VARCHAR(255) NULL,
+    tiktok_url VARCHAR(255) NULL,
+    facebook_url VARCHAR(255) NULL,
+    twitter_url VARCHAR(255) NULL,
     shake_price DECIMAL(8,2) DEFAULT 3.00,
     currency ENUM('USD', 'MXN') DEFAULT 'USD',
     is_verified BOOLEAN DEFAULT FALSE,
@@ -431,3 +435,14 @@ INSERT INTO app_versions (platform, version_name, version_code, min_supported_ve
 ('android', '1.0.0', 100, 100, FALSE, 'https://play.google.com/store/apps/details?id=com.buymeashake.app', 'Versión inicial oficial');
 
 SET FOREIGN_KEY_CHECKS = 1;
+
+-- ==============================================================================
+-- MIGRACIÓN (DBs existentes): redes sociales del atleta
+-- Ejecutar solo si athlete_profiles ya existe sin estas columnas.
+-- ==============================================================================
+-- ALTER TABLE athlete_profiles
+--   ADD COLUMN instagram_url VARCHAR(255) NULL AFTER cover_image_url,
+--   ADD COLUMN tiktok_url VARCHAR(255) NULL AFTER instagram_url,
+--   ADD COLUMN facebook_url VARCHAR(255) NULL AFTER tiktok_url,
+--   ADD COLUMN twitter_url VARCHAR(255) NULL AFTER facebook_url;
+

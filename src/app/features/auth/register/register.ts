@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, effect, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
@@ -16,6 +16,15 @@ export class Register {
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
   private readonly lookupService = inject(LookupService);
+
+  constructor() {
+    effect(() => {
+      const user = this.auth.currentUser();
+      if (this.auth.isAuthenticated() && user) {
+        void this.router.navigateByUrl(this.auth.getDefaultRoute());
+      }
+    });
+  }
 
   readonly handle = signal('');
   readonly name = signal('');

@@ -373,6 +373,10 @@ class AthleteService:
             city=profile.city,
             avatar_url=user.avatar_url if user else None,
             cover_image_url=profile.cover_image_url,
+            instagram_url=profile.instagram_url,
+            tiktok_url=profile.tiktok_url,
+            facebook_url=profile.facebook_url,
+            twitter_url=profile.twitter_url,
             shake_price=profile.shake_price,
             currency=profile.currency,
             is_verified=profile.is_verified,
@@ -440,6 +444,10 @@ class DashboardService:
             currency=athlete.currency,
             avatar_url=user.avatar_url if user else None,
             cover_image_url=athlete.cover_image_url,
+            instagram_url=athlete.instagram_url,
+            tiktok_url=athlete.tiktok_url,
+            facebook_url=athlete.facebook_url,
+            twitter_url=athlete.twitter_url,
             is_verified=athlete.is_verified,
             referral_code=athlete.referral_code,
         )
@@ -459,6 +467,12 @@ class DashboardService:
             athlete.cover_image_url = dto.cover_image_url
         if dto.google_analytics_id is not None:
             athlete.google_analytics_id = dto.google_analytics_id
+
+        # Redes: permitir limpiar enviando "" (normalizado a None) si el campo vino en el request
+        updates = dto.model_dump(exclude_unset=True)
+        for field in ("instagram_url", "tiktok_url", "facebook_url", "twitter_url"):
+            if field in updates:
+                setattr(athlete, field, updates[field])
 
         if athlete.user:
             if dto.full_name is not None:

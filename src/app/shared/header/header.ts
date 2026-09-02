@@ -16,6 +16,7 @@ export class Header {
   private readonly router = inject(Router);
 
   readonly menuOpen = signal(false);
+  readonly userMenuOpen = signal(false);
   readonly searchQuery = signal('');
 
   readonly links = [
@@ -28,6 +29,14 @@ export class Header {
 
   closeMenu(): void {
     this.menuOpen.set(false);
+  }
+
+  toggleUserMenu(): void {
+    this.userMenuOpen.update((v) => !v);
+  }
+
+  closeUserMenu(): void {
+    this.userMenuOpen.set(false);
   }
 
   onSearch(val: string): void {

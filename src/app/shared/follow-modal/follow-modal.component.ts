@@ -227,7 +227,8 @@ export class FollowModalComponent {
         },
         error: (err) => {
           this.isSendingOtp.set(false);
-          this.errorMessage.set(err.error?.message || 'Error al enviar código de verificación');
+          const msg = err.error?.error?.message || err.error?.message || 'Error al enviar código de verificación.';
+          this.errorMessage.set(msg);
         },
       });
   }

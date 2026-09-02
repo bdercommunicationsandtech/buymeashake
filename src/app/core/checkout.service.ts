@@ -11,6 +11,8 @@ export interface CheckoutDraft {
   readonly shakes: number;
   readonly unitPrice: number;
   readonly currency: 'USD' | 'MXN';
+  readonly supporterName?: string;
+  readonly isAnonymous?: boolean;
   readonly message: string;
   readonly activity: ActivityId;
   readonly downloadUrl?: string;
@@ -30,6 +32,8 @@ export interface CheckoutRequest {
   readonly creatorHandle: string;
   readonly title?: string;
   readonly shakes?: number;
+  readonly supporterName?: string;
+  readonly isAnonymous?: boolean;
   readonly message?: string;
   readonly activity?: ActivityId;
   readonly unitPrice?: number;
@@ -76,6 +80,8 @@ export class CheckoutService {
       shakes,
       unitPrice: request.unitPrice ?? SHAKE_PRICE,
       currency: request.currency ?? 'USD',
+      supporterName: request.supporterName,
+      isAnonymous: request.isAnonymous ?? false,
       message: request.message?.trim() ?? '',
       activity: request.activity ?? 'shaker',
       downloadUrl: request.downloadUrl,
@@ -87,12 +93,24 @@ export class CheckoutService {
     this._open.set(true);
   }
 
-  markPaid(): void {
+  readonly thankYouMessage = signal<string | null>(null);
+
+  private readonly _lastDonation = signal<{ supporterItem?: any; newGoalRaised?: number | null } | null>(null);
+  readonly lastDonation = this._lastDonation.asReadonly();
+
+  markPaid(supporterItem?: any, newGoalRaised?: number | null, thankYouMessage?: string | null): void {
     this._paid.set(true);
+    if (thankYouMessage) {
+      this.thankYouMessage.set(thankYouMessage);
+    }
+    if (supporterItem || newGoalRaised) {
+      this._lastDonation.set({ supporterItem, newGoalRaised });
+    }
   }
 
   close(): void {
     this._open.set(false);
     this._paid.set(false);
+    this.thankYouMessage.set(null);
   }
 }

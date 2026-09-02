@@ -1,32 +1,32 @@
 <div class="space-y-6 max-w-4xl">
   <div class="flex items-center justify-between">
     <div>
-      <h1 class="text-2xl font-black text-gray-900">Publicaciones (Posts)</h1>
-      <p class="text-sm text-gray-500 mt-1">Comparte rutinas, artículos técnicos, fotos de entrenamientos o anuncios con tu comunidad.</p>
+      <h1 class="text-2xl font-black text-gray-950 dark:text-white tracking-tight">Publicaciones (Posts)</h1>
+      <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Comparte rutinas, artículos técnicos, fotos de entrenamientos o anuncios con tu comunidad.</p>
     </div>
     <a
       routerLink="/dashboard/posts/new"
-      class="rounded-full bg-black dark:bg-[#c9ff3d] text-white dark:text-gray-950 px-5 py-2.5 text-xs font-black hover:opacity-90 transition flex items-center gap-1.5 shadow-sm"
+      class="rounded-full bg-gray-950 dark:bg-[#c9ff3d] text-white dark:text-gray-950 px-5 py-2.5 text-xs font-black hover:opacity-90 transition flex items-center gap-1.5 shadow-sm cursor-pointer"
     >
       <span>+ Crear publicación</span>
     </a>
   </div>
 
   @if (loading()) {
-    <p class="text-sm text-gray-500">Cargando publicaciones…</p>
+    <p class="text-xs text-gray-500 dark:text-gray-400">Cargando publicaciones…</p>
   }
 
   <div class="space-y-4">
     @for (post of posts(); track post.id) {
-      <article class="bg-white rounded-3xl p-6 sm:p-7 border border-gray-200/80 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <article class="bg-white dark:bg-[#121614] rounded-3xl p-6 sm:p-7 border border-gray-200/80 dark:border-white/10 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:border-gray-300 dark:hover:border-white/20 transition">
         <div class="space-y-2">
           <div class="flex items-center gap-2">
             <span
               class="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md flex items-center gap-1"
               [class]="
                 post.is_members_only
-                  ? 'bg-amber-50 text-amber-700 border border-amber-200'
-                  : 'bg-gray-100 text-gray-700'
+                  ? 'bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-[#c9ff3d] border border-amber-200 dark:border-amber-900/40'
+                  : 'bg-gray-100 dark:bg-white/10 text-gray-700 dark:text-gray-300'
               "
             >
               @if (post.is_members_only) {
@@ -36,16 +36,16 @@
             </span>
             <span class="text-xs text-gray-400 font-medium">{{ formatDate(post.published_at) }}</span>
           </div>
-          <h2 class="text-base font-black text-gray-900">{{ post.title }}</h2>
-          <p class="text-xs text-gray-600 line-clamp-2 max-w-xl">{{ excerpt(post) }}</p>
+          <h2 class="text-base font-black text-gray-950 dark:text-white">{{ post.title }}</h2>
+          <p class="text-xs text-gray-600 dark:text-gray-300 line-clamp-2 max-w-xl">{{ excerpt(post) }}</p>
         </div>
 
         <div class="flex items-center gap-3 shrink-0">
-          <span class="text-xs font-bold text-gray-500 flex items-center gap-1">
+          <span class="text-xs font-bold text-gray-500 dark:text-gray-400 flex items-center gap-1">
             <app-icon-button-support size="13" customClass="text-red-500" />
             <span>{{ post.likes_count }}</span>
           </span>
-          <button type="button" class="text-xs font-bold text-gray-700 hover:text-black border border-gray-200 rounded-xl px-3 py-1.5 transition">
+          <button type="button" class="text-xs font-bold text-gray-700 dark:text-gray-300 hover:text-black dark:hover:text-white border border-gray-200 dark:border-white/10 rounded-xl px-3 py-1.5 transition cursor-pointer">
             Editar
           </button>
         </div>
@@ -55,8 +55,8 @@
 
   <!-- Modal "Choose to create" (Fiel a Screenshot 2 de BMC) -->
   @if (showCreateModal()) {
-    <div class="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4">
-      <div class="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl relative animate-in fade-in zoom-in-95 duration-150">
+    <div class="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+      <div class="bg-white dark:bg-[#121614] rounded-3xl p-8 max-w-md w-full shadow-2xl relative animate-in fade-in zoom-in-95 duration-150 border border-gray-200 dark:border-white/10">
         <div class="flex items-center justify-between mb-6">
           <h3 class="text-lg font-black text-gray-900">Choose to create</h3>
           <button (click)="closeCreate()" class="text-gray-400 hover:text-gray-900 text-lg font-bold">✕</button>

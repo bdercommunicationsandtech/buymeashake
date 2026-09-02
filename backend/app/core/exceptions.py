@@ -15,7 +15,7 @@ class DomainException(Exception):
 class EntityNotFoundError(DomainException):
     def __init__(self, entity_name: str, identifier: Any):
         super().__init__(
-            message=f"{entity_name} no encontrado.",
+            message=f"{entity_name} not found.",
             code="ENTITY_NOT_FOUND",
             details={"entity": entity_name, "identifier": str(identifier)},
         )
@@ -24,24 +24,34 @@ class EntityNotFoundError(DomainException):
 class EntityAlreadyExistsError(DomainException):
     def __init__(self, entity_name: str, field: str, value: Any):
         super().__init__(
-            message=f"{entity_name} con {field} '{value}' ya existe.",
+            message=f"{entity_name} with {field} '{value}' already exists.",
             code="ENTITY_ALREADY_EXISTS",
             details={"entity": entity_name, "field": field, "value": str(value)},
         )
 
 
 class UnauthorizedError(DomainException):
-    def __init__(self, message: str = "Credenciales inválidas o sesión expirada."):
+    def __init__(self, message: str = "Invalid credentials or session expired."):
         super().__init__(message=message, code="UNAUTHORIZED")
 
 
 class ForbiddenError(DomainException):
-    def __init__(self, message: str = "No tienes permisos para realizar esta acción."):
+    def __init__(self, message: str = "Forbidden: you do not have permission for this action."):
         super().__init__(message=message, code="FORBIDDEN")
 
 
+class RateLimitExceededError(DomainException):
+    def __init__(self, wait_seconds: int = 60, message: str | None = None):
+        msg = message or f"Please wait {wait_seconds} seconds before requesting a new code."
+        super().__init__(
+            message=msg,
+            code="RATE_LIMIT_EXCEEDED",
+            details={"wait_seconds": wait_seconds},
+        )
+
+
 class PaymentProcessingError(DomainException):
-    def __init__(self, message: str, details: dict[str, Any] | None = None):
+    def __init__(self, message: str = "Payment processing failed.", details: dict[str, Any] | None = None):
         super().__init__(message=message, code="PAYMENT_ERROR", details=details)
 
 
@@ -73,6 +83,13 @@ def register_exception_handlers(app: FastAPI) -> None:
     async def forbidden_handler(request: Request, exc: ForbiddenError) -> JSONResponse:
         return JSONResponse(
             status_code=status.HTTP_403_FORBIDDEN,
+            content={"error": {"code": exc.code, "message": exc.message, "details": exc.details}},
+        )
+
+    @app.exception_handler(RateLimitExceededError)
+    async def rate_limit_handler(request: Request, exc: RateLimitExceededError) -> JSONResponse:
+        return JSONResponse(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
             content={"error": {"code": exc.code, "message": exc.message, "details": exc.details}},
         )
 

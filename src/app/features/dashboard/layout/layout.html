@@ -231,12 +231,80 @@
         </button>
 
         <div class="flex items-center gap-3 ml-auto">
-          <!-- Notificaciones -->
-          <button type="button" class="h-9 w-9 rounded-full bg-gray-50 dark:bg-white/5 hover:bg-gray-100 dark:hover:bg-white/10 grid place-items-center text-gray-600 dark:text-gray-300 transition">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
-            </svg>
+          <!-- Toggle Modo Claro / Modo Oscuro -->
+          <button
+            type="button"
+            (click)="themeService.toggleTheme()"
+            class="h-9 w-9 rounded-full bg-gray-50 dark:bg-white/5 hover:bg-gray-100 dark:hover:bg-white/10 grid place-items-center text-gray-600 dark:text-gray-300 transition cursor-pointer"
+            [title]="themeService.currentTheme() === 'dark' ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'"
+            aria-label="Cambiar tema de color"
+          >
+            @if (themeService.currentTheme() === 'dark') {
+              <!-- Sol / Light icon -->
+              <svg class="w-4 h-4 text-amber-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+              </svg>
+            } @else {
+              <!-- Luna / Dark icon -->
+              <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+              </svg>
+            }
           </button>
+
+          <!-- Notificaciones con Dropdown -->
+          <div class="relative">
+            <button
+              type="button"
+              (click)="toggleNotifMenu()"
+              class="relative h-9 w-9 rounded-full bg-gray-50 dark:bg-white/5 hover:bg-gray-100 dark:hover:bg-white/10 grid place-items-center text-gray-600 dark:text-gray-300 transition cursor-pointer"
+              aria-label="Ver notificaciones"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+              </svg>
+              @if (notifications().length > 0) {
+                <span class="absolute top-1 right-1 h-2 w-2 rounded-full bg-[#c9ff3d] ring-2 ring-white dark:ring-[#121614]"></span>
+              }
+            </button>
+
+            <!-- Popover de Notificaciones -->
+            @if (notifMenuOpen()) {
+              <div class="absolute right-0 mt-2 w-80 bg-white dark:bg-[#121614] rounded-2xl shadow-xl border border-gray-200/80 dark:border-white/10 py-2 z-50 animate-in fade-in zoom-in-95 duration-100">
+                <div class="px-4 py-2.5 border-b border-gray-100 dark:border-white/5 flex items-center justify-between">
+                  <p class="text-xs font-bold text-gray-900 dark:text-white">Notificaciones</p>
+                  <span class="text-[10px] font-extrabold bg-[#c9ff3d]/20 text-[#c9ff3d] px-2 py-0.5 rounded-full">
+                    {{ notifications().length }}
+                  </span>
+                </div>
+
+                <div class="max-h-72 overflow-y-auto divide-y divide-gray-100 dark:divide-white/5">
+                  @for (n of notifications(); track n.id) {
+                    <div
+                      (click)="markAsRead(n)"
+                      class="p-3 hover:bg-gray-50 dark:hover:bg-white/5 cursor-pointer transition flex items-start gap-2.5"
+                      [class.opacity-60]="n.is_read"
+                    >
+                      <div class="h-7 w-7 rounded-xl bg-emerald-50 dark:bg-white/10 text-emerald-600 dark:text-[#c9ff3d] grid place-items-center text-xs shrink-0 mt-0.5">
+                        🥤
+                      </div>
+                      <div class="min-w-0 flex-1">
+                        <p class="text-xs font-bold text-gray-900 dark:text-white leading-tight">{{ n.title }}</p>
+                        <p class="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5 line-clamp-2">{{ n.message }}</p>
+                        <span class="text-[9px] text-gray-400 mt-1 block">
+                          {{ n.created_at | date:'short' }}
+                        </span>
+                      </div>
+                    </div>
+                  } @empty {
+                    <div class="py-6 text-center text-xs text-gray-400">
+                      No tienes notificaciones pendientes
+                    </div>
+                  }
+                </div>
+              </div>
+            }
+          </div>
 
           <!-- Profile badge / User button Dinámico -->
           <div class="relative">

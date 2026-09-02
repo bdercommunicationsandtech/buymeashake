@@ -159,7 +159,7 @@
         </div>
 
         <ul class="mt-6 space-y-3.5">
-          @for (supporter of supporters; track supporter.name + supporter.when) {
+          @for (supporter of supporters(); track supporter.name + supporter.when) {
             <li class="flex items-start gap-4 rounded-2xl border border-gray-100 dark:border-white/5 bg-[#fbfbfc] dark:bg-white/5 p-4 transition hover:border-gray-200 dark:hover:border-white/15">
               <span class="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-gray-900 text-xs font-black text-[#c9ff3d]">
                 {{ supporter.initials }}
@@ -175,10 +175,34 @@
                   </span>
                 </div>
                 <p class="mt-1.5 text-sm text-gray-600 dark:text-gray-300 leading-relaxed">“{{ supporter.message }}”</p>
-                <p class="mt-2 text-[11px] font-semibold text-gray-400">
-                  {{ supporter.when }}
-                </p>
+                
+                <!-- Respuesta del Atleta -->
+                @if (supporter.creator_reply) {
+                  <div class="mt-2.5 rounded-xl border-l-2 border-[#c9ff3d] bg-gray-50 dark:bg-white/5 p-2.5 text-xs space-y-0.5">
+                    <p class="font-bold text-gray-900 dark:text-white flex items-center gap-1.5">
+                      <span class="text-[#84b80b] dark:text-[#c9ff3d]">✓ Respuesta del Atleta</span>
+                      <span class="text-[10px] text-gray-400 font-normal">({{ supporter.creator_reply_at }})</span>
+                    </p>
+                    <p class="text-gray-600 dark:text-gray-300 italic">"{{ supporter.creator_reply }}"</p>
+                  </div>
+                }
+
+                <div class="mt-2 flex items-center justify-between">
+                  <p class="text-[11px] font-semibold text-gray-400">
+                    {{ supporter.when }}
+                  </p>
+                  @if (supporter.is_liked_by_creator) {
+                    <span class="inline-flex items-center gap-1 text-[11px] font-bold text-red-500 bg-red-50 dark:bg-red-950/30 px-2 py-0.5 rounded-full">
+                      <svg class="w-3 h-3 fill-current" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+                      <span>Atleta le dio like</span>
+                    </span>
+                  }
+                </div>
               </div>
+            </li>
+          } @empty {
+            <li class="py-6 text-center text-xs font-semibold text-gray-400 dark:text-gray-500 bg-gray-50/50 dark:bg-white/5 rounded-2xl border border-dashed border-gray-200 dark:border-white/10">
+              ¡Sé el primer seguidor en invitar un shake a este atleta! 🥤
             </li>
           }
         </ul>
@@ -308,6 +332,35 @@
               </label>
             </div>
 
+            <!-- Nombre o @redsocial (Fiel a Buy Me a Coffee) -->
+            <div>
+              <label class="block text-xs font-bold uppercase tracking-wider text-gray-600 dark:text-gray-300 mb-1.5 flex items-center justify-between">
+                <span>Tu nombre o &#64;redsocial</span>
+                <label class="inline-flex items-center gap-1.5 cursor-pointer font-normal normal-case text-gray-500 dark:text-gray-400">
+                  <input
+                    type="checkbox"
+                    class="rounded border-gray-300 text-[#c9ff3d] focus:ring-[#c9ff3d]"
+                    [checked]="isAnonymous()"
+                    (change)="isAnonymous.set($any($event.target).checked)"
+                  />
+                  <span>Hacer anónimo</span>
+                </label>
+              </label>
+              @if (!isAnonymous()) {
+                <input
+                  type="text"
+                  placeholder="Tu nombre o &#64;instagram"
+                  class="w-full rounded-2xl border border-gray-200 dark:border-white/10 bg-gray-50/50 dark:bg-white/5 px-3.5 py-2.5 text-sm text-gray-900 dark:text-white placeholder:text-gray-400 focus:bg-white dark:focus:bg-[#0c0f10] focus:border-[#c9ff3d] focus:outline-none transition"
+                  [value]="supporterName()"
+                  (input)="supporterName.set($any($event.target).value)"
+                />
+              } @else {
+                <div class="rounded-2xl border border-dashed border-gray-200 dark:border-white/10 bg-gray-50/30 dark:bg-white/5 px-3.5 py-2.5 text-xs font-medium text-gray-400 italic">
+                  Tu donación aparecerá como "Alguien anónimo" 🤫
+                </div>
+              }
+            </div>
+
             <!-- Mensaje -->
             <div>
               <label class="block text-xs font-bold uppercase tracking-wider text-gray-600 dark:text-gray-300 mb-1.5">
@@ -348,7 +401,7 @@
               <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Apoya de forma recurrente y accede a beneficios exclusivos.</p>
             </div>
 
-            @for (tier of tiers; track tier.name) {
+            @for (tier of tiers(); track tier.name) {
               <div class="p-5 rounded-2xl border border-gray-200/80 dark:border-white/10 bg-[#fbfbfc] dark:bg-white/5 space-y-3 hover:border-gray-300 dark:hover:border-white/20 transition">
                 <div class="flex items-center justify-between">
                   <h4 class="font-display text-sm font-black text-gray-900 dark:text-white">{{ tier.name }}</h4>
@@ -358,38 +411,48 @@
                 <button
                   type="button"
                   (click)="joinTier(tier)"
-                  class="w-full mt-2 rounded-xl bg-gray-950 dark:bg-[#c9ff3d] text-white dark:text-gray-950 py-2.5 text-xs font-black hover:opacity-90 transition shadow-xs"
+                  class="w-full py-2.5 rounded-xl bg-gray-950 dark:bg-white text-white dark:text-gray-950 font-bold text-xs hover:bg-gray-800 dark:hover:bg-gray-100 transition"
                 >
-                  Unirse por ${{ tier.price }} USD
+                  Unirme por ${{ tier.price }}/mes
                 </button>
+              </div>
+            } @empty {
+              <div class="py-6 text-center text-xs font-semibold text-gray-400 dark:text-gray-500 bg-gray-50/50 dark:bg-white/5 rounded-2xl border border-dashed border-gray-200 dark:border-white/10">
+                Este atleta aún no ha configurado niveles de membresía.
               </div>
             }
           </div>
         }
 
-        <!-- 3. PESTAÑA TIENDA DIGITAL -->
+        <!-- 3. PESTAÑA TIENDA DIGITAL (PDFS/RUTINAS) -->
         @if (activeTab() === 'shop') {
           <div class="space-y-4">
             <div>
-              <h3 class="font-display text-base font-black text-gray-950 dark:text-white">Tienda Fitness Digital</h3>
-              <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Guías en PDF, rutinas estructuradas y plantillas descargables.</p>
+              <h3 class="font-display text-base font-black text-gray-950 dark:text-white">Tienda & Planes Digitales</h3>
+              <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Descarga guías de entrenamiento, PDFs y plantillas.</p>
             </div>
 
-            @for (product of products; track product.title) {
+            @for (prod of products(); track prod.title) {
               <div class="p-5 rounded-2xl border border-gray-200/80 dark:border-white/10 bg-[#fbfbfc] dark:bg-white/5 space-y-3 hover:border-gray-300 dark:hover:border-white/20 transition">
                 <div class="flex items-center justify-between">
-                  <span class="text-[10px] font-black uppercase text-emerald-700 dark:text-[#c9ff3d] bg-emerald-50 dark:bg-white/10 px-2.5 py-0.5 rounded-md border border-emerald-200/50 dark:border-white/10">{{ product.type }}</span>
-                  <span class="text-sm font-black text-gray-900 dark:text-white">${{ product.price }} USD</span>
+                  <span class="text-[10px] font-black uppercase px-2 py-0.5 bg-gray-200 dark:bg-white/10 text-gray-700 dark:text-gray-300 rounded-md">
+                    {{ prod.type }}
+                  </span>
+                  <span class="text-sm font-black text-emerald-600 dark:text-[#c9ff3d]">${{ prod.price }} USD</span>
                 </div>
-                <h4 class="font-display text-xs font-black text-gray-900 dark:text-white">{{ product.title }}</h4>
-                <p class="text-xs text-gray-600 dark:text-gray-300 leading-relaxed">{{ product.description }}</p>
+                <h4 class="font-display text-sm font-black text-gray-900 dark:text-white">{{ prod.title }}</h4>
+                <p class="text-xs text-gray-600 dark:text-gray-300 leading-relaxed">{{ prod.description }}</p>
                 <button
                   type="button"
-                  (click)="buyProduct(product)"
-                  class="w-full mt-2 rounded-xl bg-gray-950 dark:bg-[#c9ff3d] text-white dark:text-gray-950 py-2.5 text-xs font-black hover:opacity-90 transition shadow-xs"
+                  (click)="buyProduct(prod)"
+                  class="w-full py-2.5 rounded-xl bg-[#c9ff3d] text-gray-950 font-black text-xs hover:bg-[#bbf033] transition"
                 >
-                  Comprar & Descargar
+                  Comprar y Descargar
                 </button>
+              </div>
+            } @empty {
+              <div class="py-6 text-center text-xs font-semibold text-gray-400 dark:text-gray-500 bg-gray-50/50 dark:bg-white/5 rounded-2xl border border-dashed border-gray-200 dark:border-white/10">
+                Este atleta aún no tiene productos digitales a la venta.
               </div>
             }
           </div>
@@ -543,6 +606,7 @@
                   [post]="post"
                   (onLike)="likePost($event)"
                   (onUnlock)="unlockPost($event)"
+                  (onComment)="commentOnPost($event)"
                 />
               }
             </div>

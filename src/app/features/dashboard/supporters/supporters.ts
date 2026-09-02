@@ -43,6 +43,9 @@ export class DashboardSupporters implements OnInit {
     this.dashboardService.getProfile().subscribe({
       next: (p) => {
         this.shakePrice.set(Number(p.shake_price) || 3);
+        if (p.thank_you_message) {
+          this.thankMessage.set(p.thank_you_message);
+        }
       },
       error: () => {},
     });
@@ -57,10 +60,54 @@ export class DashboardSupporters implements OnInit {
     this.dashboardService
       .updateProfile({
         shake_price: this.shakePrice(),
+        thank_you_message: this.thankMessage(),
       })
       .subscribe({
         next: () => this.savingSettings.set(false),
         error: () => this.savingSettings.set(false),
       });
+  }
+
+  readonly activeReplyId = signal<number | null>(null);
+  readonly replyText = signal('');
+  readonly sendingReply = signal(false);
+
+  toggleReplyForm(id: number): void {
+    if (this.activeReplyId() === id) {
+      this.activeReplyId.set(null);
+      this.replyText.set('');
+    } else {
+      this.activeReplyId.set(id);
+      this.replyText.set('');
+    }
+  }
+
+  sendReply(item: SupporterItemDto): void {
+    const text = this.replyText().trim();
+    if (!text) return;
+
+    this.sendingReply.set(true);
+    this.dashboardService.replyToSupporter(item.id, text).subscribe({
+      next: (res) => {
+        this.sendingReply.set(false);
+        this.items.update((list) =>
+          list.map((it) => (it.id === item.id ? { ...it, creator_reply: res.reply, creator_reply_at: new Date().toISOString() } : it))
+        );
+        this.activeReplyId.set(null);
+        this.replyText.set('');
+      },
+      error: () => this.sendingReply.set(false),
+    });
+  }
+
+  toggleLike(item: SupporterItemDto): void {
+    this.dashboardService.toggleLikeSupporter(item.id).subscribe({
+      next: (res) => {
+        this.items.update((list) =>
+          list.map((it) => (it.id === item.id ? { ...it, is_liked_by_creator: res.is_liked } : it))
+        );
+      },
+      error: () => {},
+    });
   }
 }

@@ -14,9 +14,11 @@ from app.schemas.dtos import (
     GoalResponse,
     MembershipTierCreateRequest,
     MembershipTierResponse,
+    NotificationResponse,
     PostCreateRequest,
     PostResponse,
     ReferralDashboardResponse,
+    ReplySupporterRequest,
     SupportersDashboardResponse,
 )
 from app.services.core_services import DashboardService
@@ -200,3 +202,51 @@ async def get_my_supporters(
     """Resumen y listado de apoyos one-time (shakes)."""
     service = DashboardService(session)
     return await service.get_supporters(athlete)
+
+
+@router.post("/dashboard/supporters/{transaction_id}/reply")
+async def reply_to_supporter(
+    transaction_id: int,
+    dto: ReplySupporterRequest,
+    athlete: CurrentAthlete,
+    session: DatabaseSession,
+) -> dict:
+    """Responde al mensaje de un supporter."""
+    service = DashboardService(session)
+    return await service.reply_to_supporter(athlete, transaction_id, dto.reply_text)
+
+
+@router.post("/dashboard/supporters/{transaction_id}/like")
+async def toggle_like_supporter(
+    transaction_id: int,
+    athlete: CurrentAthlete,
+    session: DatabaseSession,
+) -> dict:
+    """Da o quita corazón (like) a un mensaje de supporter."""
+    service = DashboardService(session)
+    return await service.toggle_like_supporter(athlete, transaction_id)
+
+
+@router.get("/dashboard/notifications", response_model=list[NotificationResponse])
+async def get_my_notifications(
+    athlete: CurrentAthlete,
+    session: DatabaseSession,
+) -> list[NotificationResponse]:
+    """Obtiene las notificaciones del atleta (shakes recibidos, nuevos seguidores)."""
+    from app.repositories.base_repos import NotificationRepository
+    repo = NotificationRepository(session)
+    notifs = await repo.get_by_user_id(athlete.user_id)
+    return [NotificationResponse.model_validate(n) for n in notifs]
+
+
+@router.put("/dashboard/notifications/{notification_id}/read")
+async def mark_notification_read(
+    notification_id: int,
+    athlete: CurrentAthlete,
+    session: DatabaseSession,
+) -> dict:
+    """Marca una notificación como leída."""
+    from app.repositories.base_repos import NotificationRepository
+    repo = NotificationRepository(session)
+    await repo.mark_read(notification_id, athlete.user_id)
+    return {"success": True}

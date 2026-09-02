@@ -1,58 +1,63 @@
 <div class="space-y-6">
   
-  <h1 class="text-2xl font-black text-gray-900">Supporters</h1>
+  <div>
+    <h1 class="text-2xl font-black text-gray-950 dark:text-white tracking-tight">Supporters</h1>
+    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+      Visualiza quiénes han invitado tus shakes y responde directamente a sus mensajes.
+    </p>
+  </div>
 
-  <!-- Tabs (Fiel a Screenshot 3) -->
-  <div class="flex items-center gap-6 border-b border-gray-200 text-sm font-bold">
+  <!-- Tabs con soporte para modo claro y oscuro -->
+  <div class="flex items-center gap-6 border-b border-gray-200 dark:border-white/10 text-sm font-bold">
     <button
       type="button"
       (click)="setTab('one-time')"
-      class="pb-3 transition relative"
-      [class]="activeTab() === 'one-time' ? 'text-gray-900 border-b-2 border-black -mb-px' : 'text-gray-400 hover:text-gray-700'"
+      class="pb-3 transition relative cursor-pointer"
+      [class]="activeTab() === 'one-time' ? 'text-gray-950 dark:text-[#c9ff3d] border-b-2 border-gray-950 dark:border-[#c9ff3d] -mb-px' : 'text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'"
     >
       One-time
     </button>
     <button
       type="button"
       (click)="setTab('settings')"
-      class="pb-3 transition relative"
-      [class]="activeTab() === 'settings' ? 'text-gray-900 border-b-2 border-black -mb-px' : 'text-gray-400 hover:text-gray-700'"
+      class="pb-3 transition relative cursor-pointer"
+      [class]="activeTab() === 'settings' ? 'text-gray-950 dark:text-[#c9ff3d] border-b-2 border-gray-950 dark:border-[#c9ff3d] -mb-px' : 'text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'"
     >
       Settings
     </button>
   </div>
 
   @if (activeTab() === 'one-time') {
-    <!-- Contenedor Principal (Fiel a Screenshot 3) -->
-    <div class="bg-white rounded-3xl p-6 sm:p-8 border border-gray-200/80 shadow-xs space-y-6">
+    <!-- Contenedor Principal Adaptable a Dark & Light Mode -->
+    <div class="bg-white dark:bg-[#121614] rounded-3xl p-6 sm:p-8 border border-gray-200/80 dark:border-white/10 shadow-xs space-y-6">
       
       <!-- Fila de Métricas -->
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
         
-        <div class="bg-[#fafafb] rounded-2xl p-5 border border-gray-100">
-          <p class="text-2xl font-black text-gray-900">{{ supporterCount() }}</p>
-          <p class="text-xs font-semibold text-gray-500 mt-1 flex items-center gap-1.5">
-            <svg class="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div class="bg-[#fafafb] dark:bg-white/5 rounded-2xl p-5 border border-gray-100 dark:border-white/5">
+          <p class="text-3xl font-black text-gray-950 dark:text-white">{{ supporterCount() }}</p>
+          <p class="text-xs font-bold text-gray-500 dark:text-gray-400 mt-1.5 flex items-center gap-1.5">
+            <svg class="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
             </svg>
             Supporter
           </p>
         </div>
 
-        <div class="bg-[#fafafb] rounded-2xl p-5 border border-gray-100">
-          <p class="text-2xl font-black text-gray-900">${{ last30Days() }}</p>
-          <p class="text-xs font-semibold text-gray-500 mt-1 flex items-center gap-1.5">
-            <svg class="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div class="bg-[#fafafb] dark:bg-white/5 rounded-2xl p-5 border border-gray-100 dark:border-white/5">
+          <p class="text-3xl font-black text-emerald-600 dark:text-[#c9ff3d]">${{ last30Days() }}</p>
+          <p class="text-xs font-bold text-gray-500 dark:text-gray-400 mt-1.5 flex items-center gap-1.5">
+            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
             </svg>
             Last 30 days
           </p>
         </div>
 
-        <div class="bg-[#fafafb] rounded-2xl p-5 border border-gray-100">
-          <p class="text-2xl font-black text-gray-900">${{ allTime() }}</p>
-          <p class="text-xs font-semibold text-gray-500 mt-1 flex items-center gap-1.5">
-            <svg class="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div class="bg-[#fafafb] dark:bg-white/5 rounded-2xl p-5 border border-gray-100 dark:border-white/5">
+          <p class="text-3xl font-black text-gray-950 dark:text-white">${{ allTime() }}</p>
+          <p class="text-xs font-bold text-gray-500 dark:text-gray-400 mt-1.5 flex items-center gap-1.5">
+            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
             </svg>
             All-time
@@ -63,32 +68,108 @@
 
       <!-- Empty state o lista -->
       @if (items().length === 0) {
-      <div class="border-t border-gray-100 pt-12 pb-8 text-center">
-        <div class="h-12 w-12 rounded-full bg-gray-50 border border-gray-200/60 grid place-items-center mx-auto text-gray-400 mb-4">
+      <div class="border-t border-gray-100 dark:border-white/10 pt-12 pb-8 text-center">
+        <div class="h-14 w-14 rounded-full bg-gray-50 dark:bg-white/5 border border-gray-200/60 dark:border-white/10 grid place-items-center mx-auto text-gray-400 dark:text-gray-300 mb-4">
           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
           </svg>
         </div>
-        <h3 class="text-base font-black text-gray-900">Your first supporter is closer than you think!</h3>
-        <p class="text-xs text-gray-500 max-w-sm mx-auto mt-1.5 leading-relaxed">
+        <h3 class="text-base font-black text-gray-950 dark:text-white">Your first supporter is closer than you think!</h3>
+        <p class="text-xs text-gray-500 dark:text-gray-400 max-w-sm mx-auto mt-1.5 leading-relaxed">
           Share your page on social media to help them find you.
         </p>
       </div>
       } @else {
-      <div class="border-t border-gray-100 pt-6 divide-y divide-gray-100">
+      <div class="border-t border-gray-100 dark:border-white/10 pt-6 divide-y divide-gray-100 dark:divide-white/5">
         @for (item of items(); track item.id) {
-          <div class="py-4 flex items-center justify-between gap-4">
-            <div>
-              <p class="text-sm font-bold text-gray-900">{{ item.supporter_name }}</p>
-              @if (item.supporter_message) {
-                <p class="text-xs text-gray-500 mt-1">"{{ item.supporter_message }}"</p>
-              }
-              <p class="text-[11px] text-gray-400 mt-1">{{ item.created_at | date:'medium' }}</p>
+          <div class="py-4 space-y-2">
+            <div class="flex items-start justify-between gap-4">
+              <div>
+                <div class="flex items-center gap-2">
+                  <p class="text-sm font-bold text-gray-900 dark:text-white">{{ item.supporter_name }}</p>
+                  @if (item.is_anonymous) {
+                    <span class="text-[10px] bg-gray-100 dark:bg-white/10 text-gray-500 dark:text-gray-400 px-1.5 py-0.5 rounded font-semibold">Anónimo</span>
+                  }
+                </div>
+                @if (item.supporter_message) {
+                  <p class="text-xs text-gray-600 dark:text-gray-300 mt-1 italic">"{{ item.supporter_message }}"</p>
+                }
+                <p class="text-[11px] text-gray-400 mt-1">{{ item.created_at | date:'medium' }}</p>
+              </div>
+              <div class="text-right flex flex-col items-end">
+                <p class="text-sm font-black text-gray-900 dark:text-white">{{ item.shakes_count }} shakes</p>
+                <p class="text-xs text-emerald-600 dark:text-[#c9ff3d] font-bold">${{ item.gross_amount }} {{ item.currency }}</p>
+              </div>
             </div>
-            <div class="text-right">
-              <p class="text-sm font-black text-gray-900">{{ item.shakes_count }} shakes</p>
-              <p class="text-xs text-emerald-600 font-bold">${{ item.gross_amount }} {{ item.currency }}</p>
+
+            <!-- Acciones de Atleta: Like y Reply -->
+            <div class="flex items-center gap-3 pt-1 text-xs">
+              <button
+                type="button"
+                (click)="toggleLike(item)"
+                class="inline-flex items-center gap-1 font-bold transition cursor-pointer"
+                [class.text-red-500]="item.is_liked_by_creator"
+                [class.text-gray-400]="!item.is_liked_by_creator"
+              >
+                <svg class="w-4 h-4" [attr.fill]="item.is_liked_by_creator ? 'currentColor' : 'none'" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                </svg>
+                <span>{{ item.is_liked_by_creator ? 'Te gusta' : 'Dar like' }}</span>
+              </button>
+
+              <button
+                type="button"
+                (click)="toggleReplyForm(item.id)"
+                class="inline-flex items-center gap-1 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white font-bold transition cursor-pointer"
+              >
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+                </svg>
+                <span>{{ item.creator_reply ? 'Editar respuesta' : 'Responder' }}</span>
+              </button>
             </div>
+
+            <!-- Respuesta existente del Atleta -->
+            @if (item.creator_reply) {
+              <div class="ml-4 pl-3 border-l-2 border-[#c9ff3d] bg-gray-50 dark:bg-white/5 p-2.5 rounded-r-xl text-xs space-y-0.5">
+                <p class="font-bold text-gray-900 dark:text-white flex items-center gap-1">
+                  <span class="text-emerald-600 dark:text-[#c9ff3d]">Tu respuesta</span>
+                  <span class="text-[10px] text-gray-400 font-normal">({{ item.creator_reply_at | date:'short' }})</span>
+                </p>
+                <p class="text-gray-600 dark:text-gray-300">{{ item.creator_reply }}</p>
+              </div>
+            }
+
+            <!-- Formulario de Respuesta en vivo -->
+            @if (activeReplyId() === item.id) {
+              <div class="ml-4 pt-2 space-y-2">
+                <input
+                  type="text"
+                  placeholder="Escribe un mensaje de agradecimiento..."
+                  class="w-full text-xs p-2.5 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#121614] text-gray-900 dark:text-white outline-none focus:border-black dark:focus:border-[#c9ff3d]"
+                  [ngModel]="replyText()"
+                  (ngModelChange)="replyText.set($event)"
+                  (keyup.enter)="sendReply(item)"
+                />
+                <div class="flex gap-2 justify-end">
+                  <button
+                    type="button"
+                    (click)="activeReplyId.set(null)"
+                    class="text-xs text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 px-3 py-1 font-semibold cursor-pointer"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="button"
+                    (click)="sendReply(item)"
+                    [disabled]="sendingReply() || !replyText().trim()"
+                    class="text-xs bg-black dark:bg-[#c9ff3d] text-white dark:text-gray-950 px-3.5 py-1.5 rounded-xl font-bold hover:opacity-90 disabled:opacity-50 cursor-pointer"
+                  >
+                    {{ sendingReply() ? 'Enviando...' : 'Enviar respuesta' }}
+                  </button>
+                </div>
+              </div>
+            }
           </div>
         }
       </div>
@@ -96,28 +177,28 @@
     </div>
   } @else {
     <!-- Pestaña de Settings de Supporters -->
-    <div class="bg-white rounded-3xl p-6 sm:p-8 border border-gray-200/80 shadow-xs space-y-6">
+    <div class="bg-white dark:bg-[#121614] rounded-3xl p-6 sm:p-8 border border-gray-200/80 dark:border-white/10 shadow-xs space-y-6">
       <div>
-        <h2 class="text-base font-black text-gray-900">Configuración de donaciones</h2>
-        <p class="text-xs text-gray-500 mt-1">Personaliza el precio predeterminado y el texto de cada shake.</p>
+        <h2 class="text-base font-black text-gray-950 dark:text-white">Configuración de donaciones</h2>
+        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Personaliza el precio predeterminado y el texto de cada shake.</p>
       </div>
 
       <div class="space-y-4 max-w-md">
         <div>
-          <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Precio por Shake</label>
-          <div class="flex rounded-xl border border-gray-300 overflow-hidden">
-            <span class="bg-gray-50 px-3.5 py-2.5 text-sm font-bold text-gray-500 border-r border-gray-200">$</span>
-            <input type="number" class="flex-1 px-3 py-2 text-sm font-bold outline-none" [ngModel]="shakePrice()" (ngModelChange)="shakePrice.set(+$event)" />
-            <span class="bg-gray-50 px-3.5 py-2.5 text-xs font-bold text-gray-500 border-l border-gray-200">USD</span>
+          <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 uppercase mb-1">Precio por Shake</label>
+          <div class="flex rounded-xl border border-gray-300 dark:border-white/15 overflow-hidden">
+            <span class="bg-gray-50 dark:bg-white/5 px-3.5 py-2.5 text-sm font-bold text-gray-500 dark:text-gray-400 border-r border-gray-200 dark:border-white/10">$</span>
+            <input type="number" class="flex-1 px-3 py-2 text-sm font-bold outline-none bg-white dark:bg-[#121614] text-gray-900 dark:text-white" [ngModel]="shakePrice()" (ngModelChange)="shakePrice.set(+$event)" />
+            <span class="bg-gray-50 dark:bg-white/5 px-3.5 py-2.5 text-xs font-bold text-gray-500 dark:text-gray-400 border-l border-gray-200 dark:border-white/10">USD</span>
           </div>
         </div>
 
         <div>
-          <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Mensaje de agradecimiento predeterminado</label>
-          <textarea rows="3" class="w-full rounded-xl border border-gray-300 p-3 text-sm outline-none focus:border-black" [ngModel]="thankMessage()" (ngModelChange)="thankMessage.set($event)"></textarea>
+          <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 uppercase mb-1">Mensaje de agradecimiento predeterminado</label>
+          <textarea rows="3" class="w-full rounded-xl border border-gray-300 dark:border-white/15 p-3 text-sm outline-none bg-white dark:bg-[#121614] text-gray-900 dark:text-white focus:border-black dark:focus:border-[#c9ff3d]" [ngModel]="thankMessage()" (ngModelChange)="thankMessage.set($event)"></textarea>
         </div>
 
-        <button type="button" (click)="saveSettings()" [disabled]="savingSettings()" class="rounded-xl bg-black text-white px-5 py-2.5 text-xs font-bold hover:bg-gray-800 transition disabled:opacity-50">
+        <button type="button" (click)="saveSettings()" [disabled]="savingSettings()" class="rounded-xl bg-black dark:bg-[#c9ff3d] text-white dark:text-gray-950 px-5 py-2.5 text-xs font-bold hover:opacity-90 transition disabled:opacity-50 cursor-pointer">
           {{ savingSettings() ? 'Guardando…' : 'Guardar cambios' }}
         </button>
       </div>

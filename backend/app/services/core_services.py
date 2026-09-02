@@ -3,7 +3,12 @@ from datetime import datetime, timedelta
 from decimal import Decimal
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.exceptions import EntityAlreadyExistsError, EntityNotFoundError, UnauthorizedError
+from app.core.exceptions import (
+    EntityAlreadyExistsError,
+    EntityNotFoundError,
+    RateLimitExceededError,
+    UnauthorizedError,
+)
 from app.core.security import (
     create_access_token,
     create_refresh_token,
@@ -38,6 +43,7 @@ from app.repositories.base_repos import (
     SupporterRepository,
     UserRepository,
 )
+from app.services.email_service import send_otp_email, send_thank_you_email
 from app.schemas.dtos import (
     AppVersionCheckResponse,
     AthleteLeaderboardItemResponse,
@@ -61,6 +67,7 @@ from app.schemas.dtos import (
     MembershipTierResponse,
     PaginatedResponse,
     PaymentIntentResponse,
+    PostCommentResponse,
     PostCreateRequest,
     PostResponse,
     ReferralDashboardResponse,
@@ -105,11 +112,13 @@ class AuthService:
             if existing_handle:
                 raise EntityAlreadyExistsError("Atleta", "handle", dto.handle)
 
+        role_code = 20 if dto.role == "athlete" else 10
         user = User(
             email=dto.email,
             password_hash=get_password_hash(dto.password),
             full_name=dto.full_name,
             role=dto.role,
+            role_code=role_code,
         )
         await self.user_repo.create(user)
 
@@ -168,7 +177,22 @@ class AuthService:
 
     async def request_otp(self, dto: RequestOtpRequest) -> RequestOtpResponse:
         otp_repo = OtpRepository(self.session)
-        # Generar código numérico de 6 dígitos
+
+        # 1. Limpieza preventiva de registros expirados (>24h)
+        await otp_repo.clean_expired_otps()
+
+        # 2. Rate Limiting: verificar si solicitó un código hace menos de 60 segundos
+        latest = await otp_repo.get_latest_active_otp(dto.email, purpose="supporter_follow")
+        if latest and latest.created_at:
+            time_since_last = (datetime.now() - latest.created_at).total_seconds()
+            if time_since_last < 60:
+                wait_time = int(60 - time_since_last)
+                raise RateLimitExceededError(wait_seconds=wait_time, message=f"Por favor espera {wait_time} segundos antes de solicitar otro código.")
+
+        # 3. Invalidar cualquier código anterior pendiente de este correo
+        await otp_repo.invalidate_previous_otps(dto.email, purpose="supporter_follow")
+
+        # 4. Generar nuevo código numérico de 6 dígitos con vigencia de 15 min
         code = f"{secrets.randbelow(900000) + 100000}"
         expires_at = datetime.now() + timedelta(minutes=15)
         metadata = {
@@ -183,7 +207,7 @@ class AuthService:
             expires_at=expires_at,
         )
 
-        # Enviar correo HTML estilizado con el servicio SMTP del proyecto
+        # 5. Enviar correo HTML estilizado con el servicio SMTP del proyecto
         from app.services.email_service import send_otp_email
         await send_otp_email(to_email=dto.email, code=code, athlete_name=dto.name or dto.athlete_handle)
 
@@ -213,6 +237,7 @@ class AuthService:
                 password_hash=get_password_hash(secrets.token_urlsafe(16)),
                 full_name=name,
                 role="supporter",
+                role_code=10,
                 is_email_verified=True,
             )
             await self.user_repo.create(user)
@@ -246,6 +271,7 @@ class AuthService:
             full_name=user.full_name,
             avatar_url=user.avatar_url,
             role=user.role,
+            role_code=getattr(user, "role_code", 10) or 10,
             is_email_verified=user.is_email_verified,
             athlete_handle=athlete_handle,
             referral_code=referral_code,
@@ -324,16 +350,51 @@ class SupporterService:
     async def follow_athlete(self, supporter_id: int, handle: str) -> dict:
         athlete = await self.athlete_repo.get_by_handle(handle)
         if not athlete:
-            raise EntityNotFoundError("Atleta", "handle", handle)
+            raise EntityNotFoundError("Athlete", "handle", handle)
         await self.follow_repo.follow(supporter_id, athlete.id)
-        return {"message": f"Ahora sigues a @{handle}", "following": True}
+        return {"message": f"You are now following @{handle}", "following": True}
 
     async def unfollow_athlete(self, supporter_id: int, handle: str) -> dict:
         athlete = await self.athlete_repo.get_by_handle(handle)
         if not athlete:
-            raise EntityNotFoundError("Atleta", "handle", handle)
+            raise EntityNotFoundError("Athlete", "handle", handle)
         await self.follow_repo.unfollow(supporter_id, athlete.id)
-        return {"message": f"Has dejado de seguir a @{handle}", "following": False}
+        return {"message": f"You have unfollowed @{handle}", "following": False}
+
+    async def like_post(self, post_id: int) -> dict:
+        post_repo = PostRepository(self.session)
+        new_likes = await post_repo.like_post(post_id)
+        return {"success": True, "likes_count": new_likes}
+
+    async def comment_post(self, user: User, post_id: int, content: str) -> PostCommentResponse:
+        post_repo = PostRepository(self.session)
+        post = await post_repo.get_by_id(post_id)
+        if not post:
+            raise EntityNotFoundError("Post", post_id)
+
+        comment = await post_repo.add_comment(post_id, user.id, content)
+
+        # Notificar al atleta creador del post
+        if post.athlete and post.athlete.user_id and post.athlete.user_id != user.id:
+            notif_repo = NotificationRepository(self.session)
+            await notif_repo.create(
+                user_id=post.athlete.user_id,
+                title="Nuevo comentario en tu publicación",
+                message=f"{user.full_name} comentó: \"{content[:80]}\"",
+                type_code=401,
+                action_url=f"/{post.athlete.handle}",
+            )
+
+        return PostCommentResponse(
+            id=comment.id,
+            post_id=comment.post_id,
+            user_id=comment.user_id,
+            user_name=user.full_name,
+            user_avatar=user.avatar_url,
+            content=comment.content,
+            likes_count=comment.likes_count,
+            created_at=comment.created_at,
+        )
 
 
 
@@ -364,6 +425,40 @@ class AthleteService:
             if s.is_active
         ]
 
+        supporter_repo = SupporterRepository(self.session)
+        recent_supporters_raw = await supporter_repo.get_recent_supporters(profile.id, limit=10)
+        recent_supporters = [SupporterItemResponse(**s) for s in recent_supporters_raw]
+
+        tiers = [
+            MembershipTierResponse(
+                id=t.id,
+                name=t.name,
+                description=t.description,
+                monthly_price=t.monthly_price,
+                currency=t.currency,
+                is_active=t.is_active,
+                benefits=[b.benefit_text for b in t.benefits] if t.benefits else [],
+                members_count=0,
+            )
+            for t in profile.tiers
+            if t.is_active
+        ]
+
+        products = [
+            DigitalProductResponse(
+                id=p.id,
+                title=p.title,
+                description=p.description,
+                price=p.price,
+                currency=p.currency,
+                file_type=p.file_type,
+                file_url=p.file_url,
+                is_active=p.is_active,
+            )
+            for p in profile.products
+            if p.is_active
+        ]
+
         return CreatorPublicProfileResponse(
             id=profile.id,
             handle=profile.handle,
@@ -380,6 +475,9 @@ class AthleteService:
             active_goal_target=active_goal.target_amount if active_goal else None,
             active_goal_raised=active_goal.raised_amount if active_goal else None,
             booking_services=booking_services,
+            tiers=tiers,
+            products=products,
+            recent_supporters=recent_supporters,
         )
 
     async def get_monthly_leaderboard(self, limit: int = 10) -> list[AthleteLeaderboardItemResponse]:
@@ -399,9 +497,23 @@ class AthleteService:
                 title=p.title,
                 content_html=p.content_html,
                 access_type=p.access_type,
+                access_type_code=getattr(p, "access_type_code", 601) or 601,
                 likes_count=p.likes_count,
                 published_at=p.published_at,
-                is_members_only=p.access_type == "members_only",
+                is_members_only=getattr(p, "access_type_code", 601) == 603 or p.access_type == "members_only",
+                comments=[
+                    PostCommentResponse(
+                        id=c.id,
+                        post_id=c.post_id,
+                        user_id=c.user_id,
+                        user_name=c.user.full_name if c.user else "Fan",
+                        user_avatar=c.user.avatar_url if c.user else None,
+                        content=c.content,
+                        likes_count=c.likes_count,
+                        created_at=c.created_at,
+                    )
+                    for c in (p.comments or [])
+                ],
             )
             for p in posts
         ]
@@ -442,6 +554,7 @@ class DashboardService:
             cover_image_url=athlete.cover_image_url,
             is_verified=athlete.is_verified,
             referral_code=athlete.referral_code,
+            thank_you_message=athlete.thank_you_message,
         )
 
     async def update_profile(self, athlete: AthleteProfile, dto: AthleteProfileUpdateRequest) -> AthleteProfileFullResponse:
@@ -459,6 +572,8 @@ class DashboardService:
             athlete.cover_image_url = dto.cover_image_url
         if dto.google_analytics_id is not None:
             athlete.google_analytics_id = dto.google_analytics_id
+        if dto.thank_you_message is not None:
+            athlete.thank_you_message = dto.thank_you_message
 
         if athlete.user:
             if dto.full_name is not None:
@@ -576,19 +691,23 @@ class DashboardService:
                 title=p.title,
                 content_html=p.content_html,
                 access_type=p.access_type,
+                access_type_code=getattr(p, "access_type_code", 601) or 601,
                 likes_count=p.likes_count,
                 published_at=p.published_at,
-                is_members_only=p.access_type == "members_only",
+                is_members_only=getattr(p, "access_type_code", 601) == 603 or p.access_type == "members_only",
             )
             for p in posts
         ]
 
     async def create_post(self, athlete: AthleteProfile, dto: PostCreateRequest) -> PostResponse:
+        code = dto.access_type_code or (603 if dto.access_type == "members_only" else 601)
+        access_str = "members_only" if code == 603 else "public"
         post = Post(
             athlete_id=athlete.id,
             title=dto.title,
             content_html=dto.content_html,
-            access_type=dto.access_type,
+            access_type=access_str,
+            access_type_code=code,
         )
         created = await self.post_repo.create(post)
         return PostResponse(
@@ -596,9 +715,10 @@ class DashboardService:
             title=created.title,
             content_html=created.content_html,
             access_type=created.access_type,
+            access_type_code=created.access_type_code,
             likes_count=created.likes_count,
             published_at=created.published_at,
-            is_members_only=created.access_type == "members_only",
+            is_members_only=created.access_type_code == 603,
         )
 
     async def get_supporters(self, athlete: AthleteProfile) -> SupportersDashboardResponse:
@@ -611,6 +731,27 @@ class DashboardService:
             currency=data["currency"],
             items=items,
         )
+
+    async def reply_to_supporter(self, athlete: AthleteProfile, transaction_id: int, reply_text: str) -> dict:
+        tx = await self.supporter_repo.reply_to_supporter(athlete.id, transaction_id, reply_text)
+        if not tx:
+            raise EntityNotFoundError("Transaction", transaction_id)
+
+        # Notificar al supporter si tiene cuenta
+        if tx.supporter_id:
+            notif_repo = NotificationRepository(self.session)
+            await notif_repo.create(
+                user_id=tx.supporter_id,
+                title=f"@{athlete.handle} te ha respondido",
+                message=f"{athlete.user.full_name if athlete.user else athlete.handle}: \"{reply_text[:100]}\"",
+                type_code=401,
+                action_url=f"/{athlete.handle}",
+            )
+        return {"success": True, "message": "Reply saved successfully.", "reply": reply_text}
+
+    async def toggle_like_supporter(self, athlete: AthleteProfile, transaction_id: int) -> dict:
+        is_liked = await self.supporter_repo.toggle_like_supporter(athlete.id, transaction_id)
+        return {"success": True, "is_liked": is_liked}
 
 
 class SystemService:
@@ -675,23 +816,100 @@ class CheckoutService:
         self.athlete_repo = AthleteRepository(session)
         self.booking_repo = BookingRepository(session)
 
-    async def create_shake_intent(self, dto: ShakeCheckoutCreateRequest) -> PaymentIntentResponse:
+    async def direct_shake_donation(self, dto: ShakeCheckoutCreateRequest, supporter_user: User | None = None) -> dict:
         profile = await self.athlete_repo.get_by_handle(dto.athlete_handle)
         if not profile:
             raise EntityNotFoundError("Atleta", dto.athlete_handle)
 
         unit_price = profile.shake_price if dto.currency == "USD" else Decimal("50.00")
         gross_amount = unit_price * Decimal(dto.shakes_count)
+        platform_fee = (gross_amount * Decimal("0.05")).quantize(Decimal("0.01"))
+        stripe_fee = Decimal("0.30") + (gross_amount * Decimal("0.029")).quantize(Decimal("0.01"))
+        net_athlete = gross_amount - platform_fee - stripe_fee
 
-        mock_client_secret = f"pi_{secrets.token_hex(12)}_secret_{secrets.token_hex(8)}"
-        mock_uuid = secrets.token_hex(16)
+        # Buscar meta activa del atleta para sumar la donación
+        active_goal = next((g for g in profile.goals if g.is_active), None)
+        if active_goal:
+            active_goal.raised_amount = (active_goal.raised_amount or Decimal("0.00")) + gross_amount
 
-        return PaymentIntentResponse(
-            client_secret=mock_client_secret,
-            transaction_uuid=mock_uuid,
+        # Determinar ID del supporter (o None si es invitado)
+        supporter_id = supporter_user.id if supporter_user else None
+
+        tx = Transaction(
+            transaction_uuid=secrets.token_hex(16),
+            supporter_id=supporter_id,
+            supporter_name=dto.supporter_name.strip() if dto.supporter_name else None,
+            supporter_email=dto.supporter_email.strip() if dto.supporter_email else None,
+            athlete_id=profile.id,
+            goal_id=active_goal.id if active_goal else None,
+            transaction_type_code=201,  # Shake
+            shakes_count=dto.shakes_count,
             gross_amount=gross_amount,
             currency=dto.currency,
+            platform_fee=platform_fee,
+            stripe_fee=stripe_fee,
+            net_athlete_amount=net_athlete,
+            status_code=302,  # Aprobado / Succeeded
+            supporter_message=dto.supporter_message,
+            is_anonymous=dto.is_anonymous,
         )
+        self.session.add(tx)
+
+        # Crear notificación para el atleta
+        if dto.is_anonymous:
+            supporter_display_name = "Someone anonymous"
+        elif dto.supporter_name and dto.supporter_name.strip():
+            supporter_display_name = dto.supporter_name.strip()
+        elif supporter_user:
+            supporter_display_name = supporter_user.full_name
+        else:
+            supporter_display_name = "A Supporter"
+
+        notif_repo = NotificationRepository(self.session)
+        if profile.user_id:
+            await notif_repo.create(
+                user_id=profile.user_id,
+                title=f"{dto.shakes_count} Shakes received!",
+                message=f"{supporter_display_name} bought you {dto.shakes_count} Shakes (${gross_amount} {dto.currency}).",
+                type_code=401,
+                action_url=f"/dashboard/supporters",
+            )
+
+        await self.session.flush()
+
+        # Enviar email de agradecimiento si hay correo disponible
+        recipient_email = dto.supporter_email or (supporter_user.email if supporter_user else None)
+        if recipient_email:
+            try:
+                athlete_display_name = profile.user.full_name if profile.user else profile.handle
+                await send_thank_you_email(
+                    to_email=recipient_email,
+                    athlete_name=athlete_display_name,
+                    athlete_handle=profile.handle,
+                    shakes_count=dto.shakes_count,
+                    thank_you_message=profile.thank_you_message,
+                )
+            except Exception as e:
+                print(f"[ERROR SENDING THANK YOU EMAIL]: {e}")
+
+        return {
+            "success": True,
+            "message": f"Successfully sent {dto.shakes_count} Shakes to @{dto.athlete_handle}!",
+            "transaction_uuid": tx.transaction_uuid,
+            "gross_amount": float(gross_amount),
+            "new_goal_raised": float(active_goal.raised_amount) if active_goal else None,
+            "thank_you_message": profile.thank_you_message or "¡Muchas gracias por tu apoyo y por ser parte de mi camino deportivo!",
+            "supporter_item": {
+                "id": tx.id,
+                "supporter_name": supporter_display_name,
+                "shakes_count": dto.shakes_count,
+                "gross_amount": float(gross_amount),
+                "currency": dto.currency,
+                "supporter_message": dto.supporter_message,
+                "is_anonymous": dto.is_anonymous,
+                "created_at": datetime.now().isoformat(),
+            }
+        }
 
     async def book_session_intent(self, dto: BookingSessionCheckoutRequest, supporter_id: int) -> PaymentIntentResponse:
         service = await self.booking_repo.get_service_by_id(dto.booking_service_id)

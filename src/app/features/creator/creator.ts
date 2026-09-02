@@ -112,7 +112,7 @@ export class Creator {
   readonly creatorView = signal<CreatorView | null>(null);
   readonly loading = signal(true);
   readonly error = signal<string | null>(null);
-  readonly supporters = RECENT_SUPPORTERS;
+  readonly supporters = signal<any[]>([]);
   readonly quickShakes = QUICK_SHAKES;
 
   readonly followModalOpen = signal(false);
@@ -122,101 +122,13 @@ export class Creator {
   readonly activeTab = signal<'shakes' | 'memberships' | 'shop' | 'booking' | 'posts'>('shakes');
   readonly posts = signal<PostItem[]>([]);
 
-  openFollow(): void {
-    const handle = this.creatorView()?.handle || this.username();
-
-    // Si el usuario ya está autenticado, seguir/dejar de seguir con 1 clic directo sin modal
-    if (this.authService.isAuthenticated()) {
-      if (this.isTogglingFollow()) return;
-      this.isTogglingFollow.set(true);
-
-      if (this.isFollowing()) {
-        this.supporterService.unfollowAthlete(handle).subscribe({
-          next: () => {
-            this.isFollowing.set(false);
-            this.isTogglingFollow.set(false);
-          },
-          error: () => this.isTogglingFollow.set(false),
-        });
-      } else {
-        this.supporterService.followAthlete(handle).subscribe({
-          next: () => {
-            this.isFollowing.set(true);
-            this.isTogglingFollow.set(false);
-          },
-          error: () => this.isTogglingFollow.set(false),
-        });
-      }
-      return;
-    }
-
-    // Si es visitante no registrado, abrir modal de registro / OTP
-    this.followModalOpen.set(true);
-  }
-
-  closeFollow(): void {
-    this.followModalOpen.set(false);
-  }
-
-  onFollowSuccess(data: { email: string; name: string }): void {
-    this.isFollowing.set(true);
-    // Redirige al portal del supporter (studio.buymeacoffee.com/home style)
-    this.router.navigate(['/fan/home'], {
-      queryParams: { followed: this.creatorView()?.handle || this.username() },
-    });
-  }
-
-  sharePage(): void {
-    const url = window.location.href;
-    const name = this.creatorView()?.name || this.username();
-    if (navigator.share) {
-      navigator.share({
-        title: `Apoya a ${name} en Buy Me a Shake`,
-        text: `¡Invítale un Shake a ${name} para apoyar su carrera deportiva!`,
-        url,
-      }).catch(() => {
-        // Ignorar cancelaciones de usuario
-      });
-    } else if (navigator.clipboard) {
-      navigator.clipboard.writeText(url).then(() => {
-        alert('¡Enlace copiado al portapapeles!');
-      });
-    }
-  }
-
   readonly bookingServices = signal<CreatorBookingService[]>([]);
-
-  readonly products: CreatorProduct[] = [
-    {
-      title: 'Guía de Hipertrofia & Fuerza (12 Semanas)',
-      type: 'PDF',
-      price: 19.99,
-      description: 'Plan estructurado de 4 días con progresiones de sobrecarga y videos explicativos.',
-    },
-    {
-      title: 'Plantilla de Registro de Levantamientos (Notion)',
-      type: 'Plantilla',
-      price: 9.99,
-      description: 'Calculadora automática de 1RM, volumen de entrenamiento y RPE semanal.',
-    },
-  ];
-
-  readonly tiers: CreatorTier[] = [
-    {
-      name: 'Nivel Atleta (Comunidad)',
-      price: 5,
-      description: 'Acceso a la comunidad privada y publicaciones exclusivas.',
-      benefits: ['Acceso al canal privado de Discord', 'Posts y videos de técnica exclusivos', 'Insignia en tu perfil'],
-    },
-    {
-      name: 'Nivel Pro (Rutinas & Q&A)',
-      price: 15,
-      description: 'Bloques de entrenamiento semanales y Q&A grupal mensual.',
-      benefits: ['Todo lo del Nivel Atleta', 'Descarga libre de todos mis PDFs', 'Sesión mensual grupal en Meet'],
-    },
-  ];
+  readonly products = signal<CreatorProduct[]>([]);
+  readonly tiers = signal<CreatorTier[]>([]);
 
   readonly shakes = signal(3);
+  readonly supporterName = signal('');
+  readonly isAnonymous = signal(false);
   readonly message = signal('');
   readonly activity = signal<Activity>(ACTIVITIES[0]);
   readonly currency = signal<'USD' | 'MXN'>('USD');
@@ -278,11 +190,103 @@ export class Creator {
     return c.goalRaised + this.amount();
   });
 
+  openFollow(): void {
+    const handle = this.creatorView()?.handle || this.username();
+
+    // Si el usuario ya está autenticado, seguir/dejar de seguir con 1 clic directo sin modal
+    if (this.authService.isAuthenticated()) {
+      if (this.isTogglingFollow()) return;
+      this.isTogglingFollow.set(true);
+
+      if (this.isFollowing()) {
+        this.supporterService.unfollowAthlete(handle).subscribe({
+          next: () => {
+            this.isFollowing.set(false);
+            this.isTogglingFollow.set(false);
+          },
+          error: () => this.isTogglingFollow.set(false),
+        });
+      } else {
+        this.supporterService.followAthlete(handle).subscribe({
+          next: () => {
+            this.isFollowing.set(true);
+            this.isTogglingFollow.set(false);
+          },
+          error: () => this.isTogglingFollow.set(false),
+        });
+      }
+      return;
+    }
+
+    // Si es visitante no registrado, abrir modal de registro / OTP
+    this.followModalOpen.set(true);
+  }
+
+  closeFollow(): void {
+    this.followModalOpen.set(false);
+  }
+
+  onFollowSuccess(data: { email: string; name: string }): void {
+    this.isFollowing.set(true);
+    // Redirige al portal del supporter (studio.buymeacoffee.com/home style)
+    this.router.navigate(['/fan/home'], {
+      queryParams: { followed: this.creatorView()?.handle || this.username() },
+    });
+  }
+
+  sharePage(): void {
+    const url = window.location.href;
+    const name = this.creatorView()?.name || this.username();
+    if (navigator.share) {
+      navigator.share({
+        title: `Apoya a ${name} en Buy Me a Shake`,
+        text: `¡Invítale un Shake a ${name} para apoyar su carrera deportiva!`,
+        url,
+      }).catch(() => {});
+    } else if (navigator.clipboard) {
+      navigator.clipboard.writeText(url).then(() => {
+        alert('¡Enlace copiado al portapapeles!');
+      });
+    }
+  }
+
   constructor() {
     effect(() => {
       const handle = this.username();
       if (handle) {
         this.loadCreator(handle);
+      }
+    });
+
+    // Escucha en tiempo real si el supporter completó una donación
+    effect(() => {
+      const last = this.checkout.lastDonation();
+      if (last) {
+        if (last.newGoalRaised !== undefined && last.newGoalRaised !== null) {
+          this.creatorView.update((c) => (c ? { ...c, goalRaised: last.newGoalRaised! } : c));
+        }
+        if (last.supporterItem) {
+          const s = last.supporterItem;
+          const initials = s.supporter_name
+            .split(' ')
+            .map((w: string) => w[0])
+            .join('')
+            .slice(0, 2)
+            .toUpperCase() || 'SP';
+
+          this.supporters.update((list) => [
+            {
+              name: s.supporter_name,
+              shakes: s.shakes_count,
+              message: s.supporter_message || '¡Mucho éxito con tu entrenamiento!',
+              when: 'Justo ahora',
+              initials: initials,
+            },
+            ...list,
+          ]);
+
+          this.creatorView.update((c) => (c ? { ...c, supporters: c.supporters + 1 } : c));
+        }
       }
     });
   }
@@ -295,6 +299,58 @@ export class Creator {
       next: (profile) => {
         this.creatorView.set(this.mapProfile(profile));
         this.currency.set((profile.currency as 'USD' | 'MXN') || 'USD');
+        
+        // Cargar Tiers Reales desde BD
+        if (profile.tiers && profile.tiers.length > 0) {
+          this.tiers.set(
+            profile.tiers.map((t) => ({
+              name: t.name,
+              price: Number(t.monthly_price),
+              description: t.description || '',
+              benefits: t.benefits || [],
+            }))
+          );
+        } else {
+          this.tiers.set([]);
+        }
+
+        // Cargar Productos Digitales Reales desde BD
+        if (profile.products && profile.products.length > 0) {
+          this.products.set(
+            profile.products.map((p) => ({
+              title: p.title,
+              type: p.file_type,
+              price: Number(p.price),
+              description: p.description || '',
+            }))
+          );
+        } else {
+          this.products.set([]);
+        }
+
+        // Cargar Supporters Reales desde BD
+        if (profile.recent_supporters && profile.recent_supporters.length > 0) {
+          this.supporters.set(
+            profile.recent_supporters.map((s) => ({
+              name: s.supporter_name,
+              shakes: s.shakes_count,
+              message: s.supporter_message || '¡Mucho éxito en tus metas deportivas!',
+              creator_reply: s.creator_reply,
+              creator_reply_at: s.creator_reply_at ? new Date(s.creator_reply_at).toLocaleDateString('es-MX') : null,
+              is_liked_by_creator: s.is_liked_by_creator,
+              when: new Date(s.created_at).toLocaleDateString('es-MX'),
+              initials: s.supporter_name
+                .split(' ')
+                .map((w) => w[0])
+                .join('')
+                .slice(0, 2)
+                .toUpperCase() || 'SP',
+            }))
+          );
+        } else {
+          this.supporters.set([]);
+        }
+
         this.bookingServices.set(
           profile.booking_services.map((s) => ({
             id: String(s.id),
@@ -338,8 +394,15 @@ export class Creator {
             authorHandle: c.handle,
             publishedAt: new Date(p.published_at).toLocaleDateString('es-MX'),
             likesCount: p.likes_count,
-            commentsCount: 0,
+            commentsCount: p.comments?.length || 0,
             isMembersOnly: p.is_members_only,
+            comments: (p.comments || []).map((cm) => ({
+              id: cm.id,
+              userName: cm.user_name,
+              userAvatar: cm.user_avatar,
+              content: cm.content,
+              createdAt: new Date(cm.created_at).toLocaleDateString('es-MX'),
+            })),
           })),
         );
       },
@@ -376,9 +439,55 @@ export class Creator {
   }
 
   likePost(postId: string): void {
-    this.posts.update((list) =>
-      list.map((p) => (p.id === postId ? { ...p, likesCount: p.likesCount + 1 } : p)),
-    );
+    const id = Number(postId);
+    this.supporterService.likePost(id).subscribe({
+      next: (res) => {
+        this.posts.update((list) =>
+          list.map((p) => (p.id === postId ? { ...p, likesCount: res.likes_count } : p)),
+        );
+      },
+      error: () => {
+        this.posts.update((list) =>
+          list.map((p) => (p.id === postId ? { ...p, likesCount: p.likesCount + 1 } : p)),
+        );
+      },
+    });
+  }
+
+  commentOnPost(event: { postId: string; content: string }): void {
+    if (!this.authService.isAuthenticated()) {
+      this.router.navigate(['/auth/login'], { queryParams: { returnUrl: window.location.pathname } });
+      return;
+    }
+
+    const postId = Number(event.postId);
+    this.supporterService.commentOnPost(postId, event.content).subscribe({
+      next: (comment) => {
+        this.posts.update((list) =>
+          list.map((p) =>
+            p.id === event.postId
+              ? {
+                  ...p,
+                  commentsCount: (p.commentsCount || 0) + 1,
+                  comments: [
+                    ...(p.comments || []),
+                    {
+                      id: comment.id,
+                      userName: comment.user_name,
+                      userAvatar: comment.user_avatar,
+                      content: comment.content,
+                      createdAt: 'Justo ahora',
+                    },
+                  ],
+                }
+              : p,
+          ),
+        );
+      },
+      error: (err) => {
+        console.error('Error adding comment:', err);
+      },
+    });
   }
 
   unlockPost(_post: PostItem): void {
@@ -502,6 +611,8 @@ export class Creator {
             creatorName: c.name,
             creatorHandle: c.handle,
             shakes: this.shakes(),
+            supporterName: this.supporterName(),
+            isAnonymous: this.isAnonymous(),
             message: this.message(),
             activity: this.activity().id,
             currency: this.currency(),
@@ -516,6 +627,8 @@ export class Creator {
             creatorName: c.name,
             creatorHandle: c.handle,
             shakes: this.shakes(),
+            supporterName: this.supporterName(),
+            isAnonymous: this.isAnonymous(),
             message: this.message(),
             activity: this.activity().id,
             currency: this.currency(),

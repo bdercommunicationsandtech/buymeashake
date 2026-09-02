@@ -4,6 +4,8 @@ from app.api.dependencies import CurrentUser, DatabaseSession
 from app.schemas.dtos import (
     FollowedAthleteResponse,
     PaginatedResponse,
+    PostCommentCreateRequest,
+    PostCommentResponse,
     PostResponse,
 )
 from app.services.core_services import SupporterService
@@ -64,3 +66,26 @@ async def unfollow_athlete(
     """Permite al usuario autenticado dejar de seguir a un atleta."""
     service = SupporterService(session)
     return await service.unfollow_athlete(supporter_id=user.id, handle=athlete_handle)
+
+
+@router.post("/posts/{post_id}/like")
+async def like_post(
+    post_id: int,
+    user: CurrentUser,
+    session: DatabaseSession,
+) -> dict:
+    """Da like a una publicación."""
+    service = SupporterService(session)
+    return await service.like_post(post_id=post_id)
+
+
+@router.post("/posts/{post_id}/comments", response_model=PostCommentResponse)
+async def comment_on_post(
+    post_id: int,
+    dto: PostCommentCreateRequest,
+    user: CurrentUser,
+    session: DatabaseSession,
+) -> PostCommentResponse:
+    """Agrega un comentario a una publicación."""
+    service = SupporterService(session)
+    return await service.comment_post(user=user, post_id=post_id, content=dto.content)

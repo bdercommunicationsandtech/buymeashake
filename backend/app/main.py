@@ -15,8 +15,12 @@ from app.core.exceptions import register_exception_handlers
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Auto-crear nuevas tablas añadidas (athlete_follows, email_verifications, etc.)
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
+    try:
+        async with engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
+    except Exception as exc:
+        import logging
+        logging.getLogger("uvicorn.error").warning(f"[DB LIFESPAN WARNING] No se pudo ejecutar create_all al inicio: {exc}")
     yield
 
 

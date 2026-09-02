@@ -52,6 +52,7 @@ export interface UserMe {
   full_name: string;
   avatar_url: string | null;
   role: string;
+  role_code?: number;
   is_email_verified: boolean;
   athlete_handle: string | null;
   referral_code: string | null;
@@ -98,6 +99,9 @@ export interface CreatorProfile {
   active_goal_target: number | null;
   active_goal_raised: number | null;
   booking_services: CreatorBookingService[];
+  tiers?: MembershipTierItem[];
+  products?: DigitalProductItem[];
+  recent_supporters?: SupporterItemDto[];
 }
 
 export interface DashboardMetrics {
@@ -189,6 +193,7 @@ export interface AthleteProfileFull {
   twitter_url: string | null;
   is_verified: boolean;
   referral_code: string;
+  thank_you_message?: string | null;
 }
 
 export interface AthleteProfileUpdatePayload {
@@ -205,6 +210,7 @@ export interface AthleteProfileUpdatePayload {
   tiktok_url?: string | null;
   facebook_url?: string | null;
   twitter_url?: string | null;
+  thank_you_message?: string;
 }
 
 export interface GoalItem {
@@ -254,16 +260,29 @@ export interface PaginatedResponse<T> {
   total_pages: number;
 }
 
+export interface PostCommentDto {
+  id: number;
+  post_id: number;
+  user_id: number;
+  user_name: string;
+  user_avatar: string | null;
+  content: string;
+  likes_count: number;
+  created_at: string;
+}
+
 export interface PostResponse {
   id: number;
   title: string;
   content_html: string;
   access_type: string;
+  access_type_code?: number;
   likes_count: number;
   published_at: string;
   is_members_only: boolean;
   author_name?: string | null;
   author_handle?: string | null;
+  comments?: PostCommentDto[];
 }
 
 export interface PostItemDto {
@@ -271,9 +290,11 @@ export interface PostItemDto {
   title: string;
   content_html: string;
   access_type: string;
+  access_type_code?: number;
   likes_count: number;
   published_at: string;
   is_members_only: boolean;
+  comments?: PostCommentDto[];
 }
 
 export interface PostCreatePayload {
@@ -290,6 +311,9 @@ export interface SupporterItemDto {
   currency: string;
   supporter_message: string | null;
   is_anonymous: boolean;
+  creator_reply?: string | null;
+  creator_reply_at?: string | null;
+  is_liked_by_creator?: boolean;
   created_at: string;
 }
 

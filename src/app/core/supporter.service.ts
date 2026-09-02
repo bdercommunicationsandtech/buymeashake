@@ -32,4 +32,12 @@ export class SupporterService {
   unfollowAthlete(handle: string): Observable<{ message: string; following: boolean }> {
     return this.http.delete<{ message: string; following: boolean }>(`${this.apiUrl}/follow/${handle}`);
   }
+
+  likePost(postId: number): Observable<{ success: boolean; likes_count: number }> {
+    return this.http.post<{ success: boolean; likes_count: number }>(`${this.apiUrl}/posts/${postId}/like`, {});
+  }
+
+  commentOnPost(postId: number, content: string): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/posts/${postId}/comments`, { content });
+  }
 }

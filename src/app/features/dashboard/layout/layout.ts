@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AuthService } from '../../../core/auth.service';
 import { DashboardService } from '../../../core/dashboard.service';
+import { ThemeService } from '../../../core/theme.service';
 import { AthleteProfileFull } from '../../../core/api.models';
 
 @Component({
@@ -14,18 +15,50 @@ import { AthleteProfileFull } from '../../../core/api.models';
 export class DashboardLayout implements OnInit {
   private readonly authService = inject(AuthService);
   private readonly dashboardService = inject(DashboardService);
+  readonly themeService = inject(ThemeService);
   private readonly router = inject(Router);
 
   readonly profile = signal<AthleteProfileFull | null>(null);
   readonly publishOpen = signal(true);
   readonly userMenuOpen = signal(false);
   readonly sidebarOpen = signal(false);
+  readonly notifMenuOpen = signal(false);
+  readonly notifications = signal<any[]>([]);
 
   ngOnInit(): void {
     this.dashboardService.getProfile().subscribe({
       next: (prof) => this.profile.set(prof),
       error: () => {},
     });
+
+    this.loadNotifications();
+  }
+
+  loadNotifications(): void {
+    this.dashboardService.getNotifications().subscribe({
+      next: (items) => this.notifications.set(items),
+      error: () => {},
+    });
+  }
+
+  toggleNotifMenu(): void {
+    this.notifMenuOpen.update((v) => !v);
+  }
+
+  markAsRead(item: any): void {
+    if (!item.is_read) {
+      this.dashboardService.markNotificationRead(item.id).subscribe({
+        next: () => {
+          this.notifications.update((list) =>
+            list.map((n) => (n.id === item.id ? { ...n, is_read: true } : n))
+          );
+        },
+      });
+    }
+    if (item.action_url) {
+      this.router.navigateByUrl(item.action_url);
+      this.notifMenuOpen.set(false);
+    }
   }
 
   togglePublish(): void {

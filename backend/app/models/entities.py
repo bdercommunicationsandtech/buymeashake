@@ -86,6 +86,7 @@ class User(Base):
     full_name: Mapped[str] = mapped_column(String(150), nullable=False)
     avatar_url: Mapped[str | None] = mapped_column(String(255), nullable=True)
     role: Mapped[str] = mapped_column(Enum("supporter", "athlete", "admin", name="user_role_enum"), default="supporter")
+    role_code: Mapped[int] = mapped_column(Integer, default=10, index=True) # 10=Supporter, 20=Athlete, 90=Admin
     is_email_verified: Mapped[bool] = mapped_column(Boolean, default=False)
     stripe_customer_id: Mapped[str | None] = mapped_column(String(100), unique=True, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
@@ -113,6 +114,7 @@ class AthleteProfile(Base):
     is_verified: Mapped[bool] = mapped_column(Boolean, default=False)
     is_nsfw: Mapped[bool] = mapped_column(Boolean, default=False)
     google_analytics_id: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    thank_you_message: Mapped[str | None] = mapped_column(Text, nullable=True)
     stripe_connect_account_id: Mapped[str | None] = mapped_column(String(100), unique=True, nullable=True)
     payouts_enabled: Mapped[bool] = mapped_column(Boolean, default=False)
     referred_by_id: Mapped[int | None] = mapped_column(BigInteger, ForeignKey("athlete_profiles.id", ondelete="SET NULL"), nullable=True)
@@ -268,7 +270,9 @@ class Transaction(Base):
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
     transaction_uuid: Mapped[str] = mapped_column(String(36), unique=True, nullable=False)
-    supporter_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("users.id", ondelete="RESTRICT"), nullable=False)
+    supporter_id: Mapped[int | None] = mapped_column(BigInteger, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    supporter_name: Mapped[str | None] = mapped_column(String(150), nullable=True)
+    supporter_email: Mapped[str | None] = mapped_column(String(191), nullable=True)
     athlete_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("athlete_profiles.id", ondelete="RESTRICT"), nullable=False)
     goal_id: Mapped[int | None] = mapped_column(BigInteger, ForeignKey("goals.id", ondelete="SET NULL"), nullable=True)
     transaction_type_code: Mapped[int] = mapped_column(Integer, default=201, index=True)
@@ -283,11 +287,18 @@ class Transaction(Base):
     status_code: Mapped[int] = mapped_column(Integer, default=301, index=True)
     supporter_message: Mapped[str | None] = mapped_column(String(500), nullable=True)
     is_anonymous: Mapped[bool] = mapped_column(Boolean, default=False)
+    creator_reply: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    creator_reply_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    is_liked_by_creator: Mapped[bool] = mapped_column(Boolean, default=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+
+    supporter: Mapped["User | None"] = relationship("User")
+    athlete: Mapped[AthleteProfile] = relationship("AthleteProfile")
+    goal: Mapped["Goal | None"] = relationship("Goal")
 
 
 # ==============================================================================
-# MÓDULO 5: PUBLICACIONES & NOTIFICACIONES
+# MÓDULO 5: PUBLICACIONES, COMENTARIOS & NOTIFICACIONES
 # ==============================================================================
 
 class Post(Base):
@@ -298,19 +309,36 @@ class Post(Base):
     title: Mapped[str] = mapped_column(String(255), nullable=False)
     content_html: Mapped[str] = mapped_column(LONGTEXT, nullable=False)
     access_type: Mapped[str] = mapped_column(Enum("public", "members_only", name="post_access_enum"), default="public")
+    access_type_code: Mapped[int] = mapped_column(Integer, default=601, index=True) # 601=Public, 602=Followers Only, 603=Members Only
     minimum_tier_id: Mapped[int | None] = mapped_column(BigInteger, ForeignKey("membership_tiers.id", ondelete="SET NULL"), nullable=True)
     likes_count: Mapped[int] = mapped_column(Integer, default=0)
     published_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now(), onupdate=func.now())
 
     athlete: Mapped[AthleteProfile] = relationship("AthleteProfile", back_populates="posts")
+    comments: Mapped[list["PostComment"]] = relationship("PostComment", back_populates="post", cascade="all, delete-orphan")
+
+
+class PostComment(Base):
+    __tablename__ = "post_comments"
+
+    id: Mapped[int] = mapped_column(BIGINT(unsigned=True), primary_key=True, autoincrement=True)
+    post_id: Mapped[int] = mapped_column(BIGINT(unsigned=True), ForeignKey("posts.id", ondelete="CASCADE"), nullable=False, index=True)
+    user_id: Mapped[int] = mapped_column(BIGINT(unsigned=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    content: Mapped[str] = mapped_column(Text, nullable=False)
+    likes_count: Mapped[int] = mapped_column(Integer, default=0)
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now(), onupdate=func.now())
+
+    post: Mapped[Post] = relationship("Post", back_populates="comments")
+    user: Mapped[User] = relationship("User")
 
 
 class Notification(Base):
     __tablename__ = "notifications"
 
-    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
-    user_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    id: Mapped[int] = mapped_column(BIGINT(unsigned=True), primary_key=True, autoincrement=True)
+    user_id: Mapped[int] = mapped_column(BIGINT(unsigned=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     title: Mapped[str] = mapped_column(String(150), nullable=False)
     message: Mapped[str] = mapped_column(String(255), nullable=False)
     type_code: Mapped[int] = mapped_column(Integer, default=401)

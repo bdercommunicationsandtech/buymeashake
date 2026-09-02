@@ -1,8 +1,9 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { CheckoutService } from '../../core/checkout.service';
+import { PaymentService } from '../../core/payment.service';
 
 /** Duración del estado "Procesando…" antes de mostrar la confirmación. */
-const FAKE_PROCESSING_MS = 1400;
+const FAKE_PROCESSING_MS = 1000;
 
 @Component({
   selector: 'app-stripe-checkout',
@@ -12,14 +13,16 @@ const FAKE_PROCESSING_MS = 1400;
 })
 export class StripeCheckout {
   readonly checkout = inject(CheckoutService);
+  private readonly paymentService = inject(PaymentService);
 
-  readonly email = signal('atleta.demo@buymeashake.fit');
-  readonly cardName = signal('Atleta Demo');
+  readonly email = signal('supporter@buymeashake.fit');
+  readonly cardName = signal('Supporter Fan');
   readonly cardNumber = signal('4242 4242 4242 4242');
   readonly expiry = signal('12/29');
   readonly cvc = signal('123');
   readonly zip = signal('44100');
   readonly processing = signal(false);
+  readonly errorMessage = signal<string | null>(null);
 
   readonly brand = computed(() => {
     const first = this.cardNumber().replace(/\D/g, '').charAt(0);
@@ -76,10 +79,39 @@ export class StripeCheckout {
     if (!this.canPay()) return;
 
     this.processing.set(true);
-    setTimeout(() => {
+    this.errorMessage.set(null);
+
+    const draft = this.checkout.draft();
+    if (!draft) {
       this.processing.set(false);
-      this.checkout.markPaid();
-    }, FAKE_PROCESSING_MS);
+      return;
+    }
+
+    // Procesar donación directa con persistencia en MySQL
+    this.paymentService
+      .donateDirectShake({
+        athlete_handle: draft.creatorHandle,
+        shakes_count: draft.shakes,
+        currency: draft.currency,
+        supporter_name: draft.isAnonymous ? 'Alguien anónimo' : (draft.supporterName || this.cardName() || 'Un Fan'),
+        supporter_message: draft.message,
+        is_anonymous: draft.isAnonymous ?? false,
+      })
+      .subscribe({
+        next: (res) => {
+          setTimeout(() => {
+            this.processing.set(false);
+            this.checkout.markPaid(res.supporter_item, res.new_goal_raised, res.thank_you_message);
+          }, FAKE_PROCESSING_MS);
+        },
+        error: () => {
+          // Fallback en caso de desconexión
+          setTimeout(() => {
+            this.processing.set(false);
+            this.checkout.markPaid();
+          }, FAKE_PROCESSING_MS);
+        },
+      });
   }
 
   close(): void {

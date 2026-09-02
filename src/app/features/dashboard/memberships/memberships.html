@@ -2,8 +2,8 @@
   
   <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
     <div>
-      <h1 class="text-2xl font-black text-gray-900">Membresías Recurrentes (Tiers)</h1>
-      <p class="text-sm text-gray-500 mt-1">
+      <h1 class="text-2xl font-black text-gray-950 dark:text-white tracking-tight">Membresías Recurrentes (Tiers)</h1>
+      <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
         Ofrece suscripciones mensuales a tus seguidores con diferentes niveles de beneficios y recompensas.
       </p>
     </div>
@@ -11,7 +11,7 @@
     <button
       type="button"
       (click)="openCreateModal()"
-      class="rounded-full bg-black text-white px-5 py-2.5 text-xs font-bold hover:bg-gray-800 transition flex items-center gap-1.5 shadow-xs"
+      class="rounded-full bg-gray-950 dark:bg-[#c9ff3d] text-white dark:text-gray-950 px-5 py-2.5 text-xs font-black hover:opacity-90 transition flex items-center gap-1.5 shadow-sm cursor-pointer"
     >
       <span>+ Crear Nuevo Nivel</span>
     </button>
@@ -19,39 +19,39 @@
 
   <!-- Métricas Rápidas de Membresías -->
   <div class="grid grid-cols-1 sm:grid-cols-3 gap-5">
-    <div class="bg-white rounded-3xl p-6 border border-gray-200/80 shadow-xs">
-      <p class="text-xs font-bold text-gray-400 uppercase tracking-wider">Miembros Activos</p>
-      <p class="text-3xl font-black text-gray-900 mt-2">{{ totalMembers() }}</p>
-      <p class="text-xs text-emerald-600 font-semibold mt-2">En {{ tiers().length }} niveles activos</p>
+    <div class="bg-white dark:bg-[#121614] rounded-3xl p-6 border border-gray-200/80 dark:border-white/10 shadow-xs">
+      <p class="text-[11px] font-extrabold text-gray-400 uppercase tracking-wider">Miembros Activos</p>
+      <p class="text-3xl font-black text-gray-950 dark:text-white mt-2">{{ totalMembers() }}</p>
+      <p class="text-xs text-emerald-600 dark:text-[#c9ff3d] font-semibold mt-2">En {{ tiers().length }} niveles activos</p>
     </div>
 
-    <div class="bg-white rounded-3xl p-6 border border-gray-200/80 shadow-xs">
-      <p class="text-xs font-bold text-gray-400 uppercase tracking-wider">Ingreso Mensual Recurrente</p>
-      <p class="text-3xl font-black text-gray-900 mt-2">${{ monthlyRecurring() }} USD/mes</p>
-      <p class="text-xs text-gray-500 font-medium mt-2">Estimado por suscriptores actuales</p>
+    <div class="bg-white dark:bg-[#121614] rounded-3xl p-6 border border-gray-200/80 dark:border-white/10 shadow-xs">
+      <p class="text-[11px] font-extrabold text-gray-400 uppercase tracking-wider">Ingreso Mensual Recurrente</p>
+      <p class="text-3xl font-black text-emerald-600 dark:text-[#c9ff3d] mt-2">${{ monthlyRecurring() }} USD/mes</p>
+      <p class="text-xs text-gray-500 dark:text-gray-400 font-medium mt-2">Estimado por suscriptores actuales</p>
     </div>
 
-    <div class="bg-white rounded-3xl p-6 border border-gray-200/80 shadow-xs">
-      <p class="text-xs font-bold text-gray-400 uppercase tracking-wider">Nivel Más Popular</p>
+    <div class="bg-white dark:bg-[#121614] rounded-3xl p-6 border border-gray-200/80 dark:border-white/10 shadow-xs">
+      <p class="text-[11px] font-extrabold text-gray-400 uppercase tracking-wider">Nivel Más Popular</p>
       @if (popularTier(); as tier) {
-        <p class="text-xl font-black text-amber-600 mt-2">{{ tier.name }}</p>
-        <p class="text-xs text-gray-500 font-medium mt-2">{{ tier.members_count }} suscriptores</p>
+        <p class="text-xl font-black text-amber-500 mt-2">{{ tier.name }}</p>
+        <p class="text-xs text-gray-500 dark:text-gray-400 font-medium mt-2">{{ tier.members_count }} suscriptores</p>
       } @else {
-        <p class="text-sm text-gray-500 mt-2">Sin niveles aún</p>
+        <p class="text-sm text-gray-400 dark:text-gray-500 mt-2">Sin niveles aún</p>
       }
     </div>
   </div>
 
   @if (loading()) {
-    <p class="text-sm text-gray-500">Cargando niveles…</p>
+    <p class="text-xs text-gray-500 dark:text-gray-400">Cargando niveles…</p>
   }
 
   <!-- Lista de Niveles de Suscripción (Tiers) -->
   <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
     @for (tier of tiers(); track tier.id) {
       <div
-        class="bg-white rounded-3xl p-6 sm:p-7 border shadow-xs flex flex-col justify-between relative transition hover:shadow-md"
-        [class]="featuredTierId() === tier.id ? 'border-amber-300 ring-2 ring-amber-200/60' : 'border-gray-200/80'"
+        class="bg-white dark:bg-[#121614] rounded-3xl p-6 sm:p-7 border shadow-xs flex flex-col justify-between relative transition hover:border-gray-300 dark:hover:border-white/20"
+        [class]="featuredTierId() === tier.id ? 'border-amber-400 ring-2 ring-amber-400/40' : 'border-gray-200/80 dark:border-white/10'"
       >
         @if (featuredTierId() === tier.id) {
           <div class="absolute -top-3 left-6">
@@ -64,23 +64,23 @@
         <div>
           <div class="flex items-start justify-between gap-2">
             <div>
-              <h3 class="font-black text-gray-900 text-base">{{ tier.name }}</h3>
-              <p class="text-xs text-gray-500 mt-1 leading-relaxed">{{ tier.description }}</p>
+              <h3 class="font-black text-gray-950 dark:text-white text-base">{{ tier.name }}</h3>
+              <p class="text-xs text-gray-500 dark:text-gray-400 mt-1 leading-relaxed">{{ tier.description }}</p>
             </div>
           </div>
 
-          <div class="mt-4 pb-4 border-b border-gray-100 flex items-baseline gap-1">
-            <span class="text-3xl font-black text-gray-900">${{ tier.monthly_price }}</span>
+          <div class="mt-4 pb-4 border-b border-gray-100 dark:border-white/10 flex items-baseline gap-1">
+            <span class="text-3xl font-black text-gray-950 dark:text-white">${{ tier.monthly_price }}</span>
             <span class="text-xs font-bold text-gray-400">/ mes ({{ tier.currency }})</span>
           </div>
 
           <!-- Beneficios -->
           <div class="mt-5 space-y-2.5">
-            <p class="text-[11px] font-bold uppercase tracking-wider text-gray-400">Beneficios incluidos:</p>
+            <p class="text-[11px] font-extrabold uppercase tracking-wider text-gray-400 dark:text-gray-500">Beneficios incluidos:</p>
             <ul class="space-y-2">
               @for (benefit of tier.benefits; track benefit) {
-                <li class="text-xs text-gray-700 flex items-start gap-2">
-                  <span class="text-emerald-500 font-bold">✓</span>
+                <li class="text-xs text-gray-700 dark:text-gray-300 flex items-start gap-2">
+                  <span class="text-emerald-500 dark:text-[#c9ff3d] font-bold">✓</span>
                   <span>{{ benefit }}</span>
                 </li>
               }
@@ -88,9 +88,9 @@
           </div>
         </div>
 
-        <div class="mt-8 pt-4 border-t border-gray-100 flex items-center justify-between">
+        <div class="mt-8 pt-4 border-t border-gray-100 dark:border-white/10 flex items-center justify-between">
           <span class="text-xs font-semibold text-gray-400">{{ tier.members_count }} miembros</span>
-          <button type="button" class="text-xs font-bold text-gray-700 hover:text-black border border-gray-200 rounded-xl px-3 py-1.5 transition">
+          <button type="button" class="text-xs font-bold text-gray-700 dark:text-gray-300 hover:text-black dark:hover:text-white border border-gray-200 dark:border-white/10 rounded-xl px-3 py-1.5 transition cursor-pointer">
             Editar Nivel
           </button>
         </div>
@@ -100,27 +100,27 @@
 
   <!-- MODAL: CREAR NUEVO NIVEL -->
   @if (showCreateModal()) {
-    <div class="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4">
-      <div class="bg-white rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl space-y-5 animate-in fade-in zoom-in-95">
+    <div class="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+      <div class="bg-white dark:bg-[#121614] rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl space-y-5 animate-in fade-in zoom-in-95 border border-gray-200 dark:border-white/10">
         <div class="flex items-center justify-between">
-          <h3 class="text-lg font-black text-gray-900">Crear Nivel de Membresía</h3>
-          <button (click)="closeCreateModal()" class="text-gray-400 hover:text-gray-900 text-lg font-bold">✕</button>
+          <h3 class="text-lg font-black text-gray-950 dark:text-white">Crear Nivel de Membresía</h3>
+          <button (click)="closeCreateModal()" class="text-gray-400 hover:text-gray-900 dark:hover:text-white text-lg font-bold cursor-pointer">✕</button>
         </div>
 
         <div class="space-y-4">
           <div>
-            <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Nombre del Nivel</label>
-            <input type="text" placeholder="Ej. Atleta Pro (Rutinas Semanales)" class="w-full rounded-xl border border-gray-300 p-3 text-sm outline-none focus:border-black font-semibold" [ngModel]="newName()" (ngModelChange)="newName.set($event)" />
+            <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 uppercase mb-1">Nombre del Nivel</label>
+            <input type="text" placeholder="Ej. Atleta Pro (Rutinas Semanales)" class="w-full rounded-xl border border-gray-300 dark:border-white/15 bg-white dark:bg-[#191c1d] p-3 text-sm outline-none focus:border-black dark:focus:border-[#c9ff3d] font-semibold text-gray-900 dark:text-white" [ngModel]="newName()" (ngModelChange)="newName.set($event)" />
           </div>
 
           <div class="grid grid-cols-2 gap-3">
             <div>
-              <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Precio Mensual</label>
-              <input type="number" placeholder="10.00" class="w-full rounded-xl border border-gray-300 p-3 text-sm outline-none focus:border-black font-bold" [ngModel]="newPrice()" (ngModelChange)="newPrice.set(+$event)" />
+              <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 uppercase mb-1">Precio Mensual</label>
+              <input type="number" placeholder="10.00" class="w-full rounded-xl border border-gray-300 dark:border-white/15 bg-white dark:bg-[#191c1d] p-3 text-sm outline-none focus:border-black dark:focus:border-[#c9ff3d] font-bold text-gray-900 dark:text-white" [ngModel]="newPrice()" (ngModelChange)="newPrice.set(+$event)" />
             </div>
             <div>
-              <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Moneda</label>
-              <select class="w-full rounded-xl border border-gray-300 p-3 text-sm outline-none focus:border-black" [ngModel]="newCurrency()" (ngModelChange)="newCurrency.set($event)">
+              <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 uppercase mb-1">Moneda</label>
+              <select class="w-full rounded-xl border border-gray-300 dark:border-white/15 bg-white dark:bg-[#191c1d] p-3 text-sm outline-none focus:border-black dark:focus:border-[#c9ff3d] text-gray-900 dark:text-white" [ngModel]="newCurrency()" (ngModelChange)="newCurrency.set($event)">
                 <option value="USD">USD ($)</option>
                 <option value="MXN">MXN ($)</option>
               </select>
@@ -128,21 +128,21 @@
           </div>
 
           <div>
-            <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Descripción Corta</label>
-            <input type="text" placeholder="Breve resumen de lo que recibirán los miembros..." class="w-full rounded-xl border border-gray-300 p-3 text-sm outline-none focus:border-black" [ngModel]="newDescription()" (ngModelChange)="newDescription.set($event)" />
+            <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 uppercase mb-1">Descripción Corta</label>
+            <input type="text" placeholder="Breve resumen de lo que recibirán los miembros..." class="w-full rounded-xl border border-gray-300 dark:border-white/15 bg-white dark:bg-[#191c1d] p-3 text-sm outline-none focus:border-black dark:focus:border-[#c9ff3d] text-gray-900 dark:text-white" [ngModel]="newDescription()" (ngModelChange)="newDescription.set($event)" />
           </div>
 
           <div>
-            <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Beneficios (Uno por línea)</label>
-            <textarea rows="3" placeholder="Acceso a Discord privado&#10;Rutina mensual en PDF&#10;Q&A en vivo" class="w-full rounded-xl border border-gray-300 p-3 text-sm outline-none focus:border-black" [ngModel]="newBenefitsText()" (ngModelChange)="newBenefitsText.set($event)"></textarea>
+            <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 uppercase mb-1">Beneficios (Uno por línea)</label>
+            <textarea rows="3" placeholder="Acceso a Discord privado&#10;Rutina mensual en PDF&#10;Q&A en vivo" class="w-full rounded-xl border border-gray-300 dark:border-white/15 bg-white dark:bg-[#191c1d] p-3 text-sm outline-none focus:border-black dark:focus:border-[#c9ff3d] text-gray-900 dark:text-white" [ngModel]="newBenefitsText()" (ngModelChange)="newBenefitsText.set($event)"></textarea>
           </div>
         </div>
 
         <div class="pt-3 flex gap-2">
-          <button (click)="closeCreateModal()" type="button" class="flex-1 rounded-xl border border-gray-200 py-3 text-xs font-bold text-gray-700 hover:bg-gray-50">
+          <button (click)="closeCreateModal()" type="button" class="flex-1 rounded-xl border border-gray-200 dark:border-white/10 py-3 text-xs font-bold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5 cursor-pointer">
             Cancelar
           </button>
-          <button (click)="saveTier()" type="button" [disabled]="saving()" class="flex-1 rounded-xl bg-black text-white py-3 text-xs font-bold hover:bg-gray-800 disabled:opacity-50">
+          <button (click)="saveTier()" type="button" [disabled]="saving()" class="flex-1 rounded-xl bg-black dark:bg-[#c9ff3d] text-white dark:text-gray-950 py-3 text-xs font-black hover:opacity-90 disabled:opacity-50 cursor-pointer">
             {{ saving() ? 'Guardando…' : 'Guardar Nivel' }}
           </button>
         </div>

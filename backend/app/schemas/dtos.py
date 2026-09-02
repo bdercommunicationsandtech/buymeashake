@@ -113,6 +113,7 @@ class UserMeResponse(BaseModel):
     full_name: str
     avatar_url: str | None
     role: str
+    role_code: int = 10
     is_email_verified: bool
     athlete_handle: str | None = None
     referral_code: str | None = None
@@ -178,6 +179,18 @@ class CreatorBookingServiceResponse(BaseModel):
     platform: str
 
 
+class NotificationResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    title: str
+    message: str
+    type_code: int
+    action_url: str | None = None
+    is_read: bool
+    created_at: datetime
+
+
 class CreatorPublicProfileResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -200,6 +213,9 @@ class CreatorPublicProfileResponse(BaseModel):
     active_goal_target: Decimal | None = None
     active_goal_raised: Decimal | None = None
     booking_services: list[CreatorBookingServiceResponse] = []
+    tiers: list["MembershipTierResponse"] = []
+    products: list["DigitalProductResponse"] = []
+    recent_supporters: list["SupporterItemResponse"] = []
 
 
 # ==============================================================================
@@ -210,6 +226,8 @@ class ShakeCheckoutCreateRequest(BaseModel):
     athlete_handle: str
     shakes_count: int = Field(ge=1, le=100, default=3)
     currency: str = Field(default="USD", pattern="^(USD|MXN)$")
+    supporter_name: str | None = Field(default=None, max_length=150)
+    supporter_email: str | None = Field(default=None, max_length=191)
     supporter_message: str | None = Field(default=None, max_length=240)
     is_anonymous: bool = False
 
@@ -367,6 +385,7 @@ class AthleteProfileUpdateRequest(BaseModel):
     tiktok_url: str | None = Field(default=None, max_length=255)
     facebook_url: str | None = Field(default=None, max_length=255)
     twitter_url: str | None = Field(default=None, max_length=255)
+    thank_you_message: str | None = Field(default=None, max_length=1000)
 
     @field_validator("instagram_url", "tiktok_url", "facebook_url", "twitter_url", mode="before")
     @classmethod
@@ -397,6 +416,7 @@ class AthleteProfileFullResponse(BaseModel):
     twitter_url: str | None = None
     is_verified: bool
     referral_code: str
+    thank_you_message: str | None = None
 
 
 # Metas Deportivas (Goals)
@@ -427,11 +447,29 @@ class UploadFileResponse(BaseModel):
     size_bytes: int
 
 
-# Publicaciones (Posts)
+# Publicaciones & Comentarios (Posts & Comments)
+class PostCommentCreateRequest(BaseModel):
+    content: str = Field(min_length=1, max_length=1000)
+
+
+class PostCommentResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    post_id: int
+    user_id: int
+    user_name: str
+    user_avatar: str | None = None
+    content: str
+    likes_count: int = 0
+    created_at: datetime
+
+
 class PostCreateRequest(BaseModel):
     title: str = Field(min_length=3, max_length=255)
     content_html: str = Field(min_length=1)
     access_type: str = Field(default="public", pattern="^(public|members_only)$")
+    access_type_code: int | None = 601
 
 
 class PostResponse(BaseModel):
@@ -441,14 +479,20 @@ class PostResponse(BaseModel):
     title: str
     content_html: str
     access_type: str
+    access_type_code: int = 601
     likes_count: int
     published_at: datetime
     is_members_only: bool = False
     author_name: str | None = None
     author_handle: str | None = None
+    comments: list[PostCommentResponse] = []
 
 
 # Supporters (transacciones shake)
+class ReplySupporterRequest(BaseModel):
+    reply_text: str = Field(min_length=1, max_length=500)
+
+
 class SupporterItemResponse(BaseModel):
     id: int
     supporter_name: str
@@ -457,6 +501,9 @@ class SupporterItemResponse(BaseModel):
     currency: str
     supporter_message: str | None
     is_anonymous: bool
+    creator_reply: str | None = None
+    creator_reply_at: datetime | None = None
+    is_liked_by_creator: bool = False
     created_at: datetime
 
 

@@ -571,7 +571,7 @@
                 <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">Apoya de forma mensual y accede a beneficios exclusivos.</p>
               </div>
 
-              @for (tier of tiers; track tier.name) {
+              @for (tier of tiers(); track tier.name) {
                 <div class="space-y-3 rounded-2xl border border-gray-200/80 dark:border-white/10 bg-[#fbfbfc] dark:bg-white/5 p-5 transition hover:border-gray-300 dark:hover:border-white/20">
                   <div class="flex items-center justify-between">
                     <h4 class="font-display text-sm font-black text-gray-900 dark:text-white">{{ tier.name }}</h4>

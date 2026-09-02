@@ -17,7 +17,9 @@ from app.models.entities import (
     LookupGroup,
     LookupItem,
     MembershipTier,
+    Notification,
     Post,
+    PostComment,
     Subscription,
     TierBenefit,
     Transaction,
@@ -402,6 +404,7 @@ class PostRepository:
     async def get_by_athlete_id(self, athlete_id: int) -> list[Post]:
         query = (
             select(Post)
+            .options(selectinload(Post.comments).selectinload(PostComment.user))
             .where(Post.athlete_id == athlete_id)
             .order_by(Post.published_at.desc())
         )
@@ -411,16 +414,41 @@ class PostRepository:
     async def get_public_by_athlete_id(self, athlete_id: int) -> list[Post]:
         query = (
             select(Post)
+            .options(selectinload(Post.comments).selectinload(PostComment.user))
             .where(Post.athlete_id == athlete_id, Post.access_type == "public")
             .order_by(Post.published_at.desc())
         )
         result = await self.session.execute(query)
         return list(result.scalars().all())
 
+    async def get_by_id(self, post_id: int) -> Post | None:
+        query = select(Post).options(selectinload(Post.comments).selectinload(PostComment.user)).where(Post.id == post_id)
+        result = await self.session.execute(query)
+        return result.scalar_one_or_none()
+
     async def create(self, post: Post) -> Post:
         self.session.add(post)
         await self.session.flush()
         return post
+
+    async def like_post(self, post_id: int) -> int:
+        post = await self.get_by_id(post_id)
+        if post:
+            post.likes_count += 1
+            await self.session.flush()
+            return post.likes_count
+        return 0
+
+    async def add_comment(self, post_id: int, user_id: int, content: str) -> PostComment:
+        comment = PostComment(
+            post_id=post_id,
+            user_id=user_id,
+            content=content,
+        )
+        self.session.add(comment)
+        await self.session.flush()
+        await self.session.refresh(comment, ["user"])
+        return comment
 
 
 class SupporterRepository:
@@ -438,15 +466,18 @@ class SupporterRepository:
         items_query = (
             select(
                 Transaction.id,
-                User.full_name,
+                func.coalesce(Transaction.supporter_name, User.full_name, "Un Seguidor").label("donor_name"),
                 Transaction.shakes_count,
                 Transaction.gross_amount,
                 Transaction.currency,
                 Transaction.supporter_message,
                 Transaction.is_anonymous,
+                Transaction.creator_reply,
+                Transaction.creator_reply_at,
+                Transaction.is_liked_by_creator,
                 Transaction.created_at,
             )
-            .join(User, Transaction.supporter_id == User.id)
+            .outerjoin(User, Transaction.supporter_id == User.id)
             .where(*base_filter)
             .order_by(Transaction.created_at.desc())
             .limit(50)
@@ -467,7 +498,7 @@ class SupporterRepository:
 
         items = []
         for row in rows:
-            name = "Anónimo" if row.is_anonymous else row.full_name
+            name = "Someone anonymous" if row.is_anonymous else row.donor_name
             items.append({
                 "id": row.id,
                 "supporter_name": name,
@@ -476,6 +507,9 @@ class SupporterRepository:
                 "currency": row.currency,
                 "supporter_message": row.supporter_message,
                 "is_anonymous": row.is_anonymous,
+                "creator_reply": row.creator_reply,
+                "creator_reply_at": row.creator_reply_at,
+                "is_liked_by_creator": row.is_liked_by_creator,
                 "created_at": row.created_at,
             })
 
@@ -487,10 +521,153 @@ class SupporterRepository:
             "items": items,
         }
 
+    async def get_recent_supporters(self, athlete_id: int, limit: int = 10) -> list[dict]:
+        query = (
+            select(
+                Transaction.id,
+                func.coalesce(Transaction.supporter_name, User.full_name, "Un Seguidor").label("donor_name"),
+                Transaction.shakes_count,
+                Transaction.gross_amount,
+                Transaction.currency,
+                Transaction.supporter_message,
+                Transaction.is_anonymous,
+                Transaction.creator_reply,
+                Transaction.creator_reply_at,
+                Transaction.is_liked_by_creator,
+                Transaction.created_at,
+            )
+            .outerjoin(User, Transaction.supporter_id == User.id)
+            .where(
+                Transaction.athlete_id == athlete_id,
+                Transaction.status_code == 302,
+                Transaction.transaction_type_code == 201,
+            )
+            .order_by(Transaction.created_at.desc())
+            .limit(limit)
+        )
+        rows = (await self.session.execute(query)).all()
+        result = []
+        for r in rows:
+            name = "Someone anonymous" if r.is_anonymous else r.donor_name
+            result.append({
+                "id": r.id,
+                "supporter_name": name,
+                "shakes_count": int(r.shakes_count or 0),
+                "gross_amount": r.gross_amount or Decimal("0"),
+                "currency": r.currency,
+                "supporter_message": r.supporter_message,
+                "is_anonymous": r.is_anonymous,
+                "creator_reply": r.creator_reply,
+                "creator_reply_at": r.creator_reply_at,
+                "is_liked_by_creator": r.is_liked_by_creator,
+                "created_at": r.created_at,
+            })
+        return result
+
+    async def reply_to_supporter(self, athlete_id: int, transaction_id: int, reply_text: str) -> Transaction | None:
+        query = select(Transaction).where(Transaction.id == transaction_id, Transaction.athlete_id == athlete_id)
+        tx = (await self.session.execute(query)).scalar_one_or_none()
+        if tx:
+            tx.creator_reply = reply_text
+            tx.creator_reply_at = datetime.now()
+            await self.session.flush()
+            return tx
+        return None
+
+    async def toggle_like_supporter(self, athlete_id: int, transaction_id: int) -> bool:
+        query = select(Transaction).where(Transaction.id == transaction_id, Transaction.athlete_id == athlete_id)
+        tx = (await self.session.execute(query)).scalar_one_or_none()
+        if tx:
+            tx.is_liked_by_creator = not tx.is_liked_by_creator
+            await self.session.flush()
+            return tx.is_liked_by_creator
+        return False
+
+
+class NotificationRepository:
+    def __init__(self, session: AsyncSession):
+        self.session = session
+
+    async def get_by_user_id(self, user_id: int, limit: int = 20) -> list[Notification]:
+        query = (
+            select(Notification)
+            .where(Notification.user_id == user_id)
+            .order_by(Notification.created_at.desc())
+            .limit(limit)
+        )
+        result = await self.session.execute(query)
+        return list(result.scalars().all())
+
+    async def create(self, user_id: int, title: str, message: str, type_code: int = 401, action_url: str | None = None) -> Notification:
+        notif = Notification(
+            user_id=user_id,
+            title=title,
+            message=message,
+            type_code=type_code,
+            action_url=action_url,
+            is_read=False,
+        )
+        self.session.add(notif)
+        await self.session.flush()
+        return notif
+
+    async def mark_read(self, notification_id: int, user_id: int) -> bool:
+        query = select(Notification).where(Notification.id == notification_id, Notification.user_id == user_id)
+        notif = (await self.session.execute(query)).scalar_one_or_none()
+        if notif:
+            notif.is_read = True
+            await self.session.flush()
+            return True
+        return False
+
 
 class OtpRepository:
     def __init__(self, session: AsyncSession):
         self.session = session
+
+    async def get_latest_active_otp(self, email: str, purpose: str = "supporter_follow") -> EmailVerification | None:
+        """Obtiene el último OTP generado aún no utilizado."""
+        query = (
+            select(EmailVerification)
+            .where(
+                EmailVerification.email == email,
+                EmailVerification.purpose == purpose,
+                EmailVerification.is_used == False,
+            )
+            .order_by(EmailVerification.created_at.desc())
+            .limit(1)
+        )
+        result = await self.session.execute(query)
+        return result.scalar_one_or_none()
+
+    async def invalidate_previous_otps(self, email: str, purpose: str = "supporter_follow") -> None:
+        """Invalida cualquier OTP anterior no usado para evitar múltiples filas activas."""
+        from sqlalchemy import update
+        stmt = (
+            update(EmailVerification)
+            .where(
+                EmailVerification.email == email,
+                EmailVerification.purpose == purpose,
+                EmailVerification.is_used == False,
+            )
+            .values(is_used=True)
+        )
+        await self.session.execute(stmt)
+        await self.session.flush()
+
+    async def clean_expired_otps(self) -> int:
+        """Elimina OTPs expirados con más de 24 horas de antigüedad para mantener la tabla liviana."""
+        from sqlalchemy import delete
+        cutoff = datetime.now() - timedelta(hours=24)
+        stmt = (
+            delete(EmailVerification)
+            .where(
+                EmailVerification.expires_at < cutoff
+            )
+        )
+        result = await self.session.execute(stmt)
+        await self.session.flush()
+        return result.rowcount
 
     async def create(self, email: str, code: str, purpose: str, metadata: dict | None, expires_at: datetime) -> EmailVerification:
         record = EmailVerification(

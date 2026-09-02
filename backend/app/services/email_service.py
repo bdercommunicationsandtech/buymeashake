@@ -102,3 +102,78 @@ async def send_otp_email(to_email: str, code: str, athlete_name: str | None = No
     html = generate_otp_html(code, athlete_name)
     loop = asyncio.get_running_loop()
     return await loop.run_in_executor(None, send_email_sync, to_email, subject, html)
+
+
+def generate_thank_you_html(athlete_name: str, athlete_handle: str, shakes_count: int, thank_you_message: str | None) -> str:
+    custom_msg = thank_you_message if thank_you_message else "¡Muchas gracias por tu apoyo y por ser parte de mi camino deportivo!"
+    return f"""
+    <!DOCTYPE html>
+    <html lang="es">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>¡Gracias por tu apoyo! - Buymeashake.fit</title>
+    </head>
+    <body style="margin: 0; padding: 0; background-color: #090c0a; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #ffffff;">
+      <table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 540px; margin: 40px auto; background-color: #121614; border-radius: 24px; border: 1px solid rgba(255,255,255,0.1); overflow: hidden; box-shadow: 0 20px 40px rgba(0,0,0,0.5);">
+        
+        <!-- Header con Logo -->
+        <tr>
+          <td align="center" style="padding: 36px 24px 20px 24px;">
+            <div style="display: inline-block; background-color: #c9ff3d; color: #070a08; font-weight: 900; font-size: 20px; padding: 10px 14px; border-radius: 16px; margin-bottom: 12px;">
+              🥤
+            </div>
+            <h1 style="margin: 0; font-size: 22px; font-weight: 900; letter-spacing: -0.5px; color: #ffffff;">
+              buymeashake<span style="color: #c9ff3d;">.fit</span>
+            </h1>
+          </td>
+        </tr>
+
+        <!-- Contenido Central -->
+        <tr>
+          <td align="center" style="padding: 10px 32px 30px 32px;">
+            <h2 style="margin: 0 0 12px 0; font-size: 18px; font-weight: 800; color: #ffffff;">
+              ¡{athlete_name} te agradece tus {shakes_count} Shakes!
+            </h2>
+            <p style="margin: 0 0 24px 0; font-size: 14px; line-height: 1.6; color: #d4d4d8;">
+              Tu donación ha sido recibida exitosamente e impulsa directamente la carrera deportiva de @{athlete_handle}.
+            </p>
+
+            <!-- Nota Personalizada del Atleta -->
+            <div style="background-color: #1a221a; border-left: 4px solid #c9ff3d; border-radius: 12px; padding: 18px 20px; margin: 0 auto 28px auto; text-align: left;">
+              <p style="margin: 0 0 6px 0; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: #c9ff3d;">
+                Mensaje de {athlete_name}:
+              </p>
+              <p style="margin: 0; font-size: 14px; line-height: 1.6; color: #ffffff; font-style: italic;">
+                "{custom_msg}"
+              </p>
+            </div>
+
+            <!-- Botón Visitar Perfil -->
+            <a href="https://buymeashake.fit/{athlete_handle}" style="display: inline-block; background-color: #c9ff3d; color: #070a08; font-weight: 800; font-size: 13px; text-decoration: none; padding: 12px 28px; border-radius: 9999px;">
+              Ver perfil de @{athlete_handle}
+            </a>
+          </td>
+        </tr>
+
+        <!-- Footer -->
+        <tr>
+          <td align="center" style="padding: 20px 24px; background-color: #0d110f; border-top: 1px solid rgba(255,255,255,0.05);">
+            <p style="margin: 0; font-size: 11px; color: #52525b; font-weight: 500;">
+              © 2026 Buymeashake.fit · Gracias por impulsar el deporte
+            </p>
+          </td>
+        </tr>
+
+      </table>
+    </body>
+    </html>
+    """
+
+
+async def send_thank_you_email(to_email: str, athlete_name: str, athlete_handle: str, shakes_count: int, thank_you_message: str | None) -> bool:
+    """Envía el email de agradecimiento al donante tras completar el pago."""
+    subject = f"¡{athlete_name} te agradece tus {shakes_count} Shakes en Buymeashake.fit!"
+    html = generate_thank_you_html(athlete_name, athlete_handle, shakes_count, thank_you_message)
+    loop = asyncio.get_running_loop()
+    return await loop.run_in_executor(None, send_email_sync, to_email, subject, html)

@@ -97,4 +97,26 @@ export class DashboardService {
   getSupporters(): Observable<SupportersDashboardDto> {
     return this.http.get<SupportersDashboardDto>(`${this.apiUrl}/supporters`);
   }
+
+  getNotifications(): Observable<{ id: number; title: string; message: string; type_code: number; action_url: string | null; is_read: boolean; created_at: string }[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/notifications`);
+  }
+
+  markNotificationRead(notificationId: number): Observable<{ success: boolean }> {
+    return this.http.put<{ success: boolean }>(`${this.apiUrl}/notifications/${notificationId}/read`, {});
+  }
+
+  replyToSupporter(transactionId: number, replyText: string): Observable<{ success: boolean; message: string; reply: string }> {
+    return this.http.post<{ success: boolean; message: string; reply: string }>(
+      `${this.apiUrl}/supporters/${transactionId}/reply`,
+      { reply_text: replyText }
+    );
+  }
+
+  toggleLikeSupporter(transactionId: number): Observable<{ success: boolean; is_liked: boolean }> {
+    return this.http.post<{ success: boolean; is_liked: boolean }>(
+      `${this.apiUrl}/supporters/${transactionId}/like`,
+      {}
+    );
+  }
 }

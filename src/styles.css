@@ -686,3 +686,32 @@ h4 {
     animation-iteration-count: 1 !important;
   }
 }
+
+/* ------------------------------------------------------------------ */
+/* Post detail content                                                 */
+/* ------------------------------------------------------------------ */
+
+.prose-post p {
+  margin: 0 0 1rem;
+}
+
+.prose-post img {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  margin: 1.25rem 0;
+  border-radius: 1.25rem;
+  object-fit: cover;
+}
+
+.prose-post a {
+  color: #5cba7a;
+  font-weight: 700;
+  text-decoration: underline;
+}
+
+.prose-post strong {
+  color: inherit;
+  font-weight: 800;
+}

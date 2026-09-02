@@ -98,7 +98,7 @@ La plataforma implementa un sistema visual moderno diseñado para transmitir ene
 4. **Tienda (`/shop`):** Gestor de productos digitales con subida de PDFs y configuración de videollamadas.
 5. **Muro de Publicaciones (`/posts`):** Listado de posts y métricas de lectura/likes.
 6. **Editor de Posts (`/posts/new`):** Rich text editor con toolbar de formato, subida de imágenes y selector de visibilidad (*Público vs Solo Miembros con Nivel requerido*).
-7. **Ajustes & Metas (`/settings`):** Configuración de precio de shake, moneda (`USD` / `MXN`), avatar, portada y activación de meta deportiva.
+7. **Ajustes & Metas (`/settings`):** Configuración de precio de shake (USD), avatar, portada y activación de meta deportiva.
 8. **Retiros & Payouts (`/payouts`):** Conexión con Stripe Connect Express para transferencias bancarias automáticas.
 
 ---

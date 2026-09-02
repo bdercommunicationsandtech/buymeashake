@@ -1,0 +1,76 @@
+<div class="min-h-[70vh] bg-[#f6f7f5] dark:bg-[#0c0f10]">
+  <div class="mx-auto max-w-3xl px-4 py-8 sm:px-6 sm:py-12">
+    <a
+      [routerLink]="['/', handle()]"
+      class="inline-flex items-center gap-2 text-xs font-bold text-gray-500 transition hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
+    >
+      <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7" />
+      </svg>
+      Volver al perfil de &#64;{{ handle() }}
+    </a>
+
+    @if (loading()) {
+      <p class="mt-10 text-sm text-gray-500 dark:text-gray-400">Cargando publicación…</p>
+    } @else if (errorMessage()) {
+      <div class="mt-10 rounded-3xl border border-red-200 bg-red-50 px-5 py-4 text-sm font-semibold text-red-700 dark:border-red-900/40 dark:bg-red-950/30 dark:text-red-300">
+        {{ errorMessage() }}
+      </div>
+    } @else if (post(); as p) {
+      <article class="mt-6 overflow-hidden rounded-[2rem] border border-gray-200/80 bg-white shadow-xs dark:border-white/10 dark:bg-[#121614]">
+        @if (coverImageUrl()) {
+          <div class="relative aspect-[16/9] w-full overflow-hidden bg-gray-900 sm:aspect-[2/1]">
+            <img
+              [src]="coverImageUrl()!"
+              [alt]="p.title"
+              class="h-full w-full object-cover"
+            />
+            <div class="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent"></div>
+          </div>
+        }
+
+        <div class="space-y-6 px-5 py-7 sm:px-10 sm:py-10">
+          <div class="flex flex-wrap items-center gap-3 text-xs">
+            <span class="rounded-full bg-gray-100 px-3 py-1 font-black uppercase tracking-wider text-gray-700 dark:bg-white/10 dark:text-gray-200">
+              {{ p.is_members_only ? 'Solo miembros' : 'Público' }}
+            </span>
+            <span class="font-medium text-gray-400">{{ publishedLabel() }}</span>
+          </div>
+
+          <header class="space-y-3">
+            <h1 class="font-display text-3xl font-black leading-tight tracking-tight text-gray-950 dark:text-white sm:text-4xl">
+              {{ p.title }}
+            </h1>
+            <a
+              [routerLink]="['/', handle()]"
+              class="inline-flex items-center gap-3 text-sm font-bold text-gray-700 transition hover:text-gray-950 dark:text-gray-300 dark:hover:text-white"
+            >
+              <span class="grid h-10 w-10 place-items-center rounded-full bg-gray-900 text-xs font-black text-[#c9ff3d]">
+                {{ authorName().slice(0, 2).toUpperCase() }}
+              </span>
+              <span>
+                <span class="block text-gray-950 dark:text-white">{{ authorName() }}</span>
+                <span class="block text-xs font-medium text-gray-400">&#64;{{ handle() }}</span>
+              </span>
+            </a>
+          </header>
+
+          <div
+            class="post-body prose-post space-y-4 text-[15px] leading-relaxed text-gray-700 dark:text-gray-300"
+            [innerHTML]="bodyHtml()"
+          ></div>
+
+          <div class="flex items-center gap-4 border-t border-gray-100 pt-5 text-xs font-bold text-gray-500 dark:border-white/10 dark:text-gray-400">
+            <span class="inline-flex items-center gap-1.5">
+              <svg class="h-4 w-4 text-red-500" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd" />
+              </svg>
+              {{ p.likes_count }} likes
+            </span>
+            <span>{{ p.comments?.length || 0 }} comentarios</span>
+          </div>
+        </div>
+      </article>
+    }
+  </div>
+</div>

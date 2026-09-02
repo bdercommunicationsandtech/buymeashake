@@ -1,6 +1,7 @@
 import { Component, ChangeDetectionStrategy, input, output, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { IconLockComponent, IconStarComponent, IconShakerComponent } from '../icons';
 
 export interface PostCommentItem {
@@ -34,13 +35,13 @@ export interface PostItem {
   selector: 'app-post-card',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, FormsModule, IconLockComponent, IconStarComponent, IconShakerComponent],
+  imports: [CommonModule, FormsModule, RouterLink, IconLockComponent, IconStarComponent, IconShakerComponent],
   template: `
     <article class="bg-white dark:bg-[#121614] rounded-3xl border border-gray-200/80 dark:border-white/10 overflow-hidden shadow-xs hover:border-gray-300 dark:hover:border-white/20 transition-all duration-200">
       
       <!-- Portada con badge y estado de bloqueo -->
       @if (post().coverImageUrl) {
-        <div class="relative h-56 sm:h-72 w-full bg-gray-900 overflow-hidden">
+        <a [routerLink]="['/', post().authorHandle, 'posts', post().id]" class="relative block h-56 sm:h-72 w-full bg-gray-900 overflow-hidden">
           <img
             [src]="post().coverImageUrl"
             [alt]="post().title"
@@ -77,14 +78,14 @@ export interface PostItem {
               </p>
               <button
                 type="button"
-                (click)="onUnlock.emit(post())"
+                (click)="$event.preventDefault(); $event.stopPropagation(); onUnlock.emit(post())"
                 class="mt-4 rounded-full bg-[#c9ff3d] hover:bg-[#bbf033] text-gray-950 px-6 py-2.5 text-xs font-black transition shadow-lg shadow-[#c9ff3d]/20 active:scale-95"
               >
                 Desbloquear por Membresía
               </button>
             </div>
           }
-        </div>
+        </a>
       }
 
       <!-- Cuerpo del Post -->
@@ -111,7 +112,12 @@ export interface PostItem {
         <!-- Título y Extracto -->
         <div>
           <h3 class="font-display text-xl font-black text-gray-950 dark:text-white tracking-tight leading-snug">
-            {{ post().title }}
+            <a
+              [routerLink]="['/', post().authorHandle, 'posts', post().id]"
+              class="hover:underline decoration-[#c9ff3d] underline-offset-4"
+            >
+              {{ post().title }}
+            </a>
           </h3>
           <p class="mt-2 text-sm text-gray-600 dark:text-gray-300 leading-relaxed font-normal">
             {{ post().excerpt }}
@@ -146,13 +152,12 @@ export interface PostItem {
           </div>
 
           @if (!post().isMembersOnly || post().isUnlocked) {
-            <button
-              type="button"
-              (click)="onRead.emit(post())"
+            <a
+              [routerLink]="['/', post().authorHandle, 'posts', post().id]"
               class="text-emerald-600 dark:text-[#c9ff3d] font-black hover:underline cursor-pointer"
             >
               Leer completo →
-            </button>
+            </a>
           }
         </div>
 

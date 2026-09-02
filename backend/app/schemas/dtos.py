@@ -225,7 +225,7 @@ class CreatorPublicProfileResponse(BaseModel):
 class ShakeCheckoutCreateRequest(BaseModel):
     athlete_handle: str
     shakes_count: int = Field(ge=1, le=100, default=3)
-    currency: str = Field(default="USD", pattern="^(USD|MXN)$")
+    currency: str = Field(default="USD", pattern="^USD$")
     supporter_name: str | None = Field(default=None, max_length=150)
     supporter_email: str | None = Field(default=None, max_length=191)
     supporter_message: str | None = Field(default=None, max_length=240)
@@ -236,7 +236,7 @@ class BookingSessionCheckoutRequest(BaseModel):
     booking_service_id: int
     start_time: datetime
     end_time: datetime
-    currency: str = Field(default="USD", pattern="^(USD|MXN)$")
+    currency: str = Field(default="USD", pattern="^USD$")
     notes: str | None = None
 
 
@@ -269,7 +269,7 @@ class MembershipTierCreateRequest(BaseModel):
     name: str = Field(min_length=2, max_length=100)
     description: str | None = None
     monthly_price: Decimal = Field(gt=0)
-    currency: str = Field(default="USD", pattern="^(USD|MXN)$")
+    currency: str = Field(default="USD", pattern="^USD$")
     benefits: list[str] = []
 
 
@@ -291,7 +291,7 @@ class DigitalProductCreateRequest(BaseModel):
     title: str = Field(min_length=2, max_length=200)
     description: str | None = None
     price: Decimal = Field(gt=0)
-    currency: str = Field(default="USD", pattern="^(USD|MXN)$")
+    currency: str = Field(default="USD", pattern="^USD$")
     file_type: str = Field(pattern="^(PDF|Video_Link|Template_Notion|Zip)$")
     file_url: str
 
@@ -321,7 +321,7 @@ class BookingServiceCreateRequest(BaseModel):
     description: str | None = None
     duration_minutes: int = Field(default=45, ge=15, le=180)
     price: Decimal = Field(gt=0)
-    currency: str = Field(default="USD", pattern="^(USD|MXN)$")
+    currency: str = Field(default="USD", pattern="^USD$")
     platform: str = Field(default="google_meet", pattern="^(google_meet|zoom|whatsapp_video)$")
     availabilities: list[AvailabilitySlotDto] = []
 
@@ -377,7 +377,7 @@ class AthleteProfileUpdateRequest(BaseModel):
     city: str | None = Field(default=None, max_length=100)
     primary_sport_code: int | None = None
     shake_price: Decimal | None = Field(default=None, gt=0)
-    currency: str | None = Field(default=None, pattern="^(USD|MXN)$")
+    currency: str | None = Field(default=None, pattern="^USD$")
     avatar_url: str | None = None
     cover_image_url: str | None = None
     google_analytics_id: str | None = None
@@ -423,7 +423,7 @@ class AthleteProfileFullResponse(BaseModel):
 class GoalCreateRequest(BaseModel):
     title: str = Field(min_length=3, max_length=200)
     target_amount: Decimal = Field(gt=0)
-    currency: str = Field(default="USD", pattern="^(USD|MXN)$")
+    currency: str = Field(default="USD", pattern="^USD$")
 
 
 class GoalResponse(BaseModel):
@@ -469,7 +469,7 @@ class PostCreateRequest(BaseModel):
     title: str = Field(min_length=3, max_length=255)
     content_html: str = Field(min_length=1)
     access_type: str = Field(default="public", pattern="^(public|members_only)$")
-    access_type_code: int | None = 601
+    access_type_code: int | None = None
 
 
 class PostResponse(BaseModel):

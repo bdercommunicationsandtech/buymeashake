@@ -423,6 +423,13 @@
                   <p class="mt-2 text-[11px] font-semibold text-gray-400">{{ supporter.when }}</p>
                 </div>
               </li>
+            } @empty {
+              <li class="rounded-2xl border border-dashed border-gray-200 dark:border-white/10 bg-gray-50/60 dark:bg-white/[0.03] px-5 py-8 text-center">
+                <p class="text-sm font-bold text-gray-900 dark:text-white">Aún no hay apoyos</p>
+                <p class="mt-1.5 text-xs leading-relaxed text-gray-500 dark:text-gray-400">
+                  Sé el primero en enviar un shake.
+                </p>
+              </li>
             }
           </ul>
         </article>
@@ -480,26 +487,7 @@
               <div class="flex items-center justify-between gap-3">
                 <div>
                   <h2 class="font-display text-lg font-black text-gray-950 dark:text-white">Invítale un Shaker</h2>
-                  <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">Apoya su preparación deportiva</p>
-                </div>
-
-                <div class="flex rounded-xl border border-gray-200/60 dark:border-white/10 bg-gray-100 p-1 dark:bg-white/10">
-                  <button
-                    type="button"
-                    class="rounded-lg px-2.5 py-1 text-xs font-bold transition"
-                    [class]="currency() === 'USD' ? 'bg-white dark:bg-[#121614] text-gray-900 dark:text-white shadow-xs' : 'text-gray-500 dark:text-gray-400'"
-                    (click)="currency.set('USD')"
-                  >
-                    USD
-                  </button>
-                  <button
-                    type="button"
-                    class="rounded-lg px-2.5 py-1 text-xs font-bold transition"
-                    [class]="currency() === 'MXN' ? 'bg-white dark:bg-[#121614] text-gray-900 dark:text-white shadow-xs' : 'text-gray-500 dark:text-gray-400'"
-                    (click)="currency.set('MXN')"
-                  >
-                    MXN
-                  </button>
+                  <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">Apoya su preparación deportiva · USD</p>
                 </div>
               </div>
 

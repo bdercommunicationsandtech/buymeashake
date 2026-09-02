@@ -44,7 +44,9 @@ async def get_current_athlete(
     profile = await athlete_repo.get_by_user_id(current_user.id)
 
     if not profile:
-        raise UnauthorizedError("El usuario autenticado no tiene perfil de atleta.")
+        from app.core.exceptions import ForbiddenError
+
+        raise ForbiddenError("Necesitas una cuenta de atleta para acceder al dashboard.")
 
     return profile
 

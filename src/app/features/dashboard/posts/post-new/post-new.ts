@@ -58,6 +58,12 @@ import { DashboardService } from '../../../../core/dashboard.service';
         </div>
       </div>
 
+      @if (errorMessage()) {
+        <div class="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700 dark:border-red-900/40 dark:bg-red-950/30 dark:text-red-300">
+          {{ errorMessage() }}
+        </div>
+      }
+
       <!-- Editor Main Container -->
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         
@@ -239,6 +245,7 @@ export class DashboardPostNew {
   readonly requiredTier = signal('Todos los Miembros');
   readonly coverUrl = signal<string | null>('https://images.unsplash.com/photo-1517838277536-f5f99be501cd?q=80&w=1200&auto=format&fit=crop');
   readonly isPublishing = signal(false);
+  readonly errorMessage = signal<string | null>(null);
 
   insertFormat(prefix: string, suffix: string): void {
     const textarea = document.getElementById('post-content-area') as HTMLTextAreaElement;
@@ -284,10 +291,17 @@ export class DashboardPostNew {
   publishPost(): void {
     if (!this.title().trim()) return;
 
+    const rawContent = this.content().trim();
+    if (!rawContent) {
+      this.errorMessage.set('Escribe el contenido de la publicación antes de publicar.');
+      return;
+    }
+
     this.isPublishing.set(true);
-    const html = this.content().trim().startsWith('<')
-      ? this.content()
-      : `<p>${this.content().replace(/\n/g, '</p><p>')}</p>`;
+    this.errorMessage.set(null);
+    const html = rawContent.startsWith('<')
+      ? rawContent
+      : `<p>${rawContent.replace(/\n/g, '</p><p>')}</p>`;
 
     this.dashboardService
       .createPost({
@@ -300,7 +314,17 @@ export class DashboardPostNew {
           this.isPublishing.set(false);
           this.router.navigate(['/dashboard/posts']);
         },
-        error: () => this.isPublishing.set(false),
+        error: (err) => {
+          this.isPublishing.set(false);
+          const apiMessage = err?.error?.error?.message || err?.error?.detail;
+          if (err?.status === 401) {
+            this.errorMessage.set('Sesión expirada. Vuelve a iniciar sesión como atleta.');
+          } else if (err?.status === 403) {
+            this.errorMessage.set('Esta cuenta no tiene perfil de atleta.');
+          } else {
+            this.errorMessage.set(apiMessage || 'No se pudo publicar. Revisa el backend e inténtalo de nuevo.');
+          }
+        },
       });
   }
 }

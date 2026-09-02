@@ -17,14 +17,26 @@ export class DashboardPosts implements OnInit {
   readonly loading = signal(true);
   readonly showCreateModal = signal(false);
   readonly posts = signal<PostItemDto[]>([]);
+  readonly errorMessage = signal<string | null>(null);
 
   ngOnInit(): void {
     this.dashboardService.getPosts().subscribe({
       next: (items) => {
         this.posts.set(items);
         this.loading.set(false);
+        this.errorMessage.set(null);
       },
-      error: () => this.loading.set(false),
+      error: (err) => {
+        this.loading.set(false);
+        const status = err?.status;
+        if (status === 401) {
+          this.errorMessage.set('Sesión expirada. Vuelve a iniciar sesión como atleta.');
+        } else if (status === 403) {
+          this.errorMessage.set('Esta cuenta no tiene perfil de atleta.');
+        } else {
+          this.errorMessage.set('No se pudieron cargar las publicaciones.');
+        }
+      },
     });
   }
 

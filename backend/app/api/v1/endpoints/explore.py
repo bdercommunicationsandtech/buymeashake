@@ -31,3 +31,10 @@ async def get_creator_posts(handle: str, session: DatabaseSession) -> list[PostR
     """Retorna las publicaciones públicas del atleta."""
     service = AthleteService(session)
     return await service.get_public_posts(handle)
+
+
+@router.get("/creators/{handle}/posts/{post_id}", response_model=PostResponse)
+async def get_creator_post(handle: str, post_id: int, session: DatabaseSession) -> PostResponse:
+    """Retorna una publicación pública completa del atleta."""
+    service = AthleteService(session)
+    return await service.get_public_post(handle, post_id)

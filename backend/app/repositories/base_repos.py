@@ -427,8 +427,13 @@ class PostRepository:
         return result.scalar_one_or_none()
 
     async def create(self, post: Post) -> Post:
+        if post.published_at is None:
+            post.published_at = datetime.utcnow()
+        if post.likes_count is None:
+            post.likes_count = 0
         self.session.add(post)
         await self.session.flush()
+        await self.session.refresh(post)
         return post
 
     async def like_post(self, post_id: int) -> int:

@@ -29,6 +29,10 @@ export class ExploreService {
     return this.http.get<PostItemDto[]>(`${this.apiUrl}/creators/${handle}/posts`);
   }
 
+  getCreatorPost(handle: string, postId: number | string): Observable<PostItemDto> {
+    return this.http.get<PostItemDto>(`${this.apiUrl}/creators/${handle}/posts/${postId}`);
+  }
+
   getSystemLookups(): Observable<LookupGroupDto[]> {
     return this.http.get<LookupGroupDto[]>(`${this.apiUrl}/system/lookups`);
   }

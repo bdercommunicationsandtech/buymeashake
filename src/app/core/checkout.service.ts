@@ -10,7 +10,7 @@ export interface CheckoutDraft {
   readonly title?: string;
   readonly shakes: number;
   readonly unitPrice: number;
-  readonly currency: 'USD' | 'MXN';
+  readonly currency: 'USD';
   readonly supporterName?: string;
   readonly isAnonymous?: boolean;
   readonly message: string;
@@ -37,7 +37,7 @@ export interface CheckoutRequest {
   readonly message?: string;
   readonly activity?: ActivityId;
   readonly unitPrice?: number;
-  readonly currency?: 'USD' | 'MXN';
+  readonly currency?: 'USD';
   readonly downloadUrl?: string;
   readonly paymentClientSecret?: string;
   readonly transactionUuid?: string;

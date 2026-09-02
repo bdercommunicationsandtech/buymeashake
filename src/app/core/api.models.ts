@@ -294,6 +294,8 @@ export interface PostItemDto {
   likes_count: number;
   published_at: string;
   is_members_only: boolean;
+  author_name?: string | null;
+  author_handle?: string | null;
   comments?: PostCommentDto[];
 }
 

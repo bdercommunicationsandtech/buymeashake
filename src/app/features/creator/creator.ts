@@ -71,7 +71,7 @@ export interface CreatorView {
   shakesReceived: number;
   disciplines: string[];
   shakePrice: number;
-  currency: 'USD' | 'MXN';
+  currency: 'USD';
   coverImageUrl: string | null;
   avatarUrl: string | null;
   isVerified: boolean;
@@ -131,7 +131,7 @@ export class Creator {
   readonly isAnonymous = signal(false);
   readonly message = signal('');
   readonly activity = signal<Activity>(ACTIVITIES[0]);
-  readonly currency = signal<'USD' | 'MXN'>('USD');
+  readonly currency = signal<'USD'>('USD');
 
   readonly selectedService = signal<CreatorBookingService | null>(null);
   readonly selectedDate = signal<string>('2026-09-03');
@@ -159,10 +159,7 @@ export class Creator {
 
   readonly shakePrice = computed(() => this.creatorView()?.shakePrice ?? SHAKE_PRICE);
 
-  readonly currentPrice = computed(() => {
-    const base = this.shakePrice();
-    return this.currency() === 'USD' ? base : Math.round(base * 16);
-  });
+  readonly currentPrice = computed(() => this.shakePrice());
 
   readonly amount = computed(() => this.shakes() * this.currentPrice());
 
@@ -319,7 +316,7 @@ export class Creator {
     this.exploreService.getCreatorProfile(handle).subscribe({
       next: (profile) => {
         this.creatorView.set(this.mapProfile(profile));
-        this.currency.set((profile.currency as 'USD' | 'MXN') || 'USD');
+        this.currency.set('USD');
         
         // Cargar Tiers Reales desde BD
         if (profile.tiers && profile.tiers.length > 0) {
@@ -406,24 +403,32 @@ export class Creator {
         const c = this.creatorView();
         if (!c) return;
         this.posts.set(
-          items.map((p) => ({
-            id: String(p.id),
-            title: p.title,
-            excerpt: p.content_html.replace(/<[^>]+>/g, '').slice(0, 180),
-            authorName: c.name,
-            authorHandle: c.handle,
-            publishedAt: new Date(p.published_at).toLocaleDateString('es-MX'),
-            likesCount: p.likes_count,
-            commentsCount: p.comments?.length || 0,
-            isMembersOnly: p.is_members_only,
-            comments: (p.comments || []).map((cm) => ({
-              id: cm.id,
-              userName: cm.user_name,
-              userAvatar: cm.user_avatar,
-              content: cm.content,
-              createdAt: new Date(cm.created_at).toLocaleDateString('es-MX'),
-            })),
-          })),
+          items.map((p) => {
+            const htmlMatch = p.content_html.match(/<img[^>]+src=["']([^"']+)["']/i);
+            const mdMatch = p.content_html.match(/!\[[^\]]*]\(([^)\s]+)\)/);
+            const coverImageUrl = htmlMatch?.[1] || mdMatch?.[1] || null;
+            return {
+              id: String(p.id),
+              title: p.title,
+              excerpt: p.content_html.replace(/<[^>]+>/g, '').replace(/!\[[^\]]*]\([^)]*\)/g, '').slice(0, 180),
+              content: p.content_html,
+              authorName: c.name,
+              authorHandle: c.handle,
+              authorAvatar: c.avatarUrl,
+              publishedAt: new Date(p.published_at).toLocaleDateString('es-MX'),
+              likesCount: p.likes_count,
+              commentsCount: p.comments?.length || 0,
+              isMembersOnly: p.is_members_only,
+              coverImageUrl,
+              comments: (p.comments || []).map((cm) => ({
+                id: cm.id,
+                userName: cm.user_name,
+                userAvatar: cm.user_avatar,
+                content: cm.content,
+                createdAt: new Date(cm.created_at).toLocaleDateString('es-MX'),
+              })),
+            };
+          }),
         );
       },
       error: () => {},
@@ -454,7 +459,7 @@ export class Creator {
       shakesReceived: shakesFromSupporters > 0 ? shakesFromSupporters + 1227 : 1248,
       disciplines: [profile.primary_sport],
       shakePrice: Number(profile.shake_price) || SHAKE_PRICE,
-      currency: (profile.currency as 'USD' | 'MXN') || 'USD',
+      currency: 'USD',
       coverImageUrl: profile.cover_image_url,
       avatarUrl: profile.avatar_url,
       isVerified: profile.is_verified,

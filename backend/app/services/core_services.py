@@ -495,32 +495,63 @@ class AthleteService:
 
         post_repo = PostRepository(self.session)
         posts = await post_repo.get_public_by_athlete_id(profile.id)
+        author_name = profile.user.full_name if profile.user else profile.handle
         return [
-            PostResponse(
-                id=p.id,
-                title=p.title,
-                content_html=p.content_html,
-                access_type=p.access_type,
-                access_type_code=getattr(p, "access_type_code", 601) or 601,
-                likes_count=p.likes_count,
-                published_at=p.published_at,
-                is_members_only=getattr(p, "access_type_code", 601) == 603 or p.access_type == "members_only",
-                comments=[
-                    PostCommentResponse(
-                        id=c.id,
-                        post_id=c.post_id,
-                        user_id=c.user_id,
-                        user_name=c.user.full_name if c.user else "Fan",
-                        user_avatar=c.user.avatar_url if c.user else None,
-                        content=c.content,
-                        likes_count=c.likes_count,
-                        created_at=c.created_at,
-                    )
-                    for c in (p.comments or [])
-                ],
-            )
+            self._to_post_response(p, author_name=author_name, author_handle=profile.handle)
             for p in posts
         ]
+
+    async def get_public_post(self, handle: str, post_id: int) -> PostResponse:
+        profile = await self.athlete_repo.get_by_handle(handle)
+        if not profile:
+            raise EntityNotFoundError("Atleta", handle)
+
+        post_repo = PostRepository(self.session)
+        post = await post_repo.get_by_id(post_id)
+        if not post or post.athlete_id != profile.id:
+            raise EntityNotFoundError("Publicación", post_id)
+
+        is_members_only = (
+            getattr(post, "access_type_code", 601) == 603 or post.access_type == "members_only"
+        )
+        if is_members_only or post.access_type != "public":
+            raise EntityNotFoundError("Publicación", post_id)
+
+        author_name = profile.user.full_name if profile.user else profile.handle
+        return self._to_post_response(post, author_name=author_name, author_handle=profile.handle)
+
+    def _to_post_response(
+        self,
+        post: Post,
+        *,
+        author_name: str | None = None,
+        author_handle: str | None = None,
+    ) -> PostResponse:
+        return PostResponse(
+            id=post.id,
+            title=post.title,
+            content_html=post.content_html,
+            access_type=str(post.access_type),
+            access_type_code=getattr(post, "access_type_code", 601) or 601,
+            likes_count=post.likes_count or 0,
+            published_at=post.published_at,
+            is_members_only=getattr(post, "access_type_code", 601) == 603 or post.access_type == "members_only",
+            author_name=author_name,
+            author_handle=author_handle,
+            comments=[
+                PostCommentResponse(
+                    id=c.id,
+                    post_id=c.post_id,
+                    user_id=c.user_id,
+                    user_name=c.user.full_name if c.user else "Fan",
+                    user_avatar=c.user.avatar_url if c.user else None,
+                    content=c.content,
+                    likes_count=c.likes_count,
+                    created_at=c.created_at,
+                )
+                for c in (post.comments or [])
+            ],
+        )
 
 
 class DashboardService:
@@ -714,25 +745,27 @@ class DashboardService:
         ]
 
     async def create_post(self, athlete: AthleteProfile, dto: PostCreateRequest) -> PostResponse:
-        code = dto.access_type_code or (603 if dto.access_type == "members_only" else 601)
+        code = 603 if dto.access_type == "members_only" else (dto.access_type_code or 601)
         access_str = "members_only" if code == 603 else "public"
         post = Post(
             athlete_id=athlete.id,
-            title=dto.title,
-            content_html=dto.content_html,
+            title=dto.title.strip(),
+            content_html=dto.content_html.strip() or "<p></p>",
             access_type=access_str,
             access_type_code=code,
+            likes_count=0,
+            published_at=datetime.utcnow(),
         )
         created = await self.post_repo.create(post)
         return PostResponse(
             id=created.id,
             title=created.title,
             content_html=created.content_html,
-            access_type=created.access_type,
-            access_type_code=created.access_type_code,
-            likes_count=created.likes_count,
-            published_at=created.published_at,
-            is_members_only=created.access_type_code == 603,
+            access_type=str(created.access_type),
+            access_type_code=created.access_type_code or code,
+            likes_count=created.likes_count or 0,
+            published_at=created.published_at or datetime.utcnow(),
+            is_members_only=code == 603,
         )
 
     async def get_supporters(self, athlete: AthleteProfile) -> SupportersDashboardResponse:
@@ -835,7 +868,7 @@ class CheckoutService:
         if not profile:
             raise EntityNotFoundError("Atleta", dto.athlete_handle)
 
-        unit_price = profile.shake_price if dto.currency == "USD" else Decimal("50.00")
+        unit_price = profile.shake_price
         gross_amount = unit_price * Decimal(dto.shakes_count)
         platform_fee = (gross_amount * Decimal("0.05")).quantize(Decimal("0.01"))
         stripe_fee = Decimal("0.30") + (gross_amount * Decimal("0.029")).quantize(Decimal("0.01"))

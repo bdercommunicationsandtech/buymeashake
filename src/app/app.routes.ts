@@ -141,7 +141,15 @@ export const routes: Routes = [
     ]
   },
 
-  // 4. Perfil Público del Creador (Catch dynamic user handles like /sofifit or /yahirruiz)
+  // 4. Vista completa de publicación pública
+  {
+    path: ':username/posts/:postId',
+    title: 'Publicación — buymeashake',
+    loadComponent: () =>
+      import('./features/creator/post-detail/post-detail').then((m) => m.PostDetail),
+  },
+
+  // 5. Perfil Público del Creador (Catch dynamic user handles like /sofifit or /yahirruiz)
   {
     path: ':username',
     title: 'Perfil de atleta — buymeashake',

@@ -1,7 +1,7 @@
 <div class="space-y-6 max-w-3xl">
   <div>
     <h1 class="text-2xl font-black text-gray-900">Payouts & Stripe</h1>
-    <p class="text-sm text-gray-500 mt-1">Conecta tu cuenta bancaria a través de Stripe para recibir transferencias directas en USD o MXN.</p>
+    <p class="text-sm text-gray-500 mt-1">Conecta tu cuenta bancaria a través de Stripe para recibir transferencias directas en USD.</p>
   </div>
 
   @if (!stripeConnected()) {
@@ -39,7 +39,6 @@
             [value]="selectedCurrency()"
             (change)="selectedCurrency.set($any($event.target).value)"
           >
-            <option value="MXN">Pesos Mexicanos (MXN)</option>
             <option value="USD">Dólares Americanos (USD)</option>
           </select>
         </div>

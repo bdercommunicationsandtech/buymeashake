@@ -30,7 +30,7 @@ export class DashboardSettings implements OnInit {
   readonly city = signal('');
   readonly primarySportCode = signal<number>(101);
   readonly shakePrice = signal<number>(3);
-  readonly currency = signal<'USD' | 'MXN'>('USD');
+  readonly currency = signal<'USD'>('USD');
   readonly pageHandle = signal('');
   readonly avatarUrl = signal<string | null>(null);
   readonly coverImageUrl = signal<string | null>(null);
@@ -65,7 +65,7 @@ export class DashboardSettings implements OnInit {
         this.city.set(p.city || '');
         this.primarySportCode.set(p.primary_sport_code || 101);
         this.shakePrice.set(Number(p.shake_price) || 3);
-        this.currency.set((p.currency as 'USD' | 'MXN') || 'USD');
+        this.currency.set('USD');
         this.pageHandle.set(p.handle);
         this.avatarUrl.set(p.avatar_url);
         this.coverImageUrl.set(p.cover_image_url);

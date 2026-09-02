@@ -9,7 +9,7 @@ export interface DigitalProduct {
   title: string;
   type: 'PDF' | 'Video' | 'Plantilla';
   price: number;
-  currency: 'USD' | 'MXN';
+  currency: 'USD';
   sales: number;
   description: string;
   gradient: string;
@@ -20,7 +20,7 @@ export interface BookingService {
   title: string;
   durationMinutes: number;
   price: number;
-  currency: 'USD' | 'MXN';
+  currency: 'USD';
   platform: 'Google Meet' | 'Zoom' | 'WhatsApp Video';
   description: string;
   activeDays: string[];
@@ -145,7 +145,7 @@ export class DashboardShop implements OnInit {
             title: p.title,
             type: p.file_type === 'PDF' ? 'PDF' : p.file_type === 'Template_Notion' ? 'Plantilla' : 'Video',
             price: Number(p.price),
-            currency: (p.currency as 'USD' | 'MXN') || 'USD',
+            currency: 'USD',
             sales: 0,
             description: p.description || '',
             gradient: 'from-emerald-600 to-teal-500',
@@ -165,7 +165,7 @@ export class DashboardShop implements OnInit {
             title: s.title,
             durationMinutes: s.duration_minutes,
             price: Number(s.price),
-            currency: (s.currency as 'USD' | 'MXN') || 'USD',
+            currency: 'USD',
             platform: 'Google Meet',
             description: s.description || '',
             activeDays: ['Lun', 'Mié', 'Vie'],

@@ -9,8 +9,8 @@ import { CommonModule } from '@angular/common';
 })
 export class DashboardPayouts {
   readonly stripeConnected = signal(false);
-  readonly selectedCountry = signal('México');
-  readonly selectedCurrency = signal('MXN');
+  readonly selectedCountry = signal('Estados Unidos');
+  readonly selectedCurrency = signal('USD');
   readonly availableBalance = signal(0);
   readonly pendingBalance = signal(0);
 

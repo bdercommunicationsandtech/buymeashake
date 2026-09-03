@@ -141,6 +141,7 @@ export class DashboardGoals implements OnInit {
     this.goalDescription.set(
       'Este nuevo equipamiento nos permitirá entrenar con máxima intensidad y preparar la próxima clasificatoria.'
     );
+    this.goalCoverUrl.set(null);
     this.isEditorOpen.set(true);
   }
 
@@ -148,6 +149,7 @@ export class DashboardGoals implements OnInit {
     this.editingGoalId.set(goal.id);
     this.goalTitle.set(goal.title);
     this.goalTarget.set(Number(goal.target_amount));
+    this.goalCoverUrl.set(goal.cover_image_url || null);
     this.isEditorOpen.set(true);
   }
 
@@ -226,6 +228,7 @@ export class DashboardGoals implements OnInit {
           title,
           target_amount: target,
           is_active: true,
+          cover_image_url: this.goalCoverUrl(),
         })
         .subscribe({
           next: () => {
@@ -242,6 +245,7 @@ export class DashboardGoals implements OnInit {
           title,
           target_amount: target,
           currency: 'USD',
+          cover_image_url: this.goalCoverUrl(),
         })
         .subscribe({
           next: () => {
@@ -274,6 +278,7 @@ export class DashboardGoals implements OnInit {
           title,
           target_amount: target,
           is_active: false,
+          cover_image_url: this.goalCoverUrl(),
         })
         .subscribe({
           next: () => {
@@ -290,6 +295,7 @@ export class DashboardGoals implements OnInit {
           title,
           target_amount: target,
           currency: 'USD',
+          cover_image_url: this.goalCoverUrl(),
         })
         .subscribe({
           next: (created) => {

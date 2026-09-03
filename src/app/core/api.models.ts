@@ -84,6 +84,11 @@ export interface CreatorProfile {
   handle: string;
   name: string;
   bio: string | null;
+  page_title: string | null;
+  page_description: string | null;
+  agenda_title: string | null;
+  agenda_description: string | null;
+  agenda_image_url?: string | null;
   primary_sport: string;
   city: string | null;
   avatar_url: string | null;
@@ -98,6 +103,7 @@ export interface CreatorProfile {
   active_goal_title: string | null;
   active_goal_target: number | null;
   active_goal_raised: number | null;
+  active_goal_cover_image_url?: string | null;
   booking_services: CreatorBookingService[];
   tiers?: MembershipTierItem[];
   products?: DigitalProductItem[];
@@ -181,6 +187,11 @@ export interface AthleteProfileFull {
   full_name: string;
   email: string;
   bio: string | null;
+  page_title?: string | null;
+  page_description?: string | null;
+  agenda_title?: string | null;
+  agenda_description?: string | null;
+  agenda_image_url?: string | null;
   city: string | null;
   primary_sport_code: number | null;
   shake_price: number;
@@ -199,6 +210,11 @@ export interface AthleteProfileFull {
 export interface AthleteProfileUpdatePayload {
   full_name?: string;
   bio?: string;
+  page_title?: string | null;
+  page_description?: string | null;
+  agenda_title?: string | null;
+  agenda_description?: string | null;
+  agenda_image_url?: string | null;
   city?: string;
   primary_sport_code?: number;
   shake_price?: number;
@@ -220,6 +236,7 @@ export interface GoalItem {
   raised_amount: number;
   currency: string;
   is_active: boolean;
+  cover_image_url?: string | null;
   achieved_at: string | null;
   created_at: string;
 }
@@ -228,6 +245,7 @@ export interface GoalCreatePayload {
   title: string;
   target_amount: number;
   currency?: string;
+  cover_image_url?: string | null;
 }
 
 export interface UploadFileResult {

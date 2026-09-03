@@ -141,7 +141,16 @@ export const routes: Routes = [
     ]
   },
 
-  // 4. Vista completa de publicación pública
+  // 4. Vista de edición de página pública (fuera del layout del dashboard)
+  {
+    path: 'editar-mi-pagina',
+    title: 'Editar mi página — buymeashake',
+    canActivate: [authGuard, athleteGuard],
+    loadComponent: () =>
+      import('./features/dashboard/page/edit-page').then((m) => m.EditMyPage),
+  },
+
+  // 4b. Vista completa de publicación pública
   {
     path: ':username/posts/:postId',
     title: 'Publicación — buymeashake',

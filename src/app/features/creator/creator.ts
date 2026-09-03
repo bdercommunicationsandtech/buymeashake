@@ -24,6 +24,13 @@ import {
 } from '../../shared/icons';
 import { PostCardComponent, PostItem } from '../../shared/post-card/post-card.component';
 import { FollowModalComponent } from '../../shared/follow-modal/follow-modal.component';
+import { EditSectionOverlayComponent } from '../../shared/edit-section-overlay/edit-section-overlay.component';
+import { PageCopyModalComponent } from '../../shared/page-editor-modals/page-copy-modal.component';
+import { AthleteProfileModalComponent } from '../../shared/page-editor-modals/athlete-profile-modal.component';
+import { AgendaCopyModalComponent } from '../../shared/page-editor-modals/agenda-copy-modal.component';
+import { GoalEditorModalComponent } from '../../shared/page-editor-modals/goal-editor-modal.component';
+import { PricesModalComponent } from '../../shared/page-editor-modals/prices-modal.component';
+import { EditorSavePatch } from '../../shared/page-editor-modals/editor-save-patch';
 import { CreatorProfile } from '../../core/api.models';
 
 export interface CreatorProduct {
@@ -64,10 +71,16 @@ export interface CreatorView {
   role: string;
   city: string;
   bio: string;
+  pageTitle: string | null;
+  pageDescription: string | null;
+  agendaTitle: string | null;
+  agendaDescription: string | null;
+  agendaImageUrl: string | null;
   initials: string;
   goalTitle: string;
   goalTarget: number;
   goalRaised: number;
+  goalCoverImageUrl: string | null;
   supporters: number;
   shakesReceived: number;
   disciplines: string[];
@@ -97,6 +110,12 @@ export interface CreatorView {
     IconDumbbellComponent,
     PostCardComponent,
     FollowModalComponent,
+    EditSectionOverlayComponent,
+    PageCopyModalComponent,
+    AthleteProfileModalComponent,
+    AgendaCopyModalComponent,
+    GoalEditorModalComponent,
+    PricesModalComponent,
   ],
   templateUrl: './creator.html',
 })
@@ -109,12 +128,17 @@ export class Creator {
   private readonly supporterService = inject(SupporterService);
 
   readonly username = input.required<string>();
+  readonly editMode = input(false);
 
   readonly creatorView = signal<CreatorView | null>(null);
   readonly loading = signal(true);
   readonly error = signal<string | null>(null);
   readonly supporters = signal<any[]>([]);
   readonly quickShakes = QUICK_SHAKES;
+
+  readonly editorModal = signal<
+    'hero' | 'profile' | 'agenda' | 'goal' | 'prices' | null
+  >(null);
 
   readonly followModalOpen = signal(false);
   readonly isFollowing = signal(false);
@@ -150,6 +174,35 @@ export class Creator {
     { dayNumber: 5, dateStr: '2026-09-05', isAvailable: true, isPast: false, dayName: 'Sáb' },
     { dayNumber: 7, dateStr: '2026-09-07', isAvailable: true, isPast: false, dayName: 'Lun' },
   ]);
+
+  readonly pageTitleLines = computed(() => {
+    const raw = this.creatorView()?.pageTitle?.trim();
+    if (raw) {
+      return raw.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
+    }
+    return ['Fuerza', 'Disciplina', 'Propósito'];
+  });
+
+  readonly pageDescriptionText = computed(() => {
+    const c = this.creatorView();
+    return c?.pageDescription?.trim() || c?.bio || '';
+  });
+
+  readonly agendaTitleText = computed(
+    () => this.creatorView()?.agendaTitle?.trim() || 'Entrena, mejora y alcanza tus metas',
+  );
+
+  readonly agendaDescriptionText = computed(
+    () =>
+      this.creatorView()?.agendaDescription?.trim() ||
+      'Sesiones 1 a 1 para técnica, consultoría y seguimiento personalizado.',
+  );
+
+  readonly agendaImageStyle = computed(() => {
+    const url = this.creatorView()?.agendaImageUrl;
+    if (url) return `url('${url}')`;
+    return "url('https://images.unsplash.com/photo-1576678927484-cc907957088c?q=80&w=1200&auto=format&fit=crop')";
+  });
 
   readonly coverStyle = computed(() => {
     const url = this.creatorView()?.coverImageUrl;
@@ -305,19 +358,87 @@ export class Creator {
     this.supportMode.set(mode);
   }
 
+  openEditor(kind: 'hero' | 'profile' | 'agenda' | 'goal' | 'prices'): void {
+    this.editorModal.set(kind);
+  }
+
+  closeEditor(): void {
+    this.editorModal.set(null);
+  }
+
+  onEditorSaved(patch: EditorSavePatch): void {
+    this.editorModal.set(null);
+    this.applyEditorPatch(patch);
+    const handle = this.username() || this.creatorView()?.handle;
+    if (handle) this.loadCreator(handle, true, patch);
+  }
+
+  private applyEditorPatch(patch: EditorSavePatch): void {
+    this.creatorView.update((current) => {
+      if (!current) return current;
+      const initials = patch.name
+        ? patch.name
+            .split(' ')
+            .map((n) => n[0])
+            .join('')
+            .slice(0, 2)
+            .toUpperCase()
+        : current.initials;
+      return {
+        ...current,
+        pageTitle: patch.pageTitle !== undefined ? patch.pageTitle : current.pageTitle,
+        pageDescription:
+          patch.pageDescription !== undefined ? patch.pageDescription : current.pageDescription,
+        agendaTitle: patch.agendaTitle !== undefined ? patch.agendaTitle : current.agendaTitle,
+        agendaDescription:
+          patch.agendaDescription !== undefined ? patch.agendaDescription : current.agendaDescription,
+        agendaImageUrl:
+          patch.agendaImageUrl !== undefined ? patch.agendaImageUrl : current.agendaImageUrl,
+        goalTitle: patch.goalTitle ?? current.goalTitle,
+        goalTarget: patch.goalTarget ?? current.goalTarget,
+        goalRaised: patch.goalRaised ?? current.goalRaised,
+        goalCoverImageUrl:
+          patch.goalCoverImageUrl !== undefined ? patch.goalCoverImageUrl : current.goalCoverImageUrl,
+        shakePrice: patch.shakePrice ?? current.shakePrice,
+        name: patch.name ?? current.name,
+        bio: patch.bio ?? current.bio,
+        city: patch.city ?? current.city,
+        coverImageUrl:
+          patch.coverImageUrl !== undefined ? patch.coverImageUrl : current.coverImageUrl,
+        avatarUrl: patch.avatarUrl !== undefined ? patch.avatarUrl : current.avatarUrl,
+        instagramUrl:
+          patch.instagramUrl !== undefined ? patch.instagramUrl : current.instagramUrl,
+        tiktokUrl: patch.tiktokUrl !== undefined ? patch.tiktokUrl : current.tiktokUrl,
+        facebookUrl:
+          patch.facebookUrl !== undefined ? patch.facebookUrl : current.facebookUrl,
+        twitterUrl: patch.twitterUrl !== undefined ? patch.twitterUrl : current.twitterUrl,
+        initials,
+      };
+    });
+  }
+
   private scrollToId(id: string): void {
     requestAnimationFrame(() => {
       document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     });
   }
 
-  private loadCreator(handle: string): void {
-    this.loading.set(true);
+  private loadSeq = 0;
+
+  private loadCreator(handle: string, silent = false, keepPatch?: EditorSavePatch): void {
+    if (!silent) {
+      this.loading.set(true);
+    }
     this.error.set(null);
+    const seq = ++this.loadSeq;
 
     this.exploreService.getCreatorProfile(handle).subscribe({
       next: (profile) => {
+        if (seq !== this.loadSeq) return;
         this.creatorView.set(this.mapProfile(profile));
+        if (keepPatch) {
+          this.applyEditorPatch(keepPatch);
+        }
         this.currency.set('USD');
         
         // Cargar Tiers Reales desde BD
@@ -372,7 +493,7 @@ export class Creator {
         }
 
         this.bookingServices.set(
-          profile.booking_services.map((s) => ({
+          (profile.booking_services || []).map((s) => ({
             id: String(s.id),
             title: s.title,
             duration: `${s.duration_minutes} min`,
@@ -393,6 +514,7 @@ export class Creator {
         }
       },
       error: () => {
+        if (seq !== this.loadSeq) return;
         this.error.set('No encontramos este perfil de atleta.');
         this.loading.set(false);
       },
@@ -448,6 +570,11 @@ export class Creator {
       role: profile.primary_sport,
       city: profile.city || 'México',
       bio: profile.bio || 'Atleta oficial en buymeashake.fit',
+      pageTitle: profile.page_title ?? null,
+      pageDescription: profile.page_description ?? null,
+      agendaTitle: profile.agenda_title ?? null,
+      agendaDescription: profile.agenda_description ?? null,
+      agendaImageUrl: profile.agenda_image_url ?? null,
       initials: profile.name
         .split(' ')
         .map((n) => n[0])
@@ -457,6 +584,7 @@ export class Creator {
       goalTitle: profile.active_goal_title || 'Meta deportiva activa',
       goalTarget: goalTarget || 1000,
       goalRaised: goalRaised,
+      goalCoverImageUrl: profile.active_goal_cover_image_url ?? null,
       supporters: 860,
       shakesReceived: shakesFromSupporters > 0 ? shakesFromSupporters + 1227 : 1248,
       disciplines: [profile.primary_sport],

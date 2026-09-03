@@ -22,7 +22,8 @@ export class ExploreService {
   }
 
   getCreatorProfile(handle: string): Observable<CreatorProfile> {
-    return this.http.get<CreatorProfile>(`${this.apiUrl}/creators/${handle}`);
+    const params = new HttpParams().set('_ts', String(Date.now()));
+    return this.http.get<CreatorProfile>(`${this.apiUrl}/creators/${handle}`, { params });
   }
 
   getCreatorPosts(handle: string): Observable<PostItemDto[]> {

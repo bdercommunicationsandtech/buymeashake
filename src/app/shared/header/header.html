@@ -99,6 +99,14 @@
                   <span>Mi Dashboard</span>
                 </a>
                 <a
+                  routerLink="/editar-mi-pagina"
+                  (click)="closeUserMenu()"
+                  class="flex items-center gap-2.5 px-4 py-2.5 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-white/5 font-semibold"
+                >
+                  <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536M4 20h4.586a1 1 0 00.707-.293l9.414-9.414a2 2 0 000-2.828l-3.172-3.172a2 2 0 00-2.828 0L4.293 14.707A1 1 0 004 15.414V20z"/></svg>
+                  <span>Editar mi página</span>
+                </a>
+                <a
                   routerLink="/dashboard/settings"
                   (click)="closeUserMenu()"
                   class="flex items-center gap-2.5 px-4 py-2.5 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-white/5 font-semibold"

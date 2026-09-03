@@ -21,6 +21,20 @@ export class ExploreService {
     return this.http.get<AthleteLeaderboardItem[]>(`${this.apiUrl}/explore/leaderboard`, { params });
   }
 
+  getAthletes(params?: { q?: string; category?: string; limit?: number }): Observable<AthleteLeaderboardItem[]> {
+    let httpParams = new HttpParams();
+    if (params?.q) {
+      httpParams = httpParams.set('q', params.q);
+    }
+    if (params?.category && params.category !== 'Todos') {
+      httpParams = httpParams.set('category', params.category);
+    }
+    if (params?.limit) {
+      httpParams = httpParams.set('limit', params.limit);
+    }
+    return this.http.get<AthleteLeaderboardItem[]>(`${this.apiUrl}/explore/athletes`, { params: httpParams });
+  }
+
   getCreatorProfile(handle: string): Observable<CreatorProfile> {
     return this.http.get<CreatorProfile>(`${this.apiUrl}/creators/${handle}`);
   }

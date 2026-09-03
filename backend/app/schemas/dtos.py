@@ -162,6 +162,7 @@ class AthleteLeaderboardItemResponse(BaseModel):
     athlete_name: str
     avatar_url: str | None
     primary_sport: str
+    bio: str | None = None
     total_shakes_this_month: int
     total_raised_this_month: Decimal
     ranking_position: int

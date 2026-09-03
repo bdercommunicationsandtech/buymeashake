@@ -19,6 +19,18 @@ async def get_monthly_leaderboard(
     return await service.get_monthly_leaderboard(limit)
 
 
+@router.get("/explore/athletes", response_model=list[AthleteLeaderboardItemResponse])
+async def get_explore_athletes(
+    session: DatabaseSession,
+    q: Annotated[str | None, Query(description="Término de búsqueda por nombre, handle o disciplina")] = None,
+    category: Annotated[str | None, Query(description="Disciplina o categoría")] = None,
+    limit: Annotated[int, Query(ge=1, le=100)] = 50,
+) -> list[AthleteLeaderboardItemResponse]:
+    """Retorna el directorio completo de atletas para exploración con filtros de búsqueda y disciplina."""
+    service = AthleteService(session)
+    return await service.get_explore_athletes(query=q, category=category, limit=limit)
+
+
 @router.get("/creators/{handle}", response_model=CreatorPublicProfileResponse)
 async def get_creator_profile(handle: str, session: DatabaseSession) -> CreatorPublicProfileResponse:
     """Retorna el perfil público completo de un atleta, su meta activa y servicios 1-a-1."""

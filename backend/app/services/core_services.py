@@ -460,12 +460,20 @@ class AthleteService:
             if p.is_active
         ]
 
+        primary_sport_label = "Deporte General"
+        if profile.primary_sport_code:
+            lookup_repo = LookupRepository(self.session)
+            sport_items = await lookup_repo.get_items_by_group_code(100)
+            matched = next((item.label for item in sport_items if item.code == profile.primary_sport_code), None)
+            if matched:
+                primary_sport_label = matched
+
         return CreatorPublicProfileResponse(
             id=profile.id,
             handle=profile.handle,
             name=user.full_name if user else "Atleta Oficial",
             bio=profile.bio,
-            primary_sport="Fuerza & Levantamiento",
+            primary_sport=primary_sport_label,
             city=profile.city,
             avatar_url=user.avatar_url if user else None,
             cover_image_url=profile.cover_image_url,
@@ -487,6 +495,19 @@ class AthleteService:
 
     async def get_monthly_leaderboard(self, limit: int = 10) -> list[AthleteLeaderboardItemResponse]:
         raw_items = await self.athlete_repo.get_monthly_leaderboard(limit)
+        return [AthleteLeaderboardItemResponse(**item) for item in raw_items]
+
+    async def get_explore_athletes(
+        self,
+        query: str | None = None,
+        category: str | None = None,
+        limit: int = 50,
+    ) -> list[AthleteLeaderboardItemResponse]:
+        raw_items = await self.athlete_repo.get_explore_athletes(
+            query_str=query,
+            category=category,
+            limit=limit,
+        )
         return [AthleteLeaderboardItemResponse(**item) for item in raw_items]
 
     async def get_public_posts(self, handle: str) -> list[PostResponse]:

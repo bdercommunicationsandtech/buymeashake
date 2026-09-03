@@ -65,6 +65,10 @@ class Settings(BaseSettings):
     STRIPE_PUBLISHABLE_KEY: str = "pk_test_placeholder"
     STRIPE_WEBHOOK_SECRET: str = "whsec_placeholder"
     PLATFORM_FEE_PERCENTAGE: float = 0.05  # 5% comisión plataforma
+    FRONTEND_URL: str = "http://localhost:4200"
+    STRIPE_CONNECT_RETURN_URL: str = "http://localhost:4200/dashboard/payouts?status=return"
+    STRIPE_CONNECT_REFRESH_URL: str = "http://localhost:4200/dashboard/payouts?status=refresh"
+    STRIPE_CONNECT_BUSINESS_URL: str = "https://buymeashake.fit"
 
     # SMTP / Email Service (Mismo patrón que Buyer1 / Bder)
     SMTP_HOST: str = Field(default="smtp.gmail.com", validation_alias=AliasChoices("SMTP_HOST", "MAIL_HOST"))

@@ -87,29 +87,75 @@ export class StripeCheckout {
       return;
     }
 
-    // Procesar donación directa con persistencia en MySQL
+    // Solicitar sesión de Stripe Checkout al backend
     this.paymentService
-      .donateDirectShake({
+      .createStripeCheckoutSession({
         athlete_handle: draft.creatorHandle,
         shakes_count: draft.shakes,
         currency: draft.currency,
         supporter_name: draft.isAnonymous ? 'Alguien anónimo' : (draft.supporterName || this.cardName() || 'Un Fan'),
+        supporter_email: this.email() || undefined,
         supporter_message: draft.message,
         is_anonymous: draft.isAnonymous ?? false,
       })
       .subscribe({
-        next: (res) => {
-          setTimeout(() => {
-            this.processing.set(false);
-            this.checkout.markPaid(res.supporter_item, res.new_goal_raised, res.thank_you_message);
-          }, FAKE_PROCESSING_MS);
+        next: (sessionRes) => {
+          // Si el backend devolvió una URL real de Stripe Checkout (cuando haya keys válidas)
+          if (sessionRes.checkout_url && sessionRes.checkout_url.startsWith('https://checkout.stripe.com')) {
+            window.location.href = sessionRes.checkout_url;
+            return;
+          }
+
+          // En modo mock / desarrollo local: completar directamente con persistencia en BD
+          this.paymentService
+            .donateDirectShake({
+              athlete_handle: draft.creatorHandle,
+              shakes_count: draft.shakes,
+              currency: draft.currency,
+              supporter_name: draft.isAnonymous ? 'Alguien anónimo' : (draft.supporterName || this.cardName() || 'Un Fan'),
+              supporter_message: draft.message,
+              is_anonymous: draft.isAnonymous ?? false,
+            })
+            .subscribe({
+              next: (res) => {
+                setTimeout(() => {
+                  this.processing.set(false);
+                  this.checkout.markPaid(res.supporter_item, res.new_goal_raised, res.thank_you_message);
+                }, FAKE_PROCESSING_MS);
+              },
+              error: () => {
+                setTimeout(() => {
+                  this.processing.set(false);
+                  this.checkout.markPaid();
+                }, FAKE_PROCESSING_MS);
+              },
+            });
         },
         error: () => {
-          // Fallback en caso de desconexión
-          setTimeout(() => {
-            this.processing.set(false);
-            this.checkout.markPaid();
-          }, FAKE_PROCESSING_MS);
+          // Fallback directo a donación local
+          this.paymentService
+            .donateDirectShake({
+              athlete_handle: draft.creatorHandle,
+              shakes_count: draft.shakes,
+              currency: draft.currency,
+              supporter_name: draft.isAnonymous ? 'Alguien anónimo' : (draft.supporterName || this.cardName() || 'Un Fan'),
+              supporter_message: draft.message,
+              is_anonymous: draft.isAnonymous ?? false,
+            })
+            .subscribe({
+              next: (res) => {
+                setTimeout(() => {
+                  this.processing.set(false);
+                  this.checkout.markPaid(res.supporter_item, res.new_goal_raised, res.thank_you_message);
+                }, FAKE_PROCESSING_MS);
+              },
+              error: () => {
+                setTimeout(() => {
+                  this.processing.set(false);
+                  this.checkout.markPaid();
+                }, FAKE_PROCESSING_MS);
+              },
+            });
         },
       });
   }

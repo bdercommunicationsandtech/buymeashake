@@ -55,6 +55,11 @@ class PaymentProcessingError(DomainException):
         super().__init__(message=message, code="PAYMENT_ERROR", details=details)
 
 
+class BusinessLogicError(DomainException):
+    def __init__(self, message: str, details: dict[str, Any] | None = None):
+        super().__init__(message=message, code="BUSINESS_LOGIC_ERROR", details=details)
+
+
 def register_exception_handlers(app: FastAPI) -> None:
     """Registra los manejadores globales de excepciones de dominio en FastAPI."""
     

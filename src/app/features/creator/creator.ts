@@ -18,6 +18,7 @@ import {
   IconButtonShareComponent,
   IconButtonSupportComponent,
   IconCalendarComponent,
+  IconDumbbellComponent,
   IconShakerComponent,
   IconTrophyComponent,
 } from '../../shared/icons';
@@ -93,6 +94,7 @@ export interface CreatorView {
     IconButtonShareComponent,
     IconButtonSupportComponent,
     IconCalendarComponent,
+    IconDumbbellComponent,
     PostCardComponent,
     FollowModalComponent,
   ],

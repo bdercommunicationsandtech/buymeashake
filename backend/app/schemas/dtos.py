@@ -247,6 +247,25 @@ class PaymentIntentResponse(BaseModel):
     currency: str
 
 
+class StripeCheckoutSessionResponse(BaseModel):
+    checkout_url: str
+    session_id: str
+    transaction_uuid: str
+
+
+class StripeConnectLinkResponse(BaseModel):
+    account_link_url: str
+    stripe_connect_account_id: str
+
+
+class StripeConnectStatusResponse(BaseModel):
+    stripe_connect_account_id: str | None = None
+    payouts_enabled: bool = False
+    details_submitted: bool = False
+    charges_enabled: bool = False
+    requirements_due: list[str] = []
+
+
 # ==============================================================================
 # 5. DASHBOARD DEL ATLETA (DTOs)
 # ==============================================================================
@@ -424,6 +443,12 @@ class GoalCreateRequest(BaseModel):
     title: str = Field(min_length=3, max_length=200)
     target_amount: Decimal = Field(gt=0)
     currency: str = Field(default="USD", pattern="^USD$")
+
+
+class GoalUpdateRequest(BaseModel):
+    title: str | None = Field(default=None, min_length=3, max_length=200)
+    target_amount: Decimal | None = Field(default=None, gt=0)
+    is_active: bool | None = None
 
 
 class GoalResponse(BaseModel):

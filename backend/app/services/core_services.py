@@ -61,6 +61,7 @@ from app.schemas.dtos import (
     FollowedAthleteResponse,
     GoalCreateRequest,
     GoalResponse,
+    GoalUpdateRequest,
     LookupGroupResponse,
     LookupItemResponse,
     MembershipTierCreateRequest,
@@ -644,6 +645,21 @@ class DashboardService:
         )
         created = await self.goal_repo.create_goal(goal)
         return GoalResponse.model_validate(created)
+
+    async def update_goal(self, athlete: AthleteProfile, goal_id: int, dto: GoalUpdateRequest) -> GoalResponse:
+        goal = await self.goal_repo.get_by_id(goal_id)
+        if not goal or goal.athlete_id != athlete.id:
+            raise EntityNotFoundError("Meta", str(goal_id))
+
+        if dto.title is not None:
+            goal.title = dto.title
+        if dto.target_amount is not None:
+            goal.target_amount = dto.target_amount
+        if dto.is_active is not None:
+            goal.is_active = dto.is_active
+
+        updated = await self.goal_repo.update_goal(goal)
+        return GoalResponse.model_validate(updated)
 
     # Membresías
     async def get_tiers(self, athlete: AthleteProfile) -> list[MembershipTierResponse]:

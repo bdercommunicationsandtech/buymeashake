@@ -1,37 +1,474 @@
-<div class="space-y-6 max-w-3xl">
-  <div class="flex items-center justify-between gap-4">
-    <h1 class="text-2xl font-black text-gray-900">Metas & Campañas</h1>
-    <a routerLink="/dashboard/settings" class="text-sm font-bold text-emerald-600 hover:underline">Ajustes</a>
+<div class="max-w-6xl mx-auto space-y-8">
+
+  <!-- ========================================================================= -->
+  <!-- 1. HEADER DE LA SECCIÓN "MIS METAS DEPORTIVAS" -->
+  <!-- ========================================================================= -->
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div>
+      <div class="flex items-center gap-2.5">
+        <h1 class="text-2xl font-black text-gray-950 dark:text-white tracking-tight">Metas Deportivas</h1>
+        <span class="text-[10px] font-black uppercase tracking-wider bg-[#c9ff3d] text-gray-950 px-2 py-0.5 rounded-md">
+          GOALS
+        </span>
+      </div>
+      <p class="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-1">
+        Gestiona tus objetivos de financiamiento. Puedes tener una meta activa a la vez visible en tu perfil público.
+      </p>
+    </div>
+
+    <button
+      type="button"
+      (click)="openNewGoalModal()"
+      class="inline-flex items-center justify-center gap-2 rounded-2xl bg-gray-950 dark:bg-[#c9ff3d] text-white dark:text-gray-950 px-5 py-3 text-xs font-black hover:opacity-90 transition shadow-sm cursor-pointer"
+    >
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" />
+      </svg>
+      <span>Crear nueva meta</span>
+    </button>
   </div>
 
-  @if (loading()) {
-    <p class="text-sm text-gray-500">Cargando metas…</p>
-  } @else {
-    <div class="bg-white rounded-3xl border border-gray-200 p-6 space-y-4">
-      <h2 class="text-sm font-black text-gray-900">Nueva meta</h2>
-      <input class="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm" placeholder="Título de la campaña" [ngModel]="goalTitle()" (ngModelChange)="goalTitle.set($event)" />
-      <input type="number" min="1" class="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm" placeholder="Meta en USD" [ngModel]="goalTarget()" (ngModelChange)="goalTarget.set(+$event)" />
-      <button type="button" (click)="createGoal()" [disabled]="saving()" class="rounded-xl bg-black text-white px-4 py-2 text-sm font-bold disabled:opacity-50">
-        {{ saving() ? 'Creando…' : 'Crear meta' }}
-      </button>
-    </div>
-
-    <div class="space-y-3">
-      @for (goal of goals(); track goal.id) {
-        <div class="bg-white rounded-2xl border border-gray-200 p-5">
-          <div class="flex items-start justify-between gap-3">
-            <div>
-              <p class="font-black text-gray-900">{{ goal.title }}</p>
-              <p class="text-xs text-gray-500 mt-1">${{ goal.raised_amount }} / ${{ goal.target_amount }} {{ goal.currency }}</p>
-            </div>
-            @if (goal.is_active) {
-              <span class="text-[10px] font-bold uppercase tracking-wider bg-emerald-100 text-emerald-700 px-2 py-1 rounded-full">Activa</span>
-            }
-          </div>
-        </div>
-      } @empty {
-        <p class="text-sm text-gray-500">Aún no tienes metas. Crea la primera arriba.</p>
-      }
+  @if (successMessage()) {
+    <div class="p-4 rounded-2xl bg-emerald-950/40 border border-[#c9ff3d]/50 text-xs font-bold text-[#c9ff3d] flex items-center gap-2.5 animate-fade-in shadow-xs">
+      <svg class="w-4 h-4 shrink-0 text-[#c9ff3d]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+      </svg>
+      <span>{{ successMessage() }}</span>
     </div>
   }
+
+  @if (loading()) {
+    <div class="bg-white dark:bg-[#121614] rounded-3xl p-12 border border-gray-200/80 dark:border-white/10 text-center">
+      <div class="inline-block h-6 w-6 border-2 border-gray-300 dark:border-white/20 border-t-[#c9ff3d] rounded-full animate-spin"></div>
+      <p class="text-xs font-bold text-gray-400 mt-3">Cargando tus metas…</p>
+    </div>
+  } @else {
+
+    <!-- ======================================================================= -->
+    <!-- 2. TARJETA PRINCIPAL: META ACTIVA EN EL PERFIL PÚBLICO -->
+    <!-- ======================================================================= -->
+    <section class="space-y-3">
+      <div class="flex items-center justify-between">
+        <span class="text-xs font-black uppercase tracking-wider text-gray-400 flex items-center gap-2">
+          <span class="h-2 w-2 rounded-full bg-[#c9ff3d] animate-ping"></span>
+          <span>Meta activa en tu página pública</span>
+        </span>
+        <span class="text-[11px] font-bold text-gray-500">Solo 1 activa a la vez</span>
+      </div>
+
+      @if (activeGoal(); as active) {
+        <div class="bg-white dark:bg-[#121614] rounded-3xl border border-emerald-500/40 dark:border-[#c9ff3d]/40 shadow-lg relative overflow-hidden transition">
+          <!-- Cinta de Meta Activa -->
+          <div class="absolute top-4 right-[-32px] rotate-45 bg-[#c9ff3d] text-gray-950 font-black text-[9px] uppercase tracking-wider py-1 px-8 shadow-md z-10">
+            En Vivo
+          </div>
+
+          @if (goalCoverUrl(); as cover) {
+            <div class="relative h-36 w-full overflow-hidden border-b border-gray-100 dark:border-white/10">
+              <img [src]="cover" [alt]="active.title" class="w-full h-full object-cover" />
+              <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent"></div>
+            </div>
+          }
+
+          <div class="p-6 sm:p-8">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
+              <div class="space-y-2 max-w-xl">
+                <div class="flex items-center gap-2 text-xs font-bold text-emerald-600 dark:text-[#c9ff3d]">
+                  <app-icon-dumbbell [size]="14" />
+                  <span>RECIBIENDO DONACIONES</span>
+                </div>
+                <h2 class="text-xl sm:text-2xl font-black text-gray-950 dark:text-white leading-tight">
+                  {{ active.title }}
+                </h2>
+              <p class="text-xs text-gray-500 dark:text-gray-400">
+                Los seguidores que donen Shakers estarán aportando directamente a este objetivo.
+              </p>
+            </div>
+
+            <!-- Botones de Acción sobre la Meta Activa -->
+            <div class="flex items-center gap-3 shrink-0">
+              <button
+                type="button"
+                (click)="openEditGoal(active)"
+                class="px-4 py-2.5 rounded-xl bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 text-xs font-bold text-gray-900 dark:text-white transition cursor-pointer"
+              >
+                Editar
+              </button>
+              <button
+                type="button"
+                (click)="pauseActiveGoal(active.id)"
+                [disabled]="saving()"
+                class="px-4 py-2.5 rounded-xl border border-gray-300 dark:border-white/15 text-xs font-bold text-gray-600 dark:text-gray-300 hover:text-red-500 hover:border-red-500/50 transition cursor-pointer"
+              >
+                Pausar meta
+              </button>
+            </div>
+          </div>
+
+          <!-- Barra de Progreso y Estadísticas -->
+          <div class="mt-6 pt-5 border-t border-gray-100 dark:border-white/10">
+            <div class="flex items-baseline justify-between text-xs font-bold">
+              <span class="text-sm font-black text-gray-950 dark:text-white">
+                <strong class="text-emerald-600 dark:text-[#c9ff3d]">${{ active.raised_amount || '0.00' }}</strong> de ${{ active.target_amount }} {{ active.currency }}
+              </span>
+              <span class="text-sm font-black text-emerald-600 dark:text-[#c9ff3d]">
+                {{ getGoalPercent(active.raised_amount, active.target_amount) }}%
+              </span>
+            </div>
+
+            <div class="h-2.5 w-full rounded-full bg-gray-100 dark:bg-white/10 mt-2 overflow-hidden">
+              <div
+                class="h-full rounded-full bg-emerald-500 dark:bg-[#c9ff3d] shadow-[0_0_8px_#c9ff3d] transition-all duration-500"
+                [style.width.%]="getGoalPercent(active.raised_amount, active.target_amount)"
+              ></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    } @else {
+        <!-- Empty State: No hay meta activa -->
+        <div class="bg-white dark:bg-[#121614] rounded-3xl border border-dashed border-gray-300 dark:border-white/15 p-8 text-center space-y-3">
+          <div class="h-10 w-10 rounded-2xl bg-gray-100 dark:bg-white/5 grid place-items-center mx-auto text-gray-400">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+          </div>
+          <h3 class="text-base font-black text-gray-900 dark:text-white">No tienes ninguna meta activa en tu perfil</h3>
+          <p class="text-xs text-gray-500 dark:text-gray-400 max-w-sm mx-auto">
+            Activa una de tus metas guardadas abajo o crea una nueva para que tus fans puedan ver tu objetivo.
+          </p>
+          <button
+            type="button"
+            (click)="openNewGoalModal()"
+            class="mt-2 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#c9ff3d] text-gray-950 text-xs font-black hover:bg-[#b5ea30] transition cursor-pointer"
+          >
+            + Crear meta ahora
+          </button>
+        </div>
+      }
+    </section>
+
+    <!-- ======================================================================= -->
+    <!-- 3. GALERÍA DE TARJETAS GUARDADAS / REUTILIZABLES -->
+    <!-- ======================================================================= -->
+    <section class="space-y-4 pt-4">
+      <div class="flex items-center justify-between">
+        <h2 class="text-xs font-black uppercase tracking-wider text-gray-400">
+          Metas Guardadas & Borradores (Reutilizables)
+        </h2>
+        <span class="text-xs text-gray-500 font-bold">{{ inactiveGoals().length }} guardadas</span>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+        @for (goal of inactiveGoals(); track goal.id) {
+          <div class="bg-white dark:bg-[#121614] rounded-2xl border border-gray-200/80 dark:border-white/10 p-5 shadow-xs flex flex-col justify-between space-y-4 hover:border-gray-400 dark:hover:border-white/20 transition">
+            <div>
+              <div class="flex items-center justify-between text-[11px] font-bold text-gray-400 mb-2">
+                <span class="uppercase tracking-wider">Objetivo</span>
+                <span>${{ goal.target_amount }} {{ goal.currency }}</span>
+              </div>
+              <h3 class="text-sm font-black text-gray-900 dark:text-white leading-snug line-clamp-2">
+                {{ goal.title }}
+              </h3>
+              <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                Recaudado previo: ${{ goal.raised_amount || '0.00' }}
+              </p>
+            </div>
+
+            <div class="pt-3 border-t border-gray-100 dark:border-white/10 flex items-center justify-between gap-2">
+              <button
+                type="button"
+                (click)="openEditGoal(goal)"
+                class="text-xs font-bold text-gray-500 dark:text-gray-400 hover:text-white transition cursor-pointer"
+              >
+                Editar
+              </button>
+              <button
+                type="button"
+                (click)="activateSavedGoal(goal.id)"
+                [disabled]="saving()"
+                class="px-3.5 py-1.5 rounded-lg bg-emerald-50 dark:bg-white/5 hover:bg-emerald-100 dark:hover:bg-[#c9ff3d] hover:text-gray-950 text-xs font-black text-emerald-700 dark:text-[#c9ff3d] border border-emerald-200/50 dark:border-white/10 transition cursor-pointer disabled:opacity-50"
+              >
+                Activar en perfil
+              </button>
+            </div>
+          </div>
+        } @empty {
+          <div class="col-span-full py-6 text-center text-xs font-medium text-gray-400 border border-dashed border-gray-200 dark:border-white/10 rounded-2xl">
+            No tienes metas inactivas guardadas. Puedes guardar borradores para reutilizarlos en futuras temporadas.
+          </div>
+        }
+      </div>
+    </section>
+
+  }
+
+  <!-- ========================================================================= -->
+  <!-- 4. MODAL / DIÁLOGO DE CREACIÓN Y EDICIÓN (SE ABRE/CIERRA AL PUBLICAR) -->
+  <!-- ========================================================================= -->
+  @if (isEditorOpen()) {
+    <div class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 overflow-y-auto bg-black/80 backdrop-blur-sm animate-fade-in" role="dialog" aria-modal="true">
+      <div class="bg-[#121614] w-full max-w-5xl rounded-3xl border border-white/15 shadow-2xl overflow-hidden my-auto max-h-[92vh] flex flex-col">
+
+        <!-- HEADER DEL MODAL -->
+        <header class="p-5 sm:p-6 border-b border-white/10 flex items-center justify-between shrink-0 bg-[#121614]">
+          <div class="flex items-center gap-3">
+            <div class="h-10 w-10 rounded-xl bg-[#c9ff3d]/15 border border-[#c9ff3d]/30 grid place-items-center text-[#c9ff3d]">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9" />
+              </svg>
+            </div>
+            <div>
+              <div class="flex items-center gap-2">
+                <h2 class="text-lg sm:text-xl font-black text-white">
+                  {{ editingGoalId() ? 'Editar Meta' : 'Nueva Meta de Financiación' }}
+                </h2>
+                <span class="text-[9px] font-black uppercase tracking-wider bg-[#c9ff3d] text-gray-950 px-1.5 py-0.5 rounded">
+                  GOAL
+                </span>
+              </div>
+              <p class="text-xs text-gray-400">Define tu reto deportivo para que tus fans te impulsen con Shakers.</p>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            (click)="closeModal()"
+            class="h-8 w-8 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-gray-400 hover:text-white grid place-items-center transition cursor-pointer"
+            aria-label="Cerrar modal"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </header>
+
+        <!-- CONTENIDO CON SCROLL INTERNO -->
+        <div class="p-5 sm:p-7 overflow-y-auto grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+
+          <!-- FORMULARIO (7 COLUMNAS) -->
+          <section class="lg:col-span-7 space-y-5">
+            <!-- Selector de Tipo -->
+            <div>
+              <label class="block text-[10px] font-black uppercase tracking-wider text-gray-300 mb-2">
+                Tipo de Meta / Propósito
+              </label>
+              <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                <button
+                  type="button"
+                  (click)="setCategory('equipment')"
+                  class="flex items-center justify-center gap-1.5 py-2 px-2.5 rounded-xl border text-xs font-bold transition cursor-pointer"
+                  [class]="selectedCategory() === 'equipment' ? 'bg-[#c9ff3d]/15 border-[#c9ff3d] text-[#c9ff3d]' : 'bg-white/5 border-white/10 text-gray-300 hover:bg-white/10'"
+                >
+                  <app-icon-dumbbell [size]="14" />
+                  <span class="truncate">Equipo</span>
+                </button>
+
+                <button
+                  type="button"
+                  (click)="setCategory('travel')"
+                  class="flex items-center justify-center gap-1.5 py-2 px-2.5 rounded-xl border text-xs font-bold transition cursor-pointer"
+                  [class]="selectedCategory() === 'travel' ? 'bg-[#c9ff3d]/15 border-[#c9ff3d] text-[#c9ff3d]' : 'bg-white/5 border-white/10 text-gray-300 hover:bg-white/10'"
+                >
+                  <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                  </svg>
+                  <span class="truncate">Viaje</span>
+                </button>
+
+                <button
+                  type="button"
+                  (click)="setCategory('nutrition')"
+                  class="flex items-center justify-center gap-1.5 py-2 px-2.5 rounded-xl border text-xs font-bold transition cursor-pointer"
+                  [class]="selectedCategory() === 'nutrition' ? 'bg-[#c9ff3d]/15 border-[#c9ff3d] text-[#c9ff3d]' : 'bg-white/5 border-white/10 text-gray-300 hover:bg-white/10'"
+                >
+                  <app-icon-shaker [size]="14" />
+                  <span class="truncate">Suplementos</span>
+                </button>
+
+                <button
+                  type="button"
+                  (click)="setCategory('camp')"
+                  class="flex items-center justify-center gap-1.5 py-2 px-2.5 rounded-xl border text-xs font-bold transition cursor-pointer"
+                  [class]="selectedCategory() === 'camp' ? 'bg-[#c9ff3d]/15 border-[#c9ff3d] text-[#c9ff3d]' : 'bg-white/5 border-white/10 text-gray-300 hover:bg-white/10'"
+                >
+                  <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                  <span class="truncate">Camp</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Título -->
+            <div>
+              <div class="flex items-center justify-between mb-1">
+                <label class="text-[10px] font-black uppercase tracking-wider text-gray-300">
+                  Título del reto o meta *
+                </label>
+                <span class="text-[10px] font-semibold text-gray-400">{{ goalTitle().length }}/60</span>
+              </div>
+              <input
+                type="text"
+                maxlength="60"
+                class="w-full rounded-xl border border-white/15 bg-white/5 px-3.5 py-2.5 text-sm font-bold text-white outline-none focus:border-[#c9ff3d] transition placeholder:text-gray-500"
+                placeholder="Ej: Suplementación y Proteína de 3 Meses"
+                [ngModel]="goalTitle()"
+                (ngModelChange)="goalTitle.set($event)"
+              />
+            </div>
+
+            <!-- Portada de Meta -->
+            <div>
+              <label class="block text-[10px] font-black uppercase tracking-wider text-gray-300 mb-1">
+                Foto de portada del reto
+              </label>
+              <div class="rounded-xl border border-dashed border-white/20 bg-white/[0.02] p-3 relative group overflow-hidden">
+                @if (goalCoverUrl(); as cover) {
+                  <div class="relative h-28 w-full rounded-lg overflow-hidden border border-white/10">
+                    <img [src]="cover" alt="Portada de meta" class="w-full h-full object-cover" />
+                    <div class="absolute inset-0 bg-black/50 flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition">
+                      <label class="px-3 py-1 rounded bg-white text-gray-950 text-[11px] font-bold cursor-pointer">
+                        Cambiar
+                        <input type="file" accept="image/*" class="hidden" (change)="onFileSelected($event)" />
+                      </label>
+                      <button type="button" (click)="removeCover()" class="px-3 py-1 rounded bg-red-600 text-white text-[11px] font-bold">
+                        Quitar
+                      </button>
+                    </div>
+                  </div>
+                } @else {
+                  <div class="flex flex-col items-center justify-center text-center py-3">
+                    <p class="text-xs font-bold text-gray-300">Arrastra una imagen o selecciona un archivo</p>
+                    <label class="mt-2 inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-white/10 text-white text-xs font-bold cursor-pointer hover:bg-white/15 transition">
+                      <span>Subir foto</span>
+                      <input type="file" accept="image/*" class="hidden" (change)="onFileSelected($event)" />
+                    </label>
+                  </div>
+                }
+              </div>
+            </div>
+
+            <!-- Objetivo Financiero -->
+            <div class="bg-white/5 rounded-xl border border-white/10 p-4 space-y-3">
+              <div class="flex items-center justify-between">
+                <span class="text-[10px] font-black uppercase tracking-wider text-gray-300">Objetivo Financiero</span>
+                <span class="text-[10px] font-black text-gray-950 bg-[#c9ff3d] px-2 py-0.5 rounded">
+                  1 Shaker = ${{ unitShakePrice() }} USD
+                </span>
+              </div>
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Monto USD</label>
+                  <div class="flex rounded-lg border border-white/15 bg-black/30 overflow-hidden">
+                    <span class="px-2.5 py-2 text-xs font-black text-gray-400 border-r border-white/10">$</span>
+                    <input
+                      type="number"
+                      min="10"
+                      step="50"
+                      class="w-full px-2.5 py-2 text-xs font-black text-white bg-transparent outline-none"
+                      [ngModel]="goalTarget()"
+                      (ngModelChange)="goalTarget.set(+$event)"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Equivalente</label>
+                  <div class="flex items-center rounded-lg border border-white/15 bg-black/30 px-2.5 py-2 gap-1.5 text-xs font-black text-[#c9ff3d]">
+                    <app-icon-shaker [size]="14" />
+                    <span>{{ shakersEquivalent() }} Shakers</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Descripción -->
+            <div>
+              <label class="block text-[10px] font-black uppercase tracking-wider text-gray-300 mb-1">
+                ¿Por qué es importante para ti?
+              </label>
+              <textarea
+                rows="2"
+                class="w-full rounded-xl border border-white/15 bg-white/5 p-3 text-xs text-white outline-none focus:border-[#c9ff3d] transition placeholder:text-gray-500"
+                [ngModel]="goalDescription()"
+                (ngModelChange)="goalDescription.set($event)"
+              ></textarea>
+            </div>
+          </section>
+
+          <!-- VISTA PREVIA Y ACCIONES (5 COLUMNAS) -->
+          <aside class="lg:col-span-5 space-y-4">
+            <span class="text-[10px] font-black uppercase tracking-wider text-gray-400">Vista previa en vivo</span>
+
+            <div class="rounded-2xl border border-white/15 bg-gradient-to-b from-[#181d19] to-[#121614] p-4 shadow-xl relative overflow-hidden">
+              <div class="absolute top-3 right-[-30px] rotate-45 bg-[#c9ff3d] text-gray-950 font-black text-[8px] uppercase tracking-wider py-0.5 px-7">
+                Meta Activa
+              </div>
+
+              @if (goalCoverUrl(); as cover) {
+                <div class="h-24 w-full rounded-xl overflow-hidden mb-3 border border-white/10">
+                  <img [src]="cover" alt="Cover" class="w-full h-full object-cover" />
+                </div>
+              }
+
+              <div class="inline-flex items-center gap-1 bg-[#c9ff3d]/10 px-2 py-0.5 rounded text-[9px] font-black text-[#c9ff3d] mb-2">
+                <app-icon-dumbbell [size]="10" />
+                <span>FUERZA & POWERLIFTING</span>
+              </div>
+
+              <h4 class="text-sm font-black text-white leading-snug">{{ goalTitle() || 'Título del reto' }}</h4>
+              <p class="text-[11px] text-gray-400 mt-1 line-clamp-2">{{ goalDescription() }}</p>
+
+              <div class="mt-3 pt-3 border-t border-white/10">
+                <div class="flex items-baseline justify-between text-xs font-black">
+                  <span class="text-white">
+                    <strong class="text-[#c9ff3d]">{{ currentShakersRaised() }}</strong> / {{ shakersEquivalent() }} Shakers
+                  </span>
+                  <span class="text-[#c9ff3d]">{{ percentAchieved() }}%</span>
+                </div>
+                <div class="h-2 w-full rounded-full bg-white/10 mt-1.5 overflow-hidden">
+                  <div class="h-full rounded-full bg-[#c9ff3d]" [style.width.%]="percentAchieved()"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- BOTONES CON IDEMPOTENCIA -->
+            <div class="space-y-2 pt-2">
+              <button
+                type="button"
+                (click)="publishGoal()"
+                [disabled]="saving() || !goalTitle().trim() || goalTarget() <= 0"
+                class="w-full py-3.5 px-4 rounded-xl bg-[#c9ff3d] hover:bg-[#b5ea30] text-gray-950 font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition shadow-md disabled:opacity-50 cursor-pointer"
+              >
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+                </svg>
+                <span>{{ saving() ? 'PUBLICANDO…' : 'PUBLICAR META EN MI PERFIL' }}</span>
+              </button>
+
+              <div class="flex items-center gap-2">
+                <button
+                  type="button"
+                  (click)="saveDraft()"
+                  [disabled]="saving()"
+                  class="flex-1 py-2 px-3 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-bold text-gray-300 hover:text-white transition cursor-pointer"
+                >
+                  Guardar como tarjeta
+                </button>
+                <button
+                  type="button"
+                  (click)="closeModal()"
+                  class="flex-1 py-2 px-3 rounded-lg border border-transparent text-xs font-bold text-gray-400 hover:text-white transition cursor-pointer"
+                >
+                  Cancelar
+                </button>
+              </div>
+            </div>
+          </aside>
+        </div>
+
+      </div>
+    </div>
+  }
+
 </div>

@@ -15,6 +15,38 @@ export class PaymentService {
     return this.http.post<PaymentIntentResult>(`${this.apiUrl}/create-intent`, payload);
   }
 
+  createStripeCheckoutSession(payload: {
+    athlete_handle: string;
+    shakes_count: number;
+    currency?: string;
+    supporter_name?: string;
+    supporter_email?: string;
+    supporter_message?: string;
+    is_anonymous?: boolean;
+  }): Observable<{ checkout_url: string; session_id: string; transaction_uuid: string }> {
+    return this.http.post<{ checkout_url: string; session_id: string; transaction_uuid: string }>(
+      `${this.apiUrl}/stripe-session`,
+      payload
+    );
+  }
+
+  getStripeConnectLink(): Observable<{ account_link_url: string; stripe_connect_account_id: string }> {
+    return this.http.post<{ account_link_url: string; stripe_connect_account_id: string }>(
+      `${environment.apiUrl}/dashboard/payouts/connect-link`,
+      {}
+    );
+  }
+
+  getStripeConnectStatus(): Observable<{
+    stripe_connect_account_id: string | null;
+    payouts_enabled: boolean;
+    details_submitted: boolean;
+    charges_enabled: boolean;
+    requirements_due: string[];
+  }> {
+    return this.http.get<any>(`${environment.apiUrl}/dashboard/payouts/status`);
+  }
+
   donateDirectShake(payload: {
     athlete_handle: string;
     shakes_count: number;

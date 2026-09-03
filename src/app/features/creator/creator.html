@@ -439,16 +439,36 @@
       <aside id="support" class="scroll-mt-24 space-y-5 lg:sticky lg:top-20">
 
         <!-- Meta activa -->
-        <article class="rounded-3xl border border-gray-200/80 dark:border-white/10 bg-white dark:bg-[#121614] p-6 sm:p-7 shadow-xs">
-          <div class="flex items-start justify-between gap-4">
-            <div>
-              <span class="inline-block rounded-lg bg-emerald-50 dark:bg-white/5 px-2.5 py-1 text-[11px] font-extrabold uppercase tracking-wider text-emerald-700 dark:text-[#c9ff3d]">
-                Meta activa
+        <article class="overflow-hidden rounded-3xl border border-gray-200/80 dark:border-white/10 bg-white dark:bg-[#121614] shadow-xs">
+          @if (creator.coverImageUrl) {
+            <div class="relative h-36 w-full overflow-hidden border-b border-gray-100 dark:border-white/10">
+              <img
+                [src]="creator.coverImageUrl"
+                [alt]="creator.goalTitle"
+                class="h-full w-full object-cover"
+              />
+              <div class="absolute inset-0 bg-gradient-to-t from-[#121614]/80 via-transparent"></div>
+              <span class="absolute bottom-3 left-4 inline-flex items-center gap-1.5 rounded-lg bg-black/60 backdrop-blur-md px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-[#c9ff3d] border border-white/10">
+                <app-icon-dumbbell [size]="11" />
+                <span>Meta Deportiva</span>
               </span>
-              <h2 class="font-display mt-2.5 text-lg font-black text-gray-950 dark:text-white">{{ creator.goalTitle }}</h2>
             </div>
-            <p class="shrink-0 font-display text-2xl font-black text-gray-950 dark:text-[#c9ff3d]">{{ goalPercent() }}%</p>
-          </div>
+          }
+
+          <div class="p-6 sm:p-7">
+            <div class="flex items-start justify-between gap-4">
+              <div>
+                @if (!creator.coverImageUrl) {
+                  <span class="inline-block rounded-lg bg-emerald-50 dark:bg-white/5 px-2.5 py-1 text-[11px] font-extrabold uppercase tracking-wider text-emerald-700 dark:text-[#c9ff3d]">
+                    Meta activa
+                  </span>
+                }
+                <h2 class="font-display text-lg font-black text-gray-950 dark:text-white" [class.mt-2.5]="!creator.coverImageUrl">
+                  {{ creator.goalTitle }}
+                </h2>
+              </div>
+              <p class="shrink-0 font-display text-2xl font-black text-gray-950 dark:text-[#c9ff3d]">{{ goalPercent() }}%</p>
+            </div>
 
           <div class="relative mt-5 h-3.5 overflow-hidden rounded-full bg-gray-100 dark:bg-black/40">
             <div
@@ -476,6 +496,7 @@
             <p>
               Con tu apoyo de ${{ amount() }} {{ currency() }} la meta avanzaría a ${{ goalWithSupport() }}. ¡Gracias por apoyar el deporte!
             </p>
+          </div>
           </div>
         </article>
 

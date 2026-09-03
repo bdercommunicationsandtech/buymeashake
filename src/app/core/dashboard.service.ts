@@ -74,6 +74,10 @@ export class DashboardService {
     return this.http.post<GoalItem>(`${this.apiUrl}/goals`, payload);
   }
 
+  updateGoal(goalId: number, payload: { title?: string; target_amount?: number; is_active?: boolean }): Observable<GoalItem> {
+    return this.http.put<GoalItem>(`${this.apiUrl}/goals/${goalId}`, payload);
+  }
+
   uploadImage(file: File): Observable<UploadFileResult> {
     const formData = new FormData();
     formData.append('file', file);

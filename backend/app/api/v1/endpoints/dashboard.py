@@ -12,6 +12,7 @@ from app.schemas.dtos import (
     DashboardMetricsResponse,
     GoalCreateRequest,
     GoalResponse,
+    GoalUpdateRequest,
     MembershipTierCreateRequest,
     MembershipTierResponse,
     NotificationResponse,
@@ -76,6 +77,18 @@ async def create_my_goal(
     """Crea una nueva meta deportiva activa para recaudar fondos."""
     service = DashboardService(session)
     return await service.create_goal(athlete, dto)
+
+
+@router.put("/dashboard/goals/{goal_id}", response_model=GoalResponse)
+async def update_my_goal(
+    goal_id: int,
+    dto: GoalUpdateRequest,
+    athlete: CurrentAthlete,
+    session: DatabaseSession,
+) -> GoalResponse:
+    """Actualiza o activa/desactiva una meta deportiva existente."""
+    service = DashboardService(session)
+    return await service.update_goal(athlete, goal_id, dto)
 
 
 @router.get("/dashboard/memberships/tiers", response_model=list[MembershipTierResponse])

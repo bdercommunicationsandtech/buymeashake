@@ -1,0 +1,21 @@
+export type EditorSavePatch = {
+  pageTitle?: string | null;
+  pageDescription?: string | null;
+  agendaTitle?: string | null;
+  agendaDescription?: string | null;
+  agendaImageUrl?: string | null;
+  goalTitle?: string;
+  goalTarget?: number;
+  goalRaised?: number;
+  goalCoverImageUrl?: string | null;
+  shakePrice?: number;
+  name?: string;
+  bio?: string;
+  city?: string;
+  coverImageUrl?: string | null;
+  avatarUrl?: string | null;
+  instagramUrl?: string | null;
+  tiktokUrl?: string | null;
+  facebookUrl?: string | null;
+  twitterUrl?: string | null;
+};

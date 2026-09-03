@@ -1,8 +1,8 @@
-<div class="min-h-screen bg-[#fafafb] dark:bg-[#090c0a] text-gray-900 dark:text-gray-100 pb-16 font-sans transition-colors duration-300">
+<div class="min-h-screen overflow-x-hidden bg-[#fafafb] dark:bg-[#090c0a] text-gray-900 dark:text-gray-100 pb-16 font-sans transition-colors duration-300">
   @if (loading()) {
     <div class="flex min-h-[50vh] items-center justify-center text-sm font-semibold text-gray-500">Cargando perfil…</div>
   } @else if (error()) {
-    <div class="mx-auto max-w-lg px-5 py-24 text-center">
+    <div class="mx-auto max-w-lg px-4 sm:px-5 py-24 text-center">
       <p class="text-lg font-bold text-gray-800 dark:text-gray-200">{{ error() }}</p>
       <a routerLink="/explore" class="mt-4 inline-block text-sm font-bold text-emerald-600 hover:underline">Explorar atletas</a>
     </div>
@@ -14,19 +14,28 @@
       class="absolute inset-0 bg-cover bg-center"
       [style.background-image]="coverStyle()"
     ></div>
-    <div class="absolute inset-0 bg-gradient-to-r from-black/90 via-black/65 to-black/40"></div>
+    <div class="absolute inset-0 bg-gradient-to-b from-black/80 via-black/70 to-[#090c0a] lg:bg-gradient-to-r lg:from-black/90 lg:via-black/65 lg:to-black/40"></div>
     <div class="absolute inset-0 bg-gradient-to-t from-[#090c0a] via-transparent to-black/30"></div>
 
-    <div class="relative mx-auto flex max-w-6xl flex-col gap-8 px-5 pt-6 pb-10 sm:pt-8 sm:pb-12 lg:flex-row lg:items-center lg:justify-between lg:gap-12 lg:pt-10 lg:pb-14">
+    <div class="relative mx-auto flex max-w-6xl flex-col gap-6 px-4 pt-5 pb-8 sm:gap-8 sm:px-5 sm:pt-8 sm:pb-12 lg:flex-row lg:items-center lg:justify-between lg:gap-12 lg:pt-10 lg:pb-14">
       <!-- Claim + bio -->
-      <div class="max-w-xl text-white lg:py-4">
-        <p class="font-display text-4xl font-black uppercase leading-[0.95] tracking-tight sm:text-5xl lg:text-6xl">
-          Fuerza<br />Disciplina<br />Propósito
+      <app-edit-section-overlay
+        class="block w-full max-w-xl mx-auto order-1 lg:order-1 lg:mx-0"
+        [active]="editMode()"
+        label="Editar título y descripción"
+        (edit)="openEditor('hero')"
+      >
+      <div class="text-white text-center lg:py-4 lg:text-left">
+        <p class="font-display text-[1.85rem] font-black uppercase leading-[1.05] tracking-tight break-words sm:text-5xl lg:text-6xl sm:leading-[0.95]">
+          @for (line of pageTitleLines(); track $index) {
+            @if (!$first) { <br /> }
+            {{ line }}
+          }
         </p>
-        <p class="mt-4 max-w-md text-sm leading-relaxed text-white/75 sm:text-base">
-          {{ creator.bio }}
+        <p class="mt-3 mx-auto max-w-md text-sm leading-relaxed text-white/75 sm:mt-4 sm:text-base lg:mx-0">
+          {{ pageDescriptionText() }}
         </p>
-        <div class="mt-4 flex flex-wrap gap-2">
+        <div class="mt-3 flex flex-wrap justify-center gap-2 sm:mt-4 lg:justify-start">
           @for (discipline of creator.disciplines; track discipline) {
             <span class="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs font-semibold text-white/90 backdrop-blur-sm">
               <span class="h-1.5 w-1.5 rounded-full bg-[#c9ff3d]"></span>
@@ -35,25 +44,32 @@
           }
         </div>
       </div>
+      </app-edit-section-overlay>
 
       <!-- Profile card (estilo mock 2) -->
-      <aside class="w-full max-w-sm shrink-0 rounded-3xl border border-white/10 bg-[#121614]/90 p-6 shadow-2xl shadow-black/50 backdrop-blur-xl sm:p-7">
-        <div class="flex items-center gap-4">
+      <app-edit-section-overlay
+        class="block w-full max-w-md mx-auto shrink-0 order-2 lg:order-2 lg:mx-0 lg:max-w-sm"
+        [active]="editMode()"
+        label="Editar perfil de atleta"
+        (edit)="openEditor('profile')"
+      >
+      <aside class="w-full rounded-3xl border border-white/10 bg-[#121614]/95 p-5 shadow-2xl shadow-black/50 backdrop-blur-xl sm:p-7">
+        <div class="flex items-center gap-3 sm:gap-4">
           @if (creator.avatarUrl) {
             <img
               [src]="creator.avatarUrl"
               [alt]="creator.name"
-              class="h-16 w-16 shrink-0 rounded-full object-cover ring-2 ring-white/10"
+              class="h-14 w-14 sm:h-16 sm:w-16 shrink-0 rounded-full object-cover ring-2 ring-white/10"
             />
           } @else {
-            <div class="grid h-16 w-16 shrink-0 place-items-center rounded-full bg-[#c9ff3d] text-xl font-black text-[#070a08]">
+            <div class="grid h-14 w-14 sm:h-16 sm:w-16 shrink-0 place-items-center rounded-full bg-[#c9ff3d] text-lg sm:text-xl font-black text-[#070a08]">
               {{ creator.initials }}
             </div>
           }
 
           <div class="min-w-0 flex-1">
-            <div class="flex items-center gap-1.5">
-              <h1 class="font-display text-lg font-black text-white truncate sm:text-xl">{{ creator.name }}</h1>
+            <div class="flex items-center gap-1.5 min-w-0">
+              <h1 class="font-display text-base font-black text-white truncate sm:text-xl">{{ creator.name }}</h1>
               @if (creator.isVerified) {
                 <span class="grid h-5 w-5 shrink-0 place-items-center rounded-full bg-[#c9ff3d] text-[#070a08]" title="Verificado">
                   <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round">
@@ -62,32 +78,32 @@
                 </span>
               }
             </div>
-            <p class="mt-0.5 text-sm text-white/55">Atleta • {{ creator.role }}</p>
-            <p class="mt-1.5 flex items-center gap-1 text-xs text-white/45">
+            <p class="mt-0.5 text-xs sm:text-sm text-white/55 truncate">Atleta • {{ creator.role }}</p>
+            <p class="mt-1.5 flex items-center gap-1 text-xs text-white/45 min-w-0">
               <svg class="h-3.5 w-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
               </svg>
-              {{ creator.city }}
+              <span class="truncate">{{ creator.city }}</span>
             </p>
           </div>
         </div>
 
-        <div class="mt-5 grid grid-cols-2 border-y border-white/10 py-4">
-          <div class="flex items-center gap-2.5 pr-3">
+        <div class="mt-4 sm:mt-5 grid grid-cols-2 border-y border-white/10 py-3.5 sm:py-4">
+          <div class="flex items-center gap-2 sm:gap-2.5 pr-2 sm:pr-3 min-w-0">
             <app-icon-shaker size="18" customClass="text-white/70 shrink-0" />
-            <div>
-              <p class="font-display text-base font-black leading-none text-white">{{ creator.shakesReceived | number }}</p>
-              <p class="mt-1 text-[11px] font-medium text-white/45">Shakes recibidos</p>
+            <div class="min-w-0">
+              <p class="font-display text-sm sm:text-base font-black leading-none text-white">{{ creator.shakesReceived | number }}</p>
+              <p class="mt-1 text-[10px] sm:text-[11px] font-medium text-white/45 leading-tight">Shakes recibidos</p>
             </div>
           </div>
-          <div class="flex items-center gap-2.5 border-l border-white/10 pl-4">
+          <div class="flex items-center gap-2 sm:gap-2.5 border-l border-white/10 pl-3 sm:pl-4 min-w-0">
             <svg class="h-[18px] w-[18px] shrink-0 text-white/70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a4 4 0 00-4-4h-1M9 20H4v-2a4 4 0 014-4h1m4-4a4 4 0 11-8 0 4 4 0 018 0zm6 0a3 3 0 11-6 0 3 3 0 016 0z"/>
             </svg>
-            <div>
-              <p class="font-display text-base font-black leading-none text-white">{{ creator.supporters | number }}</p>
-              <p class="mt-1 text-[11px] font-medium text-white/45">Miembros del equipo</p>
+            <div class="min-w-0">
+              <p class="font-display text-sm sm:text-base font-black leading-none text-white">{{ creator.supporters | number }}</p>
+              <p class="mt-1 text-[10px] sm:text-[11px] font-medium text-white/45 leading-tight">Miembros</p>
             </div>
           </div>
         </div>
@@ -191,15 +207,16 @@
           </button>
         </div>
       </aside>
+      </app-edit-section-overlay>
     </div>
   </section>
 
-  <main class="mx-auto max-w-6xl space-y-8 px-5 pt-8">
+  <main class="mx-auto max-w-6xl space-y-6 px-4 pt-6 sm:space-y-8 sm:px-5 sm:pt-8">
 
     <!-- ---------------------------------------------------------- Apoya mi misión -->
     <section>
-      <div class="mb-4">
-        <h2 class="font-display text-xl font-black uppercase tracking-tight text-gray-950 dark:text-white sm:text-2xl">
+      <div class="mb-3 sm:mb-4">
+        <h2 class="font-display text-lg font-black uppercase tracking-tight text-gray-950 dark:text-white sm:text-2xl">
           Apoya mi misión
         </h2>
         <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Tú eliges cómo impulsas mi misión</p>
@@ -209,7 +226,7 @@
         <button
           type="button"
           (click)="setSupportMode('once'); scrollToSupport('once')"
-          class="flex items-start gap-4 rounded-3xl border p-5 text-left transition"
+          class="flex items-start gap-3 sm:gap-4 rounded-3xl border p-4 sm:p-5 text-left transition"
           [class]="
             supportMode() === 'once'
               ? 'border-[#c9ff3d] bg-[#c9ff3d]/10 dark:bg-[#c9ff3d]/10 shadow-sm ring-1 ring-[#c9ff3d]/40'
@@ -231,7 +248,7 @@
         <button
           type="button"
           (click)="setSupportMode('recurring'); scrollToSupport('recurring')"
-          class="flex items-start gap-4 rounded-3xl border p-5 text-left transition"
+          class="flex items-start gap-3 sm:gap-4 rounded-3xl border p-4 sm:p-5 text-left transition"
           [class]="
             supportMode() === 'recurring'
               ? 'border-[#c9ff3d] bg-[#c9ff3d]/10 dark:bg-[#c9ff3d]/10 shadow-sm ring-1 ring-[#c9ff3d]/40'
@@ -253,23 +270,34 @@
     </section>
 
     <!-- ---------------------------------------------------------- Grid principal -->
-    <section class="grid gap-8 lg:grid-cols-[1.25fr_1fr] lg:items-start">
+    <section class="grid gap-6 lg:gap-8 lg:grid-cols-[1.25fr_1fr] lg:items-start">
 
       <!-- Columna izquierda -->
-      <div class="space-y-6">
+      <div class="space-y-5 sm:space-y-6">
 
         <!-- MI AGENDA -->
+        <app-edit-section-overlay
+          [active]="editMode()"
+          label="Editar agenda"
+          (edit)="openEditor('agenda')"
+        >
         <article id="agenda" class="scroll-mt-24 overflow-hidden rounded-3xl border border-gray-200/80 dark:border-white/10 bg-white dark:bg-[#121614] shadow-xs">
           <div class="grid sm:grid-cols-[1.1fr_0.9fr]">
-            <div class="p-6 sm:p-7">
+            <div
+              class="h-36 bg-cover bg-center sm:hidden"
+              [style.background-image]="agendaImageStyle()"
+            >
+              <div class="h-full w-full bg-gradient-to-t from-black/40 to-transparent"></div>
+            </div>
+            <div class="p-5 sm:p-7">
               <span class="inline-block rounded-lg bg-emerald-50 dark:bg-white/5 px-2.5 py-1 text-[11px] font-extrabold uppercase tracking-wider text-emerald-700 dark:text-[#c9ff3d]">
                 Mi agenda
               </span>
-              <h2 class="font-display mt-3 text-xl font-black text-gray-950 dark:text-white">
-                Entrena, mejora y alcanza tus metas
+              <h2 class="font-display mt-3 text-lg font-black text-gray-950 dark:text-white sm:text-xl break-words">
+                {{ agendaTitleText() }}
               </h2>
               <p class="mt-2 text-sm leading-relaxed text-gray-600 dark:text-gray-300">
-                Sesiones 1 a 1 para técnica, consultoría y seguimiento personalizado.
+                {{ agendaDescriptionText() }}
               </p>
               <button
                 type="button"
@@ -286,13 +314,13 @@
                     <button
                       type="button"
                       (click)="selectServiceToBook(service)"
-                      class="flex w-full items-center justify-between gap-3 rounded-2xl border border-gray-100 dark:border-white/5 bg-[#fbfbfc] dark:bg-white/5 px-4 py-3 text-left transition hover:border-[#c9ff3d]/50"
+                      class="flex w-full items-center justify-between gap-3 rounded-2xl border border-gray-100 dark:border-white/5 bg-[#fbfbfc] dark:bg-white/5 px-3.5 py-3 sm:px-4 text-left transition hover:border-[#c9ff3d]/50"
                     >
-                      <span>
-                        <span class="block text-sm font-bold text-gray-900 dark:text-white">{{ service.title }}</span>
+                      <span class="min-w-0">
+                        <span class="block text-sm font-bold text-gray-900 dark:text-white truncate">{{ service.title }}</span>
                         <span class="mt-0.5 block text-xs text-gray-500 dark:text-gray-400">{{ service.duration }} · ${{ service.price }} USD</span>
                       </span>
-                      <span class="text-xs font-black text-[#c9ff3d]">Agendar →</span>
+                      <span class="shrink-0 text-xs font-black text-[#c9ff3d]">Agendar →</span>
                     </button>
                   </li>
                 } @empty {
@@ -305,7 +333,7 @@
 
             <div
               class="hidden min-h-[220px] bg-cover bg-center sm:block"
-              [style.background-image]="coverStyle()"
+              [style.background-image]="agendaImageStyle()"
             >
               <div class="h-full w-full bg-gradient-to-l from-transparent to-black/20"></div>
             </div>
@@ -313,9 +341,9 @@
 
           <!-- Panel de reserva inline -->
           @if (showBookingPanel() && selectedService() && bookingStep() === 'select-time') {
-            <div class="border-t border-gray-100 dark:border-white/10 bg-gray-50/80 dark:bg-black/20 p-6 sm:p-7 space-y-4">
-              <div class="flex items-center justify-between pb-3 border-b border-gray-200 dark:border-white/10">
-                <div>
+            <div class="border-t border-gray-100 dark:border-white/10 bg-gray-50/80 dark:bg-black/20 p-5 sm:p-7 space-y-4">
+              <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between pb-3 border-b border-gray-200 dark:border-white/10">
+                <div class="min-w-0">
                   <button
                     type="button"
                     (click)="backToServices()"
@@ -324,10 +352,10 @@
                     <span>←</span>
                     <span>Cambiar servicio</span>
                   </button>
-                  <h3 class="font-display text-sm font-black text-gray-900 dark:text-white">{{ selectedService()?.title }}</h3>
+                  <h3 class="font-display text-sm font-black text-gray-900 dark:text-white truncate">{{ selectedService()?.title }}</h3>
                   <p class="text-xs text-gray-500 dark:text-gray-400">{{ selectedService()?.duration }} · ${{ selectedService()?.price }} USD</p>
                 </div>
-                <span class="rounded-lg bg-emerald-50 dark:bg-white/10 px-2.5 py-1 text-xs font-bold text-emerald-700 dark:text-[#c9ff3d]">
+                <span class="self-start rounded-lg bg-emerald-50 dark:bg-white/10 px-2.5 py-1 text-xs font-bold text-emerald-700 dark:text-[#c9ff3d]">
                   Google Meet
                 </span>
               </div>
@@ -383,43 +411,44 @@
               <button
                 type="button"
                 (click)="confirmBookingCheckout()"
-                class="mt-2 flex w-full items-center justify-center gap-2 rounded-2xl bg-gray-950 py-3.5 text-sm font-black text-white transition hover:opacity-90 dark:bg-[#c9ff3d] dark:text-gray-950"
+                class="mt-2 flex w-full items-center justify-center gap-2 rounded-2xl bg-gray-950 px-3 py-3.5 text-sm font-black text-white transition hover:opacity-90 dark:bg-[#c9ff3d] dark:text-gray-950"
               >
                 <app-icon-calendar size="16" />
-                <span>Confirmar &amp; Pagar ${{ selectedService()?.price }} USD</span>
+                <span class="text-center leading-snug">Confirmar &amp; Pagar ${{ selectedService()?.price }} USD</span>
               </button>
             </div>
           }
         </article>
+        </app-edit-section-overlay>
 
         <!-- Apoyos recientes -->
-        <article class="rounded-3xl border border-gray-200/80 dark:border-white/10 bg-white dark:bg-[#121614] p-6 sm:p-7 shadow-xs">
-          <div class="flex items-center justify-between">
-            <h2 class="font-display text-lg font-black text-gray-950 dark:text-white">Apoyos recientes</h2>
-            <span class="rounded-full bg-gray-100 px-2.5 py-1 text-xs font-bold text-gray-400 dark:bg-white/5">
+        <article class="rounded-3xl border border-gray-200/80 dark:border-white/10 bg-white dark:bg-[#121614] p-5 sm:p-7 shadow-xs">
+          <div class="flex items-center justify-between gap-2">
+            <h2 class="font-display text-base font-black text-gray-950 dark:text-white sm:text-lg">Apoyos recientes</h2>
+            <span class="shrink-0 rounded-full bg-gray-100 px-2.5 py-1 text-[11px] font-bold text-gray-400 dark:bg-white/5 sm:text-xs">
               {{ supporters().length }} recientes
             </span>
           </div>
 
-          <ul class="mt-6 space-y-3.5">
+          <ul class="mt-5 space-y-3 sm:mt-6 sm:space-y-3.5">
             @for (supporter of supporters(); track supporter.name + supporter.when) {
-              <li class="flex items-start gap-4 rounded-2xl border border-gray-100 dark:border-white/5 bg-[#fbfbfc] dark:bg-white/5 p-4 transition hover:border-gray-200 dark:hover:border-white/15">
-                <span class="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-gray-900 text-xs font-black text-[#c9ff3d]">
+              <li class="flex items-start gap-3 rounded-2xl border border-gray-100 dark:border-white/5 bg-[#fbfbfc] dark:bg-white/5 p-3.5 transition hover:border-gray-200 dark:hover:border-white/15 sm:gap-4 sm:p-4">
+                <span class="grid h-9 w-9 shrink-0 place-items-center rounded-2xl bg-gray-900 text-[11px] font-black text-[#c9ff3d] sm:h-10 sm:w-10 sm:text-xs">
                   {{ supporter.initials }}
                 </span>
                 <div class="min-w-0 flex-1">
-                  <div class="flex items-center justify-between gap-2">
-                    <p class="truncate text-sm font-bold text-gray-900 dark:text-white">
-                      {{ supporter.name }}
+                  <div class="flex flex-col gap-1.5 sm:flex-row sm:items-center sm:justify-between sm:gap-2">
+                    <p class="min-w-0 text-sm font-bold text-gray-900 dark:text-white">
+                      <span class="block truncate sm:inline">{{ supporter.name }}</span>
                       <span class="font-normal text-gray-500 dark:text-gray-400">
                         invitó {{ supporter.shakes }} shake{{ supporter.shakes === 1 ? '' : 's' }}
                       </span>
                     </p>
-                    <span class="shrink-0 rounded-md bg-emerald-50 px-2 py-0.5 text-xs font-extrabold text-emerald-600 dark:bg-white/10 dark:text-[#c9ff3d]">
+                    <span class="self-start shrink-0 rounded-md bg-emerald-50 px-2 py-0.5 text-xs font-extrabold text-emerald-600 dark:bg-white/10 dark:text-[#c9ff3d]">
                       +${{ supporter.shakes * 3 }} USD
                     </span>
                   </div>
-                  <p class="mt-1.5 text-sm leading-relaxed text-gray-600 dark:text-gray-300">“{{ supporter.message }}”</p>
+                  <p class="mt-1.5 text-sm leading-relaxed text-gray-600 dark:text-gray-300 break-words">“{{ supporter.message }}”</p>
                   <p class="mt-2 text-[11px] font-semibold text-gray-400">{{ supporter.when }}</p>
                 </div>
               </li>
@@ -439,11 +468,16 @@
       <aside id="support" class="scroll-mt-24 space-y-5 lg:sticky lg:top-20">
 
         <!-- Meta activa -->
+        <app-edit-section-overlay
+          [active]="editMode()"
+          label="Editar meta deportiva"
+          (edit)="openEditor('goal')"
+        >
         <article class="overflow-hidden rounded-3xl border border-gray-200/80 dark:border-white/10 bg-white dark:bg-[#121614] shadow-xs">
-          @if (creator.coverImageUrl) {
+          @if (creator.goalCoverImageUrl) {
             <div class="relative h-36 w-full overflow-hidden border-b border-gray-100 dark:border-white/10">
               <img
-                [src]="creator.coverImageUrl"
+                [src]="creator.goalCoverImageUrl"
                 [alt]="creator.goalTitle"
                 class="h-full w-full object-cover"
               />
@@ -455,19 +489,19 @@
             </div>
           }
 
-          <div class="p-6 sm:p-7">
-            <div class="flex items-start justify-between gap-4">
-              <div>
-                @if (!creator.coverImageUrl) {
+          <div class="p-5 sm:p-7">
+            <div class="flex items-start justify-between gap-3">
+              <div class="min-w-0">
+                @if (!creator.goalCoverImageUrl) {
                   <span class="inline-block rounded-lg bg-emerald-50 dark:bg-white/5 px-2.5 py-1 text-[11px] font-extrabold uppercase tracking-wider text-emerald-700 dark:text-[#c9ff3d]">
                     Meta activa
                   </span>
                 }
-                <h2 class="font-display text-lg font-black text-gray-950 dark:text-white" [class.mt-2.5]="!creator.coverImageUrl">
+                <h2 class="font-display text-base font-black text-gray-950 dark:text-white break-words sm:text-lg" [class.mt-2.5]="!creator.goalCoverImageUrl">
                   {{ creator.goalTitle }}
                 </h2>
               </div>
-              <p class="shrink-0 font-display text-2xl font-black text-gray-950 dark:text-[#c9ff3d]">{{ goalPercent() }}%</p>
+              <p class="shrink-0 font-display text-xl font-black text-gray-950 dark:text-[#c9ff3d] sm:text-2xl">{{ goalPercent() }}%</p>
             </div>
 
           <div class="relative mt-5 h-3.5 overflow-hidden rounded-full bg-gray-100 dark:bg-black/40">
@@ -481,7 +515,7 @@
             ></div>
           </div>
 
-          <div class="mt-4 flex flex-wrap items-center justify-between gap-2 text-sm">
+          <div class="mt-4 flex flex-col gap-1 text-sm sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:gap-2">
             <p class="font-medium text-gray-500 dark:text-gray-400">
               <span class="font-black text-gray-900 dark:text-white">${{ creator.goalRaised }}</span>
               recaudados de ${{ creator.goalTarget }} USD
@@ -489,7 +523,7 @@
             <p class="font-semibold text-gray-400 dark:text-gray-500">Faltan ${{ remaining() }}</p>
           </div>
 
-          <div class="mt-4 flex items-start gap-2.5 rounded-2xl border border-gray-200/70 dark:border-white/10 bg-gray-50 dark:bg-white/5 p-3.5 text-xs font-medium text-gray-600 dark:text-gray-300">
+          <div class="mt-4 flex items-start gap-2.5 rounded-2xl border border-gray-200/70 dark:border-white/10 bg-gray-50 dark:bg-white/5 p-3.5 text-xs font-medium leading-relaxed text-gray-600 dark:text-gray-300">
             <svg class="mt-0.5 h-4 w-4 shrink-0 text-emerald-600 dark:text-[#c9ff3d]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
@@ -499,24 +533,30 @@
           </div>
           </div>
         </article>
+        </app-edit-section-overlay>
 
         <!-- Widget Shake / Membresías -->
-        <div class="space-y-5 rounded-3xl border border-gray-200/80 dark:border-white/10 bg-white dark:bg-[#121614] p-6 sm:p-7 shadow-xs">
+        <app-edit-section-overlay
+          [active]="editMode()"
+          label="Editar moneda y precios"
+          (edit)="openEditor('prices')"
+        >
+        <div class="space-y-5 rounded-3xl border border-gray-200/80 dark:border-white/10 bg-white dark:bg-[#121614] p-5 sm:p-7 shadow-xs">
 
           @if (supportMode() === 'once') {
             <div class="space-y-5">
               <div class="flex items-center justify-between gap-3">
-                <div>
-                  <h2 class="font-display text-lg font-black text-gray-950 dark:text-white">Invítale un Shaker</h2>
+                <div class="min-w-0">
+                  <h2 class="font-display text-base font-black text-gray-950 dark:text-white sm:text-lg">Invítale un Shaker</h2>
                   <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">Apoya su preparación deportiva · USD</p>
                 </div>
               </div>
 
-              <div class="grid grid-cols-4 gap-2.5">
+              <div class="grid grid-cols-2 gap-2 min-[400px]:grid-cols-4 sm:gap-2.5">
                 @for (option of quickShakes; track option) {
                   <button
                     type="button"
-                    class="flex flex-col items-center justify-center gap-0.5 rounded-2xl border py-3.5 text-center transition"
+                    class="flex flex-col items-center justify-center gap-0.5 rounded-2xl border py-3 text-center transition sm:py-3.5"
                     [class]="
                       shakes() === option
                         ? 'border-[#c9ff3d] bg-[#c9ff3d]/10 dark:bg-[#c9ff3d]/15 text-[#c9ff3d] ring-2 ring-[#c9ff3d]/40 shadow-sm'
@@ -524,7 +564,7 @@
                     "
                     (click)="setShakes(option)"
                   >
-                    <span class="block text-xl font-black leading-tight">{{ option }}</span>
+                    <span class="block text-lg font-black leading-tight sm:text-xl">{{ option }}</span>
                     <span class="block text-[10px] font-bold uppercase tracking-wider opacity-80">
                       ${{ option * currentPrice() }}
                     </span>
@@ -581,10 +621,10 @@
               </div>
 
               @for (tier of tiers(); track tier.name) {
-                <div class="space-y-3 rounded-2xl border border-gray-200/80 dark:border-white/10 bg-[#fbfbfc] dark:bg-white/5 p-5 transition hover:border-gray-300 dark:hover:border-white/20">
-                  <div class="flex items-center justify-between">
+                <div class="space-y-3 rounded-2xl border border-gray-200/80 dark:border-white/10 bg-[#fbfbfc] dark:bg-white/5 p-4 transition hover:border-gray-300 dark:hover:border-white/20 sm:p-5">
+                  <div class="flex flex-wrap items-center justify-between gap-2">
                     <h4 class="font-display text-sm font-black text-gray-900 dark:text-white">{{ tier.name }}</h4>
-                    <span class="text-sm font-black text-emerald-600 dark:text-[#c9ff3d]">${{ tier.price }} / mes</span>
+                    <span class="shrink-0 text-sm font-black text-emerald-600 dark:text-[#c9ff3d]">${{ tier.price }} / mes</span>
                   </div>
                   <p class="text-xs leading-relaxed text-gray-600 dark:text-gray-300">{{ tier.description }}</p>
                   <button
@@ -603,16 +643,30 @@
             Checkout seguro impulsado por Stripe
           </p>
         </div>
+        </app-edit-section-overlay>
       </aside>
     </section>
 
     <!-- ---------------------------------------------------------- Posts -->
-    <section class="space-y-5">
-      <div>
-        <h2 class="font-display text-xl font-black text-gray-950 dark:text-white">Posts</h2>
-        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-          Bitácora de preparación, rutinas y contenido exclusivo.
-        </p>
+    <section class="space-y-4 sm:space-y-5">
+      <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <h2 class="font-display text-lg font-black text-gray-950 dark:text-white sm:text-xl">Posts</h2>
+          <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+            Bitácora de preparación, rutinas y contenido exclusivo.
+          </p>
+        </div>
+        @if (editMode()) {
+          <a
+            routerLink="/dashboard/posts/new"
+            class="inline-flex w-full items-center justify-center gap-2 rounded-full bg-[#c9ff3d] px-5 py-2.5 text-xs font-black text-gray-950 shadow-sm hover:bg-[#bbf033] transition shrink-0 sm:w-auto"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" />
+            </svg>
+            Nueva publicación
+          </a>
+        }
       </div>
 
       @if (posts().length) {
@@ -633,7 +687,7 @@
     </section>
 
     <!-- ---------------------------------------------------------- Valor -->
-    <section class="grid gap-4 rounded-3xl border border-gray-200/80 dark:border-white/10 bg-white dark:bg-[#121614] p-6 sm:grid-cols-2 sm:p-8 lg:grid-cols-4">
+    <section class="grid gap-4 rounded-3xl border border-gray-200/80 dark:border-white/10 bg-white dark:bg-[#121614] p-5 sm:grid-cols-2 sm:p-8 lg:grid-cols-4">
       <div class="flex items-start gap-3">
         <span class="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-[#c9ff3d]/15 text-[#c9ff3d]">
           <app-icon-shaker size="18" />
@@ -682,5 +736,31 @@
     [athleteHandle]="creatorView()?.handle || username()"
     (onClose)="closeFollow()"
     (onFollowSuccess)="onFollowSuccess($event)"
+  />
+
+  <app-page-copy-modal
+    [open]="editorModal() === 'hero'"
+    (close)="closeEditor()"
+    (saved)="onEditorSaved($event)"
+  />
+  <app-athlete-profile-modal
+    [open]="editorModal() === 'profile'"
+    (close)="closeEditor()"
+    (saved)="onEditorSaved($event)"
+  />
+  <app-agenda-copy-modal
+    [open]="editorModal() === 'agenda'"
+    (close)="closeEditor()"
+    (saved)="onEditorSaved($event)"
+  />
+  <app-goal-editor-modal
+    [open]="editorModal() === 'goal'"
+    (close)="closeEditor()"
+    (saved)="onEditorSaved($event)"
+  />
+  <app-prices-modal
+    [open]="editorModal() === 'prices'"
+    (close)="closeEditor()"
+    (saved)="onEditorSaved($event)"
   />
 </div>

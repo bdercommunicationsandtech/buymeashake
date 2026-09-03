@@ -474,6 +474,11 @@ class AthleteService:
             handle=profile.handle,
             name=user.full_name if user else "Atleta Oficial",
             bio=profile.bio,
+            page_title=profile.page_title,
+            page_description=profile.page_description,
+            agenda_title=profile.agenda_title,
+            agenda_description=profile.agenda_description,
+            agenda_image_url=profile.agenda_image_url,
             primary_sport=primary_sport_label,
             city=profile.city,
             avatar_url=user.avatar_url if user else None,
@@ -488,6 +493,7 @@ class AthleteService:
             active_goal_title=active_goal.title if active_goal else None,
             active_goal_target=active_goal.target_amount if active_goal else None,
             active_goal_raised=active_goal.raised_amount if active_goal else None,
+            active_goal_cover_image_url=active_goal.cover_image_url if active_goal else None,
             booking_services=booking_services,
             tiers=tiers,
             products=products,
@@ -604,6 +610,11 @@ class DashboardService:
             full_name=user.full_name if user else "",
             email=user.email if user else "",
             bio=athlete.bio,
+            page_title=athlete.page_title,
+            page_description=athlete.page_description,
+            agenda_title=athlete.agenda_title,
+            agenda_description=athlete.agenda_description,
+            agenda_image_url=athlete.agenda_image_url,
             city=athlete.city,
             primary_sport_code=athlete.primary_sport_code,
             shake_price=athlete.shake_price,
@@ -622,6 +633,11 @@ class DashboardService:
     async def update_profile(self, athlete: AthleteProfile, dto: AthleteProfileUpdateRequest) -> AthleteProfileFullResponse:
         if dto.bio is not None:
             athlete.bio = dto.bio
+        updates = dto.model_dump(exclude_unset=True)
+        for field in ("page_title", "page_description", "agenda_title", "agenda_description", "agenda_image_url"):
+            if field in updates:
+                value = updates[field]
+                setattr(athlete, field, value.strip() if isinstance(value, str) and value.strip() else None)
         if dto.city is not None:
             athlete.city = dto.city
         if dto.primary_sport_code is not None:
@@ -638,7 +654,6 @@ class DashboardService:
             athlete.thank_you_message = dto.thank_you_message
 
         # Redes: permitir limpiar enviando "" (normalizado a None) si el campo vino en el request
-        updates = dto.model_dump(exclude_unset=True)
         for field in ("instagram_url", "tiktok_url", "facebook_url", "twitter_url"):
             if field in updates:
                 setattr(athlete, field, updates[field])
@@ -663,6 +678,7 @@ class DashboardService:
             title=dto.title,
             target_amount=dto.target_amount,
             currency=dto.currency,
+            cover_image_url=dto.cover_image_url,
             is_active=True,
         )
         created = await self.goal_repo.create_goal(goal)
@@ -679,6 +695,9 @@ class DashboardService:
             goal.target_amount = dto.target_amount
         if dto.is_active is not None:
             goal.is_active = dto.is_active
+        updates = dto.model_dump(exclude_unset=True)
+        if "cover_image_url" in updates:
+            goal.cover_image_url = updates["cover_image_url"] or None
 
         updated = await self.goal_repo.update_goal(goal)
         return GoalResponse.model_validate(updated)

@@ -74,7 +74,10 @@ export class DashboardService {
     return this.http.post<GoalItem>(`${this.apiUrl}/goals`, payload);
   }
 
-  updateGoal(goalId: number, payload: { title?: string; target_amount?: number; is_active?: boolean }): Observable<GoalItem> {
+  updateGoal(
+    goalId: number,
+    payload: { title?: string; target_amount?: number; is_active?: boolean; cover_image_url?: string | null },
+  ): Observable<GoalItem> {
     return this.http.put<GoalItem>(`${this.apiUrl}/goals/${goalId}`, payload);
   }
 

@@ -199,6 +199,11 @@ class CreatorPublicProfileResponse(BaseModel):
     handle: str
     name: str
     bio: str | None
+    page_title: str | None = None
+    page_description: str | None = None
+    agenda_title: str | None = None
+    agenda_description: str | None = None
+    agenda_image_url: str | None = None
     primary_sport: str
     city: str | None
     avatar_url: str | None
@@ -213,6 +218,7 @@ class CreatorPublicProfileResponse(BaseModel):
     active_goal_title: str | None = None
     active_goal_target: Decimal | None = None
     active_goal_raised: Decimal | None = None
+    active_goal_cover_image_url: str | None = None
     booking_services: list[CreatorBookingServiceResponse] = []
     tiers: list["MembershipTierResponse"] = []
     products: list["DigitalProductResponse"] = []
@@ -405,6 +411,11 @@ class ReferralDashboardResponse(BaseModel):
 class AthleteProfileUpdateRequest(BaseModel):
     full_name: str | None = Field(default=None, min_length=2, max_length=150)
     bio: str | None = Field(default=None, max_length=1000)
+    page_title: str | None = Field(default=None, max_length=200)
+    page_description: str | None = Field(default=None, max_length=2000)
+    agenda_title: str | None = Field(default=None, max_length=200)
+    agenda_description: str | None = Field(default=None, max_length=2000)
+    agenda_image_url: str | None = None
     city: str | None = Field(default=None, max_length=100)
     primary_sport_code: int | None = None
     shake_price: Decimal | None = Field(default=None, gt=0)
@@ -435,6 +446,11 @@ class AthleteProfileFullResponse(BaseModel):
     full_name: str
     email: str
     bio: str | None
+    page_title: str | None = None
+    page_description: str | None = None
+    agenda_title: str | None = None
+    agenda_description: str | None = None
+    agenda_image_url: str | None = None
     city: str | None
     primary_sport_code: int | None
     shake_price: Decimal
@@ -455,12 +471,14 @@ class GoalCreateRequest(BaseModel):
     title: str = Field(min_length=3, max_length=200)
     target_amount: Decimal = Field(gt=0)
     currency: str = Field(default="USD", pattern="^USD$")
+    cover_image_url: str | None = None
 
 
 class GoalUpdateRequest(BaseModel):
     title: str | None = Field(default=None, min_length=3, max_length=200)
     target_amount: Decimal | None = Field(default=None, gt=0)
     is_active: bool | None = None
+    cover_image_url: str | None = None
 
 
 class GoalResponse(BaseModel):
@@ -472,6 +490,7 @@ class GoalResponse(BaseModel):
     raised_amount: Decimal
     currency: str
     is_active: bool
+    cover_image_url: str | None = None
     achieved_at: datetime | None
     created_at: datetime
 

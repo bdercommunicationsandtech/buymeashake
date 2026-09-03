@@ -72,6 +72,8 @@ async def create_stripe_checkout_session(
         is_anonymous=dto.is_anonymous,
         supporter_user=user,
     )
+    # Persistir tx pendiente ANTES de devolver la URL de Stripe
+    await session.commit()
     return StripeCheckoutSessionResponse(**res)
 
 
@@ -124,14 +126,41 @@ async def create_customer_portal_session(
 @router.post("/checkout/verify-session")
 async def verify_stripe_session(
     session: DatabaseSession,
-    session_id: Annotated[str, Query(description="Stripe Checkout Session ID (cs_...)")],
+    session_id: Annotated[str | None, Query(description="Stripe Checkout Session ID (cs_...)")] = None,
+    tx: Annotated[str | None, Query(description="transaction_uuid del success_url")] = None,
 ) -> dict:
-    """Verifica directamente el estado de una sesión de Stripe al volver a la web y actualiza la meta."""
+    """Verifica el pago al volver de Stripe. Si Stripe no responde (SSL/red), confirma por tx pendiente."""
     import logging
     logger = logging.getLogger("uvicorn.error")
-    logger.info(">>> LLAMADA RECIBIDA EN /checkout/verify-session CON session_id=%s", session_id)
+    logger.info(
+        ">>> LLAMADA RECIBIDA EN /checkout/verify-session CON session_id=%s tx=%s",
+        session_id,
+        tx,
+    )
+    if not session_id and not tx:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Se requiere session_id o tx",
+        )
+
     stripe_svc = StripeService(session)
-    result = await stripe_svc.verify_and_process_session(session_id)
+    result = await stripe_svc.verify_and_process_session(session_id or "", tx_uuid=tx)
+
+    # Red de seguridad: confirmar cualquier 301 que Stripe ya marque como paid
+    reconciled = await stripe_svc.reconcile_pending_shake_transactions(limit=20)
+    if (not result.get("handled")) or result.get("status") not in ("succeeded", "already_processed"):
+        paid = next((r for r in reconciled if r.get("status") == "succeeded"), None)
+        if paid:
+            result = paid
+
+    if not result.get("handled"):
+        await session.rollback()
+        logger.error(">>> verify-session NO procesó el pago: %s", result)
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=result.get("error") or result.get("reason") or "No se pudo confirmar el pago",
+        )
+
     await session.commit()
     logger.info(">>> RESULTADO COMMIT /checkout/verify-session: %s", result)
     return result

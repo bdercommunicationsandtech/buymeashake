@@ -131,54 +131,64 @@
           </button>
         </div>
 
-        @if (creator.instagramUrl || creator.tiktokUrl || creator.facebookUrl || creator.twitterUrl) {
-          <div class="mt-5 flex items-center justify-center gap-5">
-            @if (creator.instagramUrl) {
-              <a
-                [href]="creator.instagramUrl"
-                target="_blank"
-                rel="noopener noreferrer"
-                class="text-white/55 transition hover:text-[#c9ff3d]"
-                aria-label="Instagram"
-              >
-                <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24"><path d="M7.8 2h8.4C19.4 2 22 4.6 22 7.8v8.4a5.8 5.8 0 0 1-5.8 5.8H7.8C4.6 22 2 19.4 2 16.2V7.8A5.8 5.8 0 0 1 7.8 2m-.2 2A3.6 3.6 0 0 0 4 7.6v8.8C4 18.39 5.61 20 7.6 20h8.8a3.6 3.6 0 0 0 3.6-3.6V7.6C20 5.61 18.39 4 16.4 4H7.6m9.65 1.5a1.25 1.25 0 0 1 1.25 1.25A1.25 1.25 0 0 1 17.25 8 1.25 1.25 0 0 1 16 6.75a1.25 1.25 0 0 1 1.25-1.25M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3z"/></svg>
-              </a>
-            }
-            @if (creator.tiktokUrl) {
-              <a
-                [href]="creator.tiktokUrl"
-                target="_blank"
-                rel="noopener noreferrer"
-                class="text-white/55 transition hover:text-[#c9ff3d]"
-                aria-label="TikTok"
-              >
-                <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24"><path d="M16.6 5.82s.51.5 0 0A4.278 4.278 0 0 1 15.54 3h-3.09v12.4a2.592 2.592 0 0 1-2.59 2.5c-1.42 0-2.6-1.16-2.6-2.6 0-1.72 1.66-3.01 3.37-2.48V9.66c-3.45-.46-6.47 2.22-6.47 5.64 0 3.33 2.76 5.7 5.69 5.7 3.14 0 5.69-2.55 5.69-5.7V9.01a7.35 7.35 0 0 0 4.3 1.38V7.3s-1.88.09-3.24-1.48z"/></svg>
-              </a>
-            }
-            @if (creator.facebookUrl) {
-              <a
-                [href]="creator.facebookUrl"
-                target="_blank"
-                rel="noopener noreferrer"
-                class="text-white/55 transition hover:text-[#c9ff3d]"
-                aria-label="Facebook"
-              >
-                <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24"><path d="M22 12c0-5.52-4.48-10-10-10S2 6.48 2 12c0 4.84 3.44 8.87 8 9.8V15H8v-3h2V9.5C10 7.57 11.57 6 13.5 6H16v3h-2c-.55 0-1 .45-1 1v2h3v3h-3v6.95c5.05-.5 9-4.76 9-9.95z"/></svg>
-              </a>
-            }
-            @if (creator.twitterUrl) {
-              <a
-                [href]="creator.twitterUrl"
-                target="_blank"
-                rel="noopener noreferrer"
-                class="text-white/55 transition hover:text-[#c9ff3d]"
-                aria-label="Twitter"
-              >
-                <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.727-8.915L1.254 2.25H8.08l4.253 5.622L18.244 2.25zm-1.161 17.52h1.833L7.084 4.126H5.117L17.083 19.77z"/></svg>
-              </a>
-            }
-          </div>
-        }
+        <div class="mt-5 flex items-center justify-center gap-5">
+          <a
+            [attr.href]="creator.instagramUrl || null"
+            [attr.target]="creator.instagramUrl ? '_blank' : null"
+            [attr.rel]="creator.instagramUrl ? 'noopener noreferrer' : null"
+            [attr.aria-label]="creator.instagramUrl ? 'Instagram' : null"
+            [attr.aria-disabled]="creator.instagramUrl ? null : true"
+            [class]="
+              creator.instagramUrl
+                ? 'text-[#c9ff3d] transition hover:opacity-80'
+                : 'text-white/55 pointer-events-none'
+            "
+          >
+            <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M7.8 2h8.4C19.4 2 22 4.6 22 7.8v8.4a5.8 5.8 0 0 1-5.8 5.8H7.8C4.6 22 2 19.4 2 16.2V7.8A5.8 5.8 0 0 1 7.8 2m-.2 2A3.6 3.6 0 0 0 4 7.6v8.8C4 18.39 5.61 20 7.6 20h8.8a3.6 3.6 0 0 0 3.6-3.6V7.6C20 5.61 18.39 4 16.4 4H7.6m9.65 1.5a1.25 1.25 0 0 1 1.25 1.25A1.25 1.25 0 0 1 17.25 8 1.25 1.25 0 0 1 16 6.75a1.25 1.25 0 0 1 1.25-1.25M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3z"/></svg>
+          </a>
+          <a
+            [attr.href]="creator.tiktokUrl || null"
+            [attr.target]="creator.tiktokUrl ? '_blank' : null"
+            [attr.rel]="creator.tiktokUrl ? 'noopener noreferrer' : null"
+            [attr.aria-label]="creator.tiktokUrl ? 'TikTok' : null"
+            [attr.aria-disabled]="creator.tiktokUrl ? null : true"
+            [class]="
+              creator.tiktokUrl
+                ? 'text-[#c9ff3d] transition hover:opacity-80'
+                : 'text-white/55 pointer-events-none'
+            "
+          >
+            <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M16.6 5.82s.51.5 0 0A4.278 4.278 0 0 1 15.54 3h-3.09v12.4a2.592 2.592 0 0 1-2.59 2.5c-1.42 0-2.6-1.16-2.6-2.6 0-1.72 1.66-3.01 3.37-2.48V9.66c-3.45-.46-6.47 2.22-6.47 5.64 0 3.33 2.76 5.7 5.69 5.7 3.14 0 5.69-2.55 5.69-5.7V9.01a7.35 7.35 0 0 0 4.3 1.38V7.3s-1.88.09-3.24-1.48z"/></svg>
+          </a>
+          <a
+            [attr.href]="creator.facebookUrl || null"
+            [attr.target]="creator.facebookUrl ? '_blank' : null"
+            [attr.rel]="creator.facebookUrl ? 'noopener noreferrer' : null"
+            [attr.aria-label]="creator.facebookUrl ? 'Facebook' : null"
+            [attr.aria-disabled]="creator.facebookUrl ? null : true"
+            [class]="
+              creator.facebookUrl
+                ? 'text-[#c9ff3d] transition hover:opacity-80'
+                : 'text-white/55 pointer-events-none'
+            "
+          >
+            <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M22 12c0-5.52-4.48-10-10-10S2 6.48 2 12c0 4.84 3.44 8.87 8 9.8V15H8v-3h2V9.5C10 7.57 11.57 6 13.5 6H16v3h-2c-.55 0-1 .45-1 1v2h3v3h-3v6.95c5.05-.5 9-4.76 9-9.95z"/></svg>
+          </a>
+          <a
+            [attr.href]="creator.twitterUrl || null"
+            [attr.target]="creator.twitterUrl ? '_blank' : null"
+            [attr.rel]="creator.twitterUrl ? 'noopener noreferrer' : null"
+            [attr.aria-label]="creator.twitterUrl ? 'X' : null"
+            [attr.aria-disabled]="creator.twitterUrl ? null : true"
+            [class]="
+              creator.twitterUrl
+                ? 'text-[#c9ff3d] transition hover:opacity-80'
+                : 'text-white/55 pointer-events-none'
+            "
+          >
+            <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.727-8.915L1.254 2.25H8.08l4.253 5.622L18.244 2.25zm-1.161 17.52h1.833L7.084 4.126H5.117L17.083 19.77z"/></svg>
+          </a>
+        </div>
 
         <div class="mt-4 flex items-center justify-center gap-2">
           <button
@@ -736,6 +746,12 @@
     [athleteHandle]="creatorView()?.handle || username()"
     (onClose)="closeFollow()"
     (onFollowSuccess)="onFollowSuccess($event)"
+  />
+
+  <app-share-qr-modal
+    [open]="shareModalOpen()"
+    [handle]="creatorView()?.handle || username()"
+    (close)="closeShareModal()"
   />
 
   <app-page-copy-modal

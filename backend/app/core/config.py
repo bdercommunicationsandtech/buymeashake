@@ -64,6 +64,8 @@ class Settings(BaseSettings):
     STRIPE_SECRET_KEY: str = "sk_test_placeholder"
     STRIPE_PUBLISHABLE_KEY: str = "pk_test_placeholder"
     STRIPE_WEBHOOK_SECRET: str = "whsec_placeholder"
+    # En redes con proxy/antivirus que intercepta SSL, poner false en .env
+    STRIPE_VERIFY_SSL: bool = True
     PLATFORM_FEE_PERCENTAGE: float = 0.05  # 5% comisión plataforma
     FRONTEND_URL: str = "http://localhost:4200"
     STRIPE_CONNECT_RETURN_URL: str = "http://localhost:4200/dashboard/payouts?status=return"

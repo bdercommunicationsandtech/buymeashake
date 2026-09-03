@@ -90,7 +90,14 @@ export class PaymentService {
     return this.http.post<{ portal_url: string }>(`${this.apiUrl}/billing-portal`, {});
   }
 
-  verifySession(sessionId: string): Observable<any> {
-    return this.http.post<any>(`${this.apiUrl}/verify-session?session_id=${encodeURIComponent(sessionId)}`, {});
+  verifySession(sessionId: string, txUuid?: string | null): Observable<any> {
+    const params = new URLSearchParams();
+    if (sessionId) {
+      params.set('session_id', sessionId);
+    }
+    if (txUuid) {
+      params.set('tx', txUuid);
+    }
+    return this.http.post<any>(`${this.apiUrl}/verify-session?${params.toString()}`, {});
   }
 }

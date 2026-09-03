@@ -247,7 +247,9 @@ DROP TABLE IF EXISTS transactions;
 CREATE TABLE transactions (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     transaction_uuid CHAR(36) NOT NULL UNIQUE,
-    supporter_id BIGINT UNSIGNED NOT NULL,
+    supporter_id BIGINT UNSIGNED NULL,
+    supporter_name VARCHAR(150) NULL,
+    supporter_email VARCHAR(191) NULL,
     athlete_id BIGINT UNSIGNED NOT NULL,
     goal_id BIGINT UNSIGNED NULL,
     transaction_type_code INT UNSIGNED NOT NULL DEFAULT 201, -- 201=Shake, 202=Membresía, 203=Tienda, 204=Booking
@@ -263,7 +265,7 @@ CREATE TABLE transactions (
     supporter_message VARCHAR(500) NULL,
     is_anonymous BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (supporter_id) REFERENCES users(id) ON DELETE RESTRICT,
+    FOREIGN KEY (supporter_id) REFERENCES users(id) ON DELETE SET NULL,
     FOREIGN KEY (athlete_id) REFERENCES athlete_profiles(id) ON DELETE RESTRICT,
     FOREIGN KEY (goal_id) REFERENCES goals(id) ON DELETE SET NULL,
     INDEX idx_athlete_created (athlete_id, created_at),

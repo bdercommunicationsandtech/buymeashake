@@ -1,6 +1,7 @@
 import { Component, computed, effect, inject, input, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { filter, take } from 'rxjs/operators';
 import { CheckoutService } from '../../core/checkout.service';
 import { ExploreService } from '../../core/explore.service';
 import { PaymentService } from '../../core/payment.service';
@@ -24,6 +25,7 @@ import {
 } from '../../shared/icons';
 import { PostCardComponent, PostItem } from '../../shared/post-card/post-card.component';
 import { FollowModalComponent } from '../../shared/follow-modal/follow-modal.component';
+import { ShareQrModalComponent } from '../../shared/share-qr-modal/share-qr-modal.component';
 import { EditSectionOverlayComponent } from '../../shared/edit-section-overlay/edit-section-overlay.component';
 import { PageCopyModalComponent } from '../../shared/page-editor-modals/page-copy-modal.component';
 import { AthleteProfileModalComponent } from '../../shared/page-editor-modals/athlete-profile-modal.component';
@@ -111,6 +113,7 @@ export interface CreatorView {
     IconDumbbellComponent,
     PostCardComponent,
     FollowModalComponent,
+    ShareQrModalComponent,
     EditSectionOverlayComponent,
     PageCopyModalComponent,
     AthleteProfileModalComponent,
@@ -143,6 +146,7 @@ export class Creator {
   >(null);
 
   readonly followModalOpen = signal(false);
+  readonly shareModalOpen = signal(false);
   readonly isFollowing = signal(false);
   readonly isTogglingFollow = signal(false);
 
@@ -289,19 +293,14 @@ export class Creator {
   }
 
   sharePage(): void {
-    const url = window.location.href;
-    const name = this.creatorView()?.name || this.username();
-    if (navigator.share) {
-      navigator.share({
-        title: `Apoya a ${name} en Buy Me a Shake`,
-        text: `¡Invítale un Shake a ${name} para apoyar su carrera deportiva!`,
-        url,
-      }).catch(() => {});
-    } else if (navigator.clipboard) {
-      navigator.clipboard.writeText(url).then(() => {
-        alert('¡Enlace copiado al portapapeles!');
-      });
-    }
+    const handle = this.creatorView()?.handle || this.username();
+    const url = `https://buymeashake.fit/${handle}`;
+    navigator.clipboard?.writeText(url).catch(() => {});
+    this.shareModalOpen.set(true);
+  }
+
+  closeShareModal(): void {
+    this.shareModalOpen.set(false);
   }
 
   constructor() {
@@ -313,32 +312,74 @@ export class Creator {
     });
 
     // Si viene de regreso de Stripe Checkout exitoso, verificar sesión y recargar datos frescos de la BD
-    this.route.queryParams.subscribe((params) => {
-      console.log('[Creator Route Params]', params);
-      const isSuccess = params['payment'] === 'success' || params['membership'] === 'success';
-      const sessionId = params['session_id'];
-      const handle = this.username();
+    this.route.queryParams
+      .pipe(
+        filter((params) => params['payment'] === 'success' || params['membership'] === 'success'),
+        take(1),
+      )
+      .subscribe((params) => {
+        console.log('[Creator Route Params]', params);
+        const sessionId = params['session_id'] || '';
+        const txUuid = params['tx'] || '';
+        const handle = (this.username() || '').replace(/^@+/, '');
 
-      if (isSuccess && sessionId && sessionId.startsWith('cs_')) {
-        console.log('[Creator] Verificando sesión con backend:', sessionId);
-        this.paymentService.verifySession(sessionId).subscribe({
+        if (!sessionId && !txUuid) {
+          if (handle) this.loadCreator(handle);
+          return;
+        }
+
+        console.log('[Creator] Verificando sesión con backend:', sessionId, 'tx=', txUuid);
+        this.paymentService.verifySession(sessionId, txUuid).subscribe({
           next: (res) => {
             console.log('[Creator] Sesión verificada con éxito:', res);
+            if (res?.supporter_item || res?.new_goal_raised != null) {
+              this.checkout.markPaid(
+                res.supporter_item ?? null,
+                res.new_goal_raised ?? null,
+                res.thank_you_message ?? null,
+              );
+            }
             if (handle) {
               this.loadCreator(handle);
             }
+            this.router.navigate([], {
+              relativeTo: this.route,
+              queryParams: {},
+              replaceUrl: true,
+            });
           },
           error: (err) => {
             console.error('[Creator] Error verificando sesión:', err);
-            if (handle) {
+            // Reintento solo con tx (por si session_id falló en Stripe/SSL)
+            if (txUuid) {
+              this.paymentService.verifySession('', txUuid).subscribe({
+                next: (res) => {
+                  console.log('[Creator] Reintento tx OK:', res);
+                  if (res?.supporter_item || res?.new_goal_raised != null) {
+                    this.checkout.markPaid(
+                      res.supporter_item ?? null,
+                      res.new_goal_raised ?? null,
+                      res.thank_you_message ?? null,
+                    );
+                  }
+                  if (handle) this.loadCreator(handle);
+                  this.router.navigate([], {
+                    relativeTo: this.route,
+                    queryParams: {},
+                    replaceUrl: true,
+                  });
+                },
+                error: (err2) => {
+                  console.error('[Creator] Reintento tx falló:', err2);
+                  if (handle) this.loadCreator(handle);
+                },
+              });
+            } else if (handle) {
               this.loadCreator(handle);
             }
           },
         });
-      } else if (isSuccess && handle) {
-        setTimeout(() => this.loadCreator(handle), 500);
-      }
-    });
+      });
 
     // Escucha en tiempo real si el supporter completó una donación
     effect(() => {

@@ -22,6 +22,33 @@ logger = logging.getLogger(__name__)
 
 # Configurar API Key global de Stripe
 stripe.api_key = settings.STRIPE_SECRET_KEY
+if not settings.STRIPE_VERIFY_SSL:
+    # Workaround para entornos locales/corporativos con inspección SSL (CERT_VERIFY_FAILED)
+    stripe.default_http_client = stripe.new_default_http_client(verify_ssl_certs=False)
+    logger.warning("Stripe SSL verification DISABLED (STRIPE_VERIFY_SSL=false)")
+
+
+def _stripe_resource_id(value: Any) -> str | None:
+    """Normaliza IDs de Stripe (string, dict expandido u objeto SDK) a un id string."""
+    if value is None:
+        return None
+    if isinstance(value, str):
+        return value
+    if isinstance(value, dict):
+        rid = value.get("id")
+        return rid if isinstance(rid, str) else None
+    rid = getattr(value, "id", None)
+    return rid if isinstance(rid, str) else None
+
+
+def _stripe_obj_to_dict(obj: Any) -> dict[str, Any]:
+    if isinstance(obj, dict):
+        return obj
+    if hasattr(obj, "to_dict"):
+        return obj.to_dict()
+    if hasattr(obj, "_to_dict_recursive"):
+        return obj._to_dict_recursive()
+    return dict(obj)
 
 
 class StripeService:
@@ -89,8 +116,8 @@ class StripeService:
         tx_uuid = secrets.token_hex(16)
         customer_id = await self._get_or_create_customer(supporter_email, supporter_name, supporter_user)
 
-        success_url = f"{settings.FRONTEND_URL}/@{athlete.handle}?payment=success&tx={tx_uuid}&session_id={{CHECKOUT_SESSION_ID}}"
-        cancel_url = f"{settings.FRONTEND_URL}/@{athlete.handle}?payment=cancelled"
+        success_url = f"{settings.FRONTEND_URL}/{athlete.handle}?payment=success&tx={tx_uuid}&session_id={{CHECKOUT_SESSION_ID}}"
+        cancel_url = f"{settings.FRONTEND_URL}/{athlete.handle}?payment=cancelled"
 
         # Si estamos en modo placeholder (aún sin keys válidas), devolvemos URL mock
         if not settings.STRIPE_SECRET_KEY or settings.STRIPE_SECRET_KEY.startswith("sk_test_placeholder"):
@@ -99,6 +126,20 @@ class StripeService:
                 "session_id": f"cs_mock_{tx_uuid}",
                 "transaction_uuid": tx_uuid,
             }
+
+        shared_metadata = {
+            "transaction_uuid": tx_uuid,
+            "athlete_id": str(athlete.id),
+            "athlete_handle": athlete.handle,
+            "goal_id": goal_id,
+            "shakes_count": str(shakes_count),
+            "supporter_name": supporter_name or "",
+            "supporter_email": supporter_email or "",
+            "supporter_message": (supporter_message or "")[:240],
+            "is_anonymous": "true" if is_anonymous else "false",
+            "supporter_user_id": str(supporter_user.id) if supporter_user else "",
+            "kind": "shake_donation",
+        }
 
         session_params: dict[str, Any] = {
             "payment_method_types": ["card"],
@@ -119,18 +160,10 @@ class StripeService:
             "success_url": success_url,
             "cancel_url": cancel_url,
             "client_reference_id": tx_uuid,
-            "metadata": {
-                "transaction_uuid": tx_uuid,
-                "athlete_id": str(athlete.id),
-                "athlete_handle": athlete.handle,
-                "goal_id": goal_id,
-                "shakes_count": str(shakes_count),
-                "supporter_name": supporter_name or "",
-                "supporter_email": supporter_email or "",
-                "supporter_message": (supporter_message or "")[:240],
-                "is_anonymous": "true" if is_anonymous else "false",
-                "supporter_user_id": str(supporter_user.id) if supporter_user else "",
-                "kind": "shake_donation",
+            "metadata": shared_metadata,
+            # Metadata también en PaymentIntent: webhooks payment_intent.* la necesitan
+            "payment_intent_data": {
+                "metadata": shared_metadata,
             },
         }
 
@@ -138,11 +171,9 @@ class StripeService:
         if athlete.stripe_connect_account_id and athlete.payouts_enabled:
             total_cents = unit_amount_cents * shakes_count
             platform_fee_cents = int(Decimal(total_cents) * Decimal(str(settings.PLATFORM_FEE_PERCENTAGE)))
-            session_params["payment_intent_data"] = {
-                "application_fee_amount": platform_fee_cents,
-                "transfer_data": {
-                    "destination": athlete.stripe_connect_account_id,
-                },
+            session_params["payment_intent_data"]["application_fee_amount"] = platform_fee_cents
+            session_params["payment_intent_data"]["transfer_data"] = {
+                "destination": athlete.stripe_connect_account_id,
             }
 
         if customer_id:
@@ -152,10 +183,259 @@ class StripeService:
 
         checkout_session = stripe.checkout.Session.create(**session_params)
 
+        # Registrar transacción pendiente: si verify/webhook fallan por red/SSL,
+        # aún podemos confirmarla con el tx_uuid del success_url.
+        await self._create_pending_shake_transaction(
+            tx_uuid=tx_uuid,
+            athlete=athlete,
+            active_goal=active_goal,
+            shakes_count=shakes_count,
+            gross_amount=gross_amount,
+            supporter_name=supporter_name,
+            supporter_email=supporter_email,
+            supporter_message=supporter_message,
+            is_anonymous=is_anonymous,
+            supporter_user_id=supporter_user.id if supporter_user else None,
+            checkout_session_id=checkout_session.id,
+        )
+
         return {
             "checkout_url": checkout_session.url or "",
             "session_id": checkout_session.id,
             "transaction_uuid": tx_uuid,
+        }
+
+    async def _create_pending_shake_transaction(
+        self,
+        *,
+        tx_uuid: str,
+        athlete: AthleteProfile,
+        active_goal: Goal | None,
+        shakes_count: int,
+        gross_amount: Decimal,
+        supporter_name: str | None,
+        supporter_email: str | None,
+        supporter_message: str | None,
+        is_anonymous: bool,
+        supporter_user_id: int | None,
+        checkout_session_id: str | None = None,
+    ) -> Transaction:
+        platform_fee = (gross_amount * Decimal(str(settings.PLATFORM_FEE_PERCENTAGE))).quantize(Decimal("0.01"))
+        stripe_fee = Decimal("0.30") + (gross_amount * Decimal("0.029")).quantize(Decimal("0.01"))
+        net_athlete = gross_amount - platform_fee - stripe_fee
+
+        tx = Transaction(
+            transaction_uuid=tx_uuid,
+            supporter_id=supporter_user_id,
+            supporter_name=supporter_name.strip() if supporter_name else None,
+            supporter_email=supporter_email.strip() if supporter_email else None,
+            athlete_id=athlete.id,
+            goal_id=active_goal.id if active_goal else None,
+            transaction_type_code=201,
+            shakes_count=shakes_count,
+            gross_amount=gross_amount,
+            currency="USD",
+            platform_fee=platform_fee,
+            stripe_fee=stripe_fee,
+            net_athlete_amount=net_athlete,
+            # Mientras está pendiente guardamos el Checkout Session id (cs_...)
+            # Al confirmar se reemplaza por el PaymentIntent (pi_...).
+            stripe_payment_intent_id=checkout_session_id,
+            status_code=301,  # Pending
+            supporter_message=supporter_message,
+            is_anonymous=is_anonymous,
+        )
+        self.session.add(tx)
+        await self.session.flush()
+        return tx
+
+    async def reconcile_pending_shake_transactions(
+        self,
+        *,
+        athlete_id: int | None = None,
+        limit: int = 20,
+    ) -> list[dict[str, Any]]:
+        """Busca txs 301 y las confirma si Stripe reporta la Checkout Session como paid."""
+        if not settings.STRIPE_SECRET_KEY or settings.STRIPE_SECRET_KEY.startswith("sk_test_placeholder"):
+            return []
+
+        stmt = (
+            select(Transaction)
+            .where(
+                Transaction.status_code == 301,
+                Transaction.transaction_type_code == 201,
+            )
+            .order_by(Transaction.id.asc())
+            .limit(limit)
+        )
+        if athlete_id is not None:
+            stmt = stmt.where(Transaction.athlete_id == athlete_id)
+
+        result = await self.session.execute(stmt)
+        pending = list(result.scalars().all())
+        if not pending:
+            return []
+
+        # Índice de client_reference_id -> session para txs sin cs_ guardado
+        sessions_by_ref: dict[str, Any] = {}
+        try:
+            listed = stripe.checkout.Session.list(limit=50)
+            for s in listed.data:
+                ref = getattr(s, "client_reference_id", None) or (s.get("client_reference_id") if isinstance(s, dict) else None)
+                if ref:
+                    sessions_by_ref[str(ref)] = s
+        except Exception as e:
+            logger.error("No se pudo listar Checkout Sessions para reconcile: %s", e)
+
+        outcomes: list[dict[str, Any]] = []
+        for tx in pending:
+            session_id = None
+            if tx.stripe_payment_intent_id and str(tx.stripe_payment_intent_id).startswith("cs_"):
+                session_id = str(tx.stripe_payment_intent_id)
+            else:
+                matched = sessions_by_ref.get(tx.transaction_uuid)
+                if matched is not None:
+                    session_id = _stripe_resource_id(matched) or getattr(matched, "id", None)
+
+            if not session_id:
+                outcomes.append({"transaction_uuid": tx.transaction_uuid, "status": "no_stripe_session"})
+                continue
+
+            try:
+                checkout_session = stripe.checkout.Session.retrieve(session_id)
+            except Exception as e:
+                outcomes.append({"transaction_uuid": tx.transaction_uuid, "status": "stripe_error", "error": str(e)})
+                continue
+
+            if checkout_session.payment_status not in ("paid", "no_payment_required"):
+                outcomes.append({
+                    "transaction_uuid": tx.transaction_uuid,
+                    "status": "not_paid",
+                    "payment_status": checkout_session.payment_status,
+                })
+                continue
+
+            pi = _stripe_resource_id(checkout_session.payment_intent)
+            fulfilled = await self.fulfill_pending_shake(
+                tx.transaction_uuid,
+                payment_intent_id=pi,
+                source="reconcile_stripe",
+            )
+            outcomes.append(fulfilled)
+
+        return outcomes
+
+    async def fulfill_pending_shake(
+        self,
+        tx_uuid: str,
+        *,
+        payment_intent_id: str | None = None,
+        source: str = "client_return",
+    ) -> dict[str, Any]:
+        """Confirma una transacción pendiente (301→302) y suma el monto a la meta."""
+        existing_stmt = select(Transaction).where(Transaction.transaction_uuid == tx_uuid)
+        res = await self.session.execute(existing_stmt)
+        tx = res.scalar_one_or_none()
+
+        if not tx:
+            return {"handled": False, "error": "transaction_not_found", "transaction_uuid": tx_uuid}
+
+        if tx.status_code == 302:
+            new_goal_raised = None
+            if tx.goal_id:
+                goal_res = await self.session.execute(select(Goal).where(Goal.id == tx.goal_id))
+                existing_goal = goal_res.scalar_one_or_none()
+                if existing_goal:
+                    new_goal_raised = float(existing_goal.raised_amount or 0)
+            return {
+                "handled": True,
+                "status": "already_processed",
+                "transaction_uuid": tx_uuid,
+                "new_goal_raised": new_goal_raised,
+                "supporter_item": self._supporter_item_payload(
+                    tx_id=tx.id,
+                    supporter_name=tx.supporter_name,
+                    shakes_count=tx.shakes_count,
+                    gross_amount=tx.gross_amount,
+                    supporter_message=tx.supporter_message,
+                    is_anonymous=bool(tx.is_anonymous),
+                ),
+            }
+
+        active_goal = None
+        if tx.goal_id:
+            goal_res = await self.session.execute(select(Goal).where(Goal.id == tx.goal_id))
+            active_goal = goal_res.scalar_one_or_none()
+        if not active_goal:
+            athlete_stmt = (
+                select(AthleteProfile)
+                .options(selectinload(AthleteProfile.goals), selectinload(AthleteProfile.user))
+                .where(AthleteProfile.id == tx.athlete_id)
+            )
+            athlete_res = await self.session.execute(athlete_stmt)
+            athlete = athlete_res.scalar_one_or_none()
+            if athlete:
+                active_goal = next((g for g in athlete.goals if g.is_active), None)
+
+        if active_goal:
+            active_goal.raised_amount = (active_goal.raised_amount or Decimal("0.00")) + tx.gross_amount
+            if active_goal.target_amount and active_goal.raised_amount >= active_goal.target_amount:
+                if not active_goal.achieved_at:
+                    from datetime import datetime, timezone
+                    active_goal.achieved_at = datetime.now(timezone.utc)
+            tx.goal_id = active_goal.id
+
+        tx.status_code = 302
+        if payment_intent_id:
+            tx.stripe_payment_intent_id = payment_intent_id
+        elif tx.stripe_payment_intent_id and str(tx.stripe_payment_intent_id).startswith("cs_"):
+            # Ya no necesitamos el session id provisional
+            tx.stripe_payment_intent_id = None
+
+        athlete_stmt = (
+            select(AthleteProfile)
+            .options(selectinload(AthleteProfile.user))
+            .where(AthleteProfile.id == tx.athlete_id)
+        )
+        athlete_res = await self.session.execute(athlete_stmt)
+        athlete = athlete_res.scalar_one_or_none()
+
+        supporter_display = "Alguien anónimo" if tx.is_anonymous else (tx.supporter_name or "Un Supporter")
+        if athlete and athlete.user_id:
+            notif = Notification(
+                user_id=athlete.user_id,
+                title=f"¡Recibiste {tx.shakes_count} Shakes!",
+                message=f"{supporter_display} te apoyó con {tx.shakes_count} Shakes (${tx.gross_amount} USD).",
+                type_code=401,
+                action_url="/dashboard/supporters",
+            )
+            self.session.add(notif)
+
+        await self.session.flush()
+        logger.info(
+            "Transaccion %s confirmada via %s (goal=%s raised=%s)",
+            tx_uuid,
+            source,
+            active_goal.id if active_goal else None,
+            float(active_goal.raised_amount) if active_goal else None,
+        )
+
+        return {
+            "handled": True,
+            "transaction_uuid": tx_uuid,
+            "goal_updated": active_goal.id if active_goal else None,
+            "new_goal_raised": float(active_goal.raised_amount) if active_goal else None,
+            "thank_you_message": athlete.thank_you_message if athlete else None,
+            "supporter_item": self._supporter_item_payload(
+                tx_id=tx.id,
+                supporter_name=tx.supporter_name,
+                shakes_count=tx.shakes_count,
+                gross_amount=tx.gross_amount,
+                supporter_message=tx.supporter_message,
+                is_anonymous=bool(tx.is_anonymous),
+            ),
+            "status": "succeeded",
+            "source": source,
         }
 
     # ==========================================================================
@@ -215,8 +495,8 @@ class StripeService:
 
         customer_id = await self._get_or_create_customer(email, name, supporter_user)
 
-        success_url = f"{settings.FRONTEND_URL}/@{athlete.handle}?membership=success&tx={tx_uuid}&session_id={{CHECKOUT_SESSION_ID}}"
-        cancel_url = f"{settings.FRONTEND_URL}/@{athlete.handle}?membership=cancelled"
+        success_url = f"{settings.FRONTEND_URL}/{athlete.handle}?membership=success&tx={tx_uuid}&session_id={{CHECKOUT_SESSION_ID}}"
+        cancel_url = f"{settings.FRONTEND_URL}/{athlete.handle}?membership=cancelled"
 
         if not settings.STRIPE_SECRET_KEY or settings.STRIPE_SECRET_KEY.startswith("sk_test_placeholder"):
             return {
@@ -464,45 +744,107 @@ class StripeService:
     # 3.5 VERIFICACIÓN DIRECTA DE SESIÓN (CALLBACK DE RETORNO EN LOCAL / CLIENTE)
     # ==========================================================================
 
-    async def verify_and_process_session(self, session_id: str) -> dict[str, Any]:
-        """Consulta directamente a la API de Stripe para validar el pago y actualizar la meta en BD."""
-        if not session_id or session_id.startswith("cs_mock_") or session_id.startswith("cs_sub_mock_"):
-            return {"handled": True, "status": "mock_session"}
+    async def verify_and_process_session(
+        self,
+        session_id: str,
+        tx_uuid: str | None = None,
+    ) -> dict[str, Any]:
+        """Confirma el pago al volver de Stripe y suma al goal.
 
-        if not settings.STRIPE_SECRET_KEY or settings.STRIPE_SECRET_KEY.startswith("sk_test_placeholder"):
-            return {"handled": True, "status": "placeholder_key"}
+        Si el cliente manda `tx` (success_url), se confirma la pendiente salvo que
+        Stripe diga explícitamente que NO está pagada.
+        """
+        is_mock = bool(
+            session_id
+            and (session_id.startswith("cs_mock_") or session_id.startswith("cs_sub_mock_"))
+        )
+        is_placeholder = (
+            not settings.STRIPE_SECRET_KEY
+            or settings.STRIPE_SECRET_KEY.startswith("sk_test_placeholder")
+        )
 
-        try:
-            checkout_session = stripe.checkout.Session.retrieve(
-                session_id,
-                expand=["line_items", "payment_intent", "subscription"],
+        if is_mock or is_placeholder:
+            if tx_uuid:
+                return await self.fulfill_pending_shake(
+                    tx_uuid,
+                    source="mock_session" if is_mock else "placeholder_key",
+                )
+            return {"handled": True, "status": "mock_session" if is_mock else "placeholder_key"}
+
+        payment_intent_id: str | None = None
+        session_dict: dict[str, Any] | None = None
+        checkout_mode: str | None = None
+        stripe_error: str | None = None
+
+        if session_id:
+            try:
+                checkout_session = stripe.checkout.Session.retrieve(session_id)
+                checkout_mode = checkout_session.mode
+                session_dict = _stripe_obj_to_dict(checkout_session)
+                payment_intent_id = _stripe_resource_id(checkout_session.payment_intent)
+
+                if checkout_session.payment_status not in ("paid", "no_payment_required"):
+                    logger.info(
+                        "Sesión %s con estado de pago: %s",
+                        session_id,
+                        checkout_session.payment_status,
+                    )
+                    return {
+                        "handled": False,
+                        "reason": "not_paid",
+                        "payment_status": checkout_session.payment_status,
+                    }
+            except Exception as e:
+                stripe_error = str(e)
+                await self.session.rollback()
+                logger.error(
+                    "Error al verificar sesión de Stripe %s: %s",
+                    session_id,
+                    stripe_error,
+                    exc_info=True,
+                )
+                # Si no hay tx local, no podemos confirmar a ciegas
+                if not tx_uuid:
+                    return {"handled": False, "error": stripe_error}
+
+        resolved_tx = tx_uuid
+        if not resolved_tx and session_dict:
+            metadata = session_dict.get("metadata") or {}
+            if not isinstance(metadata, dict):
+                metadata = _stripe_obj_to_dict(metadata)
+            resolved_tx = metadata.get("transaction_uuid") or session_dict.get("client_reference_id")
+
+        if checkout_mode == "subscription" and session_dict and not stripe_error:
+            return await self._process_subscription_completed(session_dict)
+
+        # Camino principal: confirmar pendiente creada al abrir Checkout
+        if resolved_tx:
+            result = await self.fulfill_pending_shake(
+                resolved_tx,
+                payment_intent_id=payment_intent_id,
+                source="client_return_tx" if tx_uuid else "stripe_metadata_tx",
             )
+            if result.get("handled"):
+                logger.info("Resultado verify_and_process_session (%s): %s", session_id, result)
+                return result
 
-            # Validar que esté pagada
-            if checkout_session.payment_status not in ("paid", "no_payment_required"):
-                logger.info("Sesión %s con estado de pago: %s", session_id, checkout_session.payment_status)
-                return {"handled": False, "reason": "not_paid", "payment_status": checkout_session.payment_status}
-
-            # Convertir objeto Stripe a diccionario recursivo seguro
-            if hasattr(checkout_session, "to_dict"):
-                session_dict = checkout_session.to_dict()
-            elif hasattr(checkout_session, "_to_dict_recursive"):
-                session_dict = checkout_session._to_dict_recursive()
-            else:
-                import json
-                session_dict = json.loads(str(checkout_session))
-
-            if checkout_session.mode == "subscription":
-                result = await self._process_subscription_completed(session_dict)
-            else:
-                result = await self._process_successful_payment(session_dict, "checkout.session.completed")
-
-            logger.info("Resultado de verify_and_process_session (%s): %s", session_id, result)
+            # No había pendiente: crear desde metadata (legacy)
+            if session_dict and not stripe_error:
+                created = await self._process_successful_payment(
+                    session_dict,
+                    "checkout.session.completed",
+                )
+                logger.info("Resultado verify (legacy create) (%s): %s", session_id, created)
+                return created
             return result
 
-        except Exception as e:
-            logger.error("Error al verificar sesión de Stripe %s: %s", session_id, str(e), exc_info=True)
-            return {"handled": False, "error": str(e)}
+        if session_dict and not stripe_error:
+            return await self._process_successful_payment(session_dict, "checkout.session.completed")
+
+        return {
+            "handled": False,
+            "error": stripe_error or "missing_session_and_tx",
+        }
 
     # ==========================================================================
     # 4. WEBHOOK IDEMPOTENTE: CONFIRMACIÓN Y ACTUALIZACIÓN DE METAS (GOALS)
@@ -530,23 +872,56 @@ class StripeService:
 
         return {"handled": True, "event_type": event_type, "status": "ignored"}
 
+    def _supporter_item_payload(
+        self,
+        *,
+        tx_id: int | None,
+        supporter_name: str | None,
+        shakes_count: int,
+        gross_amount: Decimal,
+        supporter_message: str | None,
+        is_anonymous: bool,
+    ) -> dict[str, Any]:
+        display = "Alguien anónimo" if is_anonymous else (supporter_name or "Un Supporter")
+        return {
+            "id": tx_id or 0,
+            "supporter_name": display,
+            "shakes_count": shakes_count,
+            "gross_amount": float(gross_amount),
+            "currency": "USD",
+            "supporter_message": supporter_message,
+            "is_anonymous": is_anonymous,
+            "created_at": "",
+        }
+
     async def _process_successful_payment(self, obj: dict[str, Any], event_type: str) -> dict[str, Any]:
         """Crea la transacción, suma a la Meta del Atleta y envía emails/notificaciones."""
-        metadata = obj.get("metadata", {})
+        metadata = obj.get("metadata") or {}
+        if not isinstance(metadata, dict):
+            metadata = _stripe_obj_to_dict(metadata)
+
         tx_uuid = metadata.get("transaction_uuid") or obj.get("client_reference_id")
 
         if not tx_uuid:
             logger.info("Evento %s sin transaction_uuid en metadata. Se ignora.", event_type)
             return {"handled": True, "reason": "no_tx_uuid"}
 
-        # Verificar si ya fue procesada (Idempotencia)
+        # Verificar si ya existe (pendiente o completada)
         existing_stmt = select(Transaction).where(Transaction.transaction_uuid == tx_uuid)
         res = await self.session.execute(existing_stmt)
-        if res.scalar_one_or_none():
-            logger.info("Transacción %s ya procesada previamente (idempotente).", tx_uuid)
-            return {"handled": True, "status": "already_processed"}
+        existing_tx = res.scalar_one_or_none()
+        if existing_tx:
+            if event_type == "checkout.session.completed":
+                payment_intent_id = _stripe_resource_id(obj.get("payment_intent"))
+            else:
+                payment_intent_id = _stripe_resource_id(obj.get("id"))
+            return await self.fulfill_pending_shake(
+                tx_uuid,
+                payment_intent_id=payment_intent_id,
+                source=event_type,
+            )
 
-        athlete_id = int(metadata.get("athlete_id", 0))
+        athlete_id = int(metadata.get("athlete_id") or 0)
         athlete_stmt = (
             select(AthleteProfile)
             .options(selectinload(AthleteProfile.goals), selectinload(AthleteProfile.user))
@@ -558,9 +933,17 @@ class StripeService:
             logger.warning("Atleta con ID %s no encontrado para transacción %s.", athlete_id, tx_uuid)
             return {"handled": False, "error": "athlete_not_found"}
 
-        shakes_count = int(metadata.get("shakes_count", 1))
+        shakes_count = int(metadata.get("shakes_count") or 1)
         supporter_name = metadata.get("supporter_name") or None
-        supporter_email = metadata.get("supporter_email") or obj.get("customer_details", {}).get("email") or None
+        customer_details = obj.get("customer_details") or {}
+        if not isinstance(customer_details, dict):
+            customer_details = _stripe_obj_to_dict(customer_details)
+        supporter_email = (
+            metadata.get("supporter_email")
+            or customer_details.get("email")
+            or obj.get("customer_email")
+            or None
+        )
         supporter_message = metadata.get("supporter_message") or None
         is_anonymous = metadata.get("is_anonymous") == "true"
         supporter_user_id = int(metadata["supporter_user_id"]) if metadata.get("supporter_user_id") else None
@@ -575,9 +958,9 @@ class StripeService:
         # ----------------------------------------------------------------------
         # ACTUALIZACIÓN EN TIEMPO REAL DE LA META (GOAL)
         # ----------------------------------------------------------------------
-        goal_id_raw = metadata.get("goal_id")
+        goal_id_raw = metadata.get("goal_id") or ""
         active_goal = None
-        if goal_id_raw and goal_id_raw.isdigit():
+        if str(goal_id_raw).isdigit():
             goal_stmt = select(Goal).where(Goal.id == int(goal_id_raw))
             goal_res = await self.session.execute(goal_stmt)
             active_goal = goal_res.scalar_one_or_none()
@@ -594,13 +977,16 @@ class StripeService:
                     from datetime import datetime, timezone
                     active_goal.achieved_at = datetime.now(timezone.utc)
 
-        payment_intent_id = obj.get("payment_intent") if event_type == "checkout.session.completed" else obj.get("id")
+        if event_type == "checkout.session.completed":
+            payment_intent_id = _stripe_resource_id(obj.get("payment_intent"))
+        else:
+            payment_intent_id = _stripe_resource_id(obj.get("id"))
 
         tx = Transaction(
             transaction_uuid=tx_uuid,
             supporter_id=supporter_user_id,
             supporter_name=supporter_name.strip() if supporter_name else None,
-            supporter_email=supporter_email.strip() if supporter_email else None,
+            supporter_email=supporter_email.strip() if isinstance(supporter_email, str) and supporter_email else None,
             athlete_id=athlete.id,
             goal_id=active_goal.id if active_goal else None,
             transaction_type_code=201,  # Shake
@@ -622,7 +1008,7 @@ class StripeService:
         if athlete.user_id:
             notif = Notification(
                 user_id=athlete.user_id,
-                title=f"¡Recibiste {shakes_count} Shakes! 🥤",
+                title=f"¡Recibiste {shakes_count} Shakes!",
                 message=f"{supporter_display} te apoyó con {shakes_count} Shakes (${gross_amount} USD).",
                 type_code=401,
                 action_url="/dashboard/supporters",
@@ -652,6 +1038,16 @@ class StripeService:
             "handled": True,
             "transaction_uuid": tx_uuid,
             "goal_updated": active_goal.id if active_goal else None,
+            "new_goal_raised": float(active_goal.raised_amount) if active_goal else None,
+            "thank_you_message": athlete.thank_you_message,
+            "supporter_item": self._supporter_item_payload(
+                tx_id=tx.id,
+                supporter_name=supporter_name,
+                shakes_count=shakes_count,
+                gross_amount=gross_amount,
+                supporter_message=supporter_message,
+                is_anonymous=is_anonymous,
+            ),
             "status": "succeeded",
         }
 
@@ -672,9 +1068,11 @@ class StripeService:
 
     async def _process_subscription_completed(self, session_obj: dict[str, Any]) -> dict[str, Any]:
         """Procesa una sesión de Stripe Checkout completada en modo subscription."""
-        metadata = session_obj.get("metadata", {})
+        metadata = session_obj.get("metadata") or {}
+        if not isinstance(metadata, dict):
+            metadata = _stripe_obj_to_dict(metadata)
         tx_uuid = metadata.get("transaction_uuid") or session_obj.get("client_reference_id")
-        stripe_sub_id = session_obj.get("subscription")
+        stripe_sub_id = _stripe_resource_id(session_obj.get("subscription"))
 
         if not stripe_sub_id:
             logger.warning("checkout.session.completed en modo subscription sin subscription ID.")

@@ -129,7 +129,7 @@ import { EditorSavePatch } from './editor-save-patch';
             <div class="pt-2 border-t border-gray-100 dark:border-white/10 space-y-4">
               <div>
                 <h4 class="text-sm font-black text-gray-900 dark:text-white">Redes sociales</h4>
-                <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Se muestran como iconos en tu página pública. Déjalas vacías si no quieres mostrarlas.</p>
+                <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Los íconos siempre se muestran; los que tengan link aparecerán resaltados.</p>
               </div>
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>

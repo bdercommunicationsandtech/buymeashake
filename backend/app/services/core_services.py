@@ -410,6 +410,20 @@ class AthleteService:
         if not profile:
             raise EntityNotFoundError("Atleta", handle)
 
+        # Confirmar pagos Stripe que quedaron en 301 (si el return del browser falló)
+        try:
+            from app.services.stripe_service import StripeService
+            stripe_svc = StripeService(self.session)
+            outcomes = await stripe_svc.reconcile_pending_shake_transactions(athlete_id=profile.id)
+            if outcomes:
+                await self.session.commit()
+                # Recargar perfil/goals tras posibles updates a raised_amount
+                profile = await self.athlete_repo.get_by_handle(handle)
+                if not profile:
+                    raise EntityNotFoundError("Atleta", handle)
+        except Exception as e:
+            print(f"[WARN] reconcile_pending_shake_transactions: {e}")
+
         user = profile.user
         active_goal = next((g for g in profile.goals if g.is_active), None)
 

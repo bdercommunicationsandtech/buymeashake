@@ -52,6 +52,7 @@ class AthleteRepository:
         self.session = session
 
     async def get_by_handle(self, handle: str) -> AthleteProfile | None:
+        clean_handle = handle.lstrip("@").strip()
         query = (
             select(AthleteProfile)
             .options(
@@ -61,7 +62,11 @@ class AthleteRepository:
                 selectinload(AthleteProfile.tiers).selectinload(MembershipTier.benefits),
                 selectinload(AthleteProfile.products),
             )
-            .where(AthleteProfile.handle == handle)
+            .where(
+                (AthleteProfile.handle == clean_handle)
+                | (AthleteProfile.handle == handle)
+                | (func.lower(AthleteProfile.handle) == func.lower(clean_handle))
+            )
         )
         result = await self.session.execute(query)
         return result.scalar_one_or_none()
@@ -317,6 +322,15 @@ class MembershipRepository:
         )
         result = await self.session.execute(query)
         return list(result.scalars().all())
+
+    async def get_tier_by_id(self, tier_id: int) -> MembershipTier | None:
+        query = (
+            select(MembershipTier)
+            .options(selectinload(MembershipTier.athlete))
+            .where(MembershipTier.id == tier_id, MembershipTier.is_active.is_(True))
+        )
+        result = await self.session.execute(query)
+        return result.scalar_one_or_none()
 
     async def create_tier(self, tier: MembershipTier, benefits_text: list[str]) -> MembershipTier:
         self.session.add(tier)

@@ -1,6 +1,6 @@
 import { Component, computed, effect, inject, input, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { CheckoutService } from '../../core/checkout.service';
 import { ExploreService } from '../../core/explore.service';
 import { PaymentService } from '../../core/payment.service';
@@ -34,6 +34,7 @@ export interface CreatorProduct {
 }
 
 export interface CreatorTier {
+  id: number;
   name: string;
   price: number;
   description: string;
@@ -102,6 +103,7 @@ export interface CreatorView {
 })
 export class Creator {
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
   private readonly checkout = inject(CheckoutService);
   private readonly exploreService = inject(ExploreService);
   private readonly paymentService = inject(PaymentService);
@@ -257,6 +259,34 @@ export class Creator {
       }
     });
 
+    // Si viene de regreso de Stripe Checkout exitoso, verificar sesión y recargar datos frescos de la BD
+    this.route.queryParams.subscribe((params) => {
+      console.log('[Creator Route Params]', params);
+      const isSuccess = params['payment'] === 'success' || params['membership'] === 'success';
+      const sessionId = params['session_id'];
+      const handle = this.username();
+
+      if (isSuccess && sessionId && sessionId.startsWith('cs_')) {
+        console.log('[Creator] Verificando sesión con backend:', sessionId);
+        this.paymentService.verifySession(sessionId).subscribe({
+          next: (res) => {
+            console.log('[Creator] Sesión verificada con éxito:', res);
+            if (handle) {
+              this.loadCreator(handle);
+            }
+          },
+          error: (err) => {
+            console.error('[Creator] Error verificando sesión:', err);
+            if (handle) {
+              this.loadCreator(handle);
+            }
+          },
+        });
+      } else if (isSuccess && handle) {
+        setTimeout(() => this.loadCreator(handle), 500);
+      }
+    });
+
     // Escucha en tiempo real si el supporter completó una donación
     effect(() => {
       const last = this.checkout.lastDonation();
@@ -324,6 +354,7 @@ export class Creator {
         if (profile.tiers && profile.tiers.length > 0) {
           this.tiers.set(
             profile.tiers.map((t) => ({
+              id: t.id,
               name: t.name,
               price: Number(t.monthly_price),
               description: t.description || '',
@@ -590,17 +621,44 @@ export class Creator {
     const c = this.creatorView();
     if (!c) return;
 
-    this.checkout.start({
-      type: 'membership',
-      title: tier.name,
-      creatorName: c.name,
-      creatorHandle: c.handle,
-      shakes: 1,
-      unitPrice: tier.price,
-      currency: this.currency(),
-      message: `Suscripción mensual a: ${tier.name}`,
-      activity: this.activity().id,
-    });
+    this.paymentService
+      .createSubscriptionCheckoutSession({
+        tier_id: tier.id,
+      })
+      .subscribe({
+        next: (sessionRes) => {
+          if (sessionRes.checkout_url && sessionRes.checkout_url.startsWith('https://checkout.stripe.com')) {
+            window.location.href = sessionRes.checkout_url;
+            return;
+          }
+          this.checkout.start({
+            type: 'membership',
+            title: tier.name,
+            creatorName: c.name,
+            creatorHandle: c.handle,
+            shakes: 1,
+            unitPrice: tier.price,
+            currency: this.currency(),
+            message: `Suscripción mensual a: ${tier.name}`,
+            activity: this.activity().id,
+            tierId: tier.id,
+          });
+        },
+        error: () => {
+          this.checkout.start({
+            type: 'membership',
+            title: tier.name,
+            creatorName: c.name,
+            creatorHandle: c.handle,
+            shakes: 1,
+            unitPrice: tier.price,
+            currency: this.currency(),
+            message: `Suscripción mensual a: ${tier.name}`,
+            activity: this.activity().id,
+            tierId: tier.id,
+          });
+        },
+      });
   }
 
   support(): void {
@@ -608,14 +666,21 @@ export class Creator {
     if (!c) return;
 
     this.paymentService
-      .createShakeIntent({
+      .createStripeCheckoutSession({
         athlete_handle: c.handle,
         shakes_count: this.shakes(),
         currency: this.currency(),
+        supporter_name: this.isAnonymous() ? 'Alguien anónimo' : (this.supporterName() || 'Un Fan'),
         supporter_message: this.message(),
+        is_anonymous: this.isAnonymous(),
       })
       .subscribe({
-        next: (intent) => {
+        next: (sessionRes) => {
+          if (sessionRes.checkout_url && sessionRes.checkout_url.startsWith('https://checkout.stripe.com')) {
+            window.location.href = sessionRes.checkout_url;
+            return;
+          }
+          // Fallback a modal local solo si estamos en modo simulador sin keys
           this.checkout.start({
             type: 'shake',
             creatorName: c.name,
@@ -627,8 +692,6 @@ export class Creator {
             activity: this.activity().id,
             currency: this.currency(),
             unitPrice: this.currentPrice(),
-            paymentClientSecret: intent.client_secret,
-            transactionUuid: intent.transaction_uuid,
           });
         },
         error: () => {

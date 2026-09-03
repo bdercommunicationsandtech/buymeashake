@@ -36,6 +36,7 @@ from app.repositories.base_repos import (
     GoalRepository,
     LookupRepository,
     MembershipRepository,
+    NotificationRepository,
     OtpRepository,
     PostRepository,
     ReferralRepository,
@@ -700,12 +701,22 @@ class DashboardService:
         ]
 
     async def create_tier(self, athlete: AthleteProfile, dto: MembershipTierCreateRequest) -> MembershipTierResponse:
+        from app.services.stripe_service import StripeService
+        stripe_svc = StripeService(self.session)
+        stripe_price_id = await stripe_svc.create_stripe_tier_price(
+            athlete=athlete,
+            tier_name=dto.name,
+            monthly_price=dto.monthly_price,
+            currency=dto.currency,
+        )
+
         tier = MembershipTier(
             athlete_id=athlete.id,
             name=dto.name,
             description=dto.description,
             monthly_price=dto.monthly_price,
             currency=dto.currency,
+            stripe_price_id=stripe_price_id,
         )
         created = await self.membership_repo.create_tier(tier, dto.benefits)
         return MembershipTierResponse(
@@ -1011,68 +1022,6 @@ class CheckoutService:
         )
 
 
-class SupporterService:
-    def __init__(self, session: AsyncSession):
-        self.session = session
-        self.follow_repo = FollowRepository(session)
-        self.athlete_repo = AthleteRepository(session)
-
-    async def get_feed(self, supporter_id: int, page: int = 1, page_size: int = 10) -> PaginatedResponse[PostResponse]:
-        posts, total = await self.follow_repo.get_feed_posts(supporter_id, page=page, page_size=page_size)
-        total_pages = (total + page_size - 1) // page_size if total > 0 else 1
-
-        items = []
-        for p in posts:
-            author_name = None
-            author_handle = None
-            if p.athlete:
-                author_handle = p.athlete.handle
-                if p.athlete.user:
-                    author_name = p.athlete.user.full_name
-
-            items.append(
-                PostResponse(
-                    id=p.id,
-                    title=p.title,
-                    content_html=p.content_html,
-                    access_type=p.access_type,
-                    likes_count=p.likes_count,
-                    published_at=p.published_at,
-                    is_members_only=(p.access_type == "members_only"),
-                    author_name=author_name,
-                    author_handle=author_handle,
-                )
-            )
-
-        return PaginatedResponse[PostResponse](
-            items=items,
-            total=total,
-            page=page,
-            page_size=page_size,
-            total_pages=total_pages,
-        )
-
-    async def get_following(self, supporter_id: int) -> list[FollowedAthleteResponse]:
-        athletes = await self.follow_repo.get_followed_athletes(supporter_id)
-        return [
-            FollowedAthleteResponse(
-                id=a.id,
-                name=a.user.full_name if a.user else a.handle,
-                handle=a.handle,
-                avatar_url=a.user.avatar_url if a.user else a.avatar_url,
-                bio=a.bio,
-                primary_sport=None,
-            )
-            for a in athletes
-        ]
-
-    async def follow_athlete(self, supporter_id: int, handle: str) -> dict:
-        profile = await self.athlete_repo.get_by_handle(handle)
-        if not profile:
-            raise EntityNotFoundError("Atleta", handle)
-
-        await self.follow_repo.follow(supporter_id=supporter_id, athlete_id=profile.id)
-        return {"message": f"Ahora sigues a @{handle}", "following": True}
 
 
 class StorageService:

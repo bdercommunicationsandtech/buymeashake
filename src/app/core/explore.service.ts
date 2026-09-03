@@ -36,7 +36,8 @@ export class ExploreService {
   }
 
   getCreatorProfile(handle: string): Observable<CreatorProfile> {
-    return this.http.get<CreatorProfile>(`${this.apiUrl}/creators/${handle}`);
+    const cleanHandle = handle.replace(/^@+/, '');
+    return this.http.get<CreatorProfile>(`${this.apiUrl}/creators/${encodeURIComponent(cleanHandle)}`);
   }
 
   getCreatorPosts(handle: string): Observable<PostItemDto[]> {

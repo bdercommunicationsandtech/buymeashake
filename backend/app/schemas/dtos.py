@@ -267,6 +267,17 @@ class StripeConnectStatusResponse(BaseModel):
     requirements_due: list[str] = []
 
 
+class SubscriptionCheckoutRequest(BaseModel):
+    tier_id: int
+    supporter_email: str | None = Field(default=None, max_length=191)
+    supporter_name: str | None = Field(default=None, max_length=150)
+
+
+class CustomerPortalResponse(BaseModel):
+    portal_url: str
+
+
+
 # ==============================================================================
 # 5. DASHBOARD DEL ATLETA (DTOs)
 # ==============================================================================

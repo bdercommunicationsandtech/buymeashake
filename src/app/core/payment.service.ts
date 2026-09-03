@@ -74,4 +74,23 @@ export class PaymentService {
   }> {
     return this.http.post<any>(`${this.apiUrl}/direct-shake`, payload);
   }
+
+  createSubscriptionCheckoutSession(payload: {
+    tier_id: number;
+    supporter_email?: string;
+    supporter_name?: string;
+  }): Observable<{ checkout_url: string; session_id: string; transaction_uuid: string }> {
+    return this.http.post<{ checkout_url: string; session_id: string; transaction_uuid: string }>(
+      `${this.apiUrl}/subscription-session`,
+      payload
+    );
+  }
+
+  getCustomerPortal(): Observable<{ portal_url: string }> {
+    return this.http.post<{ portal_url: string }>(`${this.apiUrl}/billing-portal`, {});
+  }
+
+  verifySession(sessionId: string): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/verify-session?session_id=${encodeURIComponent(sessionId)}`, {});
+  }
 }

@@ -162,6 +162,7 @@ class AthleteLeaderboardItemResponse(BaseModel):
     athlete_name: str
     avatar_url: str | None
     primary_sport: str
+    bio: str | None = None
     total_shakes_this_month: int
     total_raised_this_month: Decimal
     ranking_position: int
@@ -270,6 +271,17 @@ class StripeConnectStatusResponse(BaseModel):
     details_submitted: bool = False
     charges_enabled: bool = False
     requirements_due: list[str] = []
+
+
+class SubscriptionCheckoutRequest(BaseModel):
+    tier_id: int
+    supporter_email: str | None = Field(default=None, max_length=191)
+    supporter_name: str | None = Field(default=None, max_length=150)
+
+
+class CustomerPortalResponse(BaseModel):
+    portal_url: str
+
 
 
 # ==============================================================================

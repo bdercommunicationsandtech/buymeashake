@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 from decimal import Decimal
-from sqlalchemy import func, select
+from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -52,6 +52,7 @@ class AthleteRepository:
         self.session = session
 
     async def get_by_handle(self, handle: str) -> AthleteProfile | None:
+        clean_handle = handle.lstrip("@").strip()
         query = (
             select(AthleteProfile)
             .options(
@@ -61,7 +62,11 @@ class AthleteRepository:
                 selectinload(AthleteProfile.tiers).selectinload(MembershipTier.benefits),
                 selectinload(AthleteProfile.products),
             )
-            .where(AthleteProfile.handle == handle)
+            .where(
+                (AthleteProfile.handle == clean_handle)
+                | (AthleteProfile.handle == handle)
+                | (func.lower(AthleteProfile.handle) == func.lower(clean_handle))
+            )
         )
         result = await self.session.execute(query)
         return result.scalar_one_or_none()
@@ -96,18 +101,20 @@ class AthleteRepository:
                 AthleteProfile.handle,
                 User.full_name.label("athlete_name"),
                 User.avatar_url,
+                func.coalesce(LookupItem.label, "Deporte General").label("primary_sport"),
                 func.coalesce(func.sum(Transaction.shakes_count), 0).label("total_shakes_this_month"),
                 func.coalesce(func.sum(Transaction.gross_amount), 0).label("total_raised_this_month"),
             )
             .join(User, AthleteProfile.user_id == User.id)
+            .outerjoin(LookupItem, AthleteProfile.primary_sport_code == LookupItem.code)
             .outerjoin(
                 Transaction,
                 (AthleteProfile.id == Transaction.athlete_id)
                 & (Transaction.status_code == 302)
                 & (Transaction.transaction_type_code == 201),
             )
-            .group_by(AthleteProfile.id, User.id)
-            .order_by(func.sum(Transaction.shakes_count).desc())
+            .group_by(AthleteProfile.id, User.id, LookupItem.label)
+            .order_by(func.sum(Transaction.shakes_count).desc(), AthleteProfile.id.desc())
             .limit(limit)
         )
         result = await self.session.execute(query)
@@ -120,12 +127,78 @@ class AthleteRepository:
                 "handle": row.handle,
                 "athlete_name": row.athlete_name,
                 "avatar_url": row.avatar_url,
-                "primary_sport": "Deporte General",
+                "primary_sport": row.primary_sport or "Deporte General",
                 "total_shakes_this_month": int(row.total_shakes_this_month or 0),
                 "total_raised_this_month": row.total_raised_this_month or 0,
                 "ranking_position": rank,
             })
         return leaderboard
+
+    async def get_explore_athletes(
+        self,
+        query_str: str | None = None,
+        category: str | None = None,
+        limit: int = 50,
+    ) -> list[dict]:
+        query = (
+            select(
+                AthleteProfile.id.label("athlete_id"),
+                AthleteProfile.handle,
+                User.full_name.label("athlete_name"),
+                User.avatar_url,
+                func.coalesce(LookupItem.label, "Deporte General").label("primary_sport"),
+                AthleteProfile.bio,
+                func.coalesce(func.sum(Transaction.shakes_count), 0).label("total_shakes_this_month"),
+                func.coalesce(func.sum(Transaction.gross_amount), 0).label("total_raised_this_month"),
+            )
+            .join(User, AthleteProfile.user_id == User.id)
+            .outerjoin(LookupItem, AthleteProfile.primary_sport_code == LookupItem.code)
+            .outerjoin(
+                Transaction,
+                (AthleteProfile.id == Transaction.athlete_id)
+                & (Transaction.status_code == 302)
+                & (Transaction.transaction_type_code == 201),
+            )
+        )
+
+        if category and category.strip() and category.strip().lower() != "todos":
+            cat_filter = f"%{category.strip().lower()}%"
+            query = query.where(func.lower(LookupItem.label).like(cat_filter))
+
+        if query_str and query_str.strip():
+            clean_q = f"%{query_str.strip().lower()}%"
+            query = query.where(
+                or_(
+                    func.lower(User.full_name).like(clean_q),
+                    func.lower(AthleteProfile.handle).like(clean_q),
+                    func.lower(func.coalesce(AthleteProfile.bio, "")).like(clean_q),
+                    func.lower(func.coalesce(LookupItem.label, "")).like(clean_q),
+                )
+            )
+
+        query = (
+            query.group_by(AthleteProfile.id, User.id, LookupItem.label)
+            .order_by(func.sum(Transaction.shakes_count).desc(), AthleteProfile.id.desc())
+            .limit(limit)
+        )
+
+        result = await self.session.execute(query)
+        rows = result.all()
+
+        athletes = []
+        for rank, row in enumerate(rows, start=1):
+            athletes.append({
+                "athlete_id": row.athlete_id,
+                "handle": row.handle,
+                "athlete_name": row.athlete_name,
+                "avatar_url": row.avatar_url,
+                "primary_sport": row.primary_sport or "Deporte General",
+                "bio": row.bio,
+                "total_shakes_this_month": int(row.total_shakes_this_month or 0),
+                "total_raised_this_month": row.total_raised_this_month or 0,
+                "ranking_position": rank,
+            })
+        return athletes
 
 
 class DashboardRepository:
@@ -249,6 +322,15 @@ class MembershipRepository:
         )
         result = await self.session.execute(query)
         return list(result.scalars().all())
+
+    async def get_tier_by_id(self, tier_id: int) -> MembershipTier | None:
+        query = (
+            select(MembershipTier)
+            .options(selectinload(MembershipTier.athlete))
+            .where(MembershipTier.id == tier_id, MembershipTier.is_active.is_(True))
+        )
+        result = await self.session.execute(query)
+        return result.scalar_one_or_none()
 
     async def create_tier(self, tier: MembershipTier, benefits_text: list[str]) -> MembershipTier:
         self.session.add(tier)

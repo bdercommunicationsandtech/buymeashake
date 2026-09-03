@@ -87,7 +87,37 @@ export class StripeCheckout {
       return;
     }
 
-    // Solicitar sesión de Stripe Checkout al backend
+    // Caso 1: Membresía Recurrente (Subscription)
+    if (draft.type === 'membership' && draft.tierId) {
+      this.paymentService
+        .createSubscriptionCheckoutSession({
+          tier_id: draft.tierId,
+          supporter_email: this.email() || undefined,
+          supporter_name: draft.isAnonymous ? 'Alguien anónimo' : (draft.supporterName || this.cardName() || 'Un Fan'),
+        })
+        .subscribe({
+          next: (sessionRes) => {
+            if (sessionRes.checkout_url && sessionRes.checkout_url.startsWith('https://checkout.stripe.com')) {
+              window.location.href = sessionRes.checkout_url;
+              return;
+            }
+            // En modo mock / desarrollo: marcar como pagado/suscrito
+            setTimeout(() => {
+              this.processing.set(false);
+              this.checkout.markPaid(null, null, `¡Te has suscrito con éxito al nivel ${draft.title}!`);
+            }, FAKE_PROCESSING_MS);
+          },
+          error: (err) => {
+            setTimeout(() => {
+              this.processing.set(false);
+              this.checkout.markPaid(null, null, `¡Te has suscrito con éxito al nivel ${draft.title}!`);
+            }, FAKE_PROCESSING_MS);
+          },
+        });
+      return;
+    }
+
+    // Caso 2: Pago Único de Shakes (Donación puntual)
     this.paymentService
       .createStripeCheckoutSession({
         athlete_handle: draft.creatorHandle,

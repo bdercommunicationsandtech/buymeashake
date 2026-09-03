@@ -1,19 +1,21 @@
 from typing import Annotated
-from fastapi import APIRouter, Depends, Header, HTTPException, Request, status
+from fastapi import APIRouter, Depends, Header, HTTPException, Query, Request, status
 from fastapi.security import HTTPAuthorizationCredentials
 import stripe
 
 from app.api.dependencies import CurrentAthlete, CurrentUser, DatabaseSession, security_scheme
 from app.core.config import settings
 from app.core.exceptions import EntityNotFoundError
-from app.repositories.base_repos import AthleteRepository
+from app.repositories.base_repos import AthleteRepository, MembershipRepository
 from app.schemas.dtos import (
     BookingSessionCheckoutRequest,
+    CustomerPortalResponse,
     PaymentIntentResponse,
     ShakeCheckoutCreateRequest,
     StripeCheckoutSessionResponse,
     StripeConnectLinkResponse,
     StripeConnectStatusResponse,
+    SubscriptionCheckoutRequest,
 )
 from app.services.core_services import CheckoutService
 from app.services.stripe_service import StripeService
@@ -71,6 +73,69 @@ async def create_stripe_checkout_session(
         supporter_user=user,
     )
     return StripeCheckoutSessionResponse(**res)
+
+
+@router.post("/checkout/subscription-session", response_model=StripeCheckoutSessionResponse)
+async def create_subscription_checkout_session(
+    dto: SubscriptionCheckoutRequest,
+    session: DatabaseSession,
+    credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(security_scheme)] = None,
+) -> StripeCheckoutSessionResponse:
+    """Genera una sesión de Stripe Checkout en modo suscripción mensual para un Tier."""
+    user = None
+    if credentials:
+        from app.core.security import decode_token
+        from app.repositories.base_repos import UserRepository
+        payload = decode_token(credentials.credentials)
+        if payload and payload.get("type") == "access":
+            user = await UserRepository(session).get_by_id(int(payload.get("sub", 0)))
+
+    membership_repo = MembershipRepository(session)
+    tier = await membership_repo.get_tier_by_id(dto.tier_id)
+    if not tier:
+        raise EntityNotFoundError("Nivel de Membresía", dto.tier_id)
+
+    athlete = tier.athlete
+    if not athlete:
+        athlete = await AthleteRepository(session).get_by_id(tier.athlete_id)
+
+    stripe_svc = StripeService(session)
+    res = await stripe_svc.create_subscription_checkout_session(
+        athlete=athlete,
+        tier=tier,
+        supporter_user=user,
+        supporter_email=dto.supporter_email,
+        supporter_name=dto.supporter_name,
+    )
+    return StripeCheckoutSessionResponse(**res)
+
+
+@router.post("/checkout/billing-portal", response_model=CustomerPortalResponse)
+async def create_customer_portal_session(
+    user: CurrentUser,
+    session: DatabaseSession,
+) -> CustomerPortalResponse:
+    """Genera la URL del portal oficial de Stripe para que el suscriptor gestione o cancele sus membresías."""
+    stripe_svc = StripeService(session)
+    portal_url = await stripe_svc.create_customer_portal_session(user=user)
+    return CustomerPortalResponse(portal_url=portal_url)
+
+
+@router.post("/checkout/verify-session")
+async def verify_stripe_session(
+    session: DatabaseSession,
+    session_id: Annotated[str, Query(description="Stripe Checkout Session ID (cs_...)")],
+) -> dict:
+    """Verifica directamente el estado de una sesión de Stripe al volver a la web y actualiza la meta."""
+    import logging
+    logger = logging.getLogger("uvicorn.error")
+    logger.info(">>> LLAMADA RECIBIDA EN /checkout/verify-session CON session_id=%s", session_id)
+    stripe_svc = StripeService(session)
+    result = await stripe_svc.verify_and_process_session(session_id)
+    await session.commit()
+    logger.info(">>> RESULTADO COMMIT /checkout/verify-session: %s", result)
+    return result
+
 
 
 @router.post("/checkout/stripe-webhook")

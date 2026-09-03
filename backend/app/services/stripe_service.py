@@ -11,11 +11,12 @@ from typing import Any
 
 import stripe
 from sqlalchemy import select
+from sqlalchemy.orm import selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
 from app.core.exceptions import BusinessLogicError, EntityNotFoundError
-from app.models.entities import AthleteProfile, Goal, Notification, Transaction, User
+from app.models.entities import AthleteProfile, Goal, MembershipTier, Notification, Subscription, Transaction, User
 
 logger = logging.getLogger(__name__)
 
@@ -88,7 +89,7 @@ class StripeService:
         tx_uuid = secrets.token_hex(16)
         customer_id = await self._get_or_create_customer(supporter_email, supporter_name, supporter_user)
 
-        success_url = f"{settings.FRONTEND_URL}/@{athlete.handle}?payment=success&tx={tx_uuid}"
+        success_url = f"{settings.FRONTEND_URL}/@{athlete.handle}?payment=success&tx={tx_uuid}&session_id={{CHECKOUT_SESSION_ID}}"
         cancel_url = f"{settings.FRONTEND_URL}/@{athlete.handle}?payment=cancelled"
 
         # Si estamos en modo placeholder (aún sin keys válidas), devolvemos URL mock
@@ -133,6 +134,17 @@ class StripeService:
             },
         }
 
+        # Si el atleta tiene cuenta Connect activa, configurar split con application_fee
+        if athlete.stripe_connect_account_id and athlete.payouts_enabled:
+            total_cents = unit_amount_cents * shakes_count
+            platform_fee_cents = int(Decimal(total_cents) * Decimal(str(settings.PLATFORM_FEE_PERCENTAGE)))
+            session_params["payment_intent_data"] = {
+                "application_fee_amount": platform_fee_cents,
+                "transfer_data": {
+                    "destination": athlete.stripe_connect_account_id,
+                },
+            }
+
         if customer_id:
             session_params["customer"] = customer_id
         elif supporter_email:
@@ -145,6 +157,157 @@ class StripeService:
             "session_id": checkout_session.id,
             "transaction_uuid": tx_uuid,
         }
+
+    # ==========================================================================
+    # 1.1 SUSCRIPCIONES Y TIERS (MEMBRESÍAS RECURRENTES)
+    # ==========================================================================
+
+    async def create_stripe_tier_price(
+        self,
+        athlete: AthleteProfile,
+        tier_name: str,
+        monthly_price: Decimal,
+        currency: str = "USD",
+    ) -> str | None:
+        """Crea un Product y Price recurrente en Stripe para el nivel de membresía."""
+        if not settings.STRIPE_SECRET_KEY or settings.STRIPE_SECRET_KEY.startswith("sk_test_placeholder"):
+            return f"price_mock_{secrets.token_hex(8)}"
+
+        try:
+            product = stripe.Product.create(
+                name=f"{tier_name} — @{athlete.handle}",
+                description=f"Membresía mensual con @{athlete.handle} en buymeashake.fit",
+                metadata={
+                    "athlete_id": str(athlete.id),
+                    "athlete_handle": athlete.handle,
+                    "tier_name": tier_name,
+                },
+            )
+
+            unit_amount_cents = int((monthly_price * 100).to_integral_value())
+            price = stripe.Price.create(
+                product=product.id,
+                unit_amount=unit_amount_cents,
+                currency=currency.lower(),
+                recurring={"interval": "month"},
+                metadata={
+                    "athlete_id": str(athlete.id),
+                    "tier_name": tier_name,
+                },
+            )
+            return price.id
+        except Exception as e:
+            logger.error("Error al crear producto/precio recurrente en Stripe: %s", str(e))
+            return None
+
+    async def create_subscription_checkout_session(
+        self,
+        athlete: AthleteProfile,
+        tier: Any,
+        supporter_user: User | None = None,
+        supporter_email: str | None = None,
+        supporter_name: str | None = None,
+    ) -> dict[str, str]:
+        """Crea una sesión de Checkout de Stripe en modo subscription para un Tier."""
+        tx_uuid = secrets.token_hex(16)
+        email = (supporter_user.email if supporter_user else supporter_email) or ""
+        name = (supporter_user.full_name if supporter_user else supporter_name) or "Fan"
+
+        customer_id = await self._get_or_create_customer(email, name, supporter_user)
+
+        success_url = f"{settings.FRONTEND_URL}/@{athlete.handle}?membership=success&tx={tx_uuid}&session_id={{CHECKOUT_SESSION_ID}}"
+        cancel_url = f"{settings.FRONTEND_URL}/@{athlete.handle}?membership=cancelled"
+
+        if not settings.STRIPE_SECRET_KEY or settings.STRIPE_SECRET_KEY.startswith("sk_test_placeholder"):
+            return {
+                "checkout_url": success_url,
+                "session_id": f"cs_sub_mock_{tx_uuid}",
+                "transaction_uuid": tx_uuid,
+            }
+
+        price_id = tier.stripe_price_id
+        if not price_id:
+            # Si no tenía price_id, generarlo sobre la marcha
+            price_id = await self.create_stripe_tier_price(
+                athlete=athlete,
+                tier_name=tier.name,
+                monthly_price=tier.monthly_price,
+                currency=tier.currency,
+            )
+            if price_id:
+                tier.stripe_price_id = price_id
+                await self.session.flush()
+
+        if not price_id:
+            raise BusinessLogicError("No se pudo configurar el precio de la suscripción en Stripe.")
+
+        session_params: dict[str, Any] = {
+            "payment_method_types": ["card"],
+            "line_items": [
+                {
+                    "price": price_id,
+                    "quantity": 1,
+                }
+            ],
+            "mode": "subscription",
+            "success_url": success_url,
+            "cancel_url": cancel_url,
+            "client_reference_id": tx_uuid,
+            "subscription_data": {
+                "application_fee_percent": float(settings.PLATFORM_FEE_PERCENTAGE) * 100,  # ej. 5.0%
+                "metadata": {
+                    "transaction_uuid": tx_uuid,
+                    "tier_id": str(tier.id),
+                    "athlete_id": str(athlete.id),
+                    "supporter_user_id": str(supporter_user.id) if supporter_user else "",
+                    "kind": "tier_subscription",
+                },
+            },
+            "metadata": {
+                "transaction_uuid": tx_uuid,
+                "tier_id": str(tier.id),
+                "athlete_id": str(athlete.id),
+                "supporter_user_id": str(supporter_user.id) if supporter_user else "",
+                "kind": "tier_subscription",
+            },
+        }
+
+        # Si el atleta tiene cuenta Connect habilitada, destinar la suscripción a su cuenta
+        if athlete.stripe_connect_account_id and athlete.payouts_enabled:
+            session_params["subscription_data"]["transfer_data"] = {
+                "destination": athlete.stripe_connect_account_id,
+            }
+
+        if customer_id:
+            session_params["customer"] = customer_id
+        elif email:
+            session_params["customer_email"] = email
+
+        checkout_session = stripe.checkout.Session.create(**session_params)
+
+        return {
+            "checkout_url": checkout_session.url or "",
+            "session_id": checkout_session.id,
+            "transaction_uuid": tx_uuid,
+        }
+
+    async def create_customer_portal_session(self, user: User, return_url: str | None = None) -> str:
+        """Genera enlace al Customer Portal de Stripe para gestionar/cancelar suscripciones."""
+        customer_id = user.stripe_customer_id
+        if not customer_id:
+            raise BusinessLogicError("El usuario aún no tiene un perfil de pagos registrado en Stripe.")
+
+        ret_url = return_url or f"{settings.FRONTEND_URL}/explore"
+
+        if not settings.STRIPE_SECRET_KEY or settings.STRIPE_SECRET_KEY.startswith("sk_test_placeholder"):
+            return f"{ret_url}?portal=mock_success"
+
+        portal_session = stripe.billing_portal.Session.create(
+            customer=customer_id,
+            return_url=ret_url,
+        )
+        return portal_session.url
+
 
     # ==========================================================================
     # 2. STRIPE CONNECT EXPRESS (ONBOARDING & RETIROS)
@@ -298,6 +461,50 @@ class StripeService:
         return transfer.id
 
     # ==========================================================================
+    # 3.5 VERIFICACIÓN DIRECTA DE SESIÓN (CALLBACK DE RETORNO EN LOCAL / CLIENTE)
+    # ==========================================================================
+
+    async def verify_and_process_session(self, session_id: str) -> dict[str, Any]:
+        """Consulta directamente a la API de Stripe para validar el pago y actualizar la meta en BD."""
+        if not session_id or session_id.startswith("cs_mock_") or session_id.startswith("cs_sub_mock_"):
+            return {"handled": True, "status": "mock_session"}
+
+        if not settings.STRIPE_SECRET_KEY or settings.STRIPE_SECRET_KEY.startswith("sk_test_placeholder"):
+            return {"handled": True, "status": "placeholder_key"}
+
+        try:
+            checkout_session = stripe.checkout.Session.retrieve(
+                session_id,
+                expand=["line_items", "payment_intent", "subscription"],
+            )
+
+            # Validar que esté pagada
+            if checkout_session.payment_status not in ("paid", "no_payment_required"):
+                logger.info("Sesión %s con estado de pago: %s", session_id, checkout_session.payment_status)
+                return {"handled": False, "reason": "not_paid", "payment_status": checkout_session.payment_status}
+
+            # Convertir objeto Stripe a diccionario recursivo seguro
+            if hasattr(checkout_session, "to_dict"):
+                session_dict = checkout_session.to_dict()
+            elif hasattr(checkout_session, "_to_dict_recursive"):
+                session_dict = checkout_session._to_dict_recursive()
+            else:
+                import json
+                session_dict = json.loads(str(checkout_session))
+
+            if checkout_session.mode == "subscription":
+                result = await self._process_subscription_completed(session_dict)
+            else:
+                result = await self._process_successful_payment(session_dict, "checkout.session.completed")
+
+            logger.info("Resultado de verify_and_process_session (%s): %s", session_id, result)
+            return result
+
+        except Exception as e:
+            logger.error("Error al verificar sesión de Stripe %s: %s", session_id, str(e), exc_info=True)
+            return {"handled": False, "error": str(e)}
+
+    # ==========================================================================
     # 4. WEBHOOK IDEMPOTENTE: CONFIRMACIÓN Y ACTUALIZACIÓN DE METAS (GOALS)
     # ==========================================================================
 
@@ -307,7 +514,16 @@ class StripeService:
         data_object = event.get("data", {}).get("object", {})
 
         if event_type in ("checkout.session.completed", "payment_intent.succeeded"):
+            # Si la sesión completada es una suscripción
+            if event_type == "checkout.session.completed" and data_object.get("mode") == "subscription":
+                return await self._process_subscription_completed(data_object)
             return await self._process_successful_payment(data_object, event_type)
+
+        if event_type == "invoice.payment_succeeded":
+            return await self._process_invoice_payment_succeeded(data_object)
+
+        if event_type in ("customer.subscription.deleted", "customer.subscription.updated"):
+            return await self._process_subscription_updated_or_deleted(data_object, event_type)
 
         if event_type == "account.updated":
             return await self._process_account_updated(data_object)
@@ -331,7 +547,11 @@ class StripeService:
             return {"handled": True, "status": "already_processed"}
 
         athlete_id = int(metadata.get("athlete_id", 0))
-        athlete_stmt = select(AthleteProfile).where(AthleteProfile.id == athlete_id)
+        athlete_stmt = (
+            select(AthleteProfile)
+            .options(selectinload(AthleteProfile.goals), selectinload(AthleteProfile.user))
+            .where(AthleteProfile.id == athlete_id)
+        )
         athlete_res = await self.session.execute(athlete_stmt)
         athlete = athlete_res.scalar_one_or_none()
         if not athlete:
@@ -449,3 +669,138 @@ class StripeService:
             await self.session.flush()
 
         return {"handled": True, "account_id": account_id}
+
+    async def _process_subscription_completed(self, session_obj: dict[str, Any]) -> dict[str, Any]:
+        """Procesa una sesión de Stripe Checkout completada en modo subscription."""
+        metadata = session_obj.get("metadata", {})
+        tx_uuid = metadata.get("transaction_uuid") or session_obj.get("client_reference_id")
+        stripe_sub_id = session_obj.get("subscription")
+
+        if not stripe_sub_id:
+            logger.warning("checkout.session.completed en modo subscription sin subscription ID.")
+            return {"handled": False, "reason": "missing_subscription_id"}
+
+        tier_id_raw = metadata.get("tier_id")
+        if not tier_id_raw or not tier_id_raw.isdigit():
+            logger.warning("Sesión de suscripción sin tier_id válido: %s", tier_id_raw)
+            return {"handled": False, "reason": "invalid_tier_id"}
+
+        tier_id = int(tier_id_raw)
+        supporter_user_id = int(metadata["supporter_user_id"]) if metadata.get("supporter_user_id") else None
+
+        # Si no había supporter_user_id directo, buscar por email o customer_id
+        if not supporter_user_id:
+            customer_id = session_obj.get("customer")
+            email = session_obj.get("customer_details", {}).get("email")
+            if customer_id:
+                user_stmt = select(User).where(User.stripe_customer_id == customer_id)
+                u_res = await self.session.execute(user_stmt)
+                matched_user = u_res.scalar_one_or_none()
+                if matched_user:
+                    supporter_user_id = matched_user.id
+            if not supporter_user_id and email:
+                user_stmt = select(User).where(User.email == email)
+                u_res = await self.session.execute(user_stmt)
+                matched_user = u_res.scalar_one_or_none()
+                if matched_user:
+                    supporter_user_id = matched_user.id
+
+        if not supporter_user_id:
+            logger.warning("No se pudo vincular la suscripción a un User existente.")
+            return {"handled": False, "reason": "user_not_found"}
+
+        # Verificar si la suscripción ya existe (idempotente)
+        sub_stmt = select(Subscription).where(Subscription.stripe_subscription_id == stripe_sub_id)
+        sub_res = await self.session.execute(sub_stmt)
+        existing_sub = sub_res.scalar_one_or_none()
+
+        from datetime import datetime, timezone, timedelta
+        now = datetime.now(timezone.utc)
+        period_end = now + timedelta(days=31)
+
+        if not existing_sub:
+            new_sub = Subscription(
+                user_id=supporter_user_id,
+                tier_id=tier_id,
+                stripe_subscription_id=stripe_sub_id,
+                status="active",
+                current_period_start=now,
+                current_period_end=period_end,
+            )
+            self.session.add(new_sub)
+        else:
+            existing_sub.status = "active"
+            existing_sub.current_period_start = now
+            existing_sub.current_period_end = period_end
+
+        # Notificar al atleta
+        athlete_id = int(metadata.get("athlete_id", 0))
+        if athlete_id:
+            athlete_stmt = select(AthleteProfile).where(AthleteProfile.id == athlete_id)
+            a_res = await self.session.execute(athlete_stmt)
+            athlete = a_res.scalar_one_or_none()
+            if athlete and athlete.user_id:
+                notif = Notification(
+                    user_id=athlete.user_id,
+                    title="¡Nuevo Miembro en tu Comunidad! ⭐️",
+                    message="Un seguidor se acaba de suscribir a tu nivel de membresía.",
+                    type_code=402,
+                    action_url="/dashboard/memberships",
+                )
+                self.session.add(notif)
+
+        await self.session.flush()
+        return {"handled": True, "subscription_id": stripe_sub_id, "status": "active"}
+
+    async def _process_invoice_payment_succeeded(self, invoice_obj: dict[str, Any]) -> dict[str, Any]:
+        """Renueva el periodo de la suscripción tras el cobro recurrente mensual."""
+        stripe_sub_id = invoice_obj.get("subscription")
+        if not stripe_sub_id:
+            return {"handled": True, "reason": "no_subscription_in_invoice"}
+
+        stmt = select(Subscription).where(Subscription.stripe_subscription_id == stripe_sub_id)
+        res = await self.session.execute(stmt)
+        sub = res.scalar_one_or_none()
+        if not sub:
+            logger.info("Suscripción %s no encontrada en BD para renovación.", stripe_sub_id)
+            return {"handled": False, "reason": "subscription_not_found"}
+
+        lines = invoice_obj.get("lines", {}).get("data", [])
+        from datetime import datetime, timezone, timedelta
+        if lines and "period" in lines[0]:
+            period = lines[0]["period"]
+            sub.current_period_start = datetime.fromtimestamp(period.get("start", 0), timezone.utc)
+            sub.current_period_end = datetime.fromtimestamp(period.get("end", 0), timezone.utc)
+        else:
+            now = datetime.now(timezone.utc)
+            sub.current_period_end = now + timedelta(days=31)
+
+        sub.status = "active"
+        await self.session.flush()
+        return {"handled": True, "subscription_id": stripe_sub_id, "action": "renewed"}
+
+    async def _process_subscription_updated_or_deleted(self, sub_obj: dict[str, Any], event_type: str) -> dict[str, Any]:
+        """Actualiza el estado o cancela la suscripción cuando cambia en Stripe."""
+        stripe_sub_id = sub_obj.get("id")
+        if not stripe_sub_id:
+            return {"handled": False}
+
+        stmt = select(Subscription).where(Subscription.stripe_subscription_id == stripe_sub_id)
+        res = await self.session.execute(stmt)
+        sub = res.scalar_one_or_none()
+        if not sub:
+            return {"handled": False, "reason": "subscription_not_found"}
+
+        stripe_status = sub_obj.get("status", "canceled")
+        from datetime import datetime, timezone
+        if event_type == "customer.subscription.deleted" or stripe_status in ("canceled", "unpaid"):
+            sub.status = "canceled"
+            sub.canceled_at = datetime.now(timezone.utc)
+        elif stripe_status == "past_due":
+            sub.status = "past_due"
+        elif stripe_status == "active":
+            sub.status = "active"
+
+        await self.session.flush()
+        return {"handled": True, "subscription_id": stripe_sub_id, "new_status": sub.status}
+

@@ -15,6 +15,7 @@ export interface CheckoutDraft {
   readonly isAnonymous?: boolean;
   readonly message: string;
   readonly activity: ActivityId;
+  readonly tierId?: number;
   readonly downloadUrl?: string;
   readonly paymentClientSecret?: string;
   readonly transactionUuid?: string;
@@ -38,6 +39,7 @@ export interface CheckoutRequest {
   readonly activity?: ActivityId;
   readonly unitPrice?: number;
   readonly currency?: 'USD';
+  readonly tierId?: number;
   readonly downloadUrl?: string;
   readonly paymentClientSecret?: string;
   readonly transactionUuid?: string;
@@ -84,6 +86,7 @@ export class CheckoutService {
       isAnonymous: request.isAnonymous ?? false,
       message: request.message?.trim() ?? '',
       activity: request.activity ?? 'shaker',
+      tierId: request.tierId,
       downloadUrl: request.downloadUrl,
       paymentClientSecret: request.paymentClientSecret,
       transactionUuid: request.transactionUuid,

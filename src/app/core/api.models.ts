@@ -64,6 +64,7 @@ export interface AthleteLeaderboardItem {
   athlete_name: string;
   avatar_url: string | null;
   primary_sport: string;
+  bio?: string | null;
   total_shakes_this_month: number;
   total_raised_this_month: number;
   ranking_position: number;

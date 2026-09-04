@@ -652,6 +652,35 @@ class SupporterRepository:
             "items": items,
         }
 
+    async def get_profile_engagement_stats(self, athlete_id: int) -> dict[str, int]:
+        """Totales públicos del perfil: shakes pagados, seguidores y miembros activos."""
+        shakes_q = (
+            select(func.coalesce(func.sum(ShakeDetails.shakes_count), 0))
+            .join(Transaction, ShakeDetails.transaction_id == Transaction.id)
+            .where(
+                Transaction.athlete_id == athlete_id,
+                Transaction.status_code == 302,
+                Transaction.transaction_type_code == 201,
+            )
+        )
+        total_shakes = int((await self.session.execute(shakes_q)).scalar() or 0)
+
+        followers_q = select(func.count(AthleteFollow.id)).where(AthleteFollow.athlete_id == athlete_id)
+        followers_count = int((await self.session.execute(followers_q)).scalar() or 0)
+
+        members_q = (
+            select(func.count(Subscription.id))
+            .join(MembershipTier, Subscription.tier_id == MembershipTier.id)
+            .where(MembershipTier.athlete_id == athlete_id, Subscription.status == "active")
+        )
+        members_count = int((await self.session.execute(members_q)).scalar() or 0)
+
+        return {
+            "total_shakes_received": total_shakes,
+            "followers_count": followers_count,
+            "members_count": members_count,
+        }
+
     async def get_recent_supporters(self, athlete_id: int, limit: int = 10) -> list[dict]:
         query = (
             select(

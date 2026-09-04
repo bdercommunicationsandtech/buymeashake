@@ -222,6 +222,9 @@ class CreatorPublicProfileResponse(BaseModel):
     tiers: list["MembershipTierResponse"] = []
     products: list["DigitalProductResponse"] = []
     recent_supporters: list["SupporterItemResponse"] = []
+    total_shakes_received: int = 0
+    followers_count: int = 0
+    members_count: int = 0
 
 
 # ==============================================================================

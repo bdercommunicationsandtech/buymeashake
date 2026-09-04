@@ -10,10 +10,10 @@ import {
   Activity,
   ACTIVITIES,
   QUICK_SHAKES,
-  RECENT_SUPPORTERS,
   SHAKE_PRICE,
 } from '../../core/demo';
 import {
+  AnimatedShakerComponent,
   IconBoltComponent,
   IconButtonShareComponent,
   IconButtonSupportComponent,
@@ -83,6 +83,7 @@ export interface CreatorView {
   goalTarget: number;
   goalRaised: number;
   goalCoverImageUrl: string | null;
+  hasActiveGoal: boolean;
   supporters: number;
   shakesReceived: number;
   disciplines: string[];
@@ -103,6 +104,7 @@ export interface CreatorView {
   imports: [
     CommonModule,
     RouterLink,
+    AnimatedShakerComponent,
     IconShakerComponent,
     IconBoltComponent,
     IconTrophyComponent,
@@ -207,6 +209,11 @@ export class Creator {
       'Sesiones 1 a 1 para técnica, consultoría y seguimiento personalizado.',
   );
 
+  /** Hay agenda usable si el atleta publicó al menos un servicio de booking. */
+  readonly hasAgendaAvailable = computed(() => this.bookingServices().length > 0);
+
+  readonly hasActiveGoal = computed(() => Boolean(this.creatorView()?.hasActiveGoal));
+
   readonly agendaImageStyle = computed(() => {
     const url = this.creatorView()?.agendaImageUrl;
     if (url) return `url('${url}')`;
@@ -263,6 +270,9 @@ export class Creator {
         this.supporterService.unfollowAthlete(handle).subscribe({
           next: () => {
             this.isFollowing.set(false);
+            this.creatorView.update((c) =>
+              c ? { ...c, supporters: Math.max(0, c.supporters - 1) } : c,
+            );
             this.isTogglingFollow.set(false);
           },
           error: () => this.isTogglingFollow.set(false),
@@ -271,6 +281,7 @@ export class Creator {
         this.supporterService.followAthlete(handle).subscribe({
           next: () => {
             this.isFollowing.set(true);
+            this.creatorView.update((c) => (c ? { ...c, supporters: c.supporters + 1 } : c));
             this.isTogglingFollow.set(false);
           },
           error: () => this.isTogglingFollow.set(false),
@@ -289,6 +300,7 @@ export class Creator {
 
   onFollowSuccess(data: { email: string; name: string }): void {
     this.isFollowing.set(true);
+    this.creatorView.update((c) => (c ? { ...c, supporters: c.supporters + 1 } : c));
     // Redirige al portal del supporter (studio.buymeacoffee.com/home style)
     this.router.navigate(['/fan/home'], {
       queryParams: { followed: this.creatorView()?.handle || this.username() },
@@ -324,6 +336,7 @@ export class Creator {
         }
         if (last.supporterItem) {
           const s = last.supporterItem;
+          const shakesAdded = Number(s.shake_details?.shakes_count ?? 0);
           const initials = s.supporter_name
             .split(' ')
             .map((w: string) => w[0])
@@ -334,7 +347,7 @@ export class Creator {
           this.supporters.update((list) => [
             {
               name: s.supporter_name,
-              shakes: s.shake_details?.shakes_count ?? 0,
+              shakes: shakesAdded,
               message: s.shake_details?.supporter_message || '¡Mucho éxito con tu entrenamiento!',
               when: 'Justo ahora',
               initials: initials,
@@ -342,7 +355,11 @@ export class Creator {
             ...list,
           ]);
 
-          this.creatorView.update((c) => (c ? { ...c, supporters: c.supporters + 1 } : c));
+          if (shakesAdded > 0) {
+            this.creatorView.update((c) =>
+              c ? { ...c, shakesReceived: c.shakesReceived + shakesAdded } : c,
+            );
+          }
         }
       }
     });
@@ -404,6 +421,12 @@ export class Creator {
         goalRaised: patch.goalRaised ?? current.goalRaised,
         goalCoverImageUrl:
           patch.goalCoverImageUrl !== undefined ? patch.goalCoverImageUrl : current.goalCoverImageUrl,
+        hasActiveGoal:
+          patch.goalTitle !== undefined
+            ? Boolean(patch.goalTitle?.trim())
+            : patch.goalTarget !== undefined
+              ? Number(patch.goalTarget) > 0 || current.hasActiveGoal
+              : current.hasActiveGoal,
         shakePrice: patch.shakePrice ?? current.shakePrice,
         name: patch.name ?? current.name,
         bio: patch.bio ?? current.bio,
@@ -570,7 +593,8 @@ export class Creator {
   private mapProfile(profile: CreatorProfile): CreatorView {
     const goalTarget = Number(profile.active_goal_target ?? 0);
     const goalRaised = Number(profile.active_goal_raised ?? 0);
-    const shakesFromSupporters = RECENT_SUPPORTERS.reduce((sum, s) => sum + s.shakes, 0);
+    const shakesReceived = Number(profile.total_shakes_received ?? 0);
+    const followersCount = Number(profile.followers_count ?? 0);
 
     return {
       handle: profile.handle,
@@ -589,12 +613,13 @@ export class Creator {
         .join('')
         .slice(0, 2)
         .toUpperCase(),
-      goalTitle: profile.active_goal_title || 'Meta deportiva activa',
-      goalTarget: goalTarget || 1000,
+      goalTitle: profile.active_goal_title || '',
+      goalTarget: goalTarget,
       goalRaised: goalRaised,
       goalCoverImageUrl: profile.active_goal_cover_image_url ?? null,
-      supporters: 860,
-      shakesReceived: shakesFromSupporters > 0 ? shakesFromSupporters + 1227 : 1248,
+      hasActiveGoal: Boolean(profile.active_goal_title),
+      supporters: followersCount,
+      shakesReceived,
       disciplines: [profile.primary_sport],
       shakePrice: Number(profile.shake_price) || SHAKE_PRICE,
       currency: 'USD',

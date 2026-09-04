@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 from decimal import Decimal
+from typing import Any
 from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -7,6 +8,7 @@ from sqlalchemy.orm import selectinload
 from app.models.entities import (
     AppVersion,
     AthleteFollow,
+    AthletePayouts,
     AthleteProfile,
     AthleteReferrals,
     BookingAppointment,
@@ -27,6 +29,7 @@ from app.models.entities import (
     TierBenefit,
     Transaction,
     User,
+    WithdrawalRequest,
 )
 from app.services.profile_helpers import athlete_load_options
 
@@ -911,4 +914,108 @@ class FollowRepository:
             await self.session.flush()
             return True
         return False
+
+
+# ==============================================================================
+# REPOSITORIO DE RETIROS (WITHDRAWALS - BDER ARCHITECTURE)
+# ==============================================================================
+
+class WithdrawalRepository:
+    def __init__(self, session: AsyncSession):
+        self.session = session
+
+    async def get_athlete_balance(self, athlete_id: int) -> dict[str, Any]:
+        """Calcula balance disponible según la regla contable de BDER:
+        Balance Disponible = Ganancias Netas (302) - Retiros completados ('completed').
+        Las solicitudes pending, processing o failed NO descuentan balance.
+        """
+        # 1. Total ganado neto completado
+        q_earnings = select(func.coalesce(func.sum(Transaction.net_athlete_amount), Decimal("0.00"))).where(
+            Transaction.athlete_id == athlete_id,
+            Transaction.status_code == 302,
+        )
+        total_earned = (await self.session.execute(q_earnings)).scalar() or Decimal("0.00")
+
+        # 2. Total retirado completado
+        q_withdrawn = select(func.coalesce(func.sum(WithdrawalRequest.amount_usd), Decimal("0.00"))).where(
+            WithdrawalRequest.athlete_id == athlete_id,
+            WithdrawalRequest.status == "completed",
+        )
+        total_withdrawn = (await self.session.execute(q_withdrawn)).scalar() or Decimal("0.00")
+
+        # 3. Total pendiente en revisión (para visualización informativa)
+        q_pending = select(func.coalesce(func.sum(WithdrawalRequest.amount_usd), Decimal("0.00"))).where(
+            WithdrawalRequest.athlete_id == athlete_id,
+            WithdrawalRequest.status.in_(["pending", "processing"]),
+        )
+        pending_amount = (await self.session.execute(q_pending)).scalar() or Decimal("0.00")
+
+        available_balance = max(Decimal("0.00"), total_earned - total_withdrawn)
+
+        # Consultar estado de cuenta Stripe Connect
+        payouts_q = select(AthletePayouts).where(AthletePayouts.athlete_id == athlete_id)
+        payouts_row = (await self.session.execute(payouts_q)).scalar_one_or_none()
+
+        return {
+            "total_earned": total_earned,
+            "total_withdrawn": total_withdrawn,
+            "available_balance": available_balance,
+            "pending_withdrawal_amount": pending_amount,
+            "currency": "USD",
+            "destination_country": payouts_row.country_code if payouts_row else "MX",
+            "payouts_enabled": payouts_row.payouts_enabled if payouts_row else False,
+            "details_submitted": payouts_row.stripe_details_submitted if payouts_row else False,
+        }
+
+    async def create_request(
+        self,
+        athlete_id: int,
+        amount_usd: Decimal,
+        destination_country: str = "MX",
+    ) -> WithdrawalRequest:
+        """Crea una solicitud de retiro en estado 'pending'. NO toca Stripe."""
+        amount_cents = int((amount_usd * 100).to_integral_value())
+        req = WithdrawalRequest(
+            athlete_id=athlete_id,
+            amount_usd=amount_usd,
+            amount_cents=amount_cents,
+            currency="USD",
+            destination_country=destination_country,
+            status="pending",
+        )
+        self.session.add(req)
+        await self.session.flush()
+        return req
+
+    async def get_by_id(self, withdrawal_id: int) -> WithdrawalRequest | None:
+        q = (
+            select(WithdrawalRequest)
+            .options(
+                selectinload(WithdrawalRequest.athlete).selectinload(AthleteProfile.user),
+                selectinload(WithdrawalRequest.athlete).selectinload(AthleteProfile.payouts),
+            )
+            .where(WithdrawalRequest.id == withdrawal_id)
+        )
+        return (await self.session.execute(q)).scalar_one_or_none()
+
+    async def list_by_athlete(self, athlete_id: int) -> list[WithdrawalRequest]:
+        q = (
+            select(WithdrawalRequest)
+            .where(WithdrawalRequest.athlete_id == athlete_id)
+            .order_by(WithdrawalRequest.requested_at.desc())
+        )
+        return list((await self.session.execute(q)).scalars().all())
+
+    async def list_all_admin(self, status_filter: str | None = None) -> list[WithdrawalRequest]:
+        q = (
+            select(WithdrawalRequest)
+            .options(
+                selectinload(WithdrawalRequest.athlete).selectinload(AthleteProfile.user),
+            )
+            .order_by(WithdrawalRequest.requested_at.desc())
+        )
+        if status_filter:
+            q = q.where(WithdrawalRequest.status == status_filter)
+        return list((await self.session.execute(q)).scalars().all())
+
 

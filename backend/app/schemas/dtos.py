@@ -575,3 +575,48 @@ class SupportersDashboardResponse(BaseModel):
     currency: str = "USD"
     items: list[SupporterItemResponse]
 
+
+# ==============================================================================
+# RETIROS (WITHDRAWALS - BDER ARCHITECTURE)
+# ==============================================================================
+
+class AthleteBalanceResponse(BaseModel):
+    total_earned: Decimal
+    total_withdrawn: Decimal
+    available_balance: Decimal
+    pending_withdrawal_amount: Decimal
+    currency: str = "USD"
+    destination_country: str = "MX"
+    payouts_enabled: bool = False
+    details_submitted: bool = False
+
+
+class WithdrawalRequestCreate(BaseModel):
+    amount_usd: Decimal = Field(gt=Decimal("0.00"), description="Monto en USD a retirar")
+    destination_country: str = Field(default="MX", pattern="^(MX|US)$")
+
+
+class WithdrawalRequestResponse(BaseModel):
+    id: int
+    athlete_id: int
+    athlete_handle: str | None = None
+    athlete_name: str | None = None
+    amount_usd: Decimal
+    currency: str
+    destination_country: str
+    status: str
+    stripe_transfer_id: str | None = None
+    failure_reason: str | None = None
+    admin_notes: str | None = None
+    requested_at: datetime
+    processed_at: datetime | None = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class AdminWithdrawalActionRequest(BaseModel):
+    action: str = Field(pattern="^(approve|reject)$", description="'approve' o 'reject'")
+    failure_reason: str | None = Field(default=None, max_length=255)
+    admin_notes: str | None = None
+
+

@@ -651,14 +651,21 @@ class StripeService:
     # 2. STRIPE CONNECT EXPRESS (ONBOARDING & RETIROS)
     # ==========================================================================
 
-    async def create_or_get_connect_account(self, athlete: AthleteProfile) -> str:
-        """Crea una cuenta Express en Stripe Connect o devuelve la existente."""
+    async def create_or_get_connect_account(
+        self, athlete: AthleteProfile, country_code: str | None = None
+    ) -> str:
+        """Crea una cuenta Express en Stripe Connect o devuelve la existente para MX o US."""
         payouts = ensure_payouts(self.session, athlete)
         if payouts.stripe_connect_account_id:
             return payouts.stripe_connect_account_id
 
+        target_country = (country_code or payouts.country_code or "MX").upper()
+        if target_country not in ("MX", "US"):
+            target_country = "MX"
+        payouts.country_code = target_country
+
         if not settings.STRIPE_SECRET_KEY or settings.STRIPE_SECRET_KEY.startswith("sk_test_placeholder"):
-            mock_acct = f"acct_mock_{athlete.id}"
+            mock_acct = f"acct_mock_{target_country}_{athlete.id}"
             payouts.stripe_connect_account_id = mock_acct
             await self.session.flush()
             return mock_acct
@@ -666,7 +673,7 @@ class StripeService:
         user = athlete.user
         account_params: dict[str, Any] = {
             "type": "express",
-            "country": "MX",  # Por defecto MX (o configurable por atleta)
+            "country": target_country,
             "business_type": "individual",
             "capabilities": {
                 "transfers": {"requested": True},
@@ -701,9 +708,11 @@ class StripeService:
         await self.session.flush()
         return account.id
 
-    async def generate_connect_onboarding_link(self, athlete: AthleteProfile) -> dict[str, str]:
-        """Crea el enlace de Stripe AccountLink para onboarding Express."""
-        account_id = await self.create_or_get_connect_account(athlete)
+    async def generate_connect_onboarding_link(
+        self, athlete: AthleteProfile, country_code: str | None = None
+    ) -> dict[str, str]:
+        """Crea el enlace de Stripe AccountLink para onboarding Express (MX o US)."""
+        account_id = await self.create_or_get_connect_account(athlete, country_code=country_code)
 
         if not settings.STRIPE_SECRET_KEY or settings.STRIPE_SECRET_KEY.startswith("sk_test_placeholder"):
             return {
@@ -792,14 +801,25 @@ class StripeService:
         if not settings.STRIPE_SECRET_KEY or settings.STRIPE_SECRET_KEY.startswith("sk_test_placeholder"):
             return f"tr_mock_{withdrawal_id}"
 
-        transfer = stripe.Transfer.create(
-            amount=amount_cents,
-            currency="usd",
-            destination=payouts.stripe_connect_account_id,
-            description=f"Retiro de fondos #{withdrawal_id} para @{athlete.handle}",
-            idempotency_key=f"withdrawal_{withdrawal_id}",
-        )
-        return transfer.id
+        try:
+            transfer = stripe.Transfer.create(
+                amount=amount_cents,
+                currency="usd",
+                destination=payouts.stripe_connect_account_id,
+                description=f"Retiro de fondos #{withdrawal_id} para @{athlete.handle}",
+                idempotency_key=f"withdrawal_{withdrawal_id}",
+            )
+            return transfer.id
+        except stripe.error.InvalidRequestError as err:
+            # En entorno de prueba (test keys), si Stripe no tiene saldo líquido por ciclo bancario de MX
+            if "insufficient available funds" in str(err).lower() and settings.STRIPE_SECRET_KEY.startswith("sk_test_"):
+                logger.warning(
+                    "[STRIPE TEST MODE FALLBACK] Fondos insuficientes en Stripe sandbox (%s). "
+                    "Generando ID de transferencia simulada para permitir probar el flujo contable completo.",
+                    str(err)
+                )
+                return f"tr_test_{withdrawal_id}_{payouts.stripe_connect_account_id[:12]}"
+            raise
 
     # ==========================================================================
     # 3.5 VERIFICACIÓN DIRECTA DE SESIÓN (CALLBACK DE RETORNO EN LOCAL / CLIENTE)

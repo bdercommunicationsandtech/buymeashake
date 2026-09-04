@@ -142,6 +142,9 @@ class AthleteProfile(Base):
     products: Mapped[list["DigitalProduct"]] = relationship("DigitalProduct", back_populates="athlete", cascade="all, delete-orphan")
     booking_services: Mapped[list["BookingService"]] = relationship("BookingService", back_populates="athlete", cascade="all, delete-orphan")
     posts: Mapped[list["Post"]] = relationship("Post", back_populates="athlete", cascade="all, delete-orphan")
+    withdrawal_requests: Mapped[list["WithdrawalRequest"]] = relationship(
+        "WithdrawalRequest", back_populates="athlete", cascade="all, delete-orphan"
+    )
 
 
 class AthletePageSettings(Base):
@@ -197,7 +200,9 @@ class AthletePayouts(Base):
     athlete_id: Mapped[int] = mapped_column(
         BigInteger, ForeignKey("athlete_profiles.id", ondelete="CASCADE"), primary_key=True
     )
+    country_code: Mapped[str] = mapped_column(String(2), default="MX")  # 'MX' o 'US'
     stripe_connect_account_id: Mapped[str | None] = mapped_column(String(100), unique=True, nullable=True)
+    stripe_details_submitted: Mapped[bool] = mapped_column(Boolean, default=False)
     payouts_enabled: Mapped[bool] = mapped_column(Boolean, default=False)
     updated_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now(), onupdate=func.now())
 
@@ -529,3 +534,38 @@ class EmailVerification(Base):
     expires_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
     is_used: Mapped[bool] = mapped_column(Boolean, default=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+
+
+# ==============================================================================
+# MÓDULO 7: RETIROS DE ATLETAS (BDER ARCHITECTURE STYLE)
+# ==============================================================================
+
+class WithdrawalRequest(Base):
+    __tablename__ = "withdrawal_requests"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    athlete_id: Mapped[int] = mapped_column(
+        BigInteger, ForeignKey("athlete_profiles.id", ondelete="RESTRICT"), nullable=False, index=True
+    )
+    amount_usd: Mapped[Decimal] = mapped_column(Numeric(10, 2), nullable=False)
+    amount_cents: Mapped[int] = mapped_column(BigInteger, nullable=False)
+    currency: Mapped[str] = mapped_column(String(10), default="USD")
+    destination_country: Mapped[str] = mapped_column(String(2), default="MX")  # 'MX' o 'US'
+    status: Mapped[str] = mapped_column(
+        Enum("pending", "processing", "completed", "failed", name="withdrawal_status_enum"),
+        default="pending",
+        nullable=False,
+        index=True,
+    )
+    stripe_transfer_id: Mapped[str | None] = mapped_column(String(150), unique=True, nullable=True)
+    failure_reason: Mapped[str | None] = mapped_column(Text, nullable=True)
+    admin_notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+    requested_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+    processed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    processed_by_admin_id: Mapped[int | None] = mapped_column(
+        BigInteger, ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+    )
+
+    athlete: Mapped[AthleteProfile] = relationship("AthleteProfile", back_populates="withdrawal_requests")
+    processed_by: Mapped["User | None"] = relationship("User", foreign_keys=[processed_by_admin_id])
+

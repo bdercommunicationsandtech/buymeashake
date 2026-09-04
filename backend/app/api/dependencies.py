@@ -51,5 +51,24 @@ async def get_current_athlete(
     return profile
 
 
+async def get_optional_user(
+    session: DatabaseSession,
+    credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(security_scheme)],
+) -> User | None:
+    if not credentials:
+        return None
+    try:
+        payload = decode_token(credentials.credentials)
+        if not payload or payload.get("type") != "access":
+            return None
+        user_id = int(payload.get("sub", 0))
+        user_repo = UserRepository(session)
+        return await user_repo.get_by_id(user_id)
+    except Exception:
+        return None
+
+
 CurrentUser = Annotated[User, Depends(get_current_user)]
+OptionalUser = Annotated[User | None, Depends(get_optional_user)]
 CurrentAthlete = Annotated[AthleteProfile, Depends(get_current_athlete)]
+

@@ -1,86 +1,261 @@
-<div class="space-y-6 max-w-3xl">
+<div class="space-y-8 max-w-4xl">
   <div>
-    <h1 class="text-2xl font-black text-gray-900">Payouts & Stripe</h1>
-    <p class="text-sm text-gray-500 mt-1">Conecta tu cuenta bancaria a través de Stripe para recibir transferencias directas en USD.</p>
+    <h1 class="text-2xl font-black text-gray-900 dark:text-white">Payouts & Retiros</h1>
+    <p class="text-sm text-gray-500 mt-1">
+      Gestiona tu cuenta bancaria y solicita transferencias de tus ganancias en USD (México y EE.UU.).
+    </p>
   </div>
 
+  <!-- TARJETA DE BALANCE BDER STYLE -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+    <div class="bg-white dark:bg-neutral-900 rounded-3xl p-6 border border-gray-200/80 dark:border-white/10 shadow-xs flex flex-col justify-between">
+      <div>
+        <p class="text-xs font-bold text-gray-400 uppercase tracking-wider">Balance Disponible</p>
+        <p class="text-3xl font-black text-emerald-600 dark:text-[#c9ff3d] mt-2">
+          ${{ availableBalance().toFixed(2) }} <span class="text-xs font-semibold text-gray-500">USD</span>
+        </p>
+      </div>
+      <div class="mt-4 pt-4 border-t border-gray-100 dark:border-white/5">
+        <button
+          type="button"
+          [disabled]="availableBalance() < 10 || !stripeConnected()"
+          (click)="openWithdrawModal()"
+          class="w-full rounded-2xl bg-gray-900 hover:bg-black dark:bg-[#c9ff3d] dark:hover:bg-[#b2e635] text-white dark:text-gray-950 px-4 py-3 text-xs font-black transition disabled:opacity-40 disabled:cursor-not-allowed shadow-xs"
+        >
+          @if (!stripeConnected()) {
+            Conecta Stripe para retirar
+          } @else if (availableBalance() < 10) {
+            Mínimo de retiro $10.00 USD
+          } @else {
+            Solicitar Retiro
+          }
+        </button>
+      </div>
+    </div>
+
+    <div class="bg-white dark:bg-neutral-900 rounded-3xl p-6 border border-gray-200/80 dark:border-white/10 shadow-xs flex flex-col justify-between">
+      <div>
+        <p class="text-xs font-bold text-gray-400 uppercase tracking-wider">Total Ganado (Neto)</p>
+        <p class="text-2xl font-black text-gray-900 dark:text-white mt-2">
+          ${{ totalEarned().toFixed(2) }} <span class="text-xs font-semibold text-gray-500">USD</span>
+        </p>
+      </div>
+      <p class="text-xs text-gray-400 mt-2">Acumulado histórico por Shakes y suscripciones.</p>
+    </div>
+
+    <div class="bg-white dark:bg-neutral-900 rounded-3xl p-6 border border-gray-200/80 dark:border-white/10 shadow-xs flex flex-col justify-between">
+      <div>
+        <p class="text-xs font-bold text-gray-400 uppercase tracking-wider">Total Retirado</p>
+        <p class="text-2xl font-black text-gray-900 dark:text-white mt-2">
+          ${{ totalWithdrawn().toFixed(2) }} <span class="text-xs font-semibold text-gray-500">USD</span>
+        </p>
+      </div>
+      @if (pendingWithdrawalAmount() > 0) {
+        <p class="text-xs text-amber-600 font-bold mt-2">
+          En revisión: ${{ pendingWithdrawalAmount().toFixed(2) }} USD
+        </p>
+      } @else {
+        <p class="text-xs text-gray-400 mt-2">Transferencias exitosas a tu banco.</p>
+      }
+    </div>
+  </div>
+
+  <!-- CONFIGURACIÓN DE STRIPE CONNECT EXPRESS -->
   @if (!stripeConnected()) {
-    <!-- Estado: No conectado -->
-    <div class="bg-white rounded-3xl p-8 sm:p-10 border border-gray-200/80 shadow-xs space-y-6">
+    <div class="bg-white dark:bg-neutral-900 rounded-3xl p-8 border border-gray-200/80 dark:border-white/10 shadow-xs space-y-6">
       <div class="flex items-center gap-3">
-        <div class="h-10 w-10 rounded-2xl bg-[#635bff]/10 text-[#635bff] grid place-items-center font-black text-lg">
+        <div class="h-12 w-12 rounded-2xl bg-[#635bff]/10 text-[#635bff] grid place-items-center font-black text-xl">
           S
         </div>
         <div>
-          <h2 class="text-lg font-black text-gray-900">Conectar con Stripe Express</h2>
-          <p class="text-xs text-gray-500 font-medium">Procesamiento seguro y transferencias automáticas a tu cuenta CLABE o débito.</p>
+          <h2 class="text-lg font-black text-gray-900 dark:text-white">Conectar cuenta bancaria con Stripe Express</h2>
+          <p class="text-xs text-gray-500 mt-0.5">Recibe transferencias bancarias directas en México (CLABE) o Estados Unidos (ACH/Ruta).</p>
         </div>
       </div>
 
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
         <div>
-          <label class="block text-xs font-bold text-gray-700 uppercase mb-1">País de residencia</label>
+          <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 uppercase mb-1">País de residencia bancaria</label>
           <select
-            class="w-full rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 text-sm font-semibold text-gray-900 outline-none"
+            class="w-full rounded-2xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-neutral-800 px-4 py-3 text-xs font-bold text-gray-900 dark:text-white outline-none"
             [value]="selectedCountry()"
             (change)="selectedCountry.set($any($event.target).value)"
           >
-            <option value="México">México (MX)</option>
-            <option value="Estados Unidos">Estados Unidos (US)</option>
-            <option value="Colombia">Colombia (CO)</option>
-            <option value="España">España (ES)</option>
+            <option value="MX">México 🇲🇽 (Depósito en MXN a tu CLABE)</option>
+            <option value="US">Estados Unidos 🇺🇸 (Depósito en USD vía ACH/Routing)</option>
           </select>
         </div>
 
         <div>
-          <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Moneda de retiro</label>
-          <select
-            class="w-full rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 text-sm font-semibold text-gray-900 outline-none"
-            [value]="selectedCurrency()"
-            (change)="selectedCurrency.set($any($event.target).value)"
-          >
-            <option value="USD">Dólares Americanos (USD)</option>
-          </select>
+          <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 uppercase mb-1">Moneda del balance</label>
+          <input
+            type="text"
+            disabled
+            value="Dólares Americanos (USD)"
+            class="w-full rounded-2xl border border-gray-200 dark:border-white/10 bg-gray-100 dark:bg-neutral-800/50 px-4 py-3 text-xs font-bold text-gray-500 cursor-not-allowed"
+          />
         </div>
       </div>
 
-      <div class="pt-4">
+      <div class="pt-2">
         <button
           type="button"
           (click)="connectStripe()"
-          class="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-full bg-[#635bff] hover:bg-[#5349e0] text-white px-8 py-3.5 text-xs font-bold transition shadow-xs"
+          [disabled]="connecting()"
+          class="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-2xl bg-[#635bff] hover:bg-[#5349e0] text-white px-8 py-3.5 text-xs font-black transition shadow-xs disabled:opacity-50"
         >
-          <span>Conectar Stripe Express</span>
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
-          </svg>
+          @if (connecting()) {
+            <span>Conectando con Stripe...</span>
+          } @else {
+            <span>Conectar con Stripe Express</span>
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+            </svg>
+          }
         </button>
       </div>
     </div>
   } @else {
-    <!-- Estado: Conectado -->
-    <div class="bg-white rounded-3xl p-8 border border-emerald-200/80 bg-emerald-50/20 shadow-xs space-y-6">
-      <div class="flex items-center justify-between">
-        <div class="flex items-center gap-3">
-          <div class="h-10 w-10 rounded-full bg-emerald-500 text-white grid place-items-center font-bold">
-            ✓
-          </div>
-          <div>
-            <h2 class="text-base font-black text-gray-900">Stripe conectado correctamente</h2>
-            <p class="text-xs text-emerald-700 font-medium">Cuenta activa · Retiros programados semanales</p>
-          </div>
+    <div class="bg-white dark:bg-neutral-900 rounded-3xl p-6 border border-emerald-200/80 dark:border-emerald-500/20 bg-emerald-50/20 shadow-xs flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="h-10 w-10 rounded-full bg-emerald-500 text-white grid place-items-center font-bold">
+          ✓
         </div>
-        <span class="text-xs font-bold text-emerald-800 bg-emerald-100 px-3 py-1 rounded-full">Activo</span>
+        <div>
+          <h2 class="text-sm font-black text-gray-900 dark:text-white">Cuenta bancaria de Stripe verificada</h2>
+          <p class="text-xs text-emerald-700 dark:text-emerald-400 font-medium">
+            Habilitada para recibir transferencias (Destino: {{ selectedCountry() }}).
+          </p>
+        </div>
       </div>
+      <button
+        type="button"
+        (click)="connectStripe()"
+        class="text-xs font-bold text-gray-600 dark:text-gray-300 hover:underline"
+      >
+        Modificar cuenta
+      </button>
+    </div>
+  }
 
-      <div class="grid grid-cols-2 gap-4 pt-4 border-t border-gray-100">
-        <div>
-          <p class="text-xs font-semibold text-gray-400">Saldo disponible</p>
-          <p class="text-2xl font-black text-gray-900 mt-1">${{ availableBalance() }} {{ selectedCurrency() }}</p>
+  <!-- TABLA DE HISTORIAL DE RETIROS -->
+  <div class="bg-white dark:bg-neutral-900 rounded-3xl border border-gray-200/80 dark:border-white/10 shadow-xs overflow-hidden">
+    <div class="p-6 border-b border-gray-100 dark:border-white/5 flex items-center justify-between">
+      <h3 class="text-sm font-black text-gray-900 dark:text-white uppercase tracking-wider">Historial de Solicitudes de Retiro</h3>
+      <button type="button" (click)="loadWithdrawals()" class="text-xs font-bold text-gray-500 hover:text-gray-900 dark:hover:text-white">
+        Refrescar
+      </button>
+    </div>
+
+    @if (withdrawals().length === 0) {
+      <div class="p-10 text-center text-xs text-gray-400 font-medium">
+        Aún no has solicitado ningún retiro. Cuando acumules al menos $10.00 USD podrás solicitar tu primer depósito.
+      </div>
+    } @else {
+      <div class="divide-y divide-gray-100 dark:divide-white/5">
+        @for (w of withdrawals(); track w.id) {
+          <div class="p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <div class="flex items-center gap-2">
+                <span class="font-black text-base text-gray-900 dark:text-white">
+                  ${{ (+w.amount_usd).toFixed(2) }} {{ w.currency }}
+                </span>
+                <span class="text-[10px] uppercase font-black px-2.5 py-0.5 rounded-full"
+                  [ngClass]="{
+                    'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300': w.status === 'pending' || w.status === 'processing',
+                    'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300': w.status === 'completed',
+                    'bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300': w.status === 'failed'
+                  }">
+                  {{ w.status === 'pending' ? 'En revisión' : (w.status === 'completed' ? 'Transferido' : (w.status === 'failed' ? 'Rechazado' : w.status)) }}
+                </span>
+              </div>
+              <p class="text-xs text-gray-400 mt-1">
+                Solicitado el {{ w.requested_at | date:'mediumDate' }} · Destino: {{ w.destination_country }}
+              </p>
+              @if (w.status === 'failed' && w.failure_reason) {
+                <p class="text-xs text-red-600 font-medium mt-1">Motivo: {{ w.failure_reason }}</p>
+              }
+            </div>
+
+            @if (w.stripe_transfer_id) {
+              <span class="text-[11px] font-mono text-gray-400 bg-gray-50 dark:bg-neutral-800 px-3 py-1 rounded-xl">
+                Ref: {{ w.stripe_transfer_id }}
+              </span>
+            }
+          </div>
+        }
+      </div>
+    }
+  </div>
+
+  <!-- MODAL DE SOLICITAR RETIRO -->
+  @if (showWithdrawModal()) {
+    <div class="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+      <div class="bg-white dark:bg-neutral-900 rounded-3xl max-w-md w-full p-6 sm:p-8 border border-gray-200/80 dark:border-white/10 shadow-2xl space-y-5">
+        <div class="flex items-center justify-between">
+          <h3 class="text-lg font-black text-gray-900 dark:text-white">Solicitar Retiro de Fondos</h3>
+          <button type="button" (click)="closeWithdrawModal()" class="text-gray-400 hover:text-gray-600 text-xl font-black">
+            ×
+          </button>
         </div>
+
+        <p class="text-xs text-gray-500">
+          Los fondos serán transferidos mediante Stripe Connect a tu cuenta bancaria en <strong class="text-gray-900 dark:text-white">{{ selectedCountry() === 'MX' ? 'México (CLABE en MXN)' : 'Estados Unidos (USD)' }}</strong>.
+        </p>
+
+        <div class="bg-gray-50 dark:bg-neutral-800 rounded-2xl p-4 flex items-center justify-between text-xs">
+          <span class="text-gray-500 font-medium">Disponible para retirar:</span>
+          <span class="font-black text-emerald-600 dark:text-[#c9ff3d] text-base">${{ availableBalance().toFixed(2) }} USD</span>
+        </div>
+
         <div>
-          <p class="text-xs font-semibold text-gray-400">En tránsito</p>
-          <p class="text-2xl font-black text-gray-500 mt-1">${{ pendingBalance() }} {{ selectedCurrency() }}</p>
+          <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 uppercase mb-2">Monto a retirar (USD)</label>
+          <div class="relative">
+            <span class="absolute left-4 top-3 text-gray-400 font-black text-sm">$</span>
+            <input
+              type="number"
+              min="10"
+              [max]="availableBalance()"
+              step="1"
+              [(ngModel)]="withdrawAmount"
+              class="w-full rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-neutral-800 pl-8 pr-4 py-3 text-sm font-black text-gray-900 dark:text-white outline-none"
+            />
+          </div>
+          <p class="text-[11px] text-gray-400 mt-1.5">Mínimo: $10.00 USD</p>
+        </div>
+
+        @if (withdrawError()) {
+          <div class="p-3 bg-red-50 dark:bg-red-950/40 text-red-600 text-xs rounded-xl font-medium">
+            {{ withdrawError() }}
+          </div>
+        }
+
+        @if (withdrawSuccess()) {
+          <div class="p-3 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 text-xs rounded-xl font-medium">
+            {{ withdrawSuccess() }}
+          </div>
+        }
+
+        <div class="flex items-center gap-3 pt-2">
+          <button
+            type="button"
+            (click)="closeWithdrawModal()"
+            class="w-1/2 rounded-2xl border border-gray-200 dark:border-white/10 py-3 text-xs font-bold text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-neutral-800 transition"
+          >
+            Cancelar
+          </button>
+          <button
+            type="button"
+            [disabled]="requestingWithdrawal()"
+            (click)="submitWithdrawal()"
+            class="w-1/2 rounded-2xl bg-[#c9ff3d] hover:bg-[#b2e635] text-gray-950 py-3 text-xs font-black transition disabled:opacity-50 shadow-xs"
+          >
+            @if (requestingWithdrawal()) {
+              Enviando...
+            } @else {
+              Confirmar Retiro
+            }
+          </button>
         </div>
       </div>
     </div>

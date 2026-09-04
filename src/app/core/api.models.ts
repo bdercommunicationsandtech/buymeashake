@@ -270,6 +270,7 @@ export interface ShakeCheckoutPayload {
   supporter_name?: string;
   supporter_email?: string;
   shake_details: ShakeDetailsPayload;
+  recurring?: boolean;
 }
 
 export interface PaymentIntentResult {

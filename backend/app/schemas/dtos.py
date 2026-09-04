@@ -243,6 +243,7 @@ class ShakeCheckoutCreateRequest(BaseModel):
     supporter_name: str | None = Field(default=None, max_length=150)
     supporter_email: str | None = Field(default=None, max_length=191)
     shake_details: ShakeDetailsRequest = Field(default_factory=ShakeDetailsRequest)
+    recurring: bool = False
 
 
 class BookingSessionCheckoutRequest(BaseModel):

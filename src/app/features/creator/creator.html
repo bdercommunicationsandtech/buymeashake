@@ -665,31 +665,106 @@
               </button>
             </div>
           } @else {
-            <div class="space-y-4">
-              <div>
-                <h3 class="font-display text-base font-black text-gray-950 dark:text-white">Shakes recurrentes</h3>
-                <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">Apoya de forma mensual y accede a beneficios exclusivos.</p>
+            <div class="space-y-5">
+              <div class="flex items-center justify-between gap-3">
+                <div class="min-w-0">
+                  <h2 class="font-display text-base font-black text-gray-950 dark:text-white sm:text-lg">Shakes mensuales</h2>
+                  <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">Apoya de forma continua mes con mes a su preparación deportiva.</p>
+                </div>
               </div>
 
-              @for (tier of tiers(); track tier.name) {
-                <div class="space-y-3 rounded-2xl border border-gray-200/80 dark:border-white/10 bg-[#fbfbfc] dark:bg-white/5 p-4 transition hover:border-gray-300 dark:hover:border-white/20 sm:p-5">
-                  <div class="flex flex-wrap items-center justify-between gap-2">
-                    <h4 class="font-display text-sm font-black text-gray-900 dark:text-white">{{ tier.name }}</h4>
-                    <span class="shrink-0 text-sm font-black text-emerald-600 dark:text-[#c9ff3d]">${{ tier.price }} / mes</span>
-                  </div>
-                  <p class="text-xs leading-relaxed text-gray-600 dark:text-gray-300">{{ tier.description }}</p>
+              <!-- Selector de Shakes Recurrentes -->
+              <div class="grid grid-cols-2 gap-2 min-[400px]:grid-cols-4 sm:gap-2.5">
+                @for (option of quickShakes; track option) {
                   <button
                     type="button"
-                    (click)="joinTier(tier)"
-                    [disabled]="openingStripe()"
-                    class="mt-2 w-full rounded-xl bg-gray-950 py-2.5 text-xs font-black text-white shadow-xs transition hover:opacity-90 dark:bg-[#c9ff3d] dark:text-gray-950 disabled:opacity-80 disabled:cursor-wait"
+                    class="flex flex-col items-center justify-center gap-0.5 rounded-2xl border py-3 text-center transition sm:py-3.5"
+                    [class]="
+                      shakes() === option
+                        ? 'border-[#c9ff3d] bg-[#c9ff3d]/10 dark:bg-[#c9ff3d]/15 text-[#c9ff3d] ring-2 ring-[#c9ff3d]/40 shadow-sm'
+                        : 'border-gray-200 dark:border-white/10 bg-gray-50/50 dark:bg-white/5 text-gray-700 dark:text-gray-200 hover:border-gray-400 dark:hover:border-white/20'
+                    "
+                    (click)="setShakes(option)"
                   >
-                    @if (openingStripeTierId() === tier.id) {
-                      Abriendo la interfaz de Stripe…
-                    } @else {
-                      Unirse por ${{ tier.price }} USD
-                    }
+                    <span class="block text-lg font-black leading-tight sm:text-xl">{{ option }}</span>
+                    <span class="block text-[10px] font-bold uppercase tracking-wider opacity-80">
+                      ${{ option * currentPrice() }}/mes
+                    </span>
                   </button>
+                }
+
+                <label class="flex flex-col items-center justify-center rounded-2xl border border-gray-200 dark:border-white/10 bg-gray-50/50 dark:bg-white/5 px-2 py-2 text-center focus-within:border-[#c9ff3d]">
+                  <span class="block text-[10px] font-bold uppercase tracking-wider text-gray-400">{{ t().athlete.otherAmount }}</span>
+                  <input
+                    type="number"
+                    min="1"
+                    max="99"
+                    class="w-full bg-transparent text-center text-lg font-black text-gray-900 outline-none dark:text-white"
+                    [value]="shakes()"
+                    (input)="onShakesInput($any($event.target).value)"
+                    aria-label="Cantidad personalizada de shakes"
+                  />
+                </label>
+              </div>
+
+              <div>
+                <label class="mb-1.5 block text-xs font-bold uppercase tracking-wider text-gray-600 dark:text-gray-300">
+                  {{ t().athlete.cheerMessageLabel }}
+                </label>
+                <textarea
+                  rows="3"
+                  maxlength="240"
+                  [placeholder]="t().athlete.cheerMessagePlaceholder"
+                  class="w-full resize-none rounded-2xl border border-gray-200 dark:border-white/10 bg-gray-50/50 dark:bg-white/5 p-3.5 text-sm text-gray-900 placeholder:text-gray-400 transition focus:border-[#c9ff3d] focus:bg-white focus:outline-none dark:text-white dark:focus:bg-[#0c0f10]"
+                  [value]="message()"
+                  (input)="onMessageInput($any($event.target).value)"
+                ></textarea>
+                <span class="mt-1 block text-right text-[11px] font-medium text-gray-400">
+                  {{ message().length }}/240
+                </span>
+              </div>
+
+              <button
+                type="button"
+                class="flex w-full transform items-center justify-center gap-2 rounded-2xl bg-[#c9ff3d] py-4 text-sm font-black text-gray-950 shadow-lg shadow-[#c9ff3d]/20 transition hover:bg-[#bbf033] active:scale-[0.98] sm:text-base disabled:opacity-80 disabled:cursor-wait"
+                [disabled]="openingStripe()"
+                (click)="support()"
+              >
+                @if (openingStripe() && openingStripeTierId() === null) {
+                  <span class="inline-block h-4 w-4 animate-spin rounded-full border-2 border-gray-950/25 border-t-gray-950"></span>
+                  <span>{{ t().athlete.openingStripe }}</span>
+                } @else {
+                  <span>Apoyar mensualmente con ${{ amount() }} {{ currency() }} / mes</span>
+                  <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+                  </svg>
+                }
+              </button>
+
+              @if (tiers().length > 0) {
+                <div class="pt-2 border-t border-gray-100 dark:border-white/10 space-y-3">
+                  <p class="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">O únete a un nivel exclusivo</p>
+                  @for (tier of tiers(); track tier.name) {
+                    <div class="space-y-3 rounded-2xl border border-gray-200/80 dark:border-white/10 bg-[#fbfbfc] dark:bg-white/5 p-4 transition hover:border-gray-300 dark:hover:border-white/20 sm:p-5">
+                      <div class="flex flex-wrap items-center justify-between gap-2">
+                        <h4 class="font-display text-sm font-black text-gray-900 dark:text-white">{{ tier.name }}</h4>
+                        <span class="shrink-0 text-sm font-black text-emerald-600 dark:text-[#c9ff3d]">${{ tier.price }} / mes</span>
+                      </div>
+                      <p class="text-xs leading-relaxed text-gray-600 dark:text-gray-300">{{ tier.description }}</p>
+                      <button
+                        type="button"
+                        (click)="joinTier(tier)"
+                        [disabled]="openingStripe()"
+                        class="mt-2 w-full rounded-xl bg-gray-950 py-2.5 text-xs font-black text-white shadow-xs transition hover:opacity-90 dark:bg-[#c9ff3d] dark:text-gray-950 disabled:opacity-80 disabled:cursor-wait"
+                      >
+                        @if (openingStripeTierId() === tier.id) {
+                          Abriendo la interfaz de Stripe…
+                        } @else {
+                          Unirse por ${{ tier.price }} USD
+                        }
+                      </button>
+                    </div>
+                  }
                 </div>
               }
             </div>

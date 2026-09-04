@@ -393,11 +393,19 @@ class StripeService:
                 existing_goal = goal_res.scalar_one_or_none()
                 if existing_goal:
                     new_goal_raised = float(existing_goal.raised_amount or 0)
+            athlete_stmt = (
+                select(AthleteProfile)
+                .options(*_athlete_stripe_load_options())
+                .where(AthleteProfile.id == tx.athlete_id)
+            )
+            athlete_res = await self.session.execute(athlete_stmt)
+            athlete = athlete_res.scalar_one_or_none()
             return {
                 "handled": True,
                 "status": "already_processed",
                 "transaction_uuid": tx_uuid,
                 "new_goal_raised": new_goal_raised,
+                "thank_you_message": get_thank_you(athlete) if athlete else None,
                 "supporter_item": self._supporter_item_payload(
                     tx_id=tx.id,
                     supporter_name=tx.supporter_name,
@@ -947,12 +955,17 @@ class StripeService:
         return {
             "id": tx_id or 0,
             "supporter_name": display,
-            "shakes_count": shakes_count,
             "gross_amount": float(gross_amount),
             "currency": "USD",
-            "supporter_message": supporter_message,
-            "is_anonymous": is_anonymous,
             "created_at": "",
+            "shake_details": {
+                "shakes_count": shakes_count,
+                "supporter_message": supporter_message,
+                "is_anonymous": is_anonymous,
+                "creator_reply": None,
+                "creator_reply_at": None,
+                "is_liked_by_creator": False,
+            },
         }
 
     async def _process_successful_payment(self, obj: dict[str, Any], event_type: str) -> dict[str, Any]:

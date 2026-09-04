@@ -1,14 +1,17 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { CheckoutService } from '../../core/checkout.service';
 import { PaymentService } from '../../core/payment.service';
+import { AnimatedShakerComponent } from '../icons/animated-shaker';
 
 /** Duración del estado "Procesando…" antes de mostrar la confirmación. */
 const FAKE_PROCESSING_MS = 1000;
 
 @Component({
   selector: 'app-stripe-checkout',
+  standalone: true,
   templateUrl: './stripe-checkout.html',
   styleUrl: './stripe-checkout.css',
+  imports: [AnimatedShakerComponent],
   host: { '(document:keydown.escape)': 'onEscape()' },
 })
 export class StripeCheckout {
@@ -181,12 +184,13 @@ export class StripeCheckout {
   }
 
   close(): void {
-    if (this.processing()) return;
+    if (this.processing() || this.checkout.confirming()) return;
     this.checkout.close();
   }
 
   onEscape(): void {
     if (!this.checkout.open()) return;
+    if (this.checkout.confirming()) return;
     this.close();
   }
 }

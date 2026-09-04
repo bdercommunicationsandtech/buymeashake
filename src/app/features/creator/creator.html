@@ -614,13 +614,19 @@
 
               <button
                 type="button"
-                class="flex w-full transform items-center justify-center gap-2 rounded-2xl bg-[#c9ff3d] py-4 text-sm font-black text-gray-950 shadow-lg shadow-[#c9ff3d]/20 transition hover:bg-[#bbf033] active:scale-[0.98] sm:text-base"
+                class="flex w-full transform items-center justify-center gap-2 rounded-2xl bg-[#c9ff3d] py-4 text-sm font-black text-gray-950 shadow-lg shadow-[#c9ff3d]/20 transition hover:bg-[#bbf033] active:scale-[0.98] sm:text-base disabled:opacity-80 disabled:cursor-wait"
+                [disabled]="openingStripe()"
                 (click)="support()"
               >
-                <span>Apoyar ${{ amount() }} {{ currency() }}</span>
-                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
-                </svg>
+                @if (openingStripe() && openingStripeTierId() === null) {
+                  <span class="inline-block h-4 w-4 animate-spin rounded-full border-2 border-gray-950/25 border-t-gray-950"></span>
+                  <span>Abriendo la interfaz de Stripe…</span>
+                } @else {
+                  <span>Apoyar ${{ amount() }} {{ currency() }}</span>
+                  <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+                  </svg>
+                }
               </button>
             </div>
           } @else {
@@ -640,9 +646,14 @@
                   <button
                     type="button"
                     (click)="joinTier(tier)"
-                    class="mt-2 w-full rounded-xl bg-gray-950 py-2.5 text-xs font-black text-white shadow-xs transition hover:opacity-90 dark:bg-[#c9ff3d] dark:text-gray-950"
+                    [disabled]="openingStripe()"
+                    class="mt-2 w-full rounded-xl bg-gray-950 py-2.5 text-xs font-black text-white shadow-xs transition hover:opacity-90 dark:bg-[#c9ff3d] dark:text-gray-950 disabled:opacity-80 disabled:cursor-wait"
                   >
-                    Unirse por ${{ tier.price }} USD
+                    @if (openingStripeTierId() === tier.id) {
+                      Abriendo la interfaz de Stripe…
+                    } @else {
+                      Unirse por ${{ tier.price }} USD
+                    }
                   </button>
                 </div>
               }

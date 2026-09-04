@@ -146,10 +146,10 @@ async def verify_stripe_session(
     stripe_svc = StripeService(session)
     result = await stripe_svc.verify_and_process_session(session_id or "", tx_uuid=tx)
 
-    # Red de seguridad: confirmar cualquier 301 que Stripe ya marque como paid
-    reconciled = await stripe_svc.reconcile_pending_shake_transactions(limit=20)
-    if (not result.get("handled")) or result.get("status") not in ("succeeded", "already_processed"):
-        paid = next((r for r in reconciled if r.get("status") == "succeeded"), None)
+    # Solo reconciliar si aún no se confirmó
+    if not result.get("handled"):
+        reconciled = await stripe_svc.reconcile_pending_shake_transactions(limit=20)
+        paid = next((r for r in reconciled if r.get("handled")), None)
         if paid:
             result = paid
 

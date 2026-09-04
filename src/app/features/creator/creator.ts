@@ -1,7 +1,6 @@
 import { Component, computed, effect, inject, input, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { filter, take } from 'rxjs/operators';
 import { CheckoutService } from '../../core/checkout.service';
 import { ExploreService } from '../../core/explore.service';
 import { PaymentService } from '../../core/payment.service';
@@ -11,10 +10,10 @@ import {
   Activity,
   ACTIVITIES,
   QUICK_SHAKES,
-  RECENT_SUPPORTERS,
   SHAKE_PRICE,
 } from '../../core/demo';
 import {
+  AnimatedShakerComponent,
   IconBoltComponent,
   IconButtonShareComponent,
   IconButtonSupportComponent,
@@ -84,6 +83,7 @@ export interface CreatorView {
   goalTarget: number;
   goalRaised: number;
   goalCoverImageUrl: string | null;
+  hasActiveGoal: boolean;
   supporters: number;
   shakesReceived: number;
   disciplines: string[];
@@ -104,6 +104,7 @@ export interface CreatorView {
   imports: [
     CommonModule,
     RouterLink,
+    AnimatedShakerComponent,
     IconShakerComponent,
     IconBoltComponent,
     IconTrophyComponent,
@@ -140,6 +141,10 @@ export class Creator {
   readonly error = signal<string | null>(null);
   readonly supporters = signal<any[]>([]);
   readonly quickShakes = QUICK_SHAKES;
+
+  /** true mientras se crea la sesión y se redirige a Stripe Checkout */
+  readonly openingStripe = signal(false);
+  readonly openingStripeTierId = signal<number | null>(null);
 
   readonly editorModal = signal<
     'hero' | 'profile' | 'agenda' | 'goal' | 'prices' | null
@@ -204,6 +209,11 @@ export class Creator {
       'Sesiones 1 a 1 para técnica, consultoría y seguimiento personalizado.',
   );
 
+  /** Hay agenda usable si el atleta publicó al menos un servicio de booking. */
+  readonly hasAgendaAvailable = computed(() => this.bookingServices().length > 0);
+
+  readonly hasActiveGoal = computed(() => Boolean(this.creatorView()?.hasActiveGoal));
+
   readonly agendaImageStyle = computed(() => {
     const url = this.creatorView()?.agendaImageUrl;
     if (url) return `url('${url}')`;
@@ -260,6 +270,9 @@ export class Creator {
         this.supporterService.unfollowAthlete(handle).subscribe({
           next: () => {
             this.isFollowing.set(false);
+            this.creatorView.update((c) =>
+              c ? { ...c, supporters: Math.max(0, c.supporters - 1) } : c,
+            );
             this.isTogglingFollow.set(false);
           },
           error: () => this.isTogglingFollow.set(false),
@@ -268,6 +281,7 @@ export class Creator {
         this.supporterService.followAthlete(handle).subscribe({
           next: () => {
             this.isFollowing.set(true);
+            this.creatorView.update((c) => (c ? { ...c, supporters: c.supporters + 1 } : c));
             this.isTogglingFollow.set(false);
           },
           error: () => this.isTogglingFollow.set(false),
@@ -286,6 +300,7 @@ export class Creator {
 
   onFollowSuccess(data: { email: string; name: string }): void {
     this.isFollowing.set(true);
+    this.creatorView.update((c) => (c ? { ...c, supporters: c.supporters + 1 } : c));
     // Redirige al portal del supporter (studio.buymeacoffee.com/home style)
     this.router.navigate(['/fan/home'], {
       queryParams: { followed: this.creatorView()?.handle || this.username() },
@@ -311,85 +326,8 @@ export class Creator {
       }
     });
 
-    // Si viene de regreso de Stripe Checkout exitoso, verificar sesión y recargar datos frescos de la BD
-    this.route.queryParams
-      .pipe(
-        filter((params) => params['payment'] === 'success' || params['membership'] === 'success'),
-        take(1),
-      )
-      .subscribe((params) => {
-        console.log('[Creator Route Params]', params);
-        const sessionId = params['session_id'] || '';
-        const txUuid = params['tx'] || '';
-        const handle = (this.username() || '').replace(/^@+/, '');
-
-        if (!sessionId && !txUuid) {
-          if (handle) this.loadCreator(handle);
-          return;
-        }
-
-        console.log('[Creator] Verificando sesión con backend:', sessionId, 'tx=', txUuid);
-        this.paymentService.verifySession(sessionId, txUuid).subscribe({
-          next: (res: {
-            supporter_item?: unknown;
-            new_goal_raised?: number | null;
-            thank_you_message?: string | null;
-          }) => {
-            console.log('[Creator] Sesión verificada con éxito:', res);
-            if (res?.supporter_item || res?.new_goal_raised != null) {
-              this.checkout.markPaid(
-                res.supporter_item ?? null,
-                res.new_goal_raised ?? null,
-                res.thank_you_message ?? null,
-              );
-            }
-            if (handle) {
-              this.loadCreator(handle);
-            }
-            this.router.navigate([], {
-              relativeTo: this.route,
-              queryParams: {},
-              replaceUrl: true,
-            });
-          },
-          error: (err: unknown) => {
-            console.error('[Creator] Error verificando sesión:', err);
-            // Reintento solo con tx (por si session_id falló en Stripe/SSL)
-            if (txUuid) {
-              this.paymentService.verifySession('', txUuid).subscribe({
-                next: (res: {
-                  supporter_item?: unknown;
-                  new_goal_raised?: number | null;
-                  thank_you_message?: string | null;
-                }) => {
-                  console.log('[Creator] Reintento tx OK:', res);
-                  if (res?.supporter_item || res?.new_goal_raised != null) {
-                    this.checkout.markPaid(
-                      res.supporter_item ?? null,
-                      res.new_goal_raised ?? null,
-                      res.thank_you_message ?? null,
-                    );
-                  }
-                  if (handle) this.loadCreator(handle);
-                  this.router.navigate([], {
-                    relativeTo: this.route,
-                    queryParams: {},
-                    replaceUrl: true,
-                  });
-                },
-                error: (err2: unknown) => {
-                  console.error('[Creator] Reintento tx falló:', err2);
-                  if (handle) this.loadCreator(handle);
-                },
-              });
-            } else if (handle) {
-              this.loadCreator(handle);
-            }
-          },
-        });
-      });
-
     // Escucha en tiempo real si el supporter completó una donación
+    // (retorno Stripe lo maneja App al boot para mostrar overlay al instante)
     effect(() => {
       const last = this.checkout.lastDonation();
       if (last) {
@@ -398,6 +336,7 @@ export class Creator {
         }
         if (last.supporterItem) {
           const s = last.supporterItem;
+          const shakesAdded = Number(s.shake_details?.shakes_count ?? 0);
           const initials = s.supporter_name
             .split(' ')
             .map((w: string) => w[0])
@@ -408,7 +347,7 @@ export class Creator {
           this.supporters.update((list) => [
             {
               name: s.supporter_name,
-              shakes: s.shake_details?.shakes_count ?? 0,
+              shakes: shakesAdded,
               message: s.shake_details?.supporter_message || '¡Mucho éxito con tu entrenamiento!',
               when: 'Justo ahora',
               initials: initials,
@@ -416,7 +355,11 @@ export class Creator {
             ...list,
           ]);
 
-          this.creatorView.update((c) => (c ? { ...c, supporters: c.supporters + 1 } : c));
+          if (shakesAdded > 0) {
+            this.creatorView.update((c) =>
+              c ? { ...c, shakesReceived: c.shakesReceived + shakesAdded } : c,
+            );
+          }
         }
       }
     });
@@ -478,6 +421,12 @@ export class Creator {
         goalRaised: patch.goalRaised ?? current.goalRaised,
         goalCoverImageUrl:
           patch.goalCoverImageUrl !== undefined ? patch.goalCoverImageUrl : current.goalCoverImageUrl,
+        hasActiveGoal:
+          patch.goalTitle !== undefined
+            ? Boolean(patch.goalTitle?.trim())
+            : patch.goalTarget !== undefined
+              ? Number(patch.goalTarget) > 0 || current.hasActiveGoal
+              : current.hasActiveGoal,
         shakePrice: patch.shakePrice ?? current.shakePrice,
         name: patch.name ?? current.name,
         bio: patch.bio ?? current.bio,
@@ -644,7 +593,8 @@ export class Creator {
   private mapProfile(profile: CreatorProfile): CreatorView {
     const goalTarget = Number(profile.active_goal_target ?? 0);
     const goalRaised = Number(profile.active_goal_raised ?? 0);
-    const shakesFromSupporters = RECENT_SUPPORTERS.reduce((sum, s) => sum + s.shakes, 0);
+    const shakesReceived = Number(profile.total_shakes_received ?? 0);
+    const followersCount = Number(profile.followers_count ?? 0);
 
     return {
       handle: profile.handle,
@@ -663,12 +613,13 @@ export class Creator {
         .join('')
         .slice(0, 2)
         .toUpperCase(),
-      goalTitle: profile.active_goal_title || 'Meta deportiva activa',
-      goalTarget: goalTarget || 1000,
+      goalTitle: profile.active_goal_title || '',
+      goalTarget: goalTarget,
       goalRaised: goalRaised,
       goalCoverImageUrl: profile.active_goal_cover_image_url ?? null,
-      supporters: 860,
-      shakesReceived: shakesFromSupporters > 0 ? shakesFromSupporters + 1227 : 1248,
+      hasActiveGoal: Boolean(profile.active_goal_title),
+      supporters: followersCount,
+      shakesReceived,
       disciplines: [profile.primary_sport],
       shakePrice: Number(profile.shake_price) || SHAKE_PRICE,
       currency: 'USD',
@@ -798,7 +749,10 @@ export class Creator {
 
   joinTier(tier: CreatorTier): void {
     const c = this.creatorView();
-    if (!c) return;
+    if (!c || this.openingStripe()) return;
+
+    this.openingStripe.set(true);
+    this.openingStripeTierId.set(tier.id);
 
     this.paymentService
       .createSubscriptionCheckoutSession({
@@ -810,6 +764,8 @@ export class Creator {
             window.location.href = sessionRes.checkout_url;
             return;
           }
+          this.openingStripe.set(false);
+          this.openingStripeTierId.set(null);
           this.checkout.start({
             type: 'membership',
             title: tier.name,
@@ -824,6 +780,8 @@ export class Creator {
           });
         },
         error: () => {
+          this.openingStripe.set(false);
+          this.openingStripeTierId.set(null);
           this.checkout.start({
             type: 'membership',
             title: tier.name,
@@ -842,7 +800,9 @@ export class Creator {
 
   support(): void {
     const c = this.creatorView();
-    if (!c) return;
+    if (!c || this.openingStripe()) return;
+
+    this.openingStripe.set(true);
 
     this.paymentService
       .createStripeCheckoutSession({
@@ -861,6 +821,7 @@ export class Creator {
             window.location.href = sessionRes.checkout_url;
             return;
           }
+          this.openingStripe.set(false);
           // Fallback a modal local solo si estamos en modo simulador sin keys
           this.checkout.start({
             type: 'shake',
@@ -876,6 +837,7 @@ export class Creator {
           });
         },
         error: () => {
+          this.openingStripe.set(false);
           this.checkout.start({
             type: 'shake',
             creatorName: c.name,

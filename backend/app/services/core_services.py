@@ -463,6 +463,7 @@ class AthleteService:
         supporter_repo = SupporterRepository(self.session)
         recent_supporters_raw = await supporter_repo.get_recent_supporters(profile.id, limit=10)
         recent_supporters = [SupporterItemResponse(**s) for s in recent_supporters_raw]
+        engagement = await supporter_repo.get_profile_engagement_stats(profile.id)
 
         tiers = [
             MembershipTierResponse(
@@ -526,6 +527,9 @@ class AthleteService:
             tiers=tiers,
             products=products,
             recent_supporters=recent_supporters,
+            total_shakes_received=engagement["total_shakes_received"],
+            followers_count=engagement["followers_count"],
+            members_count=engagement["members_count"],
         )
 
     async def get_monthly_leaderboard(self, limit: int = 10) -> list[AthleteLeaderboardItemResponse]:

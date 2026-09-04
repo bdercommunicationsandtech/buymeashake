@@ -487,3 +487,45 @@
   max-width: 260px;
   margin: 6px auto 0;
 }
+
+.sheet-compact {
+  width: min(440px, 100%);
+}
+
+.confirming-panel {
+  min-height: 320px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.confirming-dots {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: #c9ff3d;
+  box-shadow:
+    16px 0 0 #c9ff3d,
+    -16px 0 0 #c9ff3d;
+  animation: confirming-pulse 1s ease-in-out infinite;
+}
+
+@keyframes confirming-pulse {
+  0%,
+  100% {
+    opacity: 0.35;
+    transform: scale(0.85);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+:host-context(.dark) .sheet,
+.dark .sheet {
+  background: #121614;
+  color: #f3f4f6;
+}

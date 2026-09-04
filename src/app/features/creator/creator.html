@@ -1,6 +1,17 @@
 <div class="min-h-screen overflow-x-hidden bg-[#fafafb] dark:bg-[#090c0a] text-gray-900 dark:text-gray-100 pb-16 font-sans transition-colors duration-300">
   @if (loading()) {
-    <div class="flex min-h-[50vh] items-center justify-center text-sm font-semibold text-gray-500">Cargando perfil…</div>
+    <div class="flex min-h-[70vh] flex-col items-center justify-center gap-4 px-4" role="status" aria-live="polite">
+      <div class="relative flex h-20 w-20 items-center justify-center rounded-3xl border border-[#c9ff3d]/30 bg-[#c9ff3d]/10 text-[#6a9a00] dark:text-[#c9ff3d] shadow-lg shadow-[#c9ff3d]/10">
+        <app-animated-shaker [size]="48" customClass="text-current" />
+      </div>
+      <div class="text-center space-y-1.5">
+        <p class="text-sm font-black text-gray-900 dark:text-white">Cargando perfil…</p>
+        <p class="text-xs font-medium text-gray-500 dark:text-gray-400">Preparando la página del atleta</p>
+      </div>
+      <span class="mt-1 inline-block h-1.5 w-28 overflow-hidden rounded-full bg-gray-200 dark:bg-white/10">
+        <span class="block h-full w-1/2 animate-pulse rounded-full bg-[#c9ff3d]"></span>
+      </span>
+    </div>
   } @else if (error()) {
     <div class="mx-auto max-w-lg px-4 sm:px-5 py-24 text-center">
       <p class="text-lg font-bold text-gray-800 dark:text-gray-200">{{ error() }}</p>
@@ -103,7 +114,7 @@
             </svg>
             <div class="min-w-0">
               <p class="font-display text-sm sm:text-base font-black leading-none text-white">{{ creator.supporters | number }}</p>
-              <p class="mt-1 text-[10px] sm:text-[11px] font-medium text-white/45 leading-tight">Miembros</p>
+              <p class="mt-1 text-[10px] sm:text-[11px] font-medium text-white/45 leading-tight">Seguidores</p>
             </div>
           </div>
         </div>
@@ -292,140 +303,150 @@
           (edit)="openEditor('agenda')"
         >
         <article id="agenda" class="scroll-mt-24 overflow-hidden rounded-3xl border border-gray-200/80 dark:border-white/10 bg-white dark:bg-[#121614] shadow-xs">
-          <div class="grid sm:grid-cols-[1.1fr_0.9fr]">
-            <div
-              class="h-36 bg-cover bg-center sm:hidden"
-              [style.background-image]="agendaImageStyle()"
-            >
-              <div class="h-full w-full bg-gradient-to-t from-black/40 to-transparent"></div>
-            </div>
-            <div class="p-5 sm:p-7">
-              <span class="inline-block rounded-lg bg-emerald-50 dark:bg-white/5 px-2.5 py-1 text-[11px] font-extrabold uppercase tracking-wider text-emerald-700 dark:text-[#c9ff3d]">
-                Mi agenda
-              </span>
-              <h2 class="font-display mt-3 text-lg font-black text-gray-950 dark:text-white sm:text-xl break-words">
-                {{ agendaTitleText() }}
-              </h2>
-              <p class="mt-2 text-sm leading-relaxed text-gray-600 dark:text-gray-300">
-                {{ agendaDescriptionText() }}
-              </p>
-              <button
-                type="button"
-                (click)="showBookingPanel.set(false); bookingStep.set('select-service')"
-                class="mt-5 inline-flex items-center gap-2 rounded-2xl border border-gray-200 dark:border-white/15 bg-gray-50 dark:bg-white/5 px-4 py-2.5 text-sm font-bold text-gray-800 dark:text-white transition hover:border-[#c9ff3d]/50"
+          @if (hasAgendaAvailable()) {
+            <div class="grid sm:grid-cols-[1.1fr_0.9fr]">
+              <div
+                class="h-36 bg-cover bg-center sm:hidden"
+                [style.background-image]="agendaImageStyle()"
               >
-                <app-icon-calendar size="15" />
-                Ver agenda
-              </button>
-
-              <ul class="mt-6 space-y-2.5">
-                @for (service of bookingServices(); track service.id) {
-                  <li>
-                    <button
-                      type="button"
-                      (click)="selectServiceToBook(service)"
-                      class="flex w-full items-center justify-between gap-3 rounded-2xl border border-gray-100 dark:border-white/5 bg-[#fbfbfc] dark:bg-white/5 px-3.5 py-3 sm:px-4 text-left transition hover:border-[#c9ff3d]/50"
-                    >
-                      <span class="min-w-0">
-                        <span class="block text-sm font-bold text-gray-900 dark:text-white truncate">{{ service.title }}</span>
-                        <span class="mt-0.5 block text-xs text-gray-500 dark:text-gray-400">{{ service.duration }} · ${{ service.price }} USD</span>
-                      </span>
-                      <span class="shrink-0 text-xs font-black text-[#c9ff3d]">Agendar →</span>
-                    </button>
-                  </li>
-                } @empty {
-                  <li class="rounded-2xl border border-dashed border-gray-200 dark:border-white/10 px-4 py-6 text-center text-sm text-gray-500">
-                    Pronto habrá horarios disponibles.
-                  </li>
-                }
-              </ul>
-            </div>
-
-            <div
-              class="hidden min-h-[220px] bg-cover bg-center sm:block"
-              [style.background-image]="agendaImageStyle()"
-            >
-              <div class="h-full w-full bg-gradient-to-l from-transparent to-black/20"></div>
-            </div>
-          </div>
-
-          <!-- Panel de reserva inline -->
-          @if (showBookingPanel() && selectedService() && bookingStep() === 'select-time') {
-            <div class="border-t border-gray-100 dark:border-white/10 bg-gray-50/80 dark:bg-black/20 p-5 sm:p-7 space-y-4">
-              <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between pb-3 border-b border-gray-200 dark:border-white/10">
-                <div class="min-w-0">
-                  <button
-                    type="button"
-                    (click)="backToServices()"
-                    class="mb-1 flex items-center gap-1 text-xs font-bold text-gray-400 hover:text-gray-950 dark:hover:text-white"
-                  >
-                    <span>←</span>
-                    <span>Cambiar servicio</span>
-                  </button>
-                  <h3 class="font-display text-sm font-black text-gray-900 dark:text-white truncate">{{ selectedService()?.title }}</h3>
-                  <p class="text-xs text-gray-500 dark:text-gray-400">{{ selectedService()?.duration }} · ${{ selectedService()?.price }} USD</p>
-                </div>
-                <span class="self-start rounded-lg bg-emerald-50 dark:bg-white/10 px-2.5 py-1 text-xs font-bold text-emerald-700 dark:text-[#c9ff3d]">
-                  Google Meet
+                <div class="h-full w-full bg-gradient-to-t from-black/40 to-transparent"></div>
+              </div>
+              <div class="p-5 sm:p-7">
+                <span class="inline-block rounded-lg bg-emerald-50 dark:bg-white/5 px-2.5 py-1 text-[11px] font-extrabold uppercase tracking-wider text-emerald-700 dark:text-[#c9ff3d]">
+                  Mi agenda
                 </span>
-              </div>
+                <h2 class="font-display mt-3 text-lg font-black text-gray-950 dark:text-white sm:text-xl break-words">
+                  {{ agendaTitleText() }}
+                </h2>
+                <p class="mt-2 text-sm leading-relaxed text-gray-600 dark:text-gray-300">
+                  {{ agendaDescriptionText() }}
+                </p>
+                <button
+                  type="button"
+                  (click)="showBookingPanel.set(false); bookingStep.set('select-service')"
+                  class="mt-5 inline-flex items-center gap-2 rounded-2xl border border-gray-200 dark:border-white/15 bg-gray-50 dark:bg-white/5 px-4 py-2.5 text-sm font-bold text-gray-800 dark:text-white transition hover:border-[#c9ff3d]/50"
+                >
+                  <app-icon-calendar size="15" />
+                  Ver agenda
+                </button>
 
-              <div>
-                <label class="mb-2 block text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                  1. Selecciona un día
-                </label>
-                <div class="grid grid-cols-4 gap-2 sm:grid-cols-6">
-                  @for (day of calendarDays(); track day.dateStr) {
-                    <button
-                      type="button"
-                      [disabled]="!day.isAvailable || day.isPast"
-                      (click)="selectDate(day)"
-                      class="flex flex-col items-center rounded-xl border px-1 py-2.5 text-center transition"
-                      [class]="
-                        selectedDate() === day.dateStr
-                          ? 'border-gray-950 dark:border-[#c9ff3d] bg-gray-900 dark:bg-[#1f2421] text-[#c9ff3d]'
-                          : day.isAvailable && !day.isPast
-                          ? 'border-gray-200 dark:border-white/10 bg-white dark:bg-white/5 text-gray-800 dark:text-gray-200 hover:border-gray-400'
-                          : 'cursor-not-allowed border-transparent bg-gray-50 dark:bg-white/5 text-gray-300 dark:text-gray-600'
-                      "
-                    >
-                      <span class="text-[9px] font-bold uppercase">{{ day.dayName }}</span>
-                      <span class="mt-0.5 text-sm font-black">{{ day.dayNumber }}</span>
-                    </button>
+                <ul class="mt-6 space-y-2.5">
+                  @for (service of bookingServices(); track service.id) {
+                    <li>
+                      <button
+                        type="button"
+                        (click)="selectServiceToBook(service)"
+                        class="flex w-full items-center justify-between gap-3 rounded-2xl border border-gray-100 dark:border-white/5 bg-[#fbfbfc] dark:bg-white/5 px-3.5 py-3 sm:px-4 text-left transition hover:border-[#c9ff3d]/50"
+                      >
+                        <span class="min-w-0">
+                          <span class="block text-sm font-bold text-gray-900 dark:text-white truncate">{{ service.title }}</span>
+                          <span class="mt-0.5 block text-xs text-gray-500 dark:text-gray-400">{{ service.duration }} · ${{ service.price }} USD</span>
+                        </span>
+                        <span class="shrink-0 text-xs font-black text-[#c9ff3d]">Agendar →</span>
+                      </button>
+                    </li>
                   }
-                </div>
+                </ul>
               </div>
 
-              <div>
-                <label class="mb-2 block text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                  2. Selecciona la hora
-                </label>
-                <div class="grid grid-cols-2 gap-2 sm:grid-cols-3">
-                  @for (slot of availableTimeSlots(); track slot) {
-                    <button
-                      type="button"
-                      (click)="selectSlot(slot)"
-                      class="rounded-xl border px-3 py-2.5 text-center text-xs font-bold transition"
-                      [class]="
-                        selectedTimeSlot() === slot
-                          ? 'border-[#c9ff3d] bg-[#c9ff3d]/10 text-[#c9ff3d] ring-2 ring-[#c9ff3d]/30'
-                          : 'border-gray-200 dark:border-white/10 bg-white dark:bg-white/5 text-gray-700 dark:text-gray-300 hover:border-gray-300'
-                      "
-                    >
-                      {{ slot }}
-                    </button>
-                  }
-                </div>
-              </div>
-
-              <button
-                type="button"
-                (click)="confirmBookingCheckout()"
-                class="mt-2 flex w-full items-center justify-center gap-2 rounded-2xl bg-gray-950 px-3 py-3.5 text-sm font-black text-white transition hover:opacity-90 dark:bg-[#c9ff3d] dark:text-gray-950"
+              <div
+                class="hidden min-h-[220px] bg-cover bg-center sm:block"
+                [style.background-image]="agendaImageStyle()"
               >
-                <app-icon-calendar size="16" />
-                <span class="text-center leading-snug">Confirmar &amp; Pagar ${{ selectedService()?.price }} USD</span>
-              </button>
+                <div class="h-full w-full bg-gradient-to-l from-transparent to-black/20"></div>
+              </div>
+            </div>
+
+            <!-- Panel de reserva inline -->
+            @if (showBookingPanel() && selectedService() && bookingStep() === 'select-time') {
+              <div class="border-t border-gray-100 dark:border-white/10 bg-gray-50/80 dark:bg-black/20 p-5 sm:p-7 space-y-4">
+                <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between pb-3 border-b border-gray-200 dark:border-white/10">
+                  <div class="min-w-0">
+                    <button
+                      type="button"
+                      (click)="backToServices()"
+                      class="mb-1 flex items-center gap-1 text-xs font-bold text-gray-400 hover:text-gray-950 dark:hover:text-white"
+                    >
+                      <span>←</span>
+                      <span>Cambiar servicio</span>
+                    </button>
+                    <h3 class="font-display text-sm font-black text-gray-900 dark:text-white truncate">{{ selectedService()?.title }}</h3>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">{{ selectedService()?.duration }} · ${{ selectedService()?.price }} USD</p>
+                  </div>
+                  <span class="self-start rounded-lg bg-emerald-50 dark:bg-white/10 px-2.5 py-1 text-xs font-bold text-emerald-700 dark:text-[#c9ff3d]">
+                    Google Meet
+                  </span>
+                </div>
+
+                <div>
+                  <label class="mb-2 block text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                    1. Selecciona un día
+                  </label>
+                  <div class="grid grid-cols-4 gap-2 sm:grid-cols-6">
+                    @for (day of calendarDays(); track day.dateStr) {
+                      <button
+                        type="button"
+                        [disabled]="!day.isAvailable || day.isPast"
+                        (click)="selectDate(day)"
+                        class="flex flex-col items-center rounded-xl border px-1 py-2.5 text-center transition"
+                        [class]="
+                          selectedDate() === day.dateStr
+                            ? 'border-gray-950 dark:border-[#c9ff3d] bg-gray-900 dark:bg-[#1f2421] text-[#c9ff3d]'
+                            : day.isAvailable && !day.isPast
+                            ? 'border-gray-200 dark:border-white/10 bg-white dark:bg-white/5 text-gray-800 dark:text-gray-200 hover:border-gray-400'
+                            : 'cursor-not-allowed border-transparent bg-gray-50 dark:bg-white/5 text-gray-300 dark:text-gray-600'
+                        "
+                      >
+                        <span class="text-[9px] font-bold uppercase">{{ day.dayName }}</span>
+                        <span class="mt-0.5 text-sm font-black">{{ day.dayNumber }}</span>
+                      </button>
+                    }
+                  </div>
+                </div>
+
+                <div>
+                  <label class="mb-2 block text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                    2. Selecciona la hora
+                  </label>
+                  <div class="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                    @for (slot of availableTimeSlots(); track slot) {
+                      <button
+                        type="button"
+                        (click)="selectSlot(slot)"
+                        class="rounded-xl border px-3 py-2.5 text-center text-xs font-bold transition"
+                        [class]="
+                          selectedTimeSlot() === slot
+                            ? 'border-[#c9ff3d] bg-[#c9ff3d]/10 text-[#c9ff3d] ring-2 ring-[#c9ff3d]/30'
+                            : 'border-gray-200 dark:border-white/10 bg-white dark:bg-white/5 text-gray-700 dark:text-gray-300 hover:border-gray-300'
+                        "
+                      >
+                        {{ slot }}
+                      </button>
+                    }
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  (click)="confirmBookingCheckout()"
+                  class="mt-2 flex w-full items-center justify-center gap-2 rounded-2xl bg-gray-950 px-3 py-3.5 text-sm font-black text-white transition hover:opacity-90 dark:bg-[#c9ff3d] dark:text-gray-950"
+                >
+                  <app-icon-calendar size="16" />
+                  <span class="text-center leading-snug">Confirmar &amp; Pagar ${{ selectedService()?.price }} USD</span>
+                </button>
+              </div>
+            }
+          } @else {
+            <div class="flex flex-col items-center justify-center gap-3 px-5 py-12 text-center sm:py-14">
+              <span class="inline-flex h-12 w-12 items-center justify-center rounded-2xl border border-dashed border-gray-300 dark:border-white/15 text-gray-400 dark:text-white/40">
+                <app-icon-calendar size="22" />
+              </span>
+              <div class="space-y-1">
+                <p class="text-sm font-black text-gray-900 dark:text-white">Sin agenda disponible</p>
+                <p class="text-xs leading-relaxed text-gray-500 dark:text-gray-400 max-w-xs mx-auto">
+                  Este atleta aún no tiene sesiones o horarios publicados.
+                </p>
+              </div>
             </div>
           }
         </article>
@@ -484,64 +505,78 @@
           (edit)="openEditor('goal')"
         >
         <article class="overflow-hidden rounded-3xl border border-gray-200/80 dark:border-white/10 bg-white dark:bg-[#121614] shadow-xs">
-          @if (creator.goalCoverImageUrl) {
-            <div class="relative h-36 w-full overflow-hidden border-b border-gray-100 dark:border-white/10">
-              <img
-                [src]="creator.goalCoverImageUrl"
-                [alt]="creator.goalTitle"
-                class="h-full w-full object-cover"
-              />
-              <div class="absolute inset-0 bg-gradient-to-t from-[#121614]/80 via-transparent"></div>
-              <span class="absolute bottom-3 left-4 inline-flex items-center gap-1.5 rounded-lg bg-black/60 backdrop-blur-md px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-[#c9ff3d] border border-white/10">
-                <app-icon-dumbbell [size]="11" />
-                <span>Meta Deportiva</span>
+          @if (hasActiveGoal()) {
+            @if (creator.goalCoverImageUrl) {
+              <div class="relative h-36 w-full overflow-hidden border-b border-gray-100 dark:border-white/10">
+                <img
+                  [src]="creator.goalCoverImageUrl"
+                  [alt]="creator.goalTitle"
+                  class="h-full w-full object-cover"
+                />
+                <div class="absolute inset-0 bg-gradient-to-t from-[#121614]/80 via-transparent"></div>
+                <span class="absolute bottom-3 left-4 inline-flex items-center gap-1.5 rounded-lg bg-black/60 backdrop-blur-md px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-[#c9ff3d] border border-white/10">
+                  <app-icon-dumbbell [size]="11" />
+                  <span>Meta Deportiva</span>
+                </span>
+              </div>
+            }
+
+            <div class="p-5 sm:p-7">
+              <div class="flex items-start justify-between gap-3">
+                <div class="min-w-0">
+                  @if (!creator.goalCoverImageUrl) {
+                    <span class="inline-block rounded-lg bg-emerald-50 dark:bg-white/5 px-2.5 py-1 text-[11px] font-extrabold uppercase tracking-wider text-emerald-700 dark:text-[#c9ff3d]">
+                      Meta activa
+                    </span>
+                  }
+                  <h2 class="font-display text-base font-black text-gray-950 dark:text-white break-words sm:text-lg" [class.mt-2.5]="!creator.goalCoverImageUrl">
+                    {{ creator.goalTitle }}
+                  </h2>
+                </div>
+                <p class="shrink-0 font-display text-xl font-black text-gray-950 dark:text-[#c9ff3d] sm:text-2xl">{{ goalPercent() }}%</p>
+              </div>
+
+              <div class="relative mt-5 h-3.5 overflow-hidden rounded-full bg-gray-100 dark:bg-black/40">
+                <div
+                  class="absolute inset-y-0 left-0 rounded-full bg-emerald-300 transition-[width] duration-500 dark:bg-[#c9ff3d]/40"
+                  [style.width.%]="previewPercent()"
+                ></div>
+                <div
+                  class="absolute inset-y-0 left-0 rounded-full bg-[#c9ff3d] shadow-[0_0_12px_rgba(201,255,61,0.5)] transition-[width] duration-700"
+                  [style.width.%]="goalPercent()"
+                ></div>
+              </div>
+
+              <div class="mt-4 flex flex-col gap-1 text-sm sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:gap-2">
+                <p class="font-medium text-gray-500 dark:text-gray-400">
+                  <span class="font-black text-gray-900 dark:text-white">${{ creator.goalRaised }}</span>
+                  recaudados de ${{ creator.goalTarget }} USD
+                </p>
+                <p class="font-semibold text-gray-400 dark:text-gray-500">Faltan ${{ remaining() }}</p>
+              </div>
+
+              <div class="mt-4 flex items-start gap-2.5 rounded-2xl border border-gray-200/70 dark:border-white/10 bg-gray-50 dark:bg-white/5 p-3.5 text-xs font-medium leading-relaxed text-gray-600 dark:text-gray-300">
+                <svg class="mt-0.5 h-4 w-4 shrink-0 text-emerald-600 dark:text-[#c9ff3d]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <p>
+                  Con tu apoyo de ${{ amount() }} {{ currency() }} la meta avanzaría a ${{ goalWithSupport() }}. ¡Gracias por apoyar el deporte!
+                </p>
+              </div>
+            </div>
+          } @else {
+            <div class="flex flex-col items-center justify-center gap-3 px-5 py-12 text-center sm:py-14">
+              <span class="inline-flex h-12 w-12 items-center justify-center rounded-2xl border border-dashed border-gray-300 dark:border-white/15 text-gray-400 dark:text-white/40">
+                <app-icon-dumbbell [size]="22" />
               </span>
+              <div class="space-y-1">
+                <p class="text-sm font-black text-gray-900 dark:text-white">Sin campañas activas</p>
+                <p class="text-xs leading-relaxed text-gray-500 dark:text-gray-400 max-w-xs mx-auto">
+                  Este atleta no tiene una meta de recaudación activa por ahora.
+                </p>
+              </div>
             </div>
           }
-
-          <div class="p-5 sm:p-7">
-            <div class="flex items-start justify-between gap-3">
-              <div class="min-w-0">
-                @if (!creator.goalCoverImageUrl) {
-                  <span class="inline-block rounded-lg bg-emerald-50 dark:bg-white/5 px-2.5 py-1 text-[11px] font-extrabold uppercase tracking-wider text-emerald-700 dark:text-[#c9ff3d]">
-                    Meta activa
-                  </span>
-                }
-                <h2 class="font-display text-base font-black text-gray-950 dark:text-white break-words sm:text-lg" [class.mt-2.5]="!creator.goalCoverImageUrl">
-                  {{ creator.goalTitle }}
-                </h2>
-              </div>
-              <p class="shrink-0 font-display text-xl font-black text-gray-950 dark:text-[#c9ff3d] sm:text-2xl">{{ goalPercent() }}%</p>
-            </div>
-
-          <div class="relative mt-5 h-3.5 overflow-hidden rounded-full bg-gray-100 dark:bg-black/40">
-            <div
-              class="absolute inset-y-0 left-0 rounded-full bg-emerald-300 transition-[width] duration-500 dark:bg-[#c9ff3d]/40"
-              [style.width.%]="previewPercent()"
-            ></div>
-            <div
-              class="absolute inset-y-0 left-0 rounded-full bg-[#c9ff3d] shadow-[0_0_12px_rgba(201,255,61,0.5)] transition-[width] duration-700"
-              [style.width.%]="goalPercent()"
-            ></div>
-          </div>
-
-          <div class="mt-4 flex flex-col gap-1 text-sm sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:gap-2">
-            <p class="font-medium text-gray-500 dark:text-gray-400">
-              <span class="font-black text-gray-900 dark:text-white">${{ creator.goalRaised }}</span>
-              recaudados de ${{ creator.goalTarget }} USD
-            </p>
-            <p class="font-semibold text-gray-400 dark:text-gray-500">Faltan ${{ remaining() }}</p>
-          </div>
-
-          <div class="mt-4 flex items-start gap-2.5 rounded-2xl border border-gray-200/70 dark:border-white/10 bg-gray-50 dark:bg-white/5 p-3.5 text-xs font-medium leading-relaxed text-gray-600 dark:text-gray-300">
-            <svg class="mt-0.5 h-4 w-4 shrink-0 text-emerald-600 dark:text-[#c9ff3d]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            <p>
-              Con tu apoyo de ${{ amount() }} {{ currency() }} la meta avanzaría a ${{ goalWithSupport() }}. ¡Gracias por apoyar el deporte!
-            </p>
-          </div>
-          </div>
         </article>
         </app-edit-section-overlay>
 
@@ -614,13 +649,19 @@
 
               <button
                 type="button"
-                class="flex w-full transform items-center justify-center gap-2 rounded-2xl bg-[#c9ff3d] py-4 text-sm font-black text-gray-950 shadow-lg shadow-[#c9ff3d]/20 transition hover:bg-[#bbf033] active:scale-[0.98] sm:text-base"
+                class="flex w-full transform items-center justify-center gap-2 rounded-2xl bg-[#c9ff3d] py-4 text-sm font-black text-gray-950 shadow-lg shadow-[#c9ff3d]/20 transition hover:bg-[#bbf033] active:scale-[0.98] sm:text-base disabled:opacity-80 disabled:cursor-wait"
+                [disabled]="openingStripe()"
                 (click)="support()"
               >
-                <span>Apoyar ${{ amount() }} {{ currency() }}</span>
-                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
-                </svg>
+                @if (openingStripe() && openingStripeTierId() === null) {
+                  <span class="inline-block h-4 w-4 animate-spin rounded-full border-2 border-gray-950/25 border-t-gray-950"></span>
+                  <span>Abriendo la interfaz de Stripe…</span>
+                } @else {
+                  <span>Apoyar ${{ amount() }} {{ currency() }}</span>
+                  <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+                  </svg>
+                }
               </button>
             </div>
           } @else {
@@ -640,9 +681,14 @@
                   <button
                     type="button"
                     (click)="joinTier(tier)"
-                    class="mt-2 w-full rounded-xl bg-gray-950 py-2.5 text-xs font-black text-white shadow-xs transition hover:opacity-90 dark:bg-[#c9ff3d] dark:text-gray-950"
+                    [disabled]="openingStripe()"
+                    class="mt-2 w-full rounded-xl bg-gray-950 py-2.5 text-xs font-black text-white shadow-xs transition hover:opacity-90 dark:bg-[#c9ff3d] dark:text-gray-950 disabled:opacity-80 disabled:cursor-wait"
                   >
-                    Unirse por ${{ tier.price }} USD
+                    @if (openingStripeTierId() === tier.id) {
+                      Abriendo la interfaz de Stripe…
+                    } @else {
+                      Unirse por ${{ tier.price }} USD
+                    }
                   </button>
                 </div>
               }

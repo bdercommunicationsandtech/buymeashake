@@ -1,19 +1,42 @@
 @if (checkout.open()) {
   <div class="overlay" role="dialog" aria-modal="true" aria-label="Pago de prueba con Stripe">
-    <button type="button" class="overlay-backdrop" aria-label="Cerrar" (click)="close()"></button>
+    <button
+      type="button"
+      class="overlay-backdrop"
+      aria-label="Cerrar"
+      [disabled]="checkout.confirming()"
+      (click)="close()"
+    ></button>
 
-    <div class="sheet">
-      @if (checkout.paid()) {
+    <div class="sheet" [class.sheet-compact]="checkout.confirming() || checkout.paid()">
+      @if (checkout.confirming() && !checkout.paid()) {
+        <!-- ----------------------------------------- CONFIRMANDO RETORNO STRIPE -->
+        <div class="done space-y-6 p-8 sm:p-12 text-center confirming-panel">
+          <div class="mx-auto flex h-28 w-28 items-center justify-center rounded-3xl bg-[#c9ff3d]/15 border border-[#c9ff3d]/35 text-[#6a9a00] dark:text-[#c9ff3d] shadow-lg shadow-[#c9ff3d]/10">
+            <app-animated-shaker [size]="72" customClass="text-current" />
+          </div>
+          <div class="space-y-2">
+            <p class="text-[11px] font-black uppercase tracking-[0.2em] text-emerald-700 dark:text-[#c9ff3d]">
+              Confirmando tu apoyo
+            </p>
+            <h2 class="text-2xl sm:text-3xl font-black text-gray-950 dark:text-white tracking-tight">
+              El Shake se está batiendo…
+            </h2>
+            <p class="text-sm text-gray-500 dark:text-gray-400 max-w-sm mx-auto">
+              Estamos verificando tu pago con Stripe. Esto toma solo un momento.
+            </p>
+          </div>
+          <div class="flex justify-center">
+            <span class="confirming-dots" aria-hidden="true"></span>
+          </div>
+        </div>
+      } @else if (checkout.paid()) {
         <!-- ----------------------------------------- PANTALLA POST-PAGO EXITOSA -->
         <div class="done space-y-5 p-6 sm:p-10 text-center">
           
-          <!-- Icono de Celebración con Shaker verde -->
-          <div class="mx-auto h-20 w-20 rounded-3xl bg-[#c9ff3d]/15 border border-[#c9ff3d]/30 flex items-center justify-center text-[#c9ff3d] shadow-lg shadow-[#c9ff3d]/10 animate-bounce">
-            <svg viewBox="0 0 32 32" width="40" height="40" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linejoin="round">
-              <rect x="12" y="4" width="8" height="4" rx="2" fill="currentColor" stroke="none" />
-              <path d="M10 10h12l-1.4 16a4 4 0 0 1-4 3.6h-1.2a4 4 0 0 1-4-3.6z" />
-              <path d="M11 20h10" stroke-linecap="round" />
-            </svg>
+          <!-- Shaker animado de celebración -->
+          <div class="mx-auto h-24 w-24 rounded-3xl bg-[#c9ff3d]/15 border border-[#c9ff3d]/30 flex items-center justify-center text-[#6a9a00] dark:text-[#c9ff3d] shadow-lg shadow-[#c9ff3d]/10">
+            <app-animated-shaker [size]="64" customClass="text-current" />
           </div>
 
           <div>
@@ -36,10 +59,24 @@
                 }
               }
             </h2>
-            <p class="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-1">
-              Recibo enviado a <strong class="text-gray-900 dark:text-white">{{ email() }}</strong>
-            </p>
+            @if (email()) {
+              <p class="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-1">
+                Recibo enviado a <strong class="text-gray-900 dark:text-white">{{ email() }}</strong>
+              </p>
+            }
           </div>
+
+          <!-- Thank-you del atleta (destacado, justo bajo el título) -->
+          @if (checkout.thankYouMessage()) {
+            <div class="mx-auto max-w-md p-4 sm:p-5 rounded-2xl bg-[#c9ff3d]/12 border border-[#c9ff3d]/35 text-left space-y-2">
+              <p class="text-[11px] font-black uppercase tracking-wider text-emerald-700 dark:text-[#c9ff3d]">
+                Mensaje de {{ checkout.draft()?.creatorName || 'el atleta' }}
+              </p>
+              <p class="text-sm sm:text-base italic text-gray-800 dark:text-gray-100 leading-relaxed">
+                "{{ checkout.thankYouMessage() }}"
+              </p>
+            </div>
+          }
 
           <!-- Tarjeta de Detalle del Pedido -->
           <div class="rounded-2xl border border-gray-200/80 dark:border-white/10 bg-gray-50/70 dark:bg-white/5 p-4 sm:p-5 text-left space-y-3">
@@ -58,18 +95,6 @@
                 <div class="text-xs pt-1">
                   <span class="font-bold text-gray-500">Tu mensaje:</span>
                   <p class="italic text-gray-700 dark:text-gray-300 mt-0.5">“{{ checkout.draft()?.message }}”</p>
-                </div>
-              }
-
-              <!-- Nota de Agradecimiento del Atleta (Thank-you note) -->
-              @if (checkout.thankYouMessage()) {
-                <div class="mt-3 p-3.5 rounded-xl bg-[#c9ff3d]/10 border border-[#c9ff3d]/30 text-xs space-y-1">
-                  <p class="font-black text-gray-950 dark:text-[#c9ff3d] flex items-center gap-1">
-                    <span>💌 Mensaje de {{ checkout.draft()?.creatorName }}:</span>
-                  </p>
-                  <p class="italic text-gray-800 dark:text-gray-200">
-                    "{{ checkout.thankYouMessage() }}"
-                  </p>
                 </div>
               }
             }

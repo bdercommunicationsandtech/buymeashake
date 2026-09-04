@@ -108,6 +108,9 @@ export interface CreatorProfile {
   tiers?: MembershipTierItem[];
   products?: DigitalProductItem[];
   recent_supporters?: SupporterItemDto[];
+  total_shakes_received?: number;
+  followers_count?: number;
+  members_count?: number;
 }
 
 export interface DashboardMetrics {

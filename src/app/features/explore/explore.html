@@ -5,13 +5,13 @@
     <div class="mx-auto max-w-5xl text-center">
       <span class="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 dark:bg-white/5 px-3.5 py-1 text-xs font-bold text-emerald-700 dark:text-[#c9ff3d] border border-emerald-200 dark:border-white/10">
         <span class="h-2 w-2 rounded-full bg-[#c9ff3d] animate-pulse"></span>
-        Comunidad Deportiva Oficial
+        {{ t().explore.badge }}
       </span>
       <h1 class="mt-4 text-3xl sm:text-5xl font-black tracking-tight text-gray-900 dark:text-white">
-        Apoya a los atletas que inspiran tu día a día
+        {{ t().explore.title }}
       </h1>
       <p class="mt-3.5 text-base sm:text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-        Invita un shake de apoyo directo para competencias, equipo, viajes y preparación deportiva.
+        {{ t().explore.subtitle }}
       </p>
 
       <!-- Barra de Búsqueda -->
@@ -19,7 +19,7 @@
         <div class="relative">
           <input
             type="text"
-            placeholder="Buscar por atleta, disciplina o @handle..."
+            [placeholder]="t().explore.searchPlaceholder"
             class="w-full rounded-2xl border border-gray-200 dark:border-white/15 bg-gray-50/70 dark:bg-white/5 pl-11 pr-4 py-3.5 text-sm text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:bg-white dark:focus:bg-[#121614] focus:border-gray-900 dark:focus:border-[#c9ff3d] focus:outline-none shadow-xs transition"
             [value]="searchQuery()"
             (input)="onSearch($any($event.target).value)"
@@ -40,11 +40,11 @@
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-6">
         <div>
           <span class="text-xs font-black uppercase tracking-wider text-amber-600 dark:text-[#c9ff3d] bg-amber-50 dark:bg-white/5 px-2.5 py-1 rounded-md">
-            Leaderboard Oficial
+            {{ t().explore.leaderboardBadge }}
           </span>
-          <h2 class="text-2xl sm:text-3xl font-black text-gray-900 dark:text-white mt-1">Top 10 Atletas del Mes</h2>
+          <h2 class="text-2xl sm:text-3xl font-black text-gray-900 dark:text-white mt-1">{{ t().explore.leaderboardTitle }}</h2>
         </div>
-        <span class="text-xs font-semibold text-gray-500 dark:text-gray-400">Basado en shakes recibidos este mes</span>
+        <span class="text-xs font-semibold text-gray-500 dark:text-gray-400">{{ t().explore.leaderboardSubtitle }}</span>
       </div>
 
       <!-- Podio (Top 1, 2, 3) -->
@@ -71,7 +71,7 @@
                 "
               >
                 <app-icon-trophy size="13" />
-                <span>#{{ top.rank }} {{ idx === 0 ? '1er Lugar' : idx === 1 ? '2do Lugar' : '3er Lugar' }}</span>
+                <span>#{{ top.rank }} {{ idx === 0 ? t().explore.firstPlace : idx === 1 ? t().explore.secondPlace : t().explore.thirdPlace }}</span>
               </span>
             </div>
 
@@ -83,14 +83,14 @@
                 <h3 class="font-extrabold text-gray-900 dark:text-white truncate">{{ top.name }}</h3>
                 <p class="text-xs text-gray-500 dark:text-gray-400 font-medium">&#64;{{ top.handle }}</p>
                 <span class="inline-block mt-1 text-[10px] font-bold text-emerald-700 dark:text-[#c9ff3d] bg-emerald-50 dark:bg-white/5 px-2 py-0.5 rounded-md">
-                  {{ top.sport }}
+                  {{ languageService.translateDiscipline(top.sport) }}
                 </span>
               </div>
             </div>
 
             <div class="mt-5 pt-4 border-t border-gray-100 dark:border-white/10 flex items-center justify-between">
               <div>
-                <p class="text-[11px] text-gray-400 dark:text-gray-500 font-medium">Shakes este mes</p>
+                <p class="text-[11px] text-gray-400 dark:text-gray-500 font-medium">{{ t().explore.shakesThisMonth }}</p>
                 <p class="text-lg font-black text-gray-900 dark:text-white flex items-center gap-1">
                   <span>{{ top.shakesThisMonth }}</span>
                   <app-icon-shaker size="16" customClass="text-amber-500 dark:text-[#c9ff3d]" />
@@ -100,7 +100,7 @@
                 [routerLink]="['/', top.handle]"
                 class="rounded-xl bg-[#c9ff3d] hover:bg-[#bbf033] px-3.5 py-2 text-xs font-black text-[#070a08] transition shadow-xs"
               >
-                Invitar Shake
+                {{ t().explore.inviteShake }}
               </a>
             </div>
           </div>
@@ -110,8 +110,8 @@
       <!-- Resto del Top 10 (Lugares 4 al 10) -->
       <div class="bg-white dark:bg-[#121614] rounded-3xl border border-gray-200/80 dark:border-white/10 shadow-xs overflow-hidden">
         <div class="p-5 border-b border-gray-100 dark:border-white/10 flex items-center justify-between bg-gray-50/50 dark:bg-white/[0.03]">
-          <span class="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Posición & Atleta</span>
-          <span class="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">Shakes Recibidos</span>
+          <span class="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">{{ t().explore.rankAndAthlete }}</span>
+          <span class="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">{{ t().explore.shakesReceived }}</span>
         </div>
         <div class="divide-y divide-gray-100 dark:divide-white/10">
           @for (athlete of topRemaining(); track athlete.id) {
@@ -123,7 +123,7 @@
                 </div>
                 <div class="min-w-0">
                   <h4 class="text-sm font-bold text-gray-900 dark:text-white truncate">{{ athlete.name }}</h4>
-                  <p class="text-xs text-gray-500 dark:text-gray-400 truncate">&#64;{{ athlete.handle }} · {{ athlete.sport }}</p>
+                  <p class="text-xs text-gray-500 dark:text-gray-400 truncate">&#64;{{ athlete.handle }} · {{ languageService.translateDiscipline(athlete.sport) }}</p>
                 </div>
               </div>
 
@@ -136,7 +136,7 @@
                   [routerLink]="['/', athlete.handle]"
                   class="rounded-xl border border-gray-200 dark:border-white/15 bg-white dark:bg-white/5 hover:bg-gray-50 dark:hover:bg-white/10 px-3 py-1.5 text-xs font-bold text-gray-900 dark:text-gray-100 transition"
                 >
-                  Apoyar
+                  {{ t().explore.support }}
                 </a>
               </div>
             </div>
@@ -148,8 +148,10 @@
     <!-- Filtros de Categoría -->
     <section>
       <div class="flex items-center justify-between mb-4">
-        <h3 class="text-xl font-black text-gray-900 dark:text-white">Explorar por Disciplina</h3>
-        <span class="text-xs text-gray-500 dark:text-gray-400">{{ filteredAthletes().length }} atletas encontrados</span>
+        <h3 class="text-xl font-black text-gray-900 dark:text-white">{{ t().explore.exploreByDiscipline }}</h3>
+        <span class="text-xs text-gray-500 dark:text-gray-400">
+          {{ filteredAthletes().length }} {{ filteredAthletes().length === 1 ? t().explore.athleteFound : t().explore.athletesFound }}
+        </span>
       </div>
 
       <div class="flex items-center gap-2 overflow-x-auto pb-4 scrollbar-none mb-6">
@@ -164,7 +166,7 @@
             "
             (click)="setCategory(cat)"
           >
-            {{ cat }}
+            {{ cat === 'ALL' || cat === 'Todos' ? t().explore.all : languageService.translateDiscipline(cat) }}
           </button>
         }
       </div>
@@ -194,7 +196,7 @@
                 </div>
                 
                 <span class="rounded-lg bg-gray-50 dark:bg-white/5 border border-gray-200/80 dark:border-white/10 px-2.5 py-1 text-xs font-bold text-gray-700 dark:text-gray-200">
-                  {{ athlete.sport }}
+                  {{ languageService.translateDiscipline(athlete.sport) }}
                 </span>
               </div>
 
@@ -205,7 +207,7 @@
 
             <div class="mt-6 pt-4 border-t border-gray-100 dark:border-white/10 flex items-center justify-between">
               <div class="flex items-center gap-2">
-                <span class="text-xs font-semibold text-gray-400 dark:text-gray-500">Apoyo mensual:</span>
+                <span class="text-xs font-semibold text-gray-400 dark:text-gray-500">{{ t().explore.monthlySupport }}</span>
                 <span class="text-xs font-extrabold text-gray-900 dark:text-white bg-gray-100 dark:bg-white/10 px-2 py-0.5 rounded-md">
                   {{ athlete.shakesThisMonth }} shakes
                 </span>
@@ -215,7 +217,7 @@
                 [routerLink]="['/', athlete.handle]"
                 class="rounded-xl border border-gray-200 dark:border-white/15 hover:border-gray-900 dark:hover:border-[#c9ff3d] bg-white dark:bg-white/5 hover:bg-gray-900 dark:hover:bg-[#c9ff3d] hover:text-[#c9ff3d] dark:hover:text-[#070a08] px-4 py-2 text-xs font-bold text-gray-900 dark:text-gray-100 transition"
               >
-                Ver Perfil
+                {{ t().explore.viewProfile }}
               </a>
             </div>
           </article>
@@ -224,14 +226,14 @@
 
       @if (filteredAthletes().length === 0) {
         <div class="bg-white dark:bg-[#121614] rounded-3xl p-12 text-center border border-gray-100 dark:border-white/10 mt-4">
-          <p class="text-base font-bold text-gray-900 dark:text-white">No se encontraron atletas</p>
-          <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Intenta con otra disciplina o término de búsqueda.</p>
+          <p class="text-base font-bold text-gray-900 dark:text-white">{{ t().explore.noAthletesFound }}</p>
+          <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">{{ t().explore.noAthletesSubtitle }}</p>
           <button
             type="button"
             class="mt-4 rounded-xl bg-gray-900 dark:bg-[#c9ff3d] text-[#c9ff3d] dark:text-[#070a08] px-4 py-2 text-xs font-bold"
-            (click)="setCategory('Todos'); onSearch('')"
+            (click)="setCategory('ALL'); onSearch('')"
           >
-            Restablecer filtros
+            {{ t().explore.resetFilters }}
           </button>
         </div>
       }

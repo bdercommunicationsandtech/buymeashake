@@ -1,4 +1,19 @@
-<div class="min-h-screen bg-[#fafafb] dark:bg-[#090c0a] text-gray-900 dark:text-gray-100 flex flex-col justify-center py-12 sm:px-6 lg:px-8 font-sans transition-colors duration-200">
+<div class="min-h-screen bg-[#fafafb] dark:bg-[#090c0a] text-gray-900 dark:text-gray-100 flex flex-col justify-center py-12 sm:px-6 lg:px-8 font-sans transition-colors duration-200 relative">
+  <!-- Selector de idioma -->
+  <div class="absolute top-4 right-4 sm:top-6 sm:right-8 z-10">
+    <button
+      type="button"
+      (click)="i18n.toggleLanguage()"
+      class="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-gray-200 dark:border-white/10 bg-white/80 dark:bg-[#121614]/80 backdrop-blur-md text-xs font-bold text-gray-700 dark:text-gray-200 hover:border-gray-400 dark:hover:border-white/30 transition shadow-xs cursor-pointer"
+      [attr.aria-label]="t().nav.switchLanguage"
+    >
+      <svg class="w-3.5 h-3.5 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a8.96 8.96 0 01-5.657-2M12 21a8.96 8.96 0 005.657-2M12 3a8.96 8.96 0 015.657 2M12 3a8.96 8.96 0 00-5.657 2" />
+      </svg>
+      <span>{{ i18n.lang() === 'es' ? 'EN' : 'ES' }}</span>
+    </button>
+  </div>
+
   <div class="sm:mx-auto sm:w-full sm:max-w-md">
     <!-- Logo -->
     <a routerLink="/" class="flex justify-center items-center gap-2 mb-8">
@@ -15,12 +30,12 @@
     </a>
 
     <h2 class="mt-6 text-center text-3xl font-black text-gray-950 dark:text-white tracking-tight">
-      ¡Hola de nuevo, atleta!
+      {{ t().auth.loginTitle }}
     </h2>
     <p class="mt-2 text-center text-sm text-gray-600 dark:text-gray-400 font-medium">
-      ¿No tienes cuenta?
+      {{ t().auth.noAccountPrompt }}
       <a routerLink="/auth/register" class="font-bold text-emerald-600 dark:text-[#c9ff3d] hover:underline transition">
-        Regístrate gratis
+        {{ t().auth.registerFree }}
       </a>
     </p>
   </div>
@@ -42,7 +57,7 @@
           class="py-2.5 rounded-xl transition"
           [class]="loginMode() === 'password' ? 'bg-white dark:bg-[#191c1d] text-gray-950 dark:text-white shadow-xs' : 'text-gray-500 hover:text-gray-900 dark:hover:text-white'"
         >
-          🔑 Con Contraseña
+          {{ t().auth.withPasswordTab }}
         </button>
         <button
           type="button"
@@ -50,7 +65,7 @@
           class="py-2.5 rounded-xl transition"
           [class]="loginMode() === 'otp' ? 'bg-[#c9ff3d] text-gray-950 shadow-xs' : 'text-gray-500 hover:text-gray-900 dark:hover:text-white'"
         >
-          ✉️ Código Rápido
+          {{ t().auth.quickCodeTab }}
         </button>
       </div>
 
@@ -66,7 +81,7 @@
 
           <div>
             <label for="email" class="block text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 mb-1.5">
-              Correo electrónico
+              {{ t().auth.emailLabel }}
             </label>
             <input
               id="email"
@@ -75,14 +90,14 @@
               [(ngModel)]="email"
               autocomplete="email"
               required
-              placeholder="atleta@ejemplo.com"
+              [placeholder]="t().auth.emailPlaceholder"
               class="block w-full px-4 py-3 border border-gray-300 dark:border-white/15 rounded-xl shadow-xs bg-white dark:bg-[#191c1d] text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:border-gray-900 dark:focus:border-[#c9ff3d] text-sm font-semibold transition"
             >
           </div>
 
           <div>
             <label for="password" class="block text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 mb-1.5">
-              Contraseña
+              {{ t().auth.passwordLabel }}
             </label>
             <input
               id="password"
@@ -91,7 +106,7 @@
               [(ngModel)]="password"
               autocomplete="current-password"
               required
-              placeholder="••••••••"
+              [placeholder]="t().auth.passwordPlaceholder"
               class="block w-full px-4 py-3 border border-gray-300 dark:border-white/15 rounded-xl shadow-xs bg-white dark:bg-[#191c1d] text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:border-gray-900 dark:focus:border-[#c9ff3d] text-sm font-semibold transition"
             >
           </div>
@@ -102,7 +117,7 @@
               [disabled]="loading()"
               class="w-full flex justify-center py-3.5 px-4 border border-transparent rounded-xl shadow-sm text-sm font-black text-gray-950 bg-[#c9ff3d] hover:bg-[#bbf033] focus:outline-none transition active:scale-[0.99] disabled:opacity-50 cursor-pointer"
             >
-              {{ loading() ? 'Iniciando sesión...' : 'Iniciar Sesión' }}
+              {{ loading() ? t().auth.loggingIn : t().auth.loginButton }}
             </button>
           </div>
         </form>
@@ -121,17 +136,17 @@
           @if (otpStep() === 'email') {
             <div>
               <label class="block text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 mb-1.5">
-                Tu Correo de Supporter / Atleta
+                {{ t().auth.supporterEmailLabel }}
               </label>
               <input
                 type="email"
                 [(ngModel)]="email"
                 required
-                placeholder="tu@correo.com"
+                [placeholder]="t().auth.otpEmailPlaceholder"
                 class="block w-full px-4 py-3 border border-gray-300 dark:border-white/15 rounded-xl shadow-xs bg-white dark:bg-[#191c1d] text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:border-gray-900 dark:focus:border-[#c9ff3d] text-sm font-semibold transition"
               >
               <p class="text-[11px] text-gray-400 mt-2 font-medium">
-                Te enviaremos un código de 6 dígitos a tu bandeja para ingresar al instante.
+                {{ t().auth.otpHelpText }}
               </p>
             </div>
 
@@ -141,14 +156,14 @@
               [disabled]="!email.trim() || loading()"
               class="w-full flex justify-center py-3.5 px-4 border border-transparent rounded-xl shadow-sm text-sm font-black text-gray-950 bg-[#c9ff3d] hover:bg-[#bbf033] focus:outline-none transition active:scale-[0.99] disabled:opacity-50 cursor-pointer"
             >
-              {{ loading() ? 'Enviando código...' : 'Enviar Código de Acceso' }}
+              {{ loading() ? t().auth.sendingOtp : t().auth.sendOtpButton }}
             </button>
           }
 
           @if (otpStep() === 'verify') {
             <div class="text-center space-y-4">
               <p class="text-xs text-gray-500 dark:text-gray-400">
-                Ingresa el código enviado a <strong class="text-gray-900 dark:text-white">{{ email }}</strong>
+                {{ t().auth.enterCodeSentTo }} <strong class="text-gray-900 dark:text-white">{{ email }}</strong>
               </p>
 
               <input
@@ -167,7 +182,7 @@
                 [disabled]="otpCode.length < 6 || loading()"
                 class="w-full flex justify-center py-3.5 px-4 border border-transparent rounded-xl shadow-sm text-sm font-black text-gray-950 bg-[#c9ff3d] hover:bg-[#bbf033] focus:outline-none transition active:scale-[0.99] disabled:opacity-50 cursor-pointer"
               >
-                {{ loading() ? 'Verificando...' : 'Acceder a mi Cuenta' }}
+                {{ loading() ? t().auth.verifyingOtp : t().auth.accessAccountButton }}
               </button>
 
               <button
@@ -175,7 +190,7 @@
                 (click)="otpStep.set('email')"
                 class="text-xs font-bold text-gray-400 hover:text-gray-900 dark:hover:text-white"
               >
-                ← Cambiar correo
+                {{ t().auth.changeEmail }}
               </button>
             </div>
           }
@@ -189,7 +204,7 @@
             <div class="w-full border-t border-gray-200 dark:border-white/10"></div>
           </div>
           <div class="relative flex justify-center text-xs uppercase tracking-wider font-bold">
-            <span class="px-3 bg-white dark:bg-[#121614] text-gray-400">O continúa con</span>
+            <span class="px-3 bg-white dark:bg-[#121614] text-gray-400">{{ t().auth.orContinueWith }}</span>
           </div>
         </div>
 

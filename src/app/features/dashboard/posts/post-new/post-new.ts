@@ -2,14 +2,13 @@ import { Component, inject, signal, ChangeDetectionStrategy } from '@angular/cor
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { IconLockComponent, IconStarComponent } from '../../../../shared/icons';
 import { DashboardService } from '../../../../core/dashboard.service';
 
 @Component({
   selector: 'app-dashboard-post-new',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, FormsModule, RouterLink, IconLockComponent, IconStarComponent],
+  imports: [CommonModule, FormsModule, RouterLink],
   template: `
     <div class="space-y-6 max-w-4xl mx-auto pb-16">
       

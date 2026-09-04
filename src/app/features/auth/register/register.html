@@ -1,4 +1,19 @@
-<div class="min-h-screen bg-[#fafafb] dark:bg-[#090c0a] text-gray-900 dark:text-gray-100 flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8 font-sans transition-colors duration-200">
+<div class="min-h-screen bg-[#fafafb] dark:bg-[#090c0a] text-gray-900 dark:text-gray-100 flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8 font-sans transition-colors duration-200 relative">
+  <!-- Selector de idioma -->
+  <div class="absolute top-4 right-4 sm:top-6 sm:right-8 z-10">
+    <button
+      type="button"
+      (click)="i18n.toggleLanguage()"
+      class="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-gray-200 dark:border-white/10 bg-white/80 dark:bg-[#121614]/80 backdrop-blur-md text-xs font-bold text-gray-700 dark:text-gray-200 hover:border-gray-400 dark:hover:border-white/30 transition shadow-xs cursor-pointer"
+      [attr.aria-label]="t().nav.switchLanguage"
+    >
+      <svg class="w-3.5 h-3.5 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a8.96 8.96 0 01-5.657-2M12 21a8.96 8.96 0 005.657-2M12 3a8.96 8.96 0 015.657 2M12 3a8.96 8.96 0 00-5.657 2" />
+      </svg>
+      <span>{{ i18n.lang() === 'es' ? 'EN' : 'ES' }}</span>
+    </button>
+  </div>
+
   <div class="sm:mx-auto sm:w-full sm:max-w-md">
     <!-- Logo -->
     <a routerLink="/" class="flex justify-center items-center gap-2 mb-6">
@@ -15,10 +30,10 @@
     </a>
 
     <h2 class="text-center text-3xl font-black text-gray-950 dark:text-white tracking-tight">
-      Crea tu página en 1 minuto
+      {{ t().auth.registerTitle }}
     </h2>
     <p class="mt-2 text-center text-sm text-gray-600 dark:text-gray-400">
-      Empieza a recibir apoyo de tu comunidad deportiva. Sin mensualidades.
+      {{ t().auth.registerSubtitle }}
     </p>
   </div>
 
@@ -35,7 +50,7 @@
         <!-- Handle URL preview -->
         <div>
           <label class="block text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 mb-1.5">
-            Elige tu enlace de atleta
+            {{ t().auth.athleteLinkLabel }}
           </label>
           <div class="flex rounded-xl border border-gray-300 dark:border-white/15 bg-white dark:bg-[#191c1d] focus-within:border-gray-900 dark:focus-within:border-[#c9ff3d] overflow-hidden shadow-xs">
             <span class="inline-flex items-center px-3.5 bg-gray-50 dark:bg-white/5 text-gray-500 dark:text-gray-400 text-xs sm:text-sm font-bold border-r border-gray-200 dark:border-white/10">
@@ -44,7 +59,7 @@
             <input
               type="text"
               required
-              placeholder="tu_nombre"
+              [placeholder]="t().auth.handlePlaceholder"
               class="flex-1 min-w-0 block w-full px-3.5 py-3 text-sm text-gray-900 dark:text-white placeholder-gray-400 bg-white dark:bg-[#191c1d] outline-none font-bold"
               [value]="handle()"
               (input)="onHandleInput($any($event.target).value)"
@@ -55,12 +70,12 @@
         <!-- Nombre completo -->
         <div>
           <label class="block text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 mb-1.5">
-            Nombre o Alias de Atleta / Coach
+            {{ t().auth.athleteNameLabel }}
           </label>
           <input
             type="text"
             required
-            placeholder="Ej. Sofía Ramírez"
+            [placeholder]="t().auth.athleteNamePlaceholder"
             class="block w-full px-4 py-3 border border-gray-300 dark:border-white/15 rounded-xl shadow-xs bg-white dark:bg-[#191c1d] text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:border-gray-900 dark:focus:border-[#c9ff3d] text-sm font-semibold"
             [value]="name()"
             (input)="name.set($any($event.target).value)"
@@ -70,7 +85,7 @@
         <!-- Disciplina principal -->
         <div>
           <label class="block text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 mb-1.5">
-            Disciplina o Deporte Principal
+            {{ t().auth.primarySportLabel }}
           </label>
           <select
             class="block w-full px-4 py-3 border border-gray-300 dark:border-white/15 rounded-xl shadow-xs bg-white dark:bg-[#191c1d] text-sm font-semibold text-gray-900 dark:text-white focus:outline-none focus:border-gray-900 dark:focus:border-[#c9ff3d]"
@@ -78,7 +93,7 @@
             (change)="selectedSportCode.set(+$any($event.target).value)"
           >
             @for (sport of sports(); track sport.code) {
-              <option [value]="sport.code" class="bg-white dark:bg-[#191c1d] text-gray-900 dark:text-white">{{ sport.label }}</option>
+              <option [value]="sport.code" class="bg-white dark:bg-[#191c1d] text-gray-900 dark:text-white">{{ i18n.translateDiscipline(sport.label) }}</option>
             }
           </select>
         </div>
@@ -86,12 +101,12 @@
         <!-- Correo -->
         <div>
           <label class="block text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 mb-1.5">
-            Correo electrónico
+            {{ t().auth.emailLabel }}
           </label>
           <input
             type="email"
             required
-            placeholder="atleta@ejemplo.com"
+            [placeholder]="t().auth.emailPlaceholder"
             class="block w-full px-4 py-3 border border-gray-300 dark:border-white/15 rounded-xl shadow-xs bg-white dark:bg-[#191c1d] text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:border-gray-900 dark:focus:border-[#c9ff3d] text-sm font-semibold"
             [value]="email()"
             (input)="email.set($any($event.target).value)"
@@ -101,13 +116,13 @@
         <!-- Contraseña -->
         <div>
           <label class="block text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 mb-1.5">
-            Contraseña
+            {{ t().auth.passwordLabel }}
           </label>
           <input
             type="password"
             required
             minlength="8"
-            placeholder="Mínimo 8 caracteres"
+            [placeholder]="t().auth.passwordMinLengthPlaceholder"
             class="block w-full px-4 py-3 border border-gray-300 dark:border-white/15 rounded-xl shadow-xs bg-white dark:bg-[#191c1d] text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:border-gray-900 dark:focus:border-[#c9ff3d] text-sm font-semibold"
             [value]="password()"
             (input)="password.set($any($event.target).value)"
@@ -121,15 +136,15 @@
             [disabled]="loading()"
             class="w-full flex justify-center py-3.5 px-4 border border-transparent rounded-xl shadow-sm text-sm font-black text-gray-950 bg-[#c9ff3d] hover:bg-[#bbf033] focus:outline-none transition active:scale-[0.99] disabled:opacity-50 cursor-pointer"
           >
-            {{ loading() ? 'Creando tu página...' : 'Crear mi página de atleta' }}
+            {{ loading() ? t().auth.creatingPage : t().auth.createPageButton }}
           </button>
         </div>
 
         <!-- Link a login -->
         <p class="text-center text-xs text-gray-500 dark:text-gray-400 pt-2 font-medium">
-          ¿Ya tienes cuenta?
+          {{ t().auth.alreadyHaveAccountPrompt }}
           <a routerLink="/auth/login" class="font-bold text-gray-900 dark:text-white hover:underline">
-            Iniciar sesión
+            {{ t().auth.loginLink }}
           </a>
         </p>
 

@@ -1,6 +1,7 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { CheckoutService } from '../../core/checkout.service';
 import { PaymentService } from '../../core/payment.service';
+import { LanguageService } from '../../core/language.service';
 import { AnimatedShakerComponent } from '../icons/animated-shaker';
 
 /** Duración del estado "Procesando…" antes de mostrar la confirmación. */
@@ -17,6 +18,8 @@ const FAKE_PROCESSING_MS = 1000;
 export class StripeCheckout {
   readonly checkout = inject(CheckoutService);
   private readonly paymentService = inject(PaymentService);
+  readonly i18n = inject(LanguageService);
+  readonly t = this.i18n.t;
 
   readonly email = signal('supporter@buymeashake.fit');
   readonly cardName = signal('Supporter Fan');
@@ -33,7 +36,7 @@ export class StripeCheckout {
     if (first === '5') return 'Mastercard';
     if (first === '3') return 'Amex';
     if (first === '6') return 'Discover';
-    return 'Tarjeta';
+    return this.i18n.lang() === 'es' ? 'Tarjeta' : 'Card';
   });
 
   readonly canPay = computed(() => {

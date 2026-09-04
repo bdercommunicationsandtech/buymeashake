@@ -12,6 +12,7 @@ import {
   QUICK_SHAKES,
   SHAKE_PRICE,
 } from '../../core/demo';
+import { LanguageService } from '../../core/language.service';
 import {
   AnimatedShakerComponent,
   IconBoltComponent,
@@ -132,6 +133,8 @@ export class Creator {
   private readonly paymentService = inject(PaymentService);
   private readonly authService = inject(AuthService);
   private readonly supporterService = inject(SupporterService);
+  readonly i18n = inject(LanguageService);
+  readonly t = this.i18n.t;
 
   readonly username = input.required<string>();
   readonly editMode = input(false);

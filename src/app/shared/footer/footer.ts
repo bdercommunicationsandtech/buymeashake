@@ -1,5 +1,6 @@
-import { Component } from '@angular/core';
+import { Component, computed, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { LanguageService } from '../../core/language.service';
 
 @Component({
   selector: 'app-footer',
@@ -7,24 +8,29 @@ import { RouterLink } from '@angular/router';
   templateUrl: './footer.html',
 })
 export class Footer {
+  private readonly languageService = inject(LanguageService);
+  readonly t = this.languageService.t;
   readonly year = new Date().getFullYear();
 
-  readonly columns = [
-    {
-      title: 'Producto',
-      links: [
-        { path: '/', label: 'Inicio' },
-        { path: '/explore', label: 'Explorar atletas' },
-        { path: '/auth/login', label: 'Iniciar sesión' },
-      ],
-    },
-    {
-      title: 'Para atletas',
-      links: [
-        { path: '/auth/register', label: 'Crear mi página' },
-        { path: '/dashboard/home', label: 'Panel de control' },
-        { path: '/dashboard/referrals', label: 'Programa de referidos' },
-      ],
-    },
-  ];
+  readonly columns = computed(() => {
+    const t = this.t();
+    return [
+      {
+        title: t.footer.product,
+        links: [
+          { path: '/', label: t.footer.home },
+          { path: '/explore', label: t.footer.explore },
+          { path: '/auth/login', label: t.footer.login },
+        ],
+      },
+      {
+        title: t.footer.forAthletes,
+        links: [
+          { path: '/auth/register', label: t.footer.createPage },
+          { path: '/dashboard/home', label: t.footer.dashboard },
+          { path: '/dashboard/referrals', label: t.footer.referrals },
+        ],
+      },
+    ];
+  });
 }

@@ -220,6 +220,18 @@
         </button>
 
         <div class="flex items-center gap-3 ml-auto">
+          <!-- Botón Selector de Idioma (ES / EN) -->
+          <button
+            type="button"
+            (click)="toggleLanguage()"
+            [title]="lang() === 'es' ? 'Switch to English' : 'Cambiar a Español'"
+            [attr.aria-label]="t().nav.switchLanguage"
+            class="h-9 px-2.5 rounded-full bg-gray-50 dark:bg-white/5 hover:bg-gray-100 dark:hover:bg-white/10 flex items-center gap-1.5 text-xs font-black tracking-wider uppercase text-gray-700 dark:text-gray-200 transition cursor-pointer select-none border border-gray-200/80 dark:border-white/10"
+          >
+            <span class="text-emerald-600 dark:text-[#c9ff3d] text-sm leading-none">🌐</span>
+            <span>{{ lang() === 'es' ? 'ES' : 'EN' }}</span>
+          </button>
+
           <!-- Toggle Modo Claro / Modo Oscuro -->
           <button
             type="button"
@@ -261,7 +273,7 @@
             @if (notifMenuOpen()) {
               <div class="absolute right-0 mt-2 w-80 bg-white dark:bg-[#121614] rounded-2xl shadow-xl border border-gray-200/80 dark:border-white/10 py-2 z-50 animate-in fade-in zoom-in-95 duration-100">
                 <div class="px-4 py-2.5 border-b border-gray-100 dark:border-white/5 flex items-center justify-between">
-                  <p class="text-xs font-bold text-gray-900 dark:text-white">Notificaciones</p>
+                  <p class="text-xs font-bold text-gray-900 dark:text-white">{{ t().dashboard.notifications }}</p>
                   <span class="text-[10px] font-extrabold bg-[#c9ff3d]/20 text-[#c9ff3d] px-2 py-0.5 rounded-full">
                     {{ notifications().length }}
                   </span>
@@ -287,7 +299,7 @@
                     </div>
                   } @empty {
                     <div class="py-6 text-center text-xs text-gray-400">
-                      No tienes notificaciones pendientes
+                      {{ t().dashboard.noNotifications }}
                     </div>
                   }
                 </div>
@@ -314,7 +326,7 @@
             @if (userMenuOpen()) {
               <div class="absolute right-0 mt-2 w-52 bg-white dark:bg-[#121614] rounded-2xl shadow-xl border border-gray-200/80 dark:border-white/10 py-2 z-50 animate-in fade-in zoom-in-95 duration-100">
                 <div class="px-4 py-2 border-b border-gray-100 dark:border-white/5">
-                  <p class="text-xs font-bold text-gray-500 dark:text-gray-400">Cuenta de Atleta</p>
+                  <p class="text-xs font-bold text-gray-500 dark:border-white/5">Cuenta de Atleta</p>
                   <p class="text-xs font-black text-gray-950 dark:text-white truncate">
                     &#64;{{ profile()?.handle }}
                   </p>
@@ -326,7 +338,7 @@
                   (click)="userMenuOpen.set(false)"
                   class="block px-4 py-2 text-xs font-bold text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-white/5"
                 >
-                  Ver mi página pública ↗
+                  {{ t().dashboard.viewMyPage }} ↗
                 </a>
 
                 <a
@@ -334,7 +346,7 @@
                   (click)="userMenuOpen.set(false)"
                   class="block px-4 py-2 text-xs font-bold text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-white/5"
                 >
-                  Editar mi página
+                  {{ t().nav.editMyPage }}
                 </a>
 
                 <a
@@ -342,18 +354,18 @@
                   (click)="userMenuOpen.set(false)"
                   class="block px-4 py-2 text-xs font-bold text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-white/5"
                 >
-                  Ajustes de cuenta
+                  {{ t().dashboard.settings }}
                 </a>
 
-                <div class="border-t border-gray-100 dark:border-white/5 mt-1 pt-1">
-                  <button
-                    type="button"
-                    (click)="logout()"
-                    class="w-full text-left px-4 py-2 text-xs font-bold text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20 transition cursor-pointer"
-                  >
-                    Cerrar sesión
-                  </button>
-                </div>
+                <div class="border-t border-gray-100 dark:border-white/5 my-1"></div>
+
+                <button
+                  type="button"
+                  (click)="logout()"
+                  class="w-full text-left px-4 py-2 text-xs font-bold text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20 cursor-pointer"
+                >
+                  {{ t().nav.logout }}
+                </button>
               </div>
             }
           </div>

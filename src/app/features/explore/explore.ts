@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { ExploreService } from '../../core/explore.service';
 import { LookupService } from '../../core/lookup.service';
+import { LanguageService } from '../../core/language.service';
 import { IconShakerComponent, IconTrophyComponent } from '../../shared/icons';
 import { AthleteLeaderboardItem } from '../../core/api.models';
 
@@ -39,13 +40,16 @@ function normalizeText(text: string | null | undefined): string {
 export class Explore implements OnInit {
   private readonly exploreService = inject(ExploreService);
   private readonly lookupService = inject(LookupService);
+  readonly languageService = inject(LanguageService);
 
-  readonly selectedCategory = signal<string>('Todos');
+  readonly t = this.languageService.t;
+
+  readonly selectedCategory = signal<string>('ALL');
   readonly searchQuery = signal<string>('');
   readonly leaderboardLoading = signal(false);
   readonly athletesLoading = signal(false);
 
-  readonly categories = signal<string[]>(['Todos']);
+  readonly categories = signal<string[]>(['ALL']);
 
   readonly leaderboardAthletes = signal<AthleteProfile[]>([]);
   readonly exploreAthletes = signal<AthleteProfile[]>([]);
@@ -60,7 +64,7 @@ export class Explore implements OnInit {
     this.lookupService.getSportDisciplines().subscribe({
       next: (items) => {
         const labels = items.map((i) => i.label);
-        this.categories.set(['Todos', ...labels]);
+        this.categories.set(['ALL', ...labels]);
       },
       error: () => {},
     });
@@ -139,11 +143,16 @@ export class Explore implements OnInit {
     return sourceAthletes.filter((athlete) => {
       const athleteSportNorm = normalizeText(athlete.sport);
       const catNorm = normalizeText(category);
+      const translatedCatNorm = normalizeText(this.languageService.translateDiscipline(category));
 
       const matchesCategory =
+        category === 'ALL' ||
         category === 'Todos' ||
+        category === 'All' ||
         athleteSportNorm.includes(catNorm) ||
-        catNorm.includes(athleteSportNorm);
+        catNorm.includes(athleteSportNorm) ||
+        athleteSportNorm.includes(translatedCatNorm) ||
+        translatedCatNorm.includes(athleteSportNorm);
 
       if (!matchesCategory) {
         return false;

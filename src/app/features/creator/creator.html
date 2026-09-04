@@ -5,8 +5,8 @@
         <app-animated-shaker [size]="48" customClass="text-current" />
       </div>
       <div class="text-center space-y-1.5">
-        <p class="text-sm font-black text-gray-900 dark:text-white">Cargando perfil…</p>
-        <p class="text-xs font-medium text-gray-500 dark:text-gray-400">Preparando la página del atleta</p>
+        <p class="text-sm font-black text-gray-900 dark:text-white">{{ t().athlete.loadingProfile }}</p>
+        <p class="text-xs font-medium text-gray-500 dark:text-gray-400">{{ t().athlete.preparingPage }}</p>
       </div>
       <span class="mt-1 inline-block h-1.5 w-28 overflow-hidden rounded-full bg-gray-200 dark:bg-white/10">
         <span class="block h-full w-1/2 animate-pulse rounded-full bg-[#c9ff3d]"></span>
@@ -14,8 +14,8 @@
     </div>
   } @else if (error()) {
     <div class="mx-auto max-w-lg px-4 sm:px-5 py-24 text-center">
-      <p class="text-lg font-bold text-gray-800 dark:text-gray-200">{{ error() }}</p>
-      <a routerLink="/explore" class="mt-4 inline-block text-sm font-bold text-emerald-600 hover:underline">Explorar atletas</a>
+      <p class="text-lg font-bold text-gray-800 dark:text-gray-200">{{ t().athlete.notFound }}</p>
+      <a routerLink="/explore" class="mt-4 inline-block text-sm font-bold text-emerald-600 hover:underline">{{ t().athlete.exploreAthletes }}</a>
     </div>
   } @else if (creatorView(); as creator) {
 
@@ -238,9 +238,9 @@
     <section>
       <div class="mb-3 sm:mb-4">
         <h2 class="font-display text-lg font-black uppercase tracking-tight text-gray-950 dark:text-white sm:text-2xl">
-          Apoya mi misión
+          {{ t().athlete.supportMission }}
         </h2>
-        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Tú eliges cómo impulsas mi misión</p>
+        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">{{ t().athlete.chooseSupportWay }}</p>
       </div>
 
       <div class="grid gap-3 sm:grid-cols-2">
@@ -261,8 +261,8 @@
             <app-icon-shaker size="20" />
           </span>
           <span>
-            <span class="block font-display text-base font-black text-gray-950 dark:text-white">Shake único</span>
-            <span class="mt-1 block text-xs leading-relaxed text-gray-500 dark:text-gray-400">Apoyo de una sola vez para impulsar mi preparación.</span>
+            <span class="block font-display text-base font-black text-gray-950 dark:text-white">{{ t().athlete.oneTimeShake }}</span>
+            <span class="mt-1 block text-xs leading-relaxed text-gray-500 dark:text-gray-400">{{ t().athlete.oneTimeShakeDesc }}</span>
           </span>
         </button>
 
@@ -283,8 +283,8 @@
             <app-icon-button-support size="20" />
           </span>
           <span>
-            <span class="block font-display text-base font-black text-gray-950 dark:text-white">Shakes recurrentes</span>
-            <span class="mt-1 block text-xs leading-relaxed text-gray-500 dark:text-gray-400">Membresía mensual con beneficios exclusivos.</span>
+            <span class="block font-display text-base font-black text-gray-950 dark:text-white">{{ t().athlete.monthlyShakes }}</span>
+            <span class="mt-1 block text-xs leading-relaxed text-gray-500 dark:text-gray-400">{{ t().athlete.monthlyShakesDesc }}</span>
           </span>
         </button>
       </div>
@@ -592,8 +592,8 @@
             <div class="space-y-5">
               <div class="flex items-center justify-between gap-3">
                 <div class="min-w-0">
-                  <h2 class="font-display text-base font-black text-gray-950 dark:text-white sm:text-lg">Invítale un Shaker</h2>
-                  <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">Apoya su preparación deportiva · USD</p>
+                  <h2 class="font-display text-base font-black text-gray-950 dark:text-white sm:text-lg">{{ t().athlete.buyShakeTitle }}</h2>
+                  <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">{{ t().athlete.supportPrepDesc }}</p>
                 </div>
               </div>
 
@@ -617,7 +617,7 @@
                 }
 
                 <label class="flex flex-col items-center justify-center rounded-2xl border border-gray-200 dark:border-white/10 bg-gray-50/50 dark:bg-white/5 px-2 py-2 text-center focus-within:border-[#c9ff3d]">
-                  <span class="block text-[10px] font-bold uppercase tracking-wider text-gray-400">Otro</span>
+                  <span class="block text-[10px] font-bold uppercase tracking-wider text-gray-400">{{ t().athlete.otherAmount }}</span>
                   <input
                     type="number"
                     min="1"
@@ -632,12 +632,12 @@
 
               <div>
                 <label class="mb-1.5 block text-xs font-bold uppercase tracking-wider text-gray-600 dark:text-gray-300">
-                  Mensaje de aliento (opcional)
+                  {{ t().athlete.cheerMessageLabel }}
                 </label>
                 <textarea
                   rows="3"
                   maxlength="240"
-                  placeholder="¡Mucho éxito en tu competencia!..."
+                  [placeholder]="t().athlete.cheerMessagePlaceholder"
                   class="w-full resize-none rounded-2xl border border-gray-200 dark:border-white/10 bg-gray-50/50 dark:bg-white/5 p-3.5 text-sm text-gray-900 placeholder:text-gray-400 transition focus:border-[#c9ff3d] focus:bg-white focus:outline-none dark:text-white dark:focus:bg-[#0c0f10]"
                   [value]="message()"
                   (input)="onMessageInput($any($event.target).value)"
@@ -655,9 +655,9 @@
               >
                 @if (openingStripe() && openingStripeTierId() === null) {
                   <span class="inline-block h-4 w-4 animate-spin rounded-full border-2 border-gray-950/25 border-t-gray-950"></span>
-                  <span>Abriendo la interfaz de Stripe…</span>
+                  <span>{{ t().athlete.openingStripe }}</span>
                 } @else {
-                  <span>Apoyar ${{ amount() }} {{ currency() }}</span>
+                  <span>{{ t().athlete.supportAmountBtn }} ${{ amount() }} {{ currency() }}</span>
                   <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
                   </svg>

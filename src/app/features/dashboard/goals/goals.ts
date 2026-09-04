@@ -1,15 +1,12 @@
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
 import { DashboardService } from '../../../core/dashboard.service';
 import { AuthService } from '../../../core/auth.service';
 import { GoalItem } from '../../../core/api.models';
 import {
-  IconBoltComponent,
   IconDumbbellComponent,
   IconShakerComponent,
-  IconTrophyComponent,
 } from '../../../shared/icons';
 
 export type GoalCategory = 'equipment' | 'travel' | 'nutrition' | 'camp';
@@ -20,11 +17,8 @@ export type GoalCategory = 'equipment' | 'travel' | 'nutrition' | 'camp';
   imports: [
     CommonModule,
     FormsModule,
-    RouterLink,
     IconShakerComponent,
     IconDumbbellComponent,
-    IconTrophyComponent,
-    IconBoltComponent,
   ],
   templateUrl: './goals.html',
 })

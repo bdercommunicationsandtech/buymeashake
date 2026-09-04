@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/auth.service';
+import { LanguageService } from '../../../core/language.service';
 
 @Component({
   selector: 'app-login',
@@ -13,6 +14,8 @@ import { AuthService } from '../../../core/auth.service';
 export class Login {
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
+  readonly i18n = inject(LanguageService);
+  readonly t = this.i18n.t;
 
   email = '';
   password = '';
@@ -28,7 +31,7 @@ export class Login {
     effect(() => {
       const user = this.auth.currentUser();
       if (this.auth.isAuthenticated() && user) {
-        this.infoMessage.set('Ya tienes una sesión activa. Redirigiendo…');
+        this.infoMessage.set(this.t().auth.activeSessionRedirect);
         void this.router.navigateByUrl(this.auth.getDefaultRoute());
       }
     });
@@ -46,7 +49,7 @@ export class Login {
     }
 
     if (!this.email || !this.password) {
-      this.errorMessage.set('Por favor completa todos los campos.');
+      this.errorMessage.set(this.t().auth.fillAllFieldsError);
       return;
     }
 
@@ -61,7 +64,7 @@ export class Login {
       },
       error: (err) => {
         this.loading.set(false);
-        const msg = err.error?.error?.message || 'Error al iniciar sesión. Verifica tus credenciales.';
+        const msg = err.error?.error?.message || this.t().auth.loginGeneralError;
         this.errorMessage.set(msg);
       },
     });
@@ -86,7 +89,7 @@ export class Login {
       },
       error: (err) => {
         this.loading.set(false);
-        this.errorMessage.set(err.error?.message || 'Error al enviar código de acceso.');
+        this.errorMessage.set(err.error?.message || this.t().auth.sendOtpError);
       },
     });
   }
@@ -117,7 +120,7 @@ export class Login {
       },
       error: (err) => {
         this.loading.set(false);
-        this.errorMessage.set(err.error?.message || 'El código es inválido o ha expirado.');
+        this.errorMessage.set(err.error?.message || this.t().auth.invalidOtpError);
       },
     });
   }
@@ -127,7 +130,7 @@ export class Login {
       return false;
     }
 
-    this.infoMessage.set('Ya tienes una sesión activa. Redirigiendo…');
+    this.infoMessage.set(this.t().auth.activeSessionRedirect);
     this.errorMessage.set(null);
 
     if (this.auth.currentUser()) {

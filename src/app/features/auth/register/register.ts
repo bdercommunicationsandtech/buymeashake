@@ -5,6 +5,7 @@ import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/auth.service';
 import { LookupService } from '../../../core/lookup.service';
 import { LookupItemDto } from '../../../core/api.models';
+import { LanguageService } from '../../../core/language.service';
 
 @Component({
   selector: 'app-register',
@@ -12,10 +13,12 @@ import { LookupItemDto } from '../../../core/api.models';
   imports: [CommonModule, FormsModule, RouterLink],
   templateUrl: './register.html',
 })
-export class Register {
+export class Register implements OnInit {
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
   private readonly lookupService = inject(LookupService);
+  readonly i18n = inject(LanguageService);
+  readonly t = this.i18n.t;
 
   constructor() {
     effect(() => {
@@ -55,12 +58,12 @@ export class Register {
 
   submit(): void {
     if (!this.email() || !this.password() || !this.name() || !this.handle()) {
-      this.errorMessage.set('Por favor completa todos los campos.');
+      this.errorMessage.set(this.t().auth.fillAllFieldsError);
       return;
     }
 
     if (this.password().length < 8) {
-      this.errorMessage.set('La contraseña debe tener al menos 8 caracteres.');
+      this.errorMessage.set(this.t().auth.passwordMinLengthError);
       return;
     }
 
@@ -85,7 +88,7 @@ export class Register {
           this.loading.set(false);
           const msg =
             err.error?.error?.message ||
-            'Error al crear la cuenta. Verifica que el correo o @handle no estén en uso.';
+            this.t().auth.registerGeneralError;
           this.errorMessage.set(msg);
         },
       });

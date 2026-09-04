@@ -2,7 +2,7 @@ import { Component, ChangeDetectionStrategy, input, output, signal } from '@angu
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
-import { IconLockComponent, IconStarComponent, IconShakerComponent } from '../icons';
+import { IconLockComponent } from '../icons';
 
 export interface PostCommentItem {
   id: number;
@@ -35,7 +35,7 @@ export interface PostItem {
   selector: 'app-post-card',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, FormsModule, RouterLink, IconLockComponent, IconStarComponent, IconShakerComponent],
+  imports: [CommonModule, FormsModule, RouterLink, IconLockComponent],
   template: `
     <article class="bg-white dark:bg-[#121614] rounded-3xl border border-gray-200/80 dark:border-white/10 overflow-hidden shadow-xs hover:border-gray-300 dark:hover:border-white/20 transition-all duration-200">
       

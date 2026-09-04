@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../core/auth.service';
 import { ThemeService } from '../../core/theme.service';
+import { LanguageService } from '../../core/language.service';
 
 @Component({
   selector: 'app-header',
@@ -12,8 +13,12 @@ import { ThemeService } from '../../core/theme.service';
 })
 export class Header {
   readonly themeService = inject(ThemeService);
+  readonly languageService = inject(LanguageService);
   readonly auth = inject(AuthService);
   private readonly router = inject(Router);
+
+  readonly lang = this.languageService.lang;
+  readonly t = this.languageService.t;
 
   readonly menuOpen = signal(false);
   readonly userMenuOpen = signal(false);
@@ -22,6 +27,10 @@ export class Header {
   readonly links = [
     { path: '/explore', label: 'Explorar atletas' },
   ];
+
+  toggleLanguage(): void {
+    this.languageService.toggleLanguage();
+  }
 
   toggleMenu(): void {
     this.menuOpen.update((value) => !value);

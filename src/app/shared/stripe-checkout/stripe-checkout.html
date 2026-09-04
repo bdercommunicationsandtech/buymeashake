@@ -1,9 +1,9 @@
 @if (checkout.open()) {
-  <div class="overlay" role="dialog" aria-modal="true" aria-label="Pago de prueba con Stripe">
+  <div class="overlay" role="dialog" aria-modal="true" [attr.aria-label]="t().checkout.testPaymentTitle">
     <button
       type="button"
       class="overlay-backdrop"
-      aria-label="Cerrar"
+      [attr.aria-label]="t().common.close"
       [disabled]="checkout.confirming()"
       (click)="close()"
     ></button>
@@ -17,13 +17,13 @@
           </div>
           <div class="space-y-2">
             <p class="text-[11px] font-black uppercase tracking-[0.2em] text-emerald-700 dark:text-[#c9ff3d]">
-              Confirmando tu apoyo
+              {{ t().checkout.confirmingSupport }}
             </p>
             <h2 class="text-2xl sm:text-3xl font-black text-gray-950 dark:text-white tracking-tight">
-              El Shake se está batiendo…
+              {{ t().checkout.shakeIsBlending }}
             </h2>
             <p class="text-sm text-gray-500 dark:text-gray-400 max-w-sm mx-auto">
-              Estamos verificando tu pago con Stripe. Esto toma solo un momento.
+              {{ t().checkout.verifyingStripe }}
             </p>
           </div>
           <div class="flex justify-center">
@@ -41,27 +41,27 @@
 
           <div>
             <span class="inline-block text-[11px] font-black uppercase tracking-widest text-emerald-600 dark:text-[#c9ff3d] bg-emerald-50 dark:bg-white/5 px-3 py-1 rounded-full mb-2">
-              ¡Pago Confirmado!
+              {{ t().checkout.paymentConfirmed }}
             </span>
             <h2 class="text-2xl sm:text-3xl font-black text-gray-950 dark:text-white tracking-tight">
               @switch (checkout.draft()?.type) {
                 @case ('product') {
-                  ¡Tu guía ya está disponible!
+                  {{ t().checkout.guideAvailable }}
                 }
                 @case ('booking') {
-                  ¡Cita agendada con éxito!
+                  {{ t().checkout.bookingSuccess }}
                 }
                 @case ('membership') {
-                  ¡Bienvenido al Squad!
+                  {{ t().checkout.welcomeSquad }}
                 }
                 @default {
-                  ¡Gracias por impulsar mi camino!
+                  {{ t().checkout.thankYouJourney }}
                 }
               }
             </h2>
             @if (email()) {
               <p class="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-1">
-                Recibo enviado a <strong class="text-gray-900 dark:text-white">{{ email() }}</strong>
+                {{ t().checkout.receiptSentTo }} <strong class="text-gray-900 dark:text-white">{{ email() }}</strong>
               </p>
             }
           </div>
@@ -70,7 +70,7 @@
           @if (checkout.thankYouMessage()) {
             <div class="mx-auto max-w-md p-4 sm:p-5 rounded-2xl bg-[#c9ff3d]/12 border border-[#c9ff3d]/35 text-left space-y-2">
               <p class="text-[11px] font-black uppercase tracking-wider text-emerald-700 dark:text-[#c9ff3d]">
-                Mensaje de {{ checkout.draft()?.creatorName || 'el atleta' }}
+                {{ t().checkout.messageFrom }} {{ checkout.draft()?.creatorName || t().checkout.theAthlete }}
               </p>
               <p class="text-sm sm:text-base italic text-gray-800 dark:text-gray-100 leading-relaxed">
                 "{{ checkout.thankYouMessage() }}"
@@ -81,19 +81,19 @@
           <!-- Tarjeta de Detalle del Pedido -->
           <div class="rounded-2xl border border-gray-200/80 dark:border-white/10 bg-gray-50/70 dark:bg-white/5 p-4 sm:p-5 text-left space-y-3">
             <div class="flex items-center justify-between text-xs pb-3 border-b border-gray-200/60 dark:border-white/10">
-              <span class="font-bold text-gray-500">Atleta</span>
+              <span class="font-bold text-gray-500">{{ t().checkout.athleteLabel }}</span>
               <span class="font-black text-gray-900 dark:text-white">{{ checkout.draft()?.creatorName }} (&#64;{{ checkout.draft()?.creatorHandle }})</span>
             </div>
 
             <!-- Caso 1: Shakes -->
             @if (checkout.draft()?.type === 'shake') {
               <div class="flex items-center justify-between text-xs">
-                <span class="font-bold text-gray-500">Aporte</span>
+                <span class="font-bold text-gray-500">{{ t().checkout.contributionLabel }}</span>
                 <span class="font-black text-gray-900 dark:text-white">{{ checkout.draft()?.shakes }} Shake(s)</span>
               </div>
               @if (checkout.draft()?.message) {
                 <div class="text-xs pt-1">
-                  <span class="font-bold text-gray-500">Tu mensaje:</span>
+                  <span class="font-bold text-gray-500">{{ t().checkout.yourMessageLabel }}</span>
                   <p class="italic text-gray-700 dark:text-gray-300 mt-0.5">“{{ checkout.draft()?.message }}”</p>
                 </div>
               }
@@ -103,7 +103,7 @@
             @if (checkout.draft()?.type === 'product') {
               <div class="space-y-2">
                 <div class="flex items-center justify-between text-xs">
-                  <span class="font-bold text-gray-500">Producto</span>
+                  <span class="font-bold text-gray-500">{{ t().checkout.productLabel }}</span>
                   <span class="font-black text-gray-900 dark:text-white">{{ checkout.draft()?.title }}</span>
                 </div>
                 <a
@@ -114,7 +114,7 @@
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                   </svg>
-                  <span>Descargar Guía en PDF</span>
+                  <span>{{ t().checkout.downloadPdf }}</span>
                 </a>
               </div>
             }
@@ -123,24 +123,24 @@
             @if (checkout.draft()?.type === 'booking') {
               <div class="space-y-2.5 text-xs">
                 <div class="flex items-center justify-between">
-                  <span class="font-bold text-gray-500">Servicio</span>
+                  <span class="font-bold text-gray-500">{{ t().checkout.serviceLabel }}</span>
                   <span class="font-black text-gray-900 dark:text-white">{{ checkout.draft()?.title }}</span>
                 </div>
                 <div class="flex items-center justify-between">
-                  <span class="font-bold text-gray-500">Fecha & Hora</span>
+                  <span class="font-bold text-gray-500">{{ t().checkout.dateTimeLabel }}</span>
                   <span class="font-black text-emerald-600 dark:text-[#c9ff3d]">
-                    {{ checkout.draft()?.bookingDetails?.date }} a las {{ checkout.draft()?.bookingDetails?.time }}
+                    {{ checkout.draft()?.bookingDetails?.date }} {{ t().checkout.atTime }} {{ checkout.draft()?.bookingDetails?.time }}
                   </span>
                 </div>
                 <a
                   [href]="checkout.draft()?.bookingDetails?.meetingLink || '#'"
                   target="_blank"
-                  class="w-full mt-2 rounded-xl bg-gray-950 dark:bg-white text-white dark:text-gray-950 py-3 text-xs font-black transition flex items-center justify-center gap-2"
+                  class="w-full mt-2 rounded-xl bg-gray-950 dark:bg-[#c9ff3d] hover:bg-black dark:hover:bg-[#bbf033] text-white dark:text-gray-950 py-3 text-xs font-black transition flex items-center justify-center gap-2"
                 >
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
                   </svg>
-                  <span>Abrir Enlace de Google Meet</span>
+                  <span>{{ t().checkout.openMeetLink }}</span>
                 </a>
               </div>
             }
@@ -149,18 +149,18 @@
             @if (checkout.draft()?.type === 'membership') {
               <div class="space-y-2 text-xs">
                 <div class="flex items-center justify-between">
-                  <span class="font-bold text-gray-500">Nivel de Membresía</span>
+                  <span class="font-bold text-gray-500">{{ t().checkout.membershipTierLabel }}</span>
                   <span class="font-black text-gray-900 dark:text-white">{{ checkout.draft()?.title }}</span>
                 </div>
                 <div class="p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-[11px] font-medium text-emerald-800 dark:text-emerald-300">
-                  Ya puedes ver todas las publicaciones bloqueadas y rutinas exclusivas en el perfil de {{ checkout.draft()?.creatorName }}.
+                  {{ t().checkout.membershipUnlockedNotice }} {{ checkout.draft()?.creatorName }}.
                 </div>
               </div>
             }
 
             <!-- Total Pagado -->
             <div class="pt-2 border-t border-gray-200/60 dark:border-white/10 flex items-center justify-between text-sm">
-              <span class="font-black text-gray-900 dark:text-white">Total Pagado</span>
+              <span class="font-black text-gray-900 dark:text-white">{{ t().checkout.totalPaidLabel }}</span>
               <span class="font-black text-lg text-emerald-600 dark:text-[#c9ff3d]">${{ checkout.total() }}.00 {{ checkout.draft()?.currency }}</span>
             </div>
           </div>
@@ -170,14 +170,14 @@
             <button
               type="button"
               (click)="close()"
-              class="flex-1 rounded-2xl bg-gray-950 dark:bg-white text-white dark:text-gray-950 py-3.5 text-xs font-black transition hover:opacity-90 active:scale-95"
+              class="flex-1 rounded-2xl bg-gray-950 dark:bg-[#c9ff3d] hover:bg-black dark:hover:bg-[#bbf033] text-white dark:text-gray-950 py-3.5 text-xs font-black transition active:scale-95 shadow-md shadow-black/10 dark:shadow-[#c9ff3d]/15"
             >
-              Volver a la Página del Atleta
+              {{ t().checkout.backToAthletePage }}
             </button>
           </div>
 
           <p class="text-[11px] text-gray-400">
-            Transacción procesada de forma segura por Stripe Payments.
+            {{ t().checkout.secureTransactionNotice }}
           </p>
         </div>
       } @else {
@@ -189,10 +189,10 @@
               <span class="summary-name">buymeashake.fit</span>
             </div>
 
-            <p class="summary-label">Apoyar a {{ checkout.draft()?.creatorName }}</p>
+            <p class="summary-label">{{ t().checkout.supportAthlete }} {{ checkout.draft()?.creatorName }}</p>
             <p class="summary-total">${{ checkout.total() }}.00</p>
             <p class="summary-sub">
-              {{ checkout.draft()?.shakes }} × Shake de proteína · ${{ checkout.draft()?.unitPrice }}.00
+              {{ checkout.draft()?.shakes }} × {{ t().checkout.proteinShake }} · ${{ checkout.draft()?.unitPrice }}.00
             </p>
 
             <div class="summary-line">
@@ -203,29 +203,29 @@
                 </svg>
               </div>
               <div>
-                <p class="summary-item">Shake de proteína</p>
-                <p class="summary-item-sub">Apoyo único · &#64;{{ checkout.draft()?.creatorHandle }}</p>
+                <p class="summary-item">{{ t().checkout.proteinShake }}</p>
+                <p class="summary-item-sub">{{ t().checkout.singleSupport }} · &#64;{{ checkout.draft()?.creatorHandle }}</p>
               </div>
               <p class="summary-item-price">${{ checkout.total() }}.00</p>
             </div>
 
             <div class="summary-total-row">
-              <span>Total a pagar</span>
+              <span>{{ t().checkout.totalDue }}</span>
               <span>${{ checkout.total() }}.00 {{ checkout.draft()?.currency }}</span>
             </div>
 
             <p class="summary-powered">
               Powered by <strong>stripe</strong>
-              <span class="summary-dot">·</span> Términos
-              <span class="summary-dot">·</span> Privacidad
+              <span class="summary-dot">·</span> {{ t().checkout.terms }}
+              <span class="summary-dot">·</span> {{ t().checkout.privacy }}
             </p>
           </aside>
 
           <!-- ---------------------------------- Formulario Stripe -->
           <section class="form-panel">
             <div class="form-head">
-              <h2>Pagar con tarjeta</h2>
-              <button type="button" class="close-btn" (click)="close()" aria-label="Cerrar">
+              <h2>{{ t().checkout.payWithCard }}</h2>
+              <button type="button" class="close-btn" (click)="close()" [attr.aria-label]="t().common.close">
                 <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
                   <path d="M6 6l12 12M18 6L6 18" />
                 </svg>
@@ -242,10 +242,10 @@
               </button>
             </div>
 
-            <div class="divider"><span>o paga con tarjeta</span></div>
+            <div class="divider"><span>{{ t().checkout.orPayWithCard }}</span></div>
 
             <label class="field">
-              <span class="field-label">Correo</span>
+              <span class="field-label">{{ t().checkout.emailLabel }}</span>
               <input
                 type="email"
                 class="input"
@@ -256,7 +256,7 @@
             </label>
 
             <label class="field">
-              <span class="field-label">Información de la tarjeta</span>
+              <span class="field-label">{{ t().checkout.cardInfoLabel }}</span>
               <div class="card-group">
                 <div class="card-row card-row-top">
                   <input
@@ -288,7 +288,7 @@
             </label>
 
             <label class="field">
-              <span class="field-label">Nombre en la tarjeta</span>
+              <span class="field-label">{{ t().checkout.nameOnCardLabel }}</span>
               <input
                 class="input"
                 autocomplete="cc-name"
@@ -298,7 +298,7 @@
             </label>
 
             <label class="field">
-              <span class="field-label">Código postal</span>
+              <span class="field-label">{{ t().checkout.zipLabel }}</span>
               <input
                 class="input"
                 inputmode="numeric"
@@ -309,14 +309,14 @@
 
             <button type="button" class="pay-btn" [disabled]="!canPay()" (click)="pay()">
               @if (processing()) {
-                <span class="spinner"></span> Procesando…
+                <span class="spinner"></span> {{ t().checkout.processing }}
               } @else {
-                Pagar ${{ checkout.total() }}.00
+                {{ t().checkout.payButton }} ${{ checkout.total() }}.00
               }
             </button>
 
             <p class="test-note">
-              Modo prueba · prototipo visual sin cobros reales. Usa cualquier dato.
+              {{ t().checkout.testModeNote }}
             </p>
           </section>
         </div>

@@ -11,10 +11,11 @@ async def main() -> None:
             await s.execute(
                 text(
                     """
-                    SELECT transaction_uuid, id, goal_id, gross_amount, status_code
-                    FROM transactions
-                    WHERE status_code = 301
-                    ORDER BY id ASC
+                    SELECT t.transaction_uuid, t.id, sd.goal_id, t.gross_amount, t.status_code
+                    FROM transactions t
+                    LEFT JOIN shake_details sd ON sd.transaction_id = t.id
+                    WHERE t.status_code = 301
+                    ORDER BY t.id ASC
                     """
                 )
             )
@@ -40,7 +41,7 @@ async def main() -> None:
                     """
                     SELECT id, athlete_id, raised_amount, target_amount
                     FROM goals
-                    WHERE id IN (SELECT DISTINCT goal_id FROM transactions WHERE goal_id IS NOT NULL)
+                    WHERE id IN (SELECT DISTINCT goal_id FROM shake_details WHERE goal_id IS NOT NULL)
                     ORDER BY id DESC
                     LIMIT 10
                     """

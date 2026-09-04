@@ -10,6 +10,7 @@ from app.api.v1.api import api_router
 from app.core.config import settings
 from app.core.database import Base, engine
 from app.core.exceptions import register_exception_handlers
+import app.models  # noqa: F401 — registra modelos en Base.metadata para create_all
 
 
 @asynccontextmanager

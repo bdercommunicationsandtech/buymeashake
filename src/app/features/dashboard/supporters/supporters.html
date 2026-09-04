@@ -87,17 +87,17 @@
               <div>
                 <div class="flex items-center gap-2">
                   <p class="text-sm font-bold text-gray-900 dark:text-white">{{ item.supporter_name }}</p>
-                  @if (item.is_anonymous) {
+                  @if (item.shake_details.is_anonymous) {
                     <span class="text-[10px] bg-gray-100 dark:bg-white/10 text-gray-500 dark:text-gray-400 px-1.5 py-0.5 rounded font-semibold">Anónimo</span>
                   }
                 </div>
-                @if (item.supporter_message) {
-                  <p class="text-xs text-gray-600 dark:text-gray-300 mt-1 italic">"{{ item.supporter_message }}"</p>
+                @if (item.shake_details.supporter_message) {
+                  <p class="text-xs text-gray-600 dark:text-gray-300 mt-1 italic">"{{ item.shake_details.supporter_message }}"</p>
                 }
                 <p class="text-[11px] text-gray-400 mt-1">{{ item.created_at | date:'medium' }}</p>
               </div>
               <div class="text-right flex flex-col items-end">
-                <p class="text-sm font-black text-gray-900 dark:text-white">{{ item.shakes_count }} shakes</p>
+                <p class="text-sm font-black text-gray-900 dark:text-white">{{ item.shake_details.shakes_count }} shakes</p>
                 <p class="text-xs text-emerald-600 dark:text-[#c9ff3d] font-bold">${{ item.gross_amount }} {{ item.currency }}</p>
               </div>
             </div>
@@ -108,13 +108,13 @@
                 type="button"
                 (click)="toggleLike(item)"
                 class="inline-flex items-center gap-1 font-bold transition cursor-pointer"
-                [class.text-red-500]="item.is_liked_by_creator"
-                [class.text-gray-400]="!item.is_liked_by_creator"
+                [class.text-red-500]="item.shake_details.is_liked_by_creator"
+                [class.text-gray-400]="!item.shake_details.is_liked_by_creator"
               >
-                <svg class="w-4 h-4" [attr.fill]="item.is_liked_by_creator ? 'currentColor' : 'none'" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="w-4 h-4" [attr.fill]="item.shake_details.is_liked_by_creator ? 'currentColor' : 'none'" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                 </svg>
-                <span>{{ item.is_liked_by_creator ? 'Te gusta' : 'Dar like' }}</span>
+                <span>{{ item.shake_details.is_liked_by_creator ? 'Te gusta' : 'Dar like' }}</span>
               </button>
 
               <button
@@ -125,18 +125,18 @@
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
                 </svg>
-                <span>{{ item.creator_reply ? 'Editar respuesta' : 'Responder' }}</span>
+                <span>{{ item.shake_details.creator_reply ? 'Editar respuesta' : 'Responder' }}</span>
               </button>
             </div>
 
             <!-- Respuesta existente del Atleta -->
-            @if (item.creator_reply) {
+            @if (item.shake_details.creator_reply) {
               <div class="ml-4 pl-3 border-l-2 border-[#c9ff3d] bg-gray-50 dark:bg-white/5 p-2.5 rounded-r-xl text-xs space-y-0.5">
                 <p class="font-bold text-gray-900 dark:text-white flex items-center gap-1">
                   <span class="text-emerald-600 dark:text-[#c9ff3d]">Tu respuesta</span>
-                  <span class="text-[10px] text-gray-400 font-normal">({{ item.creator_reply_at | date:'short' }})</span>
+                  <span class="text-[10px] text-gray-400 font-normal">({{ item.shake_details.creator_reply_at | date:'short' }})</span>
                 </p>
-                <p class="text-gray-600 dark:text-gray-300">{{ item.creator_reply }}</p>
+                <p class="text-gray-600 dark:text-gray-300">{{ item.shake_details.creator_reply }}</p>
               </div>
             }
 

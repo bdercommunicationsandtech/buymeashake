@@ -52,7 +52,6 @@ export interface UserMe {
   full_name: string;
   avatar_url: string | null;
   role: string;
-  role_code?: number;
   is_email_verified: boolean;
   athlete_handle: string | null;
   referral_code: string | null;
@@ -256,12 +255,18 @@ export interface UploadFileResult {
   size_bytes: number;
 }
 
-export interface ShakeCheckoutPayload {
-  athlete_handle: string;
+export interface ShakeDetailsPayload {
   shakes_count: number;
-  currency?: string;
   supporter_message?: string;
   is_anonymous?: boolean;
+}
+
+export interface ShakeCheckoutPayload {
+  athlete_handle: string;
+  currency?: string;
+  supporter_name?: string;
+  supporter_email?: string;
+  shake_details: ShakeDetailsPayload;
 }
 
 export interface PaymentIntentResult {
@@ -295,7 +300,6 @@ export interface PostResponse {
   title: string;
   content_html: string;
   access_type: string;
-  access_type_code?: number;
   likes_count: number;
   published_at: string;
   is_members_only: boolean;
@@ -309,7 +313,6 @@ export interface PostItemDto {
   title: string;
   content_html: string;
   access_type: string;
-  access_type_code?: number;
   likes_count: number;
   published_at: string;
   is_members_only: boolean;
@@ -321,21 +324,25 @@ export interface PostItemDto {
 export interface PostCreatePayload {
   title: string;
   content_html: string;
-  access_type?: 'public' | 'members_only';
+  access_type?: 'public' | 'followers_only' | 'members_only';
 }
 
-export interface SupporterItemDto {
-  id: number;
-  supporter_name: string;
+export interface ShakeDetailsDto {
   shakes_count: number;
-  gross_amount: number;
-  currency: string;
   supporter_message: string | null;
   is_anonymous: boolean;
   creator_reply?: string | null;
   creator_reply_at?: string | null;
   is_liked_by_creator?: boolean;
+}
+
+export interface SupporterItemDto {
+  id: number;
+  supporter_name: string;
+  gross_amount: number;
+  currency: string;
   created_at: string;
+  shake_details: ShakeDetailsDto;
 }
 
 export interface SupportersDashboardDto {

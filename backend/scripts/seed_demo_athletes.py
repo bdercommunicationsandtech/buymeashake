@@ -15,6 +15,7 @@ from sqlalchemy import delete, select
 from app.core.database import async_session_factory
 from app.core.security import get_password_hash
 from app.models.entities import AthleteProfile, Goal, User
+from app.services.profile_helpers import ensure_child_rows, ensure_monetization, resolve_sport_item_id
 
 DEMO_PASSWORD = "DemoShake2026!"
 DEMO_EMAIL_DOMAIN = "demo.buymeashake.fit"
@@ -188,19 +189,26 @@ async def seed_athletes() -> None:
             session.add(user)
             await session.flush()
 
+            sport_item_id = await resolve_sport_item_id(session, athlete_data["primary_sport_code"])
             profile = AthleteProfile(
                 user_id=user.id,
                 handle=athlete_data["handle"],
                 bio=athlete_data["bio"],
-                primary_sport_code=athlete_data["primary_sport_code"],
+                primary_sport_item_id=sport_item_id,
                 city=athlete_data["city"],
-                shake_price=athlete_data["shake_price"],
-                currency="USD",
                 is_verified=True,
-                referral_code=f"{athlete_data['handle']}_demo",
             )
             session.add(profile)
             await session.flush()
+
+            await ensure_child_rows(
+                session,
+                profile,
+                referral_code=f"{athlete_data['handle']}_demo",
+            )
+            mon = ensure_monetization(session, profile)
+            mon.shake_price = athlete_data["shake_price"]
+            mon.currency = "USD"
 
             goal = Goal(
                 athlete_id=profile.id,

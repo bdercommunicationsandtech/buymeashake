@@ -113,7 +113,6 @@ class UserMeResponse(BaseModel):
     full_name: str
     avatar_url: str | None
     role: str
-    role_code: int = 10
     is_email_verified: bool
     athlete_handle: str | None = None
     referral_code: str | None = None
@@ -229,14 +228,18 @@ class CreatorPublicProfileResponse(BaseModel):
 # 4. CHECKOUT & RESERVAS CALENDLY
 # ==============================================================================
 
-class ShakeCheckoutCreateRequest(BaseModel):
-    athlete_handle: str
+class ShakeDetailsRequest(BaseModel):
     shakes_count: int = Field(ge=1, le=100, default=3)
-    currency: str = Field(default="USD", pattern="^USD$")
-    supporter_name: str | None = Field(default=None, max_length=150)
-    supporter_email: str | None = Field(default=None, max_length=191)
     supporter_message: str | None = Field(default=None, max_length=240)
     is_anonymous: bool = False
+
+
+class ShakeCheckoutCreateRequest(BaseModel):
+    athlete_handle: str
+    currency: str = Field(default="USD", pattern="^(USD|MXN)$")
+    supporter_name: str | None = Field(default=None, max_length=150)
+    supporter_email: str | None = Field(default=None, max_length=191)
+    shake_details: ShakeDetailsRequest = Field(default_factory=ShakeDetailsRequest)
 
 
 class BookingSessionCheckoutRequest(BaseModel):
@@ -524,8 +527,7 @@ class PostCommentResponse(BaseModel):
 class PostCreateRequest(BaseModel):
     title: str = Field(min_length=3, max_length=255)
     content_html: str = Field(min_length=1)
-    access_type: str = Field(default="public", pattern="^(public|members_only)$")
-    access_type_code: int | None = None
+    access_type: str = Field(default="public", pattern="^(public|followers_only|members_only)$")
 
 
 class PostResponse(BaseModel):
@@ -535,7 +537,6 @@ class PostResponse(BaseModel):
     title: str
     content_html: str
     access_type: str
-    access_type_code: int = 601
     likes_count: int
     published_at: datetime
     is_members_only: bool = False
@@ -549,18 +550,22 @@ class ReplySupporterRequest(BaseModel):
     reply_text: str = Field(min_length=1, max_length=500)
 
 
-class SupporterItemResponse(BaseModel):
-    id: int
-    supporter_name: str
+class ShakeDetailsResponse(BaseModel):
     shakes_count: int
-    gross_amount: Decimal
-    currency: str
-    supporter_message: str | None
-    is_anonymous: bool
+    supporter_message: str | None = None
+    is_anonymous: bool = False
     creator_reply: str | None = None
     creator_reply_at: datetime | None = None
     is_liked_by_creator: bool = False
+
+
+class SupporterItemResponse(BaseModel):
+    id: int
+    supporter_name: str
+    gross_amount: Decimal
+    currency: str
     created_at: datetime
+    shake_details: ShakeDetailsResponse
 
 
 class SupportersDashboardResponse(BaseModel):

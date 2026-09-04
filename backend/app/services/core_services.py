@@ -24,8 +24,25 @@ from app.models.entities import (
     Goal,
     MembershipTier,
     Post,
+    ShakeDetails,
     Transaction,
     User,
+)
+from app.services.profile_helpers import (
+    ensure_child_rows,
+    ensure_monetization,
+    ensure_page_settings,
+    flatten_social,
+    get_cover_url,
+    get_currency,
+    get_page_field,
+    get_referral_code,
+    get_shake_price,
+    get_thank_you,
+    primary_sport_code,
+    primary_sport_label,
+    resolve_sport_item_id,
+    upsert_social_links,
 )
 from app.repositories.base_repos import (
     AppVersionRepository,
@@ -102,7 +119,7 @@ class AuthService:
 
         referred_by_id = None
         if dto.referral_code:
-            # Buscar atleta que lo refirió
+            # Buscar atleta que lo refirió (handle prefix from referral code)
             inviter = await self.athlete_repo.get_by_handle(dto.referral_code.split("_")[0])
             if inviter:
                 referred_by_id = inviter.id
@@ -114,26 +131,29 @@ class AuthService:
             if existing_handle:
                 raise EntityAlreadyExistsError("Atleta", "handle", dto.handle)
 
-        role_code = 20 if dto.role == "athlete" else 10
         user = User(
             email=dto.email,
             password_hash=get_password_hash(dto.password),
             full_name=dto.full_name,
             role=dto.role,
-            role_code=role_code,
         )
         await self.user_repo.create(user)
 
         if dto.role == "athlete" and dto.handle:
             referral_code = f"{dto.handle}_{secrets.token_hex(3)}"
+            sport_item_id = await resolve_sport_item_id(self.session, dto.primary_sport_code)
             athlete = AthleteProfile(
                 user_id=user.id,
                 handle=dto.handle,
-                primary_sport_code=dto.primary_sport_code,
-                referred_by_id=referred_by_id,
-                referral_code=referral_code,
+                primary_sport_item_id=sport_item_id,
             )
             await self.athlete_repo.create(athlete)
+            await ensure_child_rows(
+                self.session,
+                athlete,
+                referral_code=referral_code,
+                referred_by_id=referred_by_id,
+            )
 
         access_token = create_access_token(user.id)
         refresh_token = create_refresh_token(user.id)
@@ -239,7 +259,6 @@ class AuthService:
                 password_hash=get_password_hash(secrets.token_urlsafe(16)),
                 full_name=name,
                 role="supporter",
-                role_code=10,
                 is_email_verified=True,
             )
             await self.user_repo.create(user)
@@ -264,8 +283,12 @@ class AuthService:
         )
 
     async def get_me(self, user: User) -> UserMeResponse:
-        athlete_handle = user.athlete_profile.handle if user.athlete_profile else None
-        referral_code = user.athlete_profile.referral_code if user.athlete_profile else None
+        athlete = user.athlete_profile
+        if athlete is not None and "referrals" not in athlete.__dict__:
+            athlete = await self.athlete_repo.get_by_user_id(user.id) or athlete
+
+        athlete_handle = athlete.handle if athlete else None
+        referral_code = get_referral_code(athlete) if athlete else None
 
         return UserMeResponse(
             id=user.id,
@@ -273,7 +296,6 @@ class AuthService:
             full_name=user.full_name,
             avatar_url=user.avatar_url,
             role=user.role,
-            role_code=getattr(user, "role_code", 10) or 10,
             is_email_verified=user.is_email_verified,
             athlete_handle=athlete_handle,
             referral_code=referral_code,
@@ -318,20 +340,17 @@ class SupporterService:
         for p in posts:
             author_name = p.athlete.user.full_name if p.athlete and p.athlete.user else "Atleta"
             author_handle = p.athlete.handle if p.athlete else ""
-            author_avatar = p.athlete.user.avatar_url if p.athlete and p.athlete.user else None
-            
+
             items.append(PostResponse(
                 id=p.id,
-                athlete_id=p.athlete_id,
                 title=p.title,
                 content_html=p.content_html,
                 access_type=p.access_type,
-                minimum_tier_id=p.minimum_tier_id,
-                likes_count=p.likes_count,
+                likes_count=p.likes_count or 0,
                 published_at=p.published_at,
+                is_members_only=p.access_type == "members_only",
                 author_name=author_name,
                 author_handle=author_handle,
-                author_avatar_url=author_avatar,
             ))
         total_pages = (total + page_size - 1) // page_size if total > 0 else 1
         return PaginatedResponse(
@@ -352,20 +371,20 @@ class SupporterService:
     async def follow_athlete(self, supporter_id: int, handle: str) -> dict:
         athlete = await self.athlete_repo.get_by_handle(handle)
         if not athlete:
-            raise EntityNotFoundError("Athlete", "handle", handle)
+            raise EntityNotFoundError("Athlete", handle)
         await self.follow_repo.follow(supporter_id, athlete.id)
         return {"message": f"You are now following @{handle}", "following": True}
 
     async def unfollow_athlete(self, supporter_id: int, handle: str) -> dict:
         athlete = await self.athlete_repo.get_by_handle(handle)
         if not athlete:
-            raise EntityNotFoundError("Athlete", "handle", handle)
+            raise EntityNotFoundError("Athlete", handle)
         await self.follow_repo.unfollow(supporter_id, athlete.id)
         return {"message": f"You have unfollowed @{handle}", "following": False}
 
-    async def like_post(self, post_id: int) -> dict:
+    async def like_post(self, post_id: int, user_id: int) -> dict:
         post_repo = PostRepository(self.session)
-        new_likes = await post_repo.like_post(post_id)
+        new_likes = await post_repo.like_post(post_id, user_id)
         return {"success": True, "likes_count": new_likes}
 
     async def comment_post(self, user: User, post_id: int, content: str) -> PostCommentResponse:
@@ -475,34 +494,29 @@ class AthleteService:
             if p.is_active
         ]
 
-        primary_sport_label = "Deporte General"
-        if profile.primary_sport_code:
-            lookup_repo = LookupRepository(self.session)
-            sport_items = await lookup_repo.get_items_by_group_code(100)
-            matched = next((item.label for item in sport_items if item.code == profile.primary_sport_code), None)
-            if matched:
-                primary_sport_label = matched
+        social = flatten_social(profile)
+        sport_label = primary_sport_label(profile) or "Deporte General"
 
         return CreatorPublicProfileResponse(
             id=profile.id,
             handle=profile.handle,
             name=user.full_name if user else "Atleta Oficial",
             bio=profile.bio,
-            page_title=profile.page_title,
-            page_description=profile.page_description,
-            agenda_title=profile.agenda_title,
-            agenda_description=profile.agenda_description,
-            agenda_image_url=profile.agenda_image_url,
-            primary_sport=primary_sport_label,
+            page_title=get_page_field(profile, "page_title"),
+            page_description=get_page_field(profile, "page_description"),
+            agenda_title=get_page_field(profile, "agenda_title"),
+            agenda_description=get_page_field(profile, "agenda_description"),
+            agenda_image_url=get_page_field(profile, "agenda_image_url"),
+            primary_sport=sport_label,
             city=profile.city,
             avatar_url=user.avatar_url if user else None,
-            cover_image_url=profile.cover_image_url,
-            instagram_url=profile.instagram_url,
-            tiktok_url=profile.tiktok_url,
-            facebook_url=profile.facebook_url,
-            twitter_url=profile.twitter_url,
-            shake_price=profile.shake_price,
-            currency=profile.currency,
+            cover_image_url=get_cover_url(profile),
+            instagram_url=social.get("instagram_url"),
+            tiktok_url=social.get("tiktok_url"),
+            facebook_url=social.get("facebook_url"),
+            twitter_url=social.get("twitter_url"),
+            shake_price=get_shake_price(profile),
+            currency=get_currency(profile),
             is_verified=profile.is_verified,
             active_goal_title=active_goal.title if active_goal else None,
             active_goal_target=active_goal.target_amount if active_goal else None,
@@ -554,9 +568,7 @@ class AthleteService:
         if not post or post.athlete_id != profile.id:
             raise EntityNotFoundError("Publicación", post_id)
 
-        is_members_only = (
-            getattr(post, "access_type_code", 601) == 603 or post.access_type == "members_only"
-        )
+        is_members_only = post.access_type == "members_only"
         if is_members_only or post.access_type != "public":
             raise EntityNotFoundError("Publicación", post_id)
 
@@ -575,10 +587,9 @@ class AthleteService:
             title=post.title,
             content_html=post.content_html,
             access_type=str(post.access_type),
-            access_type_code=getattr(post, "access_type_code", 601) or 601,
             likes_count=post.likes_count or 0,
             published_at=post.published_at,
-            is_members_only=getattr(post, "access_type_code", 601) == 603 or post.access_type == "members_only",
+            is_members_only=post.access_type == "members_only",
             author_name=author_name,
             author_handle=author_handle,
             comments=[
@@ -618,59 +629,83 @@ class DashboardService:
     # Perfil & Ajustes
     async def get_profile(self, athlete: AthleteProfile) -> AthleteProfileFullResponse:
         user = athlete.user
+        social = flatten_social(athlete)
         return AthleteProfileFullResponse(
             id=athlete.id,
             handle=athlete.handle,
             full_name=user.full_name if user else "",
             email=user.email if user else "",
             bio=athlete.bio,
-            page_title=athlete.page_title,
-            page_description=athlete.page_description,
-            agenda_title=athlete.agenda_title,
-            agenda_description=athlete.agenda_description,
-            agenda_image_url=athlete.agenda_image_url,
+            page_title=get_page_field(athlete, "page_title"),
+            page_description=get_page_field(athlete, "page_description"),
+            agenda_title=get_page_field(athlete, "agenda_title"),
+            agenda_description=get_page_field(athlete, "agenda_description"),
+            agenda_image_url=get_page_field(athlete, "agenda_image_url"),
             city=athlete.city,
-            primary_sport_code=athlete.primary_sport_code,
-            shake_price=athlete.shake_price,
-            currency=athlete.currency,
+            primary_sport_code=primary_sport_code(athlete),
+            shake_price=get_shake_price(athlete),
+            currency=get_currency(athlete),
             avatar_url=user.avatar_url if user else None,
-            cover_image_url=athlete.cover_image_url,
-            instagram_url=athlete.instagram_url,
-            tiktok_url=athlete.tiktok_url,
-            facebook_url=athlete.facebook_url,
-            twitter_url=athlete.twitter_url,
+            cover_image_url=get_cover_url(athlete),
+            instagram_url=social.get("instagram_url"),
+            tiktok_url=social.get("tiktok_url"),
+            facebook_url=social.get("facebook_url"),
+            twitter_url=social.get("twitter_url"),
             is_verified=athlete.is_verified,
-            referral_code=athlete.referral_code,
-            thank_you_message=athlete.thank_you_message,
+            referral_code=get_referral_code(athlete) or "",
+            thank_you_message=get_thank_you(athlete),
         )
 
     async def update_profile(self, athlete: AthleteProfile, dto: AthleteProfileUpdateRequest) -> AthleteProfileFullResponse:
         if dto.bio is not None:
             athlete.bio = dto.bio
-        updates = dto.model_dump(exclude_unset=True)
-        for field in ("page_title", "page_description", "agenda_title", "agenda_description", "agenda_image_url"):
-            if field in updates:
-                value = updates[field]
-                setattr(athlete, field, value.strip() if isinstance(value, str) and value.strip() else None)
         if dto.city is not None:
             athlete.city = dto.city
-        if dto.primary_sport_code is not None:
-            athlete.primary_sport_code = dto.primary_sport_code
-        if dto.shake_price is not None:
-            athlete.shake_price = dto.shake_price
-        if dto.currency is not None:
-            athlete.currency = dto.currency
-        if dto.cover_image_url is not None:
-            athlete.cover_image_url = dto.cover_image_url
-        if dto.google_analytics_id is not None:
-            athlete.google_analytics_id = dto.google_analytics_id
-        if dto.thank_you_message is not None:
-            athlete.thank_you_message = dto.thank_you_message
 
-        # Redes: permitir limpiar enviando "" (normalizado a None) si el campo vino en el request
-        for field in ("instagram_url", "tiktok_url", "facebook_url", "twitter_url"):
-            if field in updates:
-                setattr(athlete, field, updates[field])
+        updates = dto.model_dump(exclude_unset=True)
+
+        page_fields = (
+            "page_title",
+            "page_description",
+            "agenda_title",
+            "agenda_description",
+            "agenda_image_url",
+            "cover_image_url",
+            "google_analytics_id",
+            "thank_you_message",
+        )
+        if any(f in updates for f in page_fields):
+            ps = ensure_page_settings(self.session, athlete)
+            for field in page_fields:
+                if field not in updates:
+                    continue
+                value = updates[field]
+                if isinstance(value, str):
+                    value = value.strip() or None
+                setattr(ps, field, value)
+
+        if dto.shake_price is not None or dto.currency is not None:
+            mon = ensure_monetization(self.session, athlete)
+            if dto.shake_price is not None:
+                mon.shake_price = dto.shake_price
+            if dto.currency is not None:
+                mon.currency = dto.currency
+
+        if dto.primary_sport_code is not None:
+            athlete.primary_sport_item_id = await resolve_sport_item_id(self.session, dto.primary_sport_code)
+
+        social_updates = {
+            platform: updates[field]
+            for platform, field in (
+                ("instagram", "instagram_url"),
+                ("tiktok", "tiktok_url"),
+                ("facebook", "facebook_url"),
+                ("twitter", "twitter_url"),
+            )
+            if field in updates
+        }
+        if social_updates:
+            await upsert_social_links(self.session, athlete, social_updates)
 
         if athlete.user:
             if dto.full_name is not None:
@@ -679,7 +714,8 @@ class DashboardService:
                 athlete.user.avatar_url = dto.avatar_url
 
         await self.athlete_repo.update(athlete)
-        return await self.get_profile(athlete)
+        refreshed = await self.athlete_repo.get_by_user_id(athlete.user_id)
+        return await self.get_profile(refreshed or athlete)
 
     # Metas Deportivas (Goals)
     async def get_goals(self, athlete: AthleteProfile) -> list[GoalResponse]:
@@ -806,7 +842,8 @@ class DashboardService:
 
     # Referidos
     async def get_referrals(self, athlete: AthleteProfile) -> ReferralDashboardResponse:
-        data = await self.referral_repo.get_referral_summary(athlete.id, athlete.referral_code)
+        code = get_referral_code(athlete) or ""
+        data = await self.referral_repo.get_referral_summary(athlete.id, code)
         return ReferralDashboardResponse(**data)
 
     async def get_posts(self, athlete: AthleteProfile) -> list[PostResponse]:
@@ -817,23 +854,20 @@ class DashboardService:
                 title=p.title,
                 content_html=p.content_html,
                 access_type=p.access_type,
-                access_type_code=getattr(p, "access_type_code", 601) or 601,
                 likes_count=p.likes_count,
                 published_at=p.published_at,
-                is_members_only=getattr(p, "access_type_code", 601) == 603 or p.access_type == "members_only",
+                is_members_only=p.access_type == "members_only",
             )
             for p in posts
         ]
 
     async def create_post(self, athlete: AthleteProfile, dto: PostCreateRequest) -> PostResponse:
-        code = 603 if dto.access_type == "members_only" else (dto.access_type_code or 601)
-        access_str = "members_only" if code == 603 else "public"
+        access_type = dto.access_type if dto.access_type in ("public", "followers_only", "members_only") else "public"
         post = Post(
             athlete_id=athlete.id,
             title=dto.title.strip(),
             content_html=dto.content_html.strip() or "<p></p>",
-            access_type=access_str,
-            access_type_code=code,
+            access_type=access_type,
             likes_count=0,
             published_at=datetime.utcnow(),
         )
@@ -843,10 +877,9 @@ class DashboardService:
             title=created.title,
             content_html=created.content_html,
             access_type=str(created.access_type),
-            access_type_code=created.access_type_code or code,
             likes_count=created.likes_count or 0,
             published_at=created.published_at or datetime.utcnow(),
-            is_members_only=code == 603,
+            is_members_only=created.access_type == "members_only",
         )
 
     async def get_supporters(self, athlete: AthleteProfile) -> SupportersDashboardResponse:
@@ -949,8 +982,9 @@ class CheckoutService:
         if not profile:
             raise EntityNotFoundError("Atleta", dto.athlete_handle)
 
-        unit_price = profile.shake_price
-        gross_amount = unit_price * Decimal(dto.shakes_count)
+        details = dto.shake_details
+        unit_price = get_shake_price(profile)
+        gross_amount = unit_price * Decimal(details.shakes_count)
         platform_fee = (gross_amount * Decimal("0.05")).quantize(Decimal("0.01"))
         stripe_fee = Decimal("0.30") + (gross_amount * Decimal("0.029")).quantize(Decimal("0.01"))
         net_athlete = gross_amount - platform_fee - stripe_fee
@@ -969,22 +1003,29 @@ class CheckoutService:
             supporter_name=dto.supporter_name.strip() if dto.supporter_name else None,
             supporter_email=dto.supporter_email.strip() if dto.supporter_email else None,
             athlete_id=profile.id,
-            goal_id=active_goal.id if active_goal else None,
             transaction_type_code=201,  # Shake
-            shakes_count=dto.shakes_count,
             gross_amount=gross_amount,
             currency=dto.currency,
             platform_fee=platform_fee,
             stripe_fee=stripe_fee,
             net_athlete_amount=net_athlete,
             status_code=302,  # Aprobado / Succeeded
-            supporter_message=dto.supporter_message,
-            is_anonymous=dto.is_anonymous,
         )
         self.session.add(tx)
+        await self.session.flush()
+
+        self.session.add(
+            ShakeDetails(
+                transaction_id=tx.id,
+                shakes_count=details.shakes_count,
+                supporter_message=details.supporter_message,
+                is_anonymous=details.is_anonymous,
+                goal_id=active_goal.id if active_goal else None,
+            )
+        )
 
         # Crear notificación para el atleta
-        if dto.is_anonymous:
+        if details.is_anonymous:
             supporter_display_name = "Someone anonymous"
         elif dto.supporter_name and dto.supporter_name.strip():
             supporter_display_name = dto.supporter_name.strip()
@@ -997,14 +1038,15 @@ class CheckoutService:
         if profile.user_id:
             await notif_repo.create(
                 user_id=profile.user_id,
-                title=f"{dto.shakes_count} Shakes received!",
-                message=f"{supporter_display_name} bought you {dto.shakes_count} Shakes (${gross_amount} {dto.currency}).",
+                title=f"{details.shakes_count} Shakes received!",
+                message=f"{supporter_display_name} bought you {details.shakes_count} Shakes (${gross_amount} {dto.currency}).",
                 type_code=401,
                 action_url=f"/dashboard/supporters",
             )
 
         await self.session.flush()
 
+        thank_you = get_thank_you(profile)
         # Enviar email de agradecimiento si hay correo disponible
         recipient_email = dto.supporter_email or (supporter_user.email if supporter_user else None)
         if recipient_email:
@@ -1014,29 +1056,34 @@ class CheckoutService:
                     to_email=recipient_email,
                     athlete_name=athlete_display_name,
                     athlete_handle=profile.handle,
-                    shakes_count=dto.shakes_count,
-                    thank_you_message=profile.thank_you_message,
+                    shakes_count=details.shakes_count,
+                    thank_you_message=thank_you,
                 )
             except Exception as e:
                 print(f"[ERROR SENDING THANK YOU EMAIL]: {e}")
 
         return {
             "success": True,
-            "message": f"Successfully sent {dto.shakes_count} Shakes to @{dto.athlete_handle}!",
+            "message": f"Successfully sent {details.shakes_count} Shakes to @{dto.athlete_handle}!",
             "transaction_uuid": tx.transaction_uuid,
             "gross_amount": float(gross_amount),
             "new_goal_raised": float(active_goal.raised_amount) if active_goal else None,
-            "thank_you_message": profile.thank_you_message or "¡Muchas gracias por tu apoyo y por ser parte de mi camino deportivo!",
+            "thank_you_message": thank_you or "¡Muchas gracias por tu apoyo y por ser parte de mi camino deportivo!",
             "supporter_item": {
                 "id": tx.id,
                 "supporter_name": supporter_display_name,
-                "shakes_count": dto.shakes_count,
                 "gross_amount": float(gross_amount),
                 "currency": dto.currency,
-                "supporter_message": dto.supporter_message,
-                "is_anonymous": dto.is_anonymous,
-                "created_at": datetime.now().isoformat(),
-            }
+                "created_at": tx.created_at.isoformat() if tx.created_at else None,
+                "shake_details": {
+                    "shakes_count": details.shakes_count,
+                    "supporter_message": details.supporter_message,
+                    "is_anonymous": details.is_anonymous,
+                    "creator_reply": None,
+                    "creator_reply_at": None,
+                    "is_liked_by_creator": False,
+                },
+            },
         }
 
     async def book_session_intent(self, dto: BookingSessionCheckoutRequest, supporter_id: int) -> PaymentIntentResponse:

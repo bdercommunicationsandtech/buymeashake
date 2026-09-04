@@ -118,16 +118,20 @@ export class StripeCheckout {
     }
 
     // Caso 2: Pago Único de Shakes (Donación puntual)
-    this.paymentService
-      .createStripeCheckoutSession({
-        athlete_handle: draft.creatorHandle,
+    const shakePayload = {
+      athlete_handle: draft.creatorHandle,
+      currency: draft.currency,
+      supporter_name: draft.isAnonymous ? 'Alguien anónimo' : (draft.supporterName || this.cardName() || 'Un Fan'),
+      supporter_email: this.email() || undefined,
+      shake_details: {
         shakes_count: draft.shakes,
-        currency: draft.currency,
-        supporter_name: draft.isAnonymous ? 'Alguien anónimo' : (draft.supporterName || this.cardName() || 'Un Fan'),
-        supporter_email: this.email() || undefined,
         supporter_message: draft.message,
         is_anonymous: draft.isAnonymous ?? false,
-      })
+      },
+    };
+
+    this.paymentService
+      .createStripeCheckoutSession(shakePayload)
       .subscribe({
         next: (sessionRes) => {
           // Si el backend devolvió una URL real de Stripe Checkout (cuando haya keys válidas)
@@ -138,14 +142,7 @@ export class StripeCheckout {
 
           // En modo mock / desarrollo local: completar directamente con persistencia en BD
           this.paymentService
-            .donateDirectShake({
-              athlete_handle: draft.creatorHandle,
-              shakes_count: draft.shakes,
-              currency: draft.currency,
-              supporter_name: draft.isAnonymous ? 'Alguien anónimo' : (draft.supporterName || this.cardName() || 'Un Fan'),
-              supporter_message: draft.message,
-              is_anonymous: draft.isAnonymous ?? false,
-            })
+            .donateDirectShake(shakePayload)
             .subscribe({
               next: (res) => {
                 setTimeout(() => {
@@ -164,14 +161,7 @@ export class StripeCheckout {
         error: () => {
           // Fallback directo a donación local
           this.paymentService
-            .donateDirectShake({
-              athlete_handle: draft.creatorHandle,
-              shakes_count: draft.shakes,
-              currency: draft.currency,
-              supporter_name: draft.isAnonymous ? 'Alguien anónimo' : (draft.supporterName || this.cardName() || 'Un Fan'),
-              supporter_message: draft.message,
-              is_anonymous: draft.isAnonymous ?? false,
-            })
+            .donateDirectShake(shakePayload)
             .subscribe({
               next: (res) => {
                 setTimeout(() => {

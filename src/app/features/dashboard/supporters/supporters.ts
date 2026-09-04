@@ -91,7 +91,18 @@ export class DashboardSupporters implements OnInit {
       next: (res) => {
         this.sendingReply.set(false);
         this.items.update((list) =>
-          list.map((it) => (it.id === item.id ? { ...it, creator_reply: res.reply, creator_reply_at: new Date().toISOString() } : it))
+          list.map((it) =>
+            it.id === item.id
+              ? {
+                  ...it,
+                  shake_details: {
+                    ...it.shake_details,
+                    creator_reply: res.reply,
+                    creator_reply_at: new Date().toISOString(),
+                  },
+                }
+              : it
+          )
         );
         this.activeReplyId.set(null);
         this.replyText.set('');
@@ -104,7 +115,17 @@ export class DashboardSupporters implements OnInit {
     this.dashboardService.toggleLikeSupporter(item.id).subscribe({
       next: (res) => {
         this.items.update((list) =>
-          list.map((it) => (it.id === item.id ? { ...it, is_liked_by_creator: res.is_liked } : it))
+          list.map((it) =>
+            it.id === item.id
+              ? {
+                  ...it,
+                  shake_details: {
+                    ...it.shake_details,
+                    is_liked_by_creator: res.is_liked,
+                  },
+                }
+              : it
+          )
         );
       },
       error: () => {},

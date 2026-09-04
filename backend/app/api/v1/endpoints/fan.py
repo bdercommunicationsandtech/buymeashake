@@ -76,7 +76,7 @@ async def like_post(
 ) -> dict:
     """Da like a una publicación."""
     service = SupporterService(session)
-    return await service.like_post(post_id=post_id)
+    return await service.like_post(post_id=post_id, user_id=user.id)
 
 
 @router.post("/posts/{post_id}/comments", response_model=PostCommentResponse)

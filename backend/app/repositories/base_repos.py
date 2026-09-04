@@ -8,6 +8,7 @@ from app.models.entities import (
     AppVersion,
     AthleteFollow,
     AthleteProfile,
+    AthleteReferrals,
     BookingAppointment,
     BookingAvailability,
     BookingService,
@@ -20,11 +21,14 @@ from app.models.entities import (
     Notification,
     Post,
     PostComment,
+    PostLike,
+    ShakeDetails,
     Subscription,
     TierBenefit,
     Transaction,
     User,
 )
+from app.services.profile_helpers import athlete_load_options
 
 
 class UserRepository:
@@ -32,7 +36,13 @@ class UserRepository:
         self.session = session
 
     async def get_by_id(self, user_id: int) -> User | None:
-        query = select(User).options(selectinload(User.athlete_profile)).where(User.id == user_id)
+        query = (
+            select(User)
+            .options(
+                selectinload(User.athlete_profile).selectinload(AthleteProfile.referrals),
+            )
+            .where(User.id == user_id)
+        )
         result = await self.session.execute(query)
         return result.scalar_one_or_none()
 
@@ -56,11 +66,9 @@ class AthleteRepository:
         query = (
             select(AthleteProfile)
             .options(
-                selectinload(AthleteProfile.user),
-                selectinload(AthleteProfile.goals),
-                selectinload(AthleteProfile.booking_services),
+                *athlete_load_options(),
                 selectinload(AthleteProfile.tiers).selectinload(MembershipTier.benefits),
-                selectinload(AthleteProfile.products),
+                selectinload(AthleteProfile.booking_services).selectinload(BookingService.availabilities),
             )
             .where(
                 (AthleteProfile.handle == clean_handle)
@@ -75,7 +83,7 @@ class AthleteRepository:
         query = (
             select(AthleteProfile)
             .options(
-                selectinload(AthleteProfile.user),
+                *athlete_load_options(),
                 selectinload(AthleteProfile.tiers).selectinload(MembershipTier.benefits),
                 selectinload(AthleteProfile.products),
                 selectinload(AthleteProfile.booking_services).selectinload(BookingService.availabilities),
@@ -102,19 +110,20 @@ class AthleteRepository:
                 User.full_name.label("athlete_name"),
                 User.avatar_url,
                 func.coalesce(LookupItem.label, "Deporte General").label("primary_sport"),
-                func.coalesce(func.sum(Transaction.shakes_count), 0).label("total_shakes_this_month"),
+                func.coalesce(func.sum(ShakeDetails.shakes_count), 0).label("total_shakes_this_month"),
                 func.coalesce(func.sum(Transaction.gross_amount), 0).label("total_raised_this_month"),
             )
             .join(User, AthleteProfile.user_id == User.id)
-            .outerjoin(LookupItem, AthleteProfile.primary_sport_code == LookupItem.code)
+            .outerjoin(LookupItem, AthleteProfile.primary_sport_item_id == LookupItem.id)
             .outerjoin(
                 Transaction,
                 (AthleteProfile.id == Transaction.athlete_id)
                 & (Transaction.status_code == 302)
                 & (Transaction.transaction_type_code == 201),
             )
+            .outerjoin(ShakeDetails, ShakeDetails.transaction_id == Transaction.id)
             .group_by(AthleteProfile.id, User.id, LookupItem.label)
-            .order_by(func.sum(Transaction.shakes_count).desc(), AthleteProfile.id.desc())
+            .order_by(func.sum(ShakeDetails.shakes_count).desc(), AthleteProfile.id.desc())
             .limit(limit)
         )
         result = await self.session.execute(query)
@@ -148,17 +157,18 @@ class AthleteRepository:
                 User.avatar_url,
                 func.coalesce(LookupItem.label, "Deporte General").label("primary_sport"),
                 AthleteProfile.bio,
-                func.coalesce(func.sum(Transaction.shakes_count), 0).label("total_shakes_this_month"),
+                func.coalesce(func.sum(ShakeDetails.shakes_count), 0).label("total_shakes_this_month"),
                 func.coalesce(func.sum(Transaction.gross_amount), 0).label("total_raised_this_month"),
             )
             .join(User, AthleteProfile.user_id == User.id)
-            .outerjoin(LookupItem, AthleteProfile.primary_sport_code == LookupItem.code)
+            .outerjoin(LookupItem, AthleteProfile.primary_sport_item_id == LookupItem.id)
             .outerjoin(
                 Transaction,
                 (AthleteProfile.id == Transaction.athlete_id)
                 & (Transaction.status_code == 302)
                 & (Transaction.transaction_type_code == 201),
             )
+            .outerjoin(ShakeDetails, ShakeDetails.transaction_id == Transaction.id)
         )
 
         if category and category.strip() and category.strip().lower() != "todos":
@@ -178,7 +188,7 @@ class AthleteRepository:
 
         query = (
             query.group_by(AthleteProfile.id, User.id, LookupItem.label)
-            .order_by(func.sum(Transaction.shakes_count).desc(), AthleteProfile.id.desc())
+            .order_by(func.sum(ShakeDetails.shakes_count).desc(), AthleteProfile.id.desc())
             .limit(limit)
         )
 
@@ -213,8 +223,9 @@ class DashboardRepository:
             select(
                 Transaction.transaction_type_code,
                 func.sum(Transaction.gross_amount).label("total_gross"),
-                func.sum(Transaction.shakes_count).label("total_shakes"),
+                func.sum(ShakeDetails.shakes_count).label("total_shakes"),
             )
+            .outerjoin(ShakeDetails, ShakeDetails.transaction_id == Transaction.id)
             .where(
                 Transaction.athlete_id == athlete_id,
                 Transaction.status_code == 302,
@@ -414,20 +425,21 @@ class ReferralRepository:
         self.session = session
 
     async def get_referral_summary(self, athlete_id: int, referral_code: str) -> dict:
-        # Atletas que se registraron con su referred_by_id
         query = (
             select(
                 User.full_name.label("name"),
                 AthleteProfile.handle,
                 AthleteProfile.created_at.label("joined_date"),
-                func.coalesce(func.sum(Transaction.shakes_count), 0).label("shakes_count"),
+                func.coalesce(func.sum(ShakeDetails.shakes_count), 0).label("shakes_count"),
             )
             .join(User, AthleteProfile.user_id == User.id)
+            .join(AthleteReferrals, AthleteReferrals.athlete_id == AthleteProfile.id)
             .outerjoin(
                 Transaction,
                 (AthleteProfile.id == Transaction.athlete_id) & (Transaction.status_code == 302),
             )
-            .where(AthleteProfile.referred_by_id == athlete_id)
+            .outerjoin(ShakeDetails, ShakeDetails.transaction_id == Transaction.id)
+            .where(AthleteReferrals.referred_by_id == athlete_id)
             .group_by(AthleteProfile.id, User.id)
         )
         result = await self.session.execute(query)
@@ -539,13 +551,21 @@ class PostRepository:
         await self.session.refresh(post)
         return post
 
-    async def like_post(self, post_id: int) -> int:
+    async def like_post(self, post_id: int, user_id: int) -> int:
         post = await self.get_by_id(post_id)
-        if post:
-            post.likes_count += 1
-            await self.session.flush()
-            return post.likes_count
-        return 0
+        if not post:
+            return 0
+        existing = (
+            await self.session.execute(
+                select(PostLike).where(PostLike.post_id == post_id, PostLike.user_id == user_id)
+            )
+        ).scalar_one_or_none()
+        if existing:
+            return post.likes_count or 0
+        self.session.add(PostLike(post_id=post_id, user_id=user_id))
+        post.likes_count = (post.likes_count or 0) + 1
+        await self.session.flush()
+        return post.likes_count
 
     async def add_comment(self, post_id: int, user_id: int, content: str) -> PostComment:
         comment = PostComment(
@@ -575,16 +595,17 @@ class SupporterRepository:
             select(
                 Transaction.id,
                 func.coalesce(Transaction.supporter_name, User.full_name, "Un Seguidor").label("donor_name"),
-                Transaction.shakes_count,
+                ShakeDetails.shakes_count,
                 Transaction.gross_amount,
                 Transaction.currency,
-                Transaction.supporter_message,
-                Transaction.is_anonymous,
-                Transaction.creator_reply,
-                Transaction.creator_reply_at,
-                Transaction.is_liked_by_creator,
+                ShakeDetails.supporter_message,
+                ShakeDetails.is_anonymous,
+                ShakeDetails.creator_reply,
+                ShakeDetails.creator_reply_at,
+                ShakeDetails.is_liked_by_creator,
                 Transaction.created_at,
             )
+            .join(ShakeDetails, ShakeDetails.transaction_id == Transaction.id)
             .outerjoin(User, Transaction.supporter_id == User.id)
             .where(*base_filter)
             .order_by(Transaction.created_at.desc())
@@ -610,15 +631,17 @@ class SupporterRepository:
             items.append({
                 "id": row.id,
                 "supporter_name": name,
-                "shakes_count": int(row.shakes_count or 0),
                 "gross_amount": row.gross_amount or Decimal("0"),
                 "currency": row.currency,
-                "supporter_message": row.supporter_message,
-                "is_anonymous": row.is_anonymous,
-                "creator_reply": row.creator_reply,
-                "creator_reply_at": row.creator_reply_at,
-                "is_liked_by_creator": row.is_liked_by_creator,
                 "created_at": row.created_at,
+                "shake_details": {
+                    "shakes_count": int(row.shakes_count or 0),
+                    "supporter_message": row.supporter_message,
+                    "is_anonymous": bool(row.is_anonymous),
+                    "creator_reply": row.creator_reply,
+                    "creator_reply_at": row.creator_reply_at,
+                    "is_liked_by_creator": bool(row.is_liked_by_creator),
+                },
             })
 
         return {
@@ -634,16 +657,17 @@ class SupporterRepository:
             select(
                 Transaction.id,
                 func.coalesce(Transaction.supporter_name, User.full_name, "Un Seguidor").label("donor_name"),
-                Transaction.shakes_count,
+                ShakeDetails.shakes_count,
                 Transaction.gross_amount,
                 Transaction.currency,
-                Transaction.supporter_message,
-                Transaction.is_anonymous,
-                Transaction.creator_reply,
-                Transaction.creator_reply_at,
-                Transaction.is_liked_by_creator,
+                ShakeDetails.supporter_message,
+                ShakeDetails.is_anonymous,
+                ShakeDetails.creator_reply,
+                ShakeDetails.creator_reply_at,
+                ShakeDetails.is_liked_by_creator,
                 Transaction.created_at,
             )
+            .join(ShakeDetails, ShakeDetails.transaction_id == Transaction.id)
             .outerjoin(User, Transaction.supporter_id == User.id)
             .where(
                 Transaction.athlete_id == athlete_id,
@@ -660,35 +684,45 @@ class SupporterRepository:
             result.append({
                 "id": r.id,
                 "supporter_name": name,
-                "shakes_count": int(r.shakes_count or 0),
                 "gross_amount": r.gross_amount or Decimal("0"),
                 "currency": r.currency,
-                "supporter_message": r.supporter_message,
-                "is_anonymous": r.is_anonymous,
-                "creator_reply": r.creator_reply,
-                "creator_reply_at": r.creator_reply_at,
-                "is_liked_by_creator": r.is_liked_by_creator,
                 "created_at": r.created_at,
+                "shake_details": {
+                    "shakes_count": int(r.shakes_count or 0),
+                    "supporter_message": r.supporter_message,
+                    "is_anonymous": bool(r.is_anonymous),
+                    "creator_reply": r.creator_reply,
+                    "creator_reply_at": r.creator_reply_at,
+                    "is_liked_by_creator": bool(r.is_liked_by_creator),
+                },
             })
         return result
 
     async def reply_to_supporter(self, athlete_id: int, transaction_id: int, reply_text: str) -> Transaction | None:
-        query = select(Transaction).where(Transaction.id == transaction_id, Transaction.athlete_id == athlete_id)
+        query = (
+            select(Transaction)
+            .options(selectinload(Transaction.shake_details))
+            .where(Transaction.id == transaction_id, Transaction.athlete_id == athlete_id)
+        )
         tx = (await self.session.execute(query)).scalar_one_or_none()
-        if tx:
-            tx.creator_reply = reply_text
-            tx.creator_reply_at = datetime.now()
+        if tx and tx.shake_details:
+            tx.shake_details.creator_reply = reply_text
+            tx.shake_details.creator_reply_at = datetime.now()
             await self.session.flush()
             return tx
         return None
 
     async def toggle_like_supporter(self, athlete_id: int, transaction_id: int) -> bool:
-        query = select(Transaction).where(Transaction.id == transaction_id, Transaction.athlete_id == athlete_id)
+        query = (
+            select(Transaction)
+            .options(selectinload(Transaction.shake_details))
+            .where(Transaction.id == transaction_id, Transaction.athlete_id == athlete_id)
+        )
         tx = (await self.session.execute(query)).scalar_one_or_none()
-        if tx:
-            tx.is_liked_by_creator = not tx.is_liked_by_creator
+        if tx and tx.shake_details:
+            tx.shake_details.is_liked_by_creator = not tx.shake_details.is_liked_by_creator
             await self.session.flush()
-            return tx.is_liked_by_creator
+            return tx.shake_details.is_liked_by_creator
         return False
 
 

@@ -64,12 +64,12 @@ async def create_stripe_checkout_session(
     stripe_svc = StripeService(session)
     res = await stripe_svc.create_shake_checkout_session(
         athlete=athlete,
-        shakes_count=dto.shakes_count,
+        shakes_count=dto.shake_details.shakes_count,
         currency=dto.currency,
         supporter_name=dto.supporter_name,
         supporter_email=dto.supporter_email,
-        supporter_message=dto.supporter_message,
-        is_anonymous=dto.is_anonymous,
+        supporter_message=dto.shake_details.supporter_message,
+        is_anonymous=dto.shake_details.is_anonymous,
         supporter_user=user,
     )
     # Persistir tx pendiente ANTES de devolver la URL de Stripe
@@ -228,7 +228,7 @@ async def get_stripe_connect_status(
 @router.post("/checkout/create-intent", response_model=PaymentIntentResponse)
 async def create_shake_intent(dto: ShakeCheckoutCreateRequest, session: DatabaseSession) -> PaymentIntentResponse:
     """Crea una intención de pago en Stripe para invitar shakes a un atleta."""
-    mock_secret = f"pi_mock_{dto.shakes_count}shakes"
+    mock_secret = f"pi_mock_{dto.shake_details.shakes_count}shakes"
     return PaymentIntentResponse(client_secret=mock_secret, transaction_uuid=dto.athlete_handle, gross_amount=5.0, currency="USD")
 
 

@@ -330,7 +330,11 @@ export class Creator {
 
         console.log('[Creator] Verificando sesión con backend:', sessionId, 'tx=', txUuid);
         this.paymentService.verifySession(sessionId, txUuid).subscribe({
-          next: (res) => {
+          next: (res: {
+            supporter_item?: unknown;
+            new_goal_raised?: number | null;
+            thank_you_message?: string | null;
+          }) => {
             console.log('[Creator] Sesión verificada con éxito:', res);
             if (res?.supporter_item || res?.new_goal_raised != null) {
               this.checkout.markPaid(
@@ -348,12 +352,16 @@ export class Creator {
               replaceUrl: true,
             });
           },
-          error: (err) => {
+          error: (err: unknown) => {
             console.error('[Creator] Error verificando sesión:', err);
             // Reintento solo con tx (por si session_id falló en Stripe/SSL)
             if (txUuid) {
               this.paymentService.verifySession('', txUuid).subscribe({
-                next: (res) => {
+                next: (res: {
+                  supporter_item?: unknown;
+                  new_goal_raised?: number | null;
+                  thank_you_message?: string | null;
+                }) => {
                   console.log('[Creator] Reintento tx OK:', res);
                   if (res?.supporter_item || res?.new_goal_raised != null) {
                     this.checkout.markPaid(
@@ -369,7 +377,7 @@ export class Creator {
                     replaceUrl: true,
                   });
                 },
-                error: (err2) => {
+                error: (err2: unknown) => {
                   console.error('[Creator] Reintento tx falló:', err2);
                   if (handle) this.loadCreator(handle);
                 },
@@ -400,8 +408,8 @@ export class Creator {
           this.supporters.update((list) => [
             {
               name: s.supporter_name,
-              shakes: s.shakes_count,
-              message: s.supporter_message || '¡Mucho éxito con tu entrenamiento!',
+              shakes: s.shake_details?.shakes_count ?? 0,
+              message: s.shake_details?.supporter_message || '¡Mucho éxito con tu entrenamiento!',
               when: 'Justo ahora',
               initials: initials,
             },
@@ -546,11 +554,13 @@ export class Creator {
           this.supporters.set(
             profile.recent_supporters.map((s) => ({
               name: s.supporter_name,
-              shakes: s.shakes_count,
-              message: s.supporter_message || '¡Mucho éxito en tus metas deportivas!',
-              creator_reply: s.creator_reply,
-              creator_reply_at: s.creator_reply_at ? new Date(s.creator_reply_at).toLocaleDateString('es-MX') : null,
-              is_liked_by_creator: s.is_liked_by_creator,
+              shakes: s.shake_details?.shakes_count ?? 0,
+              message: s.shake_details?.supporter_message || '¡Mucho éxito en tus metas deportivas!',
+              creator_reply: s.shake_details?.creator_reply,
+              creator_reply_at: s.shake_details?.creator_reply_at
+                ? new Date(s.shake_details.creator_reply_at).toLocaleDateString('es-MX')
+                : null,
+              is_liked_by_creator: s.shake_details?.is_liked_by_creator,
               when: new Date(s.created_at).toLocaleDateString('es-MX'),
               initials: s.supporter_name
                 .split(' ')
@@ -837,11 +847,13 @@ export class Creator {
     this.paymentService
       .createStripeCheckoutSession({
         athlete_handle: c.handle,
-        shakes_count: this.shakes(),
         currency: this.currency(),
         supporter_name: this.isAnonymous() ? 'Alguien anónimo' : (this.supporterName() || 'Un Fan'),
-        supporter_message: this.message(),
-        is_anonymous: this.isAnonymous(),
+        shake_details: {
+          shakes_count: this.shakes(),
+          supporter_message: this.message(),
+          is_anonymous: this.isAnonymous(),
+        },
       })
       .subscribe({
         next: (sessionRes) => {

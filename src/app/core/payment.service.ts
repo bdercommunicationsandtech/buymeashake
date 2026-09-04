@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
-import { PaymentIntentResult, ShakeCheckoutPayload } from './api.models';
+import { PaymentIntentResult, ShakeCheckoutPayload, SupporterItemDto } from './api.models';
 
 @Injectable({
   providedIn: 'root',
@@ -15,15 +15,11 @@ export class PaymentService {
     return this.http.post<PaymentIntentResult>(`${this.apiUrl}/create-intent`, payload);
   }
 
-  createStripeCheckoutSession(payload: {
-    athlete_handle: string;
-    shakes_count: number;
-    currency?: string;
-    supporter_name?: string;
-    supporter_email?: string;
-    supporter_message?: string;
-    is_anonymous?: boolean;
-  }): Observable<{ checkout_url: string; session_id: string; transaction_uuid: string }> {
+  createStripeCheckoutSession(payload: ShakeCheckoutPayload): Observable<{
+    checkout_url: string;
+    session_id: string;
+    transaction_uuid: string;
+  }> {
     return this.http.post<{ checkout_url: string; session_id: string; transaction_uuid: string }>(
       `${this.apiUrl}/stripe-session`,
       payload
@@ -47,30 +43,14 @@ export class PaymentService {
     return this.http.get<any>(`${environment.apiUrl}/dashboard/payouts/status`);
   }
 
-  donateDirectShake(payload: {
-    athlete_handle: string;
-    shakes_count: number;
-    currency?: string;
-    supporter_name?: string;
-    supporter_message?: string;
-    is_anonymous?: boolean;
-  }): Observable<{
+  donateDirectShake(payload: ShakeCheckoutPayload): Observable<{
     success: boolean;
     message: string;
     transaction_uuid: string;
     gross_amount: number;
     new_goal_raised: number | null;
     thank_you_message?: string | null;
-    supporter_item: {
-      id: number;
-      supporter_name: string;
-      shakes_count: number;
-      gross_amount: number;
-      currency: string;
-      supporter_message: string | null;
-      is_anonymous: boolean;
-      created_at: string;
-    };
+    supporter_item: SupporterItemDto;
   }> {
     return this.http.post<any>(`${this.apiUrl}/direct-shake`, payload);
   }
@@ -86,18 +66,31 @@ export class PaymentService {
     );
   }
 
-  getCustomerPortal(): Observable<{ portal_url: string }> {
+  createCustomerPortalSession(): Observable<{ portal_url: string }> {
     return this.http.post<{ portal_url: string }>(`${this.apiUrl}/billing-portal`, {});
   }
 
-  verifySession(sessionId: string, txUuid?: string | null): Observable<any> {
-    const params = new URLSearchParams();
-    if (sessionId) {
-      params.set('session_id', sessionId);
-    }
-    if (txUuid) {
-      params.set('tx', txUuid);
-    }
-    return this.http.post<any>(`${this.apiUrl}/verify-session?${params.toString()}`, {});
+  verifySession(
+    sessionId: string,
+    txUuid: string = '',
+  ): Observable<{
+    success?: boolean;
+    handled?: boolean;
+    new_goal_raised?: number | null;
+    thank_you_message?: string | null;
+    supporter_item?: SupporterItemDto | null;
+    [key: string]: unknown;
+  }> {
+    const params: Record<string, string> = {};
+    if (sessionId) params['session_id'] = sessionId;
+    if (txUuid) params['tx'] = txUuid;
+    return this.http.post<{
+      success?: boolean;
+      handled?: boolean;
+      new_goal_raised?: number | null;
+      thank_you_message?: string | null;
+      supporter_item?: SupporterItemDto | null;
+      [key: string]: unknown;
+    }>(`${this.apiUrl}/verify-session`, {}, { params });
   }
 }

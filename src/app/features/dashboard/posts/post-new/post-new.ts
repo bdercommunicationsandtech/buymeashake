@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { DashboardService } from '../../../../core/dashboard.service';
+import { LanguageService } from '../../../../core/language.service';
 
 @Component({
   selector: 'app-dashboard-post-new',
@@ -18,15 +19,15 @@ import { DashboardService } from '../../../../core/dashboard.service';
           <a
             routerLink="/dashboard/posts"
             class="h-9 w-9 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-white/5 grid place-items-center text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition"
-            aria-label="Volver a publicaciones"
+            [attr.aria-label]="t().dashboard.postsView.backAria"
           >
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7" />
             </svg>
           </a>
           <div>
-            <h1 class="font-display text-xl sm:text-2xl font-black text-gray-950 dark:text-white">Nueva Publicación</h1>
-            <p class="text-xs text-gray-500 dark:text-gray-400">Comparte rutinas, artículos o anuncios con tu comunidad.</p>
+            <h1 class="font-display text-xl sm:text-2xl font-black text-gray-950 dark:text-white">{{ t().dashboard.postsView.newPostTitle }}</h1>
+            <p class="text-xs text-gray-500 dark:text-gray-400">{{ t().dashboard.postsView.newPostSubtitle }}</p>
           </div>
         </div>
 
@@ -36,7 +37,7 @@ import { DashboardService } from '../../../../core/dashboard.service';
             (click)="saveDraft()"
             class="px-5 py-2.5 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-white/5 text-xs font-bold text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-white/10 transition"
           >
-            Guardar Borrador
+            {{ t().dashboard.postsView.saveDraft }}
           </button>
           <button
             type="button"
@@ -46,9 +47,9 @@ import { DashboardService } from '../../../../core/dashboard.service';
           >
             @if (isPublishing()) {
               <span class="inline-block h-3.5 w-3.5 border-2 border-gray-950 border-t-transparent rounded-full animate-spin"></span>
-              <span>Publicando...</span>
+              <span>{{ t().dashboard.postsView.publishing }}</span>
             } @else {
-              <span>Publicar ahora</span>
+              <span>{{ t().dashboard.postsView.publishNow }}</span>
               <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
               </svg>
@@ -73,7 +74,7 @@ import { DashboardService } from '../../../../core/dashboard.service';
           <div class="bg-white dark:bg-[#121614] rounded-3xl p-6 sm:p-8 border border-gray-200/80 dark:border-white/10 shadow-xs space-y-4">
             <input
               type="text"
-              placeholder="Título de la publicación (ej. Mi rutina pesada de sentadilla)..."
+              [placeholder]="t().dashboard.postsView.postTitlePlaceholder"
               class="w-full font-display text-2xl sm:text-3xl font-black text-gray-950 dark:text-white placeholder:text-gray-300 dark:placeholder:text-gray-600 bg-transparent border-none outline-none focus:ring-0 p-0"
               [value]="title()"
               (input)="title.set($any($event.target).value)"
@@ -81,28 +82,28 @@ import { DashboardService } from '../../../../core/dashboard.service';
 
             <!-- Toolbar de Formato Rápido -->
             <div class="flex items-center gap-1 py-2 px-3 rounded-2xl bg-gray-50 dark:bg-white/5 border border-gray-200/60 dark:border-white/5 text-gray-600 dark:text-gray-300 text-xs font-bold overflow-x-auto">
-              <button type="button" (click)="insertFormat('**', '**')" class="p-2 hover:bg-gray-200 dark:hover:bg-white/10 rounded-lg transition" title="Negrita">
+              <button type="button" (click)="insertFormat('**', '**')" class="p-2 hover:bg-gray-200 dark:hover:bg-white/10 rounded-lg transition" [title]="t().dashboard.postsView.toolbarBold">
                 <strong>B</strong>
               </button>
-              <button type="button" (click)="insertFormat('*', '*')" class="p-2 hover:bg-gray-200 dark:hover:bg-white/10 rounded-lg transition" title="Cursiva">
+              <button type="button" (click)="insertFormat('*', '*')" class="p-2 hover:bg-gray-200 dark:hover:bg-white/10 rounded-lg transition" [title]="t().dashboard.postsView.toolbarItalic">
                 <em>I</em>
               </button>
-              <button type="button" (click)="insertFormat('### ', '')" class="p-2 hover:bg-gray-200 dark:hover:bg-white/10 rounded-lg transition" title="Encabezado">
+              <button type="button" (click)="insertFormat('### ', '')" class="p-2 hover:bg-gray-200 dark:hover:bg-white/10 rounded-lg transition" [title]="t().dashboard.postsView.toolbarHeading">
                 H3
               </button>
               <span class="h-4 w-px bg-gray-200 dark:bg-white/10 mx-1"></span>
-              <button type="button" (click)="insertFormat('- ', '')" class="p-2 hover:bg-gray-200 dark:hover:bg-white/10 rounded-lg transition" title="Lista de viñetas">
-                • Lista
+              <button type="button" (click)="insertFormat('- ', '')" class="p-2 hover:bg-gray-200 dark:hover:bg-white/10 rounded-lg transition" [title]="t().dashboard.postsView.toolbarList">
+                {{ t().dashboard.postsView.toolbarList }}
               </button>
-              <button type="button" (click)="insertFormat('> ', '')" class="p-2 hover:bg-gray-200 dark:hover:bg-white/10 rounded-lg transition" title="Cita">
-                “ Cita
+              <button type="button" (click)="insertFormat('> ', '')" class="p-2 hover:bg-gray-200 dark:hover:bg-white/10 rounded-lg transition" [title]="t().dashboard.postsView.toolbarQuote">
+                {{ t().dashboard.postsView.toolbarQuote }}
               </button>
               <span class="h-4 w-px bg-gray-200 dark:bg-white/10 mx-1"></span>
-              <label class="p-2 hover:bg-gray-200 dark:hover:bg-white/10 rounded-lg transition cursor-pointer flex items-center gap-1.5" title="Subir Imagen">
+              <label class="p-2 hover:bg-gray-200 dark:hover:bg-white/10 rounded-lg transition cursor-pointer flex items-center gap-1.5" [title]="t().dashboard.postsView.toolbarImage">
                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                 </svg>
-                <span>Imagen</span>
+                <span>{{ t().dashboard.postsView.toolbarImage }}</span>
                 <input type="file" accept="image/*" class="hidden" (change)="onImageUpload($event)" />
               </label>
             </div>
@@ -111,7 +112,7 @@ import { DashboardService } from '../../../../core/dashboard.service';
             <textarea
               id="post-content-area"
               rows="14"
-              placeholder="Escribe tu contenido aquí... Puedes estructurar tus bloques de entrenamiento, series, repeticiones, consejos nutricionales o notas del día..."
+              [placeholder]="t().dashboard.postsView.contentPlaceholder"
               class="w-full resize-none text-base text-gray-800 dark:text-gray-200 placeholder:text-gray-400 dark:placeholder:text-gray-600 bg-transparent border-none outline-none focus:ring-0 p-0 leading-relaxed font-sans"
               [value]="content()"
               (input)="content.set($any($event.target).value)"
@@ -121,13 +122,13 @@ import { DashboardService } from '../../../../core/dashboard.service';
           <!-- Extracto Corto -->
           <div class="bg-white dark:bg-[#121614] rounded-3xl p-6 border border-gray-200/80 dark:border-white/10 shadow-xs space-y-2">
             <label class="block text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300">
-              Extracto / Resumen Visible
+              {{ t().dashboard.postsView.excerptLabel }}
             </label>
-            <p class="text-xs text-gray-500 dark:text-gray-400">Este texto se verá en el feed y en las vistas previas antes de desbloquear.</p>
+            <p class="text-xs text-gray-500 dark:text-gray-400">{{ t().dashboard.postsView.excerptHelp }}</p>
             <textarea
               rows="2"
               maxlength="200"
-              placeholder="Breve introducción para captar la atención de tus seguidores..."
+              [placeholder]="t().dashboard.postsView.excerptPlaceholder"
               class="w-full rounded-2xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 p-3.5 text-xs text-gray-900 dark:text-white focus:bg-white dark:focus:bg-[#0c0f10] focus:border-[#c9ff3d] outline-none transition"
               [value]="excerpt()"
               (input)="excerpt.set($any($event.target).value)"
@@ -142,7 +143,7 @@ import { DashboardService } from '../../../../core/dashboard.service';
           
           <!-- Audiencia / Visibilidad -->
           <div class="bg-white dark:bg-[#121614] rounded-3xl p-6 border border-gray-200/80 dark:border-white/10 shadow-xs space-y-4">
-            <h3 class="font-display text-sm font-black text-gray-950 dark:text-white">¿Quién puede ver este post?</h3>
+            <h3 class="font-display text-sm font-black text-gray-950 dark:text-white">{{ t().dashboard.postsView.audienceTitle }}</h3>
             
             <div class="space-y-2.5">
               <!-- Opción 1: Público -->
@@ -157,8 +158,8 @@ import { DashboardService } from '../../../../core/dashboard.service';
               >
                 <input type="radio" name="audience" [checked]="audience() === 'public'" class="mt-1 text-[#c9ff3d] focus:ring-[#c9ff3d]" />
                 <div>
-                  <p class="text-xs font-black text-gray-900 dark:text-white">Público (Todos)</p>
-                  <p class="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5">Cualquier visitante puede leer el post completo.</p>
+                  <p class="text-xs font-black text-gray-900 dark:text-white">{{ t().dashboard.postsView.audiencePublicTitle }}</p>
+                  <p class="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5">{{ t().dashboard.postsView.audiencePublicDesc }}</p>
                 </div>
               </label>
 
@@ -175,10 +176,10 @@ import { DashboardService } from '../../../../core/dashboard.service';
                 <input type="radio" name="audience" [checked]="audience() === 'members'" class="mt-1 text-[#c9ff3d] focus:ring-[#c9ff3d]" />
                 <div>
                   <div class="flex items-center gap-1.5">
-                    <p class="text-xs font-black text-gray-900 dark:text-white">Solo Miembros</p>
-                    <span class="text-[10px] font-bold text-amber-500 bg-amber-500/10 px-1.5 py-0.2 rounded">Exclusivo</span>
+                    <p class="text-xs font-black text-gray-900 dark:text-white">{{ t().dashboard.postsView.audienceMembersTitle }}</p>
+                    <span class="text-[10px] font-bold text-amber-500 bg-amber-500/10 px-1.5 py-0.2 rounded">{{ t().dashboard.postsView.audienceMembersExclusive }}</span>
                   </div>
-                  <p class="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5">Bloqueado con candado para suscriptores activos.</p>
+                  <p class="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5">{{ t().dashboard.postsView.audienceMembersDesc }}</p>
                 </div>
               </label>
             </div>
@@ -186,15 +187,15 @@ import { DashboardService } from '../../../../core/dashboard.service';
             <!-- Selector de Nivel Requerido si es para Miembros -->
             @if (audience() === 'members') {
               <div class="pt-2 space-y-1.5 border-t border-gray-100 dark:border-white/5">
-                <label class="block text-[11px] font-bold uppercase tracking-wider text-gray-500">Nivel Mínimo Requerido</label>
+                <label class="block text-[11px] font-bold uppercase tracking-wider text-gray-500">{{ t().dashboard.postsView.minTierLabel }}</label>
                 <select
                   class="w-full rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#1f2421] p-2.5 text-xs font-semibold text-gray-900 dark:text-white focus:border-[#c9ff3d] outline-none"
                   [value]="requiredTier()"
                   (change)="requiredTier.set($any($event.target).value)"
                 >
-                  <option value="Todos los Miembros">Todos los Miembros (Cualquier Nivel)</option>
-                  <option value="Comunidad Pro ($15/mes)">Comunidad Pro ($15/mes o superior)</option>
-                  <option value="Atleta Elite ($35/mes)">Atleta Elite ($35/mes)</option>
+                  <option value="Todos los Miembros">{{ t().dashboard.postsView.tierOptionAll }}</option>
+                  <option value="Comunidad Pro ($15/mes)">{{ t().dashboard.postsView.tierOptionPro }}</option>
+                  <option value="Atleta Elite ($35/mes)">{{ t().dashboard.postsView.tierOptionElite }}</option>
                 </select>
               </div>
             }
@@ -202,7 +203,7 @@ import { DashboardService } from '../../../../core/dashboard.service';
 
           <!-- Imagen de Portada -->
           <div class="bg-white dark:bg-[#121614] rounded-3xl p-6 border border-gray-200/80 dark:border-white/10 shadow-xs space-y-3">
-            <h3 class="font-display text-sm font-black text-gray-950 dark:text-white">Foto de Portada</h3>
+            <h3 class="font-display text-sm font-black text-gray-950 dark:text-white">{{ t().dashboard.postsView.coverPhotoTitle }}</h3>
             
             @if (coverUrl()) {
               <div class="relative rounded-2xl overflow-hidden h-36 w-full border border-gray-200 dark:border-white/10">
@@ -220,8 +221,8 @@ import { DashboardService } from '../../../../core/dashboard.service';
                 <svg class="w-7 h-7 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                 </svg>
-                <span class="text-xs font-bold text-gray-700 dark:text-gray-300">Subir imagen destacada</span>
-                <span class="text-[10px] text-gray-400">PNG, JPG o WEBP hasta 5MB</span>
+                <span class="text-xs font-bold text-gray-700 dark:text-gray-300">{{ t().dashboard.postsView.uploadFeaturedImage }}</span>
+                <span class="text-[10px] text-gray-400">{{ t().dashboard.postsView.coverImageFormatHelp }}</span>
                 <input type="file" accept="image/*" class="hidden" (change)="onCoverUpload($event)" />
               </label>
             }
@@ -236,6 +237,8 @@ import { DashboardService } from '../../../../core/dashboard.service';
 export class DashboardPostNew {
   private readonly router = inject(Router);
   private readonly dashboardService = inject(DashboardService);
+  readonly languageService = inject(LanguageService);
+  readonly t = this.languageService.currentTranslations;
 
   readonly title = signal('');
   readonly content = signal('');
@@ -292,7 +295,7 @@ export class DashboardPostNew {
 
     const rawContent = this.content().trim();
     if (!rawContent) {
-      this.errorMessage.set('Escribe el contenido de la publicación antes de publicar.');
+      this.errorMessage.set(this.t().dashboard.postsView.contentRequiredError);
       return;
     }
 
@@ -317,11 +320,11 @@ export class DashboardPostNew {
           this.isPublishing.set(false);
           const apiMessage = err?.error?.error?.message || err?.error?.detail;
           if (err?.status === 401) {
-            this.errorMessage.set('Sesión expirada. Vuelve a iniciar sesión como atleta.');
+            this.errorMessage.set(this.t().dashboard.postsView.sessionExpired);
           } else if (err?.status === 403) {
-            this.errorMessage.set('Esta cuenta no tiene perfil de atleta.');
+            this.errorMessage.set(this.t().dashboard.postsView.noAthleteProfile);
           } else {
-            this.errorMessage.set(apiMessage || 'No se pudo publicar. Revisa el backend e inténtalo de nuevo.');
+            this.errorMessage.set(apiMessage || this.t().dashboard.postsView.publishFailedError);
           }
         },
       });

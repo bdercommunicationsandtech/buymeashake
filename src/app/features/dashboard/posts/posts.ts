@@ -4,6 +4,7 @@ import { RouterLink } from '@angular/router';
 import { IconButtonSupportComponent, IconLockComponent } from '../../../shared/icons';
 import { DashboardService } from '../../../core/dashboard.service';
 import { PostItemDto } from '../../../core/api.models';
+import { LanguageService } from '../../../core/language.service';
 
 @Component({
   selector: 'app-dashboard-posts',
@@ -13,6 +14,8 @@ import { PostItemDto } from '../../../core/api.models';
 })
 export class DashboardPosts implements OnInit {
   private readonly dashboardService = inject(DashboardService);
+  readonly languageService = inject(LanguageService);
+  readonly t = this.languageService.currentTranslations;
 
   readonly loading = signal(true);
   readonly showCreateModal = signal(false);
@@ -30,11 +33,11 @@ export class DashboardPosts implements OnInit {
         this.loading.set(false);
         const status = err?.status;
         if (status === 401) {
-          this.errorMessage.set('Sesión expirada. Vuelve a iniciar sesión como atleta.');
+          this.errorMessage.set(this.t().dashboard.postsView.sessionExpired);
         } else if (status === 403) {
-          this.errorMessage.set('Esta cuenta no tiene perfil de atleta.');
+          this.errorMessage.set(this.t().dashboard.postsView.noAthleteProfile);
         } else {
-          this.errorMessage.set('No se pudieron cargar las publicaciones.');
+          this.errorMessage.set(this.t().dashboard.postsView.loadError);
         }
       },
     });
@@ -48,7 +51,8 @@ export class DashboardPosts implements OnInit {
   formatDate(value: string): string {
     const date = new Date(value);
     if (Number.isNaN(date.getTime())) return value;
-    return date.toLocaleDateString('es-MX', { day: 'numeric', month: 'short', year: 'numeric' });
+    const locale = this.languageService.currentLang() === 'en' ? 'en-US' : 'es-MX';
+    return date.toLocaleDateString(locale, { day: 'numeric', month: 'short', year: 'numeric' });
   }
 
   openCreate(): void {

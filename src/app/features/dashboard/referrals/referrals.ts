@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { IconShakerComponent } from '../../../shared/icons';
 import { DashboardService } from '../../../core/dashboard.service';
 import { ReferralDashboardData } from '../../../core/api.models';
+import { LanguageService } from '../../../core/language.service';
 
 @Component({
   selector: 'app-dashboard-referrals',
@@ -12,6 +13,8 @@ import { ReferralDashboardData } from '../../../core/api.models';
 })
 export class DashboardReferrals implements OnInit {
   private readonly dashboardService = inject(DashboardService);
+  readonly languageService = inject(LanguageService);
+  readonly t = this.languageService.currentTranslations;
 
   readonly loading = signal(true);
   readonly copied = signal(false);

@@ -5,6 +5,7 @@ import {
   output,
   signal,
   computed,
+  inject,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
@@ -12,6 +13,7 @@ import {
   renderShareCardPng,
   type QrVariant,
 } from '../utils/qrcode';
+import { LanguageService } from '../../core/language.service';
 
 @Component({
   selector: 'app-share-qr-modal',
@@ -35,7 +37,7 @@ import {
             type="button"
             (click)="close.emit()"
             class="absolute top-4 right-4 h-8 w-8 rounded-full bg-gray-100 dark:bg-white/10 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white grid place-items-center text-xs font-bold transition cursor-pointer"
-            aria-label="Cerrar"
+            [attr.aria-label]="t().common.close"
           >
             ✕
           </button>
@@ -45,17 +47,17 @@ import {
               id="share-qr-title"
               class="font-display text-xl font-black text-gray-950 dark:text-white"
             >
-              Compartir página
+              {{ t().shareModal.title }}
             </h3>
             <p class="text-xs text-gray-500 dark:text-gray-400 mt-1 font-medium">
-              Elige el diseño de tu QR y descárgalo para redes o imprimir.
+              {{ t().shareModal.subtitle }}
             </p>
           </div>
 
           <div
             class="mt-5 grid grid-cols-2 gap-1 p-1 rounded-2xl bg-gray-100 dark:bg-white/5 border border-gray-200/70 dark:border-white/10"
             role="tablist"
-            aria-label="Diseño del QR"
+            [attr.aria-label]="t().shareModal.qrDesignAria"
           >
             <button
               type="button"
@@ -70,7 +72,7 @@ import {
               [class.shadow-xs]="variant() === 'light'"
               [class.text-gray-500]="variant() !== 'light'"
             >
-              Blanco
+              {{ t().shareModal.white }}
             </button>
             <button
               type="button"
@@ -85,7 +87,7 @@ import {
               [class.shadow-xs]="variant() === 'dark'"
               [class.text-gray-500]="variant() !== 'dark'"
             >
-              Negro
+              {{ t().shareModal.black }}
             </button>
           </div>
 
@@ -93,14 +95,14 @@ import {
             @if (previewUrl(); as preview) {
               <img
                 [src]="preview"
-                [alt]="'QR de ' + displayPath()"
+                [alt]="t().shareModal.qrAltPrefix + ' ' + displayPath()"
                 class="w-full max-w-[280px] rounded-[1.75rem] shadow-lg border border-gray-200/60 dark:border-white/10"
               />
             } @else {
               <div
                 class="w-full max-w-[280px] aspect-[100/128] rounded-[1.75rem] bg-gray-100 dark:bg-white/5 grid place-items-center text-xs font-bold text-gray-400"
               >
-                No se pudo generar el QR
+                {{ t().shareModal.generateError }}
               </div>
             }
           </div>
@@ -119,7 +121,7 @@ import {
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5m0 0l5-5m-5 5V4"/>
               </svg>
-              {{ downloading() ? 'Descargando…' : 'Descargar QR' }}
+              {{ downloading() ? t().shareModal.downloading : t().shareModal.downloadQr }}
             </button>
 
             <button
@@ -130,7 +132,7 @@ import {
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/>
               </svg>
-              {{ linkCopied() ? '¡Link copiado!' : 'Copiar link' }}
+              {{ linkCopied() ? t().shareModal.linkCopied : t().shareModal.copyLink }}
             </button>
           </div>
         </div>
@@ -140,6 +142,9 @@ import {
 })
 export class ShareQrModalComponent {
   readonly open = input(false);
+  readonly i18n = inject(LanguageService);
+  readonly t = this.i18n.t;
+
   readonly handle = input('...');
   readonly close = output<void>();
 
@@ -158,6 +163,7 @@ export class ShareQrModalComponent {
         displayPath: this.displayPath(),
         variant: this.variant(),
         width: 720,
+        scanMeText: this.t().shareModal.scanMe,
       });
     } catch {
       return null;
@@ -177,6 +183,7 @@ export class ShareQrModalComponent {
         displayPath: this.displayPath(),
         variant: this.variant(),
         width: 1200,
+        scanMeText: this.t().shareModal.scanMe,
       });
       const theme = this.variant() === 'light' ? 'blanco' : 'negro';
       downloadDataUrl(hiRes, `buymeashake-${this.handle()}-qr-${theme}.png`);

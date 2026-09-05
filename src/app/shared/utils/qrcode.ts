@@ -168,6 +168,7 @@ export function renderShareCardPng(params: {
   displayPath: string;
   variant: QrVariant;
   width?: number;
+  scanMeText?: string;
 }): string {
   const width = params.width ?? 900;
   const height = Math.round(width * 1.28);
@@ -246,7 +247,7 @@ export function renderShareCardPng(params: {
   // CTA
   const ctaY = qrY + qrOuter + height * 0.06;
   const phoneSize = width * 0.045;
-  const ctaText = 'Escanéame';
+  const ctaText = params.scanMeText || 'Escanéame';
   ctx.font = `800 ${Math.round(width * 0.042)}px Montserrat, system-ui, sans-serif`;
   const textW = ctx.measureText(ctaText).width;
   const gap = width * 0.02;

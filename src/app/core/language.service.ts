@@ -20,9 +20,23 @@ export const DISCIPLINE_ES_TO_EN: Record<string, string> = {
   'Ultra Trail Running': 'Ultra Trail Running',
   'CrossFit Games': 'CrossFit Games',
   'CrossFit': 'CrossFit',
+  'Crossfit': 'CrossFit',
   'Artes Marciales / BJJ': 'Martial Arts / BJJ',
   'Natación & Triatlón': 'Swimming & Triathlon',
   'Deporte General': 'General Sports',
+  'Fuerza': 'Strength',
+  'Boxeo': 'Boxing',
+  'Natación': 'Swimming',
+  'Atletismo': 'Athletics',
+  'Fútbol': 'Soccer',
+  'Futbol': 'Soccer',
+  'Gimnasia': 'Gymnastics',
+  'Triatlón': 'Triathlon',
+  'Triatlon': 'Triathlon',
+  'Ciclismo': 'Cycling',
+  'Halterofilia': 'Weightlifting',
+  'Entrenador': 'Coach',
+  'Entrenador Personal': 'Personal Trainer',
 };
 
 @Injectable({
@@ -33,7 +47,9 @@ export class LanguageService {
 
   // Public Signals
   readonly lang = this.activeLang.asReadonly();
+  readonly currentLang = this.lang;
   readonly t = computed<TranslationSchema>(() => TRANSLATIONS[this.activeLang()]);
+  readonly currentTranslations = this.t;
 
   constructor() {
     this.syncDocumentLang(this.activeLang());
@@ -87,12 +103,16 @@ export class LanguageService {
 
   translateDiscipline(name: string): string {
     if (!name) return '';
+    const trimmed = name.trim();
     if (this.activeLang() === 'es') {
       for (const [es, en] of Object.entries(DISCIPLINE_ES_TO_EN)) {
-        if (en.toLowerCase() === name.toLowerCase()) return es;
+        if (en.toLowerCase() === trimmed.toLowerCase()) return es;
       }
-      return name;
+      return trimmed;
     }
-    return DISCIPLINE_ES_TO_EN[name] || name;
+    for (const [es, en] of Object.entries(DISCIPLINE_ES_TO_EN)) {
+      if (es.toLowerCase() === trimmed.toLowerCase()) return en;
+    }
+    return DISCIPLINE_ES_TO_EN[trimmed] || trimmed;
   }
 }

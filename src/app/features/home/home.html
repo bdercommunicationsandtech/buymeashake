@@ -333,7 +333,7 @@
                 <span class="text-[11px] font-black text-amber-600 dark:text-amber-400">#{{ leader.rank }}</span>
                 <h3 class="font-black text-gray-900 dark:text-white text-sm truncate">{{ leader.name }}</h3>
               </div>
-              <p class="text-xs text-gray-500 dark:text-gray-400 truncate">&#64;{{ leader.handle }} · {{ leader.sport }}</p>
+              <p class="text-xs text-gray-500 dark:text-gray-400 truncate">&#64;{{ leader.handle }} · {{ languageService.translateDiscipline(leader.sport) }}</p>
             </div>
           </div>
 

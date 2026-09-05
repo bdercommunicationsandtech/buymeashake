@@ -133,8 +133,9 @@ export class Creator {
   private readonly paymentService = inject(PaymentService);
   private readonly authService = inject(AuthService);
   private readonly supporterService = inject(SupporterService);
-  readonly i18n = inject(LanguageService);
-  readonly t = this.i18n.t;
+  readonly languageService = inject(LanguageService);
+  readonly i18n = this.languageService;
+  readonly t = this.languageService.t;
 
   readonly username = input.required<string>();
   readonly editMode = input(false);
@@ -182,19 +183,24 @@ export class Creator {
     '09:00 AM', '10:30 AM', '12:00 PM', '04:00 PM', '05:30 PM', '07:00 PM',
   ]);
 
-  readonly calendarDays = signal<CalendarDay[]>([
-    { dayNumber: 3, dateStr: '2026-09-03', isAvailable: true, isPast: false, dayName: 'Jue' },
-    { dayNumber: 4, dateStr: '2026-09-04', isAvailable: true, isPast: false, dayName: 'Vie' },
-    { dayNumber: 5, dateStr: '2026-09-05', isAvailable: true, isPast: false, dayName: 'Sáb' },
-    { dayNumber: 7, dateStr: '2026-09-07', isAvailable: true, isPast: false, dayName: 'Lun' },
-  ]);
+  readonly calendarDays = computed<CalendarDay[]>(() => {
+    const isEn = this.languageService.currentLang() === 'en';
+    return [
+      { dayNumber: 3, dateStr: '2026-09-03', isAvailable: true, isPast: false, dayName: isEn ? 'Thu' : 'Jue' },
+      { dayNumber: 4, dateStr: '2026-09-04', isAvailable: true, isPast: false, dayName: isEn ? 'Fri' : 'Vie' },
+      { dayNumber: 5, dateStr: '2026-09-05', isAvailable: true, isPast: false, dayName: isEn ? 'Sat' : 'Sáb' },
+      { dayNumber: 7, dateStr: '2026-09-07', isAvailable: true, isPast: false, dayName: isEn ? 'Mon' : 'Lun' },
+    ];
+  });
 
   readonly pageTitleLines = computed(() => {
     const raw = this.creatorView()?.pageTitle?.trim();
     if (raw) {
       return raw.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
     }
-    return ['Fuerza', 'Disciplina', 'Propósito'];
+    return this.languageService.currentLang() === 'en'
+      ? ['Strength', 'Discipline', 'Purpose']
+      : ['Fuerza', 'Disciplina', 'Propósito'];
   });
 
   readonly pageDescriptionText = computed(() => {
@@ -203,13 +209,19 @@ export class Creator {
   });
 
   readonly agendaTitleText = computed(
-    () => this.creatorView()?.agendaTitle?.trim() || 'Entrena, mejora y alcanza tus metas',
+    () =>
+      this.creatorView()?.agendaTitle?.trim() ||
+      (this.languageService.currentLang() === 'en'
+        ? 'Train, improve, and reach your goals'
+        : 'Entrena, mejora y alcanza tus metas'),
   );
 
   readonly agendaDescriptionText = computed(
     () =>
       this.creatorView()?.agendaDescription?.trim() ||
-      'Sesiones 1 a 1 para técnica, consultoría y seguimiento personalizado.',
+      (this.languageService.currentLang() === 'en'
+        ? '1-on-1 sessions for technique, consulting, and personalized coaching.'
+        : 'Sesiones 1 a 1 para técnica, consultoría y seguimiento personalizado.'),
   );
 
   /** Hay agenda usable si el atleta publicó al menos un servicio de booking. */
@@ -510,10 +522,10 @@ export class Creator {
               message: s.shake_details?.supporter_message || '¡Mucho éxito en tus metas deportivas!',
               creator_reply: s.shake_details?.creator_reply,
               creator_reply_at: s.shake_details?.creator_reply_at
-                ? new Date(s.shake_details.creator_reply_at).toLocaleDateString('es-MX')
+                ? new Date(s.shake_details.creator_reply_at).toLocaleDateString(this.i18n.lang() === 'es' ? 'es-MX' : 'en-US')
                 : null,
               is_liked_by_creator: s.shake_details?.is_liked_by_creator,
-              when: new Date(s.created_at).toLocaleDateString('es-MX'),
+              when: new Date(s.created_at).toLocaleDateString(this.i18n.lang() === 'es' ? 'es-MX' : 'en-US'),
               initials: s.supporter_name
                 .split(' ')
                 .map((w) => w[0])
@@ -573,7 +585,7 @@ export class Creator {
               authorName: c.name,
               authorHandle: c.handle,
               authorAvatar: c.avatarUrl,
-              publishedAt: new Date(p.published_at).toLocaleDateString('es-MX'),
+              publishedAt: new Date(p.published_at).toLocaleDateString(this.i18n.lang() === 'es' ? 'es-MX' : 'en-US'),
               likesCount: p.likes_count,
               commentsCount: p.comments?.length || 0,
               isMembersOnly: p.is_members_only,

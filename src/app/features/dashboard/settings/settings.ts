@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { DashboardService } from '../../../core/dashboard.service';
 import { LookupService } from '../../../core/lookup.service';
 import { AthleteProfileFull, LookupItemDto } from '../../../core/api.models';
+import { LanguageService } from '../../../core/language.service';
 
 @Component({
   selector: 'app-dashboard-settings',
@@ -14,6 +15,8 @@ import { AthleteProfileFull, LookupItemDto } from '../../../core/api.models';
 export class DashboardSettings implements OnInit {
   private readonly dashboardService = inject(DashboardService);
   private readonly lookupService = inject(LookupService);
+  readonly languageService = inject(LanguageService);
+  readonly t = this.languageService.currentTranslations;
 
   readonly Math = Math;
 
@@ -116,7 +119,7 @@ export class DashboardSettings implements OnInit {
       },
       error: () => {
         this.uploadingAvatar.set(false);
-        this.errorMessage.set('Error al subir imagen de avatar.');
+        this.errorMessage.set(this.t().dashboard.settingsView.avatarUploadError);
       },
     });
   }
@@ -136,7 +139,7 @@ export class DashboardSettings implements OnInit {
       },
       error: () => {
         this.uploadingCover.set(false);
-        this.errorMessage.set('Error al subir imagen de portada.');
+        this.errorMessage.set(this.t().dashboard.settingsView.coverUploadError);
       },
     });
   }
@@ -167,7 +170,7 @@ export class DashboardSettings implements OnInit {
       },
       error: (err) => {
         this.loading.set(false);
-        const msg = err.error?.error?.message || 'Error al guardar cambios.';
+        const msg = err.error?.error?.message || this.t().dashboard.settingsView.saveProfileError;
         this.errorMessage.set(msg);
       },
     });

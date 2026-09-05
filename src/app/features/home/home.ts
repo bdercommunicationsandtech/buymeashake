@@ -51,7 +51,7 @@ export interface FloatingAthlete {
 })
 export class Home {
   private readonly checkout = inject(CheckoutService);
-  private readonly languageService = inject(LanguageService);
+  readonly languageService = inject(LanguageService);
 
   readonly t = this.languageService.t;
 

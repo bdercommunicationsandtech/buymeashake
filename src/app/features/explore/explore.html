@@ -1,168 +1,53 @@
-<div class="min-h-screen bg-[#fafafb] dark:bg-[#090c0a] text-gray-900 dark:text-gray-100 pb-20 font-sans transition-colors duration-300">
-  
+<div class="min-h-screen bg-gray-50 dark:bg-[#080a0b] text-gray-900 dark:text-slate-100 pb-20 font-sans transition-colors duration-300 selection:bg-[#c9ff3d] selection:text-black">
   <!-- Hero / Header -->
-  <section class="border-b border-gray-200 dark:border-white/10 bg-white dark:bg-[#0c0f10] py-12 px-5 sm:px-8 transition-colors duration-300">
-    <div class="mx-auto max-w-5xl text-center">
-      <span class="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 dark:bg-white/5 px-3.5 py-1 text-xs font-bold text-emerald-700 dark:text-[#c9ff3d] border border-emerald-200 dark:border-white/10">
-        <span class="h-2 w-2 rounded-full bg-[#c9ff3d] animate-pulse"></span>
-        {{ t().explore.badge }}
-      </span>
-      <h1 class="mt-4 text-3xl sm:text-5xl font-black tracking-tight text-gray-900 dark:text-white">
-        {{ t().explore.title }}
-      </h1>
-      <p class="mt-3.5 text-base sm:text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-        {{ t().explore.subtitle }}
-      </p>
+  <section class="border-b border-gray-200 dark:border-[#1f2427] bg-white dark:bg-[#0c0f10]/95 backdrop-blur-md py-10 px-5 sm:px-8 transition-colors duration-300 relative overflow-hidden">
+    <!-- Glow background accent -->
+    <div class="absolute -top-10 left-1/2 -translate-x-1/2 w-96 h-44 bg-[#c9ff3d]/10 rounded-full blur-[90px] pointer-events-none hidden dark:block"></div>
+    
+    <div class="mx-auto max-w-5xl flex flex-col md:flex-row md:items-end justify-between gap-6 relative z-10">
+      <div>
+        <!-- Official status badge -->
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 dark:bg-[#191e21] border border-emerald-200 dark:border-[#2b3236] text-[11px] font-bold uppercase tracking-wider text-emerald-700 dark:text-slate-300 mb-3 shadow-xs">
+          <span class="w-2 h-2 rounded-full bg-emerald-500 dark:bg-[#c9ff3d] animate-ping"></span>
+          <span class="dark:text-[#c9ff3d]">{{ t().explore.badge }}</span> • {{ t().explore.monthlyRanking }}
+        </div>
+        <h1 class="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-gray-900 dark:text-white">
+          Top 10 Atletas <span class="text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-teal-500 dark:from-[#c9ff3d] dark:to-[#7bff00]">del Mes</span>
+        </h1>
+        <p class="mt-2 text-sm sm:text-base text-gray-600 dark:text-slate-400 max-w-2xl">
+          {{ t().explore.subtitle }}
+        </p>
+      </div>
 
       <!-- Barra de Búsqueda -->
-      <div class="mt-8 max-w-xl mx-auto">
+      <div class="w-full md:w-72 shrink-0">
         <div class="relative">
           <input
             type="text"
             [placeholder]="t().explore.searchPlaceholder"
-            class="w-full rounded-2xl border border-gray-200 dark:border-white/15 bg-gray-50/70 dark:bg-white/5 pl-11 pr-4 py-3.5 text-sm text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:bg-white dark:focus:bg-[#121614] focus:border-gray-900 dark:focus:border-[#c9ff3d] focus:outline-none shadow-xs transition"
+            class="w-full rounded-xl border border-gray-300 dark:border-[#23282b] bg-white dark:bg-[#14181a] pl-10 pr-4 py-3 text-sm text-gray-900 dark:text-slate-200 placeholder:text-gray-400 dark:placeholder:text-slate-500 focus:bg-white dark:focus:bg-[#14181a] focus:border-gray-900 dark:focus:border-[#c9ff3d] focus:ring-1 focus:ring-gray-900 dark:focus:ring-[#c9ff3d] focus:outline-none shadow-xs transition-all"
             [value]="searchQuery()"
             (input)="onSearch($any($event.target).value)"
           />
-          <svg class="absolute left-4 top-3.5 h-5 w-5 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg class="absolute left-3.5 top-3 h-4 w-4 text-gray-400 dark:text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
           </svg>
         </div>
       </div>
     </div>
-  </section>
 
-  <!-- Contenedor Principal -->
-  <div class="mx-auto max-w-5xl px-5 pt-10">
-    
-    <!-- TOP 10 MENSUAL -->
-    <section class="mb-14">
-      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-6">
-        <div>
-          <span class="text-xs font-black uppercase tracking-wider text-amber-600 dark:text-[#c9ff3d] bg-amber-50 dark:bg-white/5 px-2.5 py-1 rounded-md">
-            {{ t().explore.leaderboardBadge }}
-          </span>
-          <h2 class="text-2xl sm:text-3xl font-black text-gray-900 dark:text-white mt-1">{{ t().explore.leaderboardTitle }}</h2>
-        </div>
-        <span class="text-xs font-semibold text-gray-500 dark:text-gray-400">{{ t().explore.leaderboardSubtitle }}</span>
-      </div>
-
-      <!-- Podio (Top 1, 2, 3) -->
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-5 items-end mb-6">
-        @for (top of topPodium(); track top.id; let idx = $index) {
-          <div
-            class="bg-white dark:bg-[#121614] rounded-3xl p-6 border shadow-sm relative transition hover:shadow-md dark:hover:border-white/20"
-            [class]="
-              idx === 0
-                ? 'border-amber-300 dark:border-amber-500/40 md:-translate-y-3 ring-2 ring-amber-200/50 dark:ring-amber-500/20'
-                : 'border-gray-200/80 dark:border-white/10'
-            "
-          >
-            <!-- Badge de lugar -->
-            <div class="absolute -top-3.5 left-6">
-              <span
-                class="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-black shadow-xs"
-                [class]="
-                  idx === 0
-                    ? 'bg-amber-400 text-gray-900 ring-2 ring-amber-200'
-                    : idx === 1
-                    ? 'bg-gray-200 dark:bg-white/15 text-gray-800 dark:text-gray-100'
-                    : 'bg-amber-700/80 text-white'
-                "
-              >
-                <app-icon-trophy size="13" />
-                <span>#{{ top.rank }} {{ idx === 0 ? t().explore.firstPlace : idx === 1 ? t().explore.secondPlace : t().explore.thirdPlace }}</span>
-              </span>
-            </div>
-
-            <div class="flex items-center gap-4 mt-2">
-              <div class="grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-gray-900 dark:bg-[#090c0a] text-base font-black text-[#c9ff3d]">
-                {{ top.initials }}
-              </div>
-              <div class="min-w-0 flex-1">
-                <h3 class="font-extrabold text-gray-900 dark:text-white truncate">{{ top.name }}</h3>
-                <p class="text-xs text-gray-500 dark:text-gray-400 font-medium">&#64;{{ top.handle }}</p>
-                <span class="inline-block mt-1 text-[10px] font-bold text-emerald-700 dark:text-[#c9ff3d] bg-emerald-50 dark:bg-white/5 px-2 py-0.5 rounded-md">
-                  {{ languageService.translateDiscipline(top.sport) }}
-                </span>
-              </div>
-            </div>
-
-            <div class="mt-5 pt-4 border-t border-gray-100 dark:border-white/10 flex items-center justify-between">
-              <div>
-                <p class="text-[11px] text-gray-400 dark:text-gray-500 font-medium">{{ t().explore.shakesThisMonth }}</p>
-                <p class="text-lg font-black text-gray-900 dark:text-white flex items-center gap-1">
-                  <span>{{ top.shakesThisMonth }}</span>
-                  <app-icon-shaker size="16" customClass="text-amber-500 dark:text-[#c9ff3d]" />
-                </p>
-              </div>
-              <a
-                [routerLink]="['/', top.handle]"
-                class="rounded-xl bg-[#c9ff3d] hover:bg-[#bbf033] px-3.5 py-2 text-xs font-black text-[#070a08] transition shadow-xs"
-              >
-                {{ t().explore.inviteShake }}
-              </a>
-            </div>
-          </div>
-        }
-      </div>
-
-      <!-- Resto del Top 10 (Lugares 4 al 10) -->
-      <div class="bg-white dark:bg-[#121614] rounded-3xl border border-gray-200/80 dark:border-white/10 shadow-xs overflow-hidden">
-        <div class="p-5 border-b border-gray-100 dark:border-white/10 flex items-center justify-between bg-gray-50/50 dark:bg-white/[0.03]">
-          <span class="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">{{ t().explore.rankAndAthlete }}</span>
-          <span class="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">{{ t().explore.shakesReceived }}</span>
-        </div>
-        <div class="divide-y divide-gray-100 dark:divide-white/10">
-          @for (athlete of topRemaining(); track athlete.id) {
-            <div class="p-4 sm:p-5 flex items-center justify-between gap-4 hover:bg-gray-50/60 dark:hover:bg-white/[0.04] transition">
-              <div class="flex items-center gap-4 min-w-0">
-                <span class="font-black text-sm text-gray-400 dark:text-gray-500 w-6 text-center">#{{ athlete.rank }}</span>
-                <div class="h-10 w-10 rounded-2xl bg-gray-900 dark:bg-[#090c0a] text-[#c9ff3d] font-black text-xs grid place-items-center shrink-0">
-                  {{ athlete.initials }}
-                </div>
-                <div class="min-w-0">
-                  <h4 class="text-sm font-bold text-gray-900 dark:text-white truncate">{{ athlete.name }}</h4>
-                  <p class="text-xs text-gray-500 dark:text-gray-400 truncate">&#64;{{ athlete.handle }} · {{ languageService.translateDiscipline(athlete.sport) }}</p>
-                </div>
-              </div>
-
-              <div class="flex items-center gap-3 shrink-0">
-                <span class="text-xs font-bold text-gray-700 dark:text-gray-200 flex items-center gap-1">
-                  <span>{{ athlete.shakesThisMonth }}</span>
-                  <app-icon-shaker size="13" customClass="text-amber-500 dark:text-[#c9ff3d]" />
-                </span>
-                <a
-                  [routerLink]="['/', athlete.handle]"
-                  class="rounded-xl border border-gray-200 dark:border-white/15 bg-white dark:bg-white/5 hover:bg-gray-50 dark:hover:bg-white/10 px-3 py-1.5 text-xs font-bold text-gray-900 dark:text-gray-100 transition"
-                >
-                  {{ t().explore.support }}
-                </a>
-              </div>
-            </div>
-          }
-        </div>
-      </div>
-    </section>
-
-    <!-- Filtros de Categoría -->
-    <section>
-      <div class="flex items-center justify-between mb-4">
-        <h3 class="text-xl font-black text-gray-900 dark:text-white">{{ t().explore.exploreByDiscipline }}</h3>
-        <span class="text-xs text-gray-500 dark:text-gray-400">
-          {{ filteredAthletes().length }} {{ filteredAthletes().length === 1 ? t().explore.athleteFound : t().explore.athletesFound }}
-        </span>
-      </div>
-
-      <div class="flex items-center gap-2 overflow-x-auto pb-4 scrollbar-none mb-6">
+    <!-- Filters & Period Bar -->
+    <div class="mx-auto max-w-5xl mt-8 pt-6 border-t border-gray-100 dark:border-[#1e2326] flex flex-col sm:flex-row sm:items-center justify-between gap-4 relative z-10">
+      <div class="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+        <span class="text-xs text-gray-500 dark:text-slate-500 font-bold uppercase tracking-wider shrink-0 mr-1">Filtrar:</span>
         @for (cat of categories(); track cat) {
           <button
             type="button"
-            class="shrink-0 rounded-xl px-4 py-2 text-xs sm:text-sm font-bold transition"
+            class="shrink-0 rounded-full px-4 py-1.5 text-xs font-bold transition-colors border"
             [class]="
               selectedCategory() === cat
-                ? 'bg-gray-900 dark:bg-[#c9ff3d] text-[#c9ff3d] dark:text-[#070a08] shadow-sm'
-                : 'bg-white dark:bg-[#121614] text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/10 border border-gray-200 dark:border-white/10'
+                ? 'bg-gray-900 dark:bg-[#202629] text-white dark:text-[#c9ff3d] border-gray-900 dark:border-[#c9ff3d]/40 shadow-sm'
+                : 'bg-white dark:bg-[#121618] text-gray-600 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white border-gray-200 dark:border-[#23282b] hover:border-gray-400 dark:hover:border-slate-600'
             "
             (click)="setCategory(cat)"
           >
@@ -170,73 +55,293 @@
           </button>
         }
       </div>
+    </div>
+  </section>
 
-      <!-- Cuadrícula de Atletas -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-        @for (athlete of filteredAthletes(); track athlete.id) {
-          <article class="bg-white dark:bg-[#121614] rounded-3xl p-6 border border-gray-200/80 dark:border-white/10 shadow-xs transition hover:border-gray-300 dark:hover:border-white/20 hover:shadow-sm flex flex-col justify-between">
-            <div>
-              <div class="flex items-start justify-between gap-4">
-                <div class="flex items-center gap-3.5">
-                  @if (athlete.avatarUrl) {
-                    <img
-                      [src]="athlete.avatarUrl"
-                      [alt]="athlete.name"
-                      class="h-12 w-12 shrink-0 rounded-2xl object-cover border border-gray-200 dark:border-white/10"
-                    />
+  <!-- Contenedor Principal -->
+  <div class="mx-auto max-w-5xl px-5 pt-8">
+    
+    <!-- TOP 10 MENSUAL -->
+    <section class="mb-14">
+      <!-- Podio (Top 1, 2, 3) -->
+      @if (topPodium().length > 0) {
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-end mb-12">
+          
+          <!-- 2ND PLACE (SILVER) -->
+          @if (topPodium()[1]; as second) {
+            <div class="order-2 md:order-1 bg-white dark:bg-[#101416] border border-gray-200 dark:border-[#282f34] rounded-3xl p-6 relative flex flex-col justify-between hover:border-gray-300 dark:hover:border-slate-400 transition-all duration-300 hover:shadow-lg dark:hover:shadow-[0_10px_30px_rgba(0,0,0,0.5)]">
+              <!-- Rank Badge -->
+              <div class="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-gradient-to-r from-gray-200 to-gray-400 dark:from-slate-200 dark:to-slate-400 text-gray-900 dark:text-black px-4 py-1 rounded-full font-black text-xs uppercase tracking-wider flex items-center gap-1.5 shadow-md">
+                <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 15.39l-3.76 2.27.99-4.28-3.32-2.88 4.38-.37L12 6.09l1.71 4.04 4.38.37-3.32 2.88.99 4.28z"/></svg>
+                #2 {{ t().explore.secondPlace }}
+              </div>
+              <div class="pt-3 text-center">
+                <div class="relative w-28 h-28 mx-auto mb-4">
+                  @if (second.avatarUrl) {
+                    <img [src]="second.avatarUrl" [alt]="second.name" class="w-full h-full object-cover rounded-full border-4 border-gray-200 dark:border-slate-300 shadow-xl" />
                   } @else {
-                    <div class="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-gray-900 dark:bg-[#090c0a] text-sm font-black text-[#c9ff3d]">
-                      {{ athlete.initials }}
+                    <div class="w-full h-full rounded-full border-4 border-gray-200 dark:border-slate-300 bg-gray-100 dark:bg-[#1b2226] text-gray-400 flex items-center justify-center text-3xl font-black shadow-xl">
+                      {{ second.initials }}
                     </div>
                   }
-                  <div>
-                    <h3 class="font-extrabold text-gray-900 dark:text-white text-base">{{ athlete.name }}</h3>
-                    <p class="text-xs text-gray-500 dark:text-gray-400 font-medium">&#64;{{ athlete.handle }}</p>
+                  <div class="absolute bottom-0 right-1 bg-white dark:bg-[#101416] border-2 border-gray-200 dark:border-slate-300 w-8 h-8 rounded-full flex items-center justify-center text-xs font-black text-gray-900 dark:text-white">
+                    {{ second.initials }}
                   </div>
                 </div>
-                
-                <span class="rounded-lg bg-gray-50 dark:bg-white/5 border border-gray-200/80 dark:border-white/10 px-2.5 py-1 text-xs font-bold text-gray-700 dark:text-gray-200">
-                  {{ languageService.translateDiscipline(athlete.sport) }}
+                <h3 class="text-xl font-extrabold text-gray-900 dark:text-white">{{ second.name }}</h3>
+                <p class="text-xs text-gray-500 dark:text-slate-400 font-mono mt-0.5">&#64;{{ second.handle }}</p>
+                <span class="inline-block mt-2.5 px-3 py-1 rounded-full bg-gray-50 dark:bg-[#181d20] border border-gray-200 dark:border-[#2b3237] text-[11px] font-bold text-gray-700 dark:text-slate-300">
+                  {{ languageService.translateDiscipline(second.sport) }}
                 </span>
               </div>
-
-              <p class="mt-3.5 text-sm text-gray-600 dark:text-gray-300 leading-relaxed line-clamp-2">
-                {{ athlete.bio }}
-              </p>
+              <div class="mt-6 pt-5 border-t border-gray-100 dark:border-[#1e2327]">
+                <div class="flex items-center justify-between mb-4">
+                  <div>
+                    <span class="text-[10px] uppercase font-bold text-gray-400 dark:text-slate-500 tracking-wider">Shakers</span>
+                    <div class="text-2xl font-black text-gray-900 dark:text-white flex items-center gap-1.5">
+                      {{ second.shakesThisMonth }} 
+                      <app-icon-shaker size="16" customClass="text-gray-400 dark:text-slate-500" />
+                    </div>
+                  </div>
+                  <div class="text-right">
+                    <span class="text-[10px] uppercase font-bold text-gray-400 dark:text-slate-500 tracking-wider">{{ t().explore.raised }}</span>
+                    <div class="text-sm font-bold text-emerald-600 dark:text-emerald-400">${{ second.totalRaised }} USD</div>
+                  </div>
+                </div>
+                <a [routerLink]="['/', second.handle]" class="w-full bg-gray-50 dark:bg-[#181d20] hover:bg-gray-900 dark:hover:bg-[#c9ff3d] hover:text-white dark:hover:text-black text-gray-900 dark:text-white border border-gray-200 dark:border-[#30383d] dark:hover:border-[#c9ff3d] font-extrabold text-xs uppercase tracking-wider py-3 rounded-xl transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer">
+                  <span>{{ t().explore.inviteShake }}</span>
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                </a>
+              </div>
             </div>
+          }
 
-            <div class="mt-6 pt-4 border-t border-gray-100 dark:border-white/10 flex items-center justify-between">
-              <div class="flex items-center gap-2">
-                <span class="text-xs font-semibold text-gray-400 dark:text-gray-500">{{ t().explore.monthlySupport }}</span>
-                <span class="text-xs font-extrabold text-gray-900 dark:text-white bg-gray-100 dark:bg-white/10 px-2 py-0.5 rounded-md">
-                  {{ athlete.shakesThisMonth }} shakes
+          <!-- 1ST PLACE (CHAMPION - GOLD) -->
+          @if (topPodium()[0]; as first) {
+            <div class="order-1 md:order-2 bg-gradient-to-b from-white to-gray-50 dark:from-[#191e20] dark:to-[#111416] border-2 border-amber-400 dark:border-[#c9ff3d] rounded-3xl p-6 sm:p-7 relative flex flex-col justify-between shadow-xl dark:shadow-[0_0_35px_rgba(204,255,0,0.18)] transform md:-translate-y-3 z-20">
+              <div class="absolute -top-4 left-1/2 -translate-x-1/2 bg-gradient-to-r from-amber-300 via-amber-400 dark:via-[#c9ff3d] to-yellow-400 text-gray-900 dark:text-black px-5 py-1.5 rounded-full font-black text-xs uppercase tracking-wider flex items-center gap-1.5 shadow-lg dark:shadow-[0_0_20px_rgba(204,255,0,0.6)]">
+                <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 15.39l-3.76 2.27.99-4.28-3.32-2.88 4.38-.37L12 6.09l1.71 4.04 4.38.37-3.32 2.88.99 4.28z"/></svg>
+                #1 {{ t().explore.champion }}
+              </div>
+              <div class="pt-3 text-center">
+                <div class="relative w-32 h-32 mx-auto mb-4">
+                  <div class="absolute -inset-1 rounded-full bg-gradient-to-tr from-amber-300 dark:from-[#c9ff3d] to-yellow-400 opacity-80 blur-sm animate-pulse hidden dark:block"></div>
+                  @if (first.avatarUrl) {
+                    <img [src]="first.avatarUrl" [alt]="first.name" class="relative w-full h-full object-cover rounded-full border-4 border-amber-400 dark:border-[#c9ff3d] shadow-2xl bg-white" />
+                  } @else {
+                    <div class="relative w-full h-full rounded-full border-4 border-amber-400 dark:border-[#c9ff3d] bg-gray-100 dark:bg-[#1b2226] flex items-center justify-center text-4xl font-black shadow-2xl text-amber-500 dark:text-[#c9ff3d]">
+                      {{ first.initials }}
+                    </div>
+                  }
+                  <div class="absolute bottom-1 right-1 bg-white dark:bg-black border-2 border-amber-400 dark:border-[#c9ff3d] w-8 h-8 rounded-full flex items-center justify-center text-xs font-black text-amber-600 dark:text-[#c9ff3d]">
+                    #1
+                  </div>
+                </div>
+                <h3 class="text-2xl font-black text-gray-900 dark:text-white tracking-tight">{{ first.name }}</h3>
+                <p class="text-xs text-gray-500 dark:text-slate-400 font-mono mt-0.5">&#64;{{ first.handle }}</p>
+                <span class="inline-block mt-2.5 px-3 py-1 rounded-full bg-amber-50 dark:bg-[#20272b] border border-amber-200 dark:border-[#354047] text-xs font-bold text-amber-700 dark:text-[#c9ff3d]">
+                  {{ languageService.translateDiscipline(first.sport) }}
                 </span>
               </div>
-              
-              <a
-                [routerLink]="['/', athlete.handle]"
-                class="rounded-xl border border-gray-200 dark:border-white/15 hover:border-gray-900 dark:hover:border-[#c9ff3d] bg-white dark:bg-white/5 hover:bg-gray-900 dark:hover:bg-[#c9ff3d] hover:text-[#c9ff3d] dark:hover:text-[#070a08] px-4 py-2 text-xs font-bold text-gray-900 dark:text-gray-100 transition"
-              >
-                {{ t().explore.viewProfile }}
-              </a>
+              <div class="mt-7 pt-5 border-t border-gray-100 dark:border-[#2a3237]">
+                <div class="grid grid-cols-2 gap-3 mb-5 text-left bg-gray-50 dark:bg-[#0c0f10] p-3 rounded-2xl border border-gray-200 dark:border-[#22292d]">
+                  <div>
+                    <span class="text-[10px] uppercase font-bold text-gray-500 dark:text-slate-400 tracking-wider">Shakers Este Mes</span>
+                    <div class="text-3xl font-black text-gray-900 dark:text-white flex items-center gap-1.5">
+                      {{ first.shakesThisMonth }}
+                      <app-icon-shaker size="20" customClass="text-amber-500 dark:text-slate-500" />
+                    </div>
+                  </div>
+                  <div class="border-l border-gray-200 dark:border-[#20272a] pl-3">
+                    <span class="text-[10px] uppercase font-bold text-gray-500 dark:text-slate-400 tracking-wider">{{ t().explore.raised }}</span>
+                    <div class="text-lg font-black text-emerald-600 dark:text-[#c9ff3d]">${{ first.totalRaised }} <span class="text-xs font-normal">USD</span></div>
+                  </div>
+                </div>
+                <a [routerLink]="['/', first.handle]" class="w-full bg-amber-400 dark:bg-[#c9ff3d] hover:bg-amber-500 dark:hover:bg-[#bbf000] text-gray-900 dark:text-black font-black text-sm uppercase tracking-wider py-3.5 rounded-xl shadow-md dark:shadow-[0_0_25px_rgba(204,255,0,0.4)] transform hover:scale-[1.02] active:scale-100 transition-all flex items-center justify-center gap-2 cursor-pointer">
+                  <span>{{ t().explore.inviteShake }}</span>
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                </a>
+              </div>
             </div>
-          </article>
-        }
-      </div>
+          }
 
-      @if (filteredAthletes().length === 0) {
-        <div class="bg-white dark:bg-[#121614] rounded-3xl p-12 text-center border border-gray-100 dark:border-white/10 mt-4">
-          <p class="text-base font-bold text-gray-900 dark:text-white">{{ t().explore.noAthletesFound }}</p>
-          <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">{{ t().explore.noAthletesSubtitle }}</p>
-          <button
-            type="button"
-            class="mt-4 rounded-xl bg-gray-900 dark:bg-[#c9ff3d] text-[#c9ff3d] dark:text-[#070a08] px-4 py-2 text-xs font-bold"
-            (click)="setCategory('ALL'); onSearch('')"
-          >
-            {{ t().explore.resetFilters }}
-          </button>
+          <!-- 3RD PLACE (BRONZE) -->
+          @if (topPodium()[2]; as third) {
+            <div class="order-3 md:order-3 bg-white dark:bg-[#101416] border border-gray-200 dark:border-[#282f34] rounded-3xl p-6 relative flex flex-col justify-between hover:border-amber-700/80 transition-all duration-300 hover:shadow-lg dark:hover:shadow-[0_10px_30px_rgba(0,0,0,0.5)]">
+              <div class="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-gradient-to-r from-amber-600 to-amber-800 text-amber-50 dark:text-amber-100 px-4 py-1 rounded-full font-black text-xs uppercase tracking-wider flex items-center gap-1.5 shadow-md">
+                <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 15.39l-3.76 2.27.99-4.28-3.32-2.88 4.38-.37L12 6.09l1.71 4.04 4.38.37-3.32 2.88.99 4.28z"/></svg>
+                #3 {{ t().explore.thirdPlace }}
+              </div>
+              <div class="pt-3 text-center">
+                <div class="relative w-28 h-28 mx-auto mb-4">
+                  @if (third.avatarUrl) {
+                    <img [src]="third.avatarUrl" [alt]="third.name" class="w-full h-full object-cover rounded-full border-4 border-amber-600/80 shadow-xl" />
+                  } @else {
+                    <div class="w-full h-full rounded-full border-4 border-amber-600/80 bg-gray-100 dark:bg-[#1b2226] text-amber-700 flex items-center justify-center text-3xl font-black shadow-xl">
+                      {{ third.initials }}
+                    </div>
+                  }
+                  <div class="absolute bottom-0 right-1 bg-white dark:bg-[#101416] border-2 border-amber-600/80 w-8 h-8 rounded-full flex items-center justify-center text-sm font-black text-amber-700 dark:text-amber-400">
+                    {{ third.initials }}
+                  </div>
+                </div>
+                <h3 class="text-xl font-extrabold text-gray-900 dark:text-white">{{ third.name }}</h3>
+                <p class="text-xs text-gray-500 dark:text-slate-400 font-mono mt-0.5">&#64;{{ third.handle }}</p>
+                <span class="inline-block mt-2.5 px-3 py-1 rounded-full bg-gray-50 dark:bg-[#181d20] border border-gray-200 dark:border-[#2b3237] text-[11px] font-bold text-gray-700 dark:text-slate-300">
+                  {{ languageService.translateDiscipline(third.sport) }}
+                </span>
+              </div>
+              <div class="mt-6 pt-5 border-t border-gray-100 dark:border-[#1e2327]">
+                <div class="flex items-center justify-between mb-4">
+                  <div>
+                    <span class="text-[10px] uppercase font-bold text-gray-400 dark:text-slate-500 tracking-wider">Shakers</span>
+                    <div class="text-2xl font-black text-gray-900 dark:text-white flex items-center gap-1.5">
+                      {{ third.shakesThisMonth }}
+                      <app-icon-shaker size="16" customClass="text-gray-400 dark:text-slate-500" />
+                    </div>
+                  </div>
+                  <div class="text-right">
+                    <span class="text-[10px] uppercase font-bold text-gray-400 dark:text-slate-500 tracking-wider">{{ t().explore.raised }}</span>
+                    <div class="text-sm font-bold text-emerald-600 dark:text-emerald-400">${{ third.totalRaised }} USD</div>
+                  </div>
+                </div>
+                <a [routerLink]="['/', third.handle]" class="w-full bg-gray-50 dark:bg-[#181d20] hover:bg-gray-900 dark:hover:bg-[#c9ff3d] hover:text-white dark:hover:text-black text-gray-900 dark:text-white border border-gray-200 dark:border-[#30383d] dark:hover:border-[#c9ff3d] font-extrabold text-xs uppercase tracking-wider py-3 rounded-xl transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer">
+                  <span>{{ t().explore.inviteShake }}</span>
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                </a>
+              </div>
+            </div>
+          }
         </div>
       }
+
+      <!-- Resto del Top 10 -->
+      <div class="flex items-center justify-between mb-3 mt-4">
+        <h2 class="text-lg font-black tracking-tight text-gray-900 dark:text-white uppercase flex items-center gap-2">
+          <span>{{ t().explore.fullRanking }}</span>
+        </h2>
+        <span class="text-xs font-semibold text-gray-500 dark:text-slate-400">{{ t().explore.showingRanks4To10 }}</span>
+      </div>
+
+      <div class="bg-white dark:bg-[#0f1315] border border-gray-200 dark:border-[#202528] rounded-2xl overflow-hidden shadow-md dark:shadow-2xl">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse min-w-[700px]">
+            <thead>
+              <tr class="border-b border-gray-200 dark:border-[#202528] bg-gray-50 dark:bg-[#14181b]/70 text-[11px] font-black tracking-widest uppercase text-gray-500 dark:text-slate-400">
+                <th class="py-4 px-6 w-16" scope="col">{{ t().explore.rank }}</th>
+                <th class="py-4 px-6" scope="col">{{ t().explore.athlete }}</th>
+                <th class="py-4 px-6" scope="col">{{ t().explore.discipline }}</th>
+                <th class="py-4 px-6 text-right" scope="col">{{ t().explore.shakesReceived }}</th>
+                <th class="py-4 px-6 text-center w-36" scope="col">{{ t().explore.action }}</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100 dark:divide-[#1b2023] text-sm">
+              @for (athlete of topRemaining(); track athlete.id) {
+                <tr class="hover:bg-gray-50 dark:hover:bg-[#15191c]/80 transition-colors group">
+                  <td class="py-4 px-6 font-black text-base text-gray-500 dark:text-slate-400 group-hover:text-gray-900 dark:group-hover:text-white">
+                    #{{ athlete.rank }}
+                  </td>
+                  <td class="py-4 px-6">
+                    <div class="flex items-center gap-3">
+                      <div class="w-10 h-10 rounded-xl bg-gray-100 dark:bg-[#1b2226] border border-gray-200 dark:border-[#2d373d] flex items-center justify-center font-bold text-xs text-gray-600 dark:text-[#c9ff3d]">
+                        {{ athlete.initials }}
+                      </div>
+                      <div>
+                        <div class="font-bold text-gray-900 dark:text-white dark:group-hover:text-[#c9ff3d] transition-colors">
+                          {{ athlete.name }}
+                        </div>
+                        <div class="text-xs text-gray-500 dark:text-slate-400">&#64;{{ athlete.handle }}</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="py-4 px-6">
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 dark:bg-[#161c1f] text-gray-700 dark:text-slate-300 border border-gray-200 dark:border-[#263035]">
+                      {{ languageService.translateDiscipline(athlete.sport) }}
+                    </span>
+                  </td>
+                  <td class="py-4 px-6 text-right font-black text-gray-900 dark:text-white text-base">
+                    {{ athlete.shakesThisMonth }}
+                  </td>
+                  <td class="py-4 px-6 text-center">
+                    <a [routerLink]="['/', athlete.handle]" class="bg-white dark:bg-[#181e21] hover:bg-gray-900 dark:hover:bg-[#c9ff3d] hover:text-white dark:hover:text-black text-gray-700 dark:text-slate-200 border border-gray-300 dark:border-[#2a343a] dark:hover:border-[#c9ff3d] font-bold text-xs px-4 py-2 rounded-xl transition-all w-full flex items-center justify-center gap-1.5 cursor-pointer">
+                      <span>{{ t().explore.support }}</span>
+                    </a>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
     </section>
+
+    <!-- Resto de explorador (búsqueda normal) -->
+    @if (searchQuery() !== '' || selectedCategory() !== 'ALL') {
+      <section>
+        <div class="flex items-center justify-between mb-4 mt-8 border-t border-gray-200 dark:border-white/10 pt-8">
+          <h3 class="text-xl font-black text-gray-900 dark:text-white">{{ t().explore.exploreByDiscipline }}</h3>
+          <span class="text-xs text-gray-500 dark:text-slate-400">
+            {{ filteredAthletes().length }} {{ filteredAthletes().length === 1 ? t().explore.athleteFound : t().explore.athletesFound }}
+          </span>
+        </div>
+
+        <!-- Cuadrícula de Atletas filtrada -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+          @for (athlete of filteredAthletes(); track athlete.id) {
+            <article class="bg-white dark:bg-[#121614] rounded-3xl p-6 border border-gray-200/80 dark:border-white/10 shadow-xs transition hover:border-gray-300 dark:hover:border-white/20 hover:shadow-sm flex flex-col justify-between">
+              <div>
+                <div class="flex items-start justify-between gap-4">
+                  <div class="flex items-center gap-3.5">
+                    @if (athlete.avatarUrl) {
+                      <img [src]="athlete.avatarUrl" [alt]="athlete.name" class="h-12 w-12 shrink-0 rounded-2xl object-cover border border-gray-200 dark:border-white/10" />
+                    } @else {
+                      <div class="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-gray-900 dark:bg-[#090c0a] text-sm font-black text-[#c9ff3d]">
+                        {{ athlete.initials }}
+                      </div>
+                    }
+                    <div>
+                      <h3 class="font-extrabold text-gray-900 dark:text-white text-base">{{ athlete.name }}</h3>
+                      <p class="text-xs text-gray-500 dark:text-slate-400 font-medium">&#64;{{ athlete.handle }}</p>
+                    </div>
+                  </div>
+                  <span class="rounded-lg bg-gray-50 dark:bg-white/5 border border-gray-200/80 dark:border-white/10 px-2.5 py-1 text-xs font-bold text-gray-700 dark:text-gray-200">
+                    {{ languageService.translateDiscipline(athlete.sport) }}
+                  </span>
+                </div>
+                <p class="mt-3.5 text-sm text-gray-600 dark:text-gray-300 leading-relaxed line-clamp-2">
+                  {{ athlete.bio }}
+                </p>
+              </div>
+
+              <div class="mt-6 pt-4 border-t border-gray-100 dark:border-white/10 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <span class="text-xs font-semibold text-gray-400 dark:text-gray-500">{{ t().explore.monthlySupport }}</span>
+                  <span class="text-xs font-extrabold text-gray-900 dark:text-white bg-gray-100 dark:bg-white/10 px-2 py-0.5 rounded-md">
+                    {{ athlete.shakesThisMonth }} shakes
+                  </span>
+                </div>
+                <a [routerLink]="['/', athlete.handle]" class="rounded-xl border border-gray-200 dark:border-white/15 hover:border-gray-900 dark:hover:border-[#c9ff3d] bg-white dark:bg-white/5 hover:bg-gray-900 dark:hover:bg-[#c9ff3d] hover:text-[#c9ff3d] dark:hover:text-[#070a08] px-4 py-2 text-xs font-bold text-gray-900 dark:text-gray-100 transition">
+                  {{ t().explore.viewProfile }}
+                </a>
+              </div>
+            </article>
+          }
+        </div>
+
+        @if (filteredAthletes().length === 0) {
+          <div class="bg-white dark:bg-[#121614] rounded-3xl p-12 text-center border border-gray-100 dark:border-white/10 mt-4">
+            <p class="text-base font-bold text-gray-900 dark:text-white">{{ t().explore.noAthletesFound }}</p>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">{{ t().explore.noAthletesSubtitle }}</p>
+            <button
+              type="button"
+              class="mt-4 rounded-xl bg-gray-900 dark:bg-[#c9ff3d] text-[#c9ff3d] dark:text-[#070a08] px-4 py-2 text-xs font-bold"
+              (click)="setCategory('ALL'); onSearch('')"
+            >
+              {{ t().explore.resetFilters }}
+            </button>
+          </div>
+        }
+      </section>
+    }
   </div>
 </div>

@@ -218,7 +218,7 @@ export class AnimatedShakerComponent {
     // Timeline GSAP sincronizada
     const tl = gsap.timeline({
       onComplete: () => {
-        this.statusText.set('¡Batido listo para entrenar! 🥤');
+        this.statusText.set('¡Batido listo para entrenar! ');
         setTimeout(() => this.statusText.set('¡Toca para agitar el Shaker!'), 2500);
       },
     });

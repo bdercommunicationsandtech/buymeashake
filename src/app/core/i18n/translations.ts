@@ -559,6 +559,7 @@ export interface TranslationSchema {
   };
   explore: {
     badge: string;
+    monthlyRanking: string;
     title: string;
     subtitle: string;
     searchPlaceholder: string;
@@ -568,10 +569,18 @@ export interface TranslationSchema {
     firstPlace: string;
     secondPlace: string;
     thirdPlace: string;
+    champion: string;
     shakesThisMonth: string;
+    raised: string;
     inviteShake: string;
     rankAndAthlete: string;
     shakesReceived: string;
+    fullRanking: string;
+    showingRanks4To10: string;
+    rank: string;
+    athlete: string;
+    discipline: string;
+    action: string;
     support: string;
     exploreByDiscipline: string;
     all: string;
@@ -606,6 +615,8 @@ export interface TranslationSchema {
     verifyingOtp: string;
     changeEmail: string;
     orContinueWith: string;
+    continueWithGoogle: string;
+    continueWithApple: string;
     fillAllFieldsError: string;
     loginGeneralError: string;
     sendOtpError: string;
@@ -635,6 +646,19 @@ export interface TranslationSchema {
     rateLimitWait: string;
     maxAttemptsError: string;
     remainingAttemptsError: string;
+    loginHeroTitle: string;
+    loginHeroTitleAccent: string;
+    loginHeroSubtitle: string;
+    loginHeroPoint1Title: string;
+    loginHeroPoint1Text: string;
+    loginHeroPoint2Title: string;
+    loginHeroPoint2Text: string;
+    loginHeroPoint3Title: string;
+    loginHeroPoint3Text: string;
+    loginHeroNote: string;
+    forgotPassword: string;
+    newHerePrompt: string;
+    createAccountCta: string;
     registerTitle: string;
     registerSubtitle: string;
     athleteLinkLabel: string;

@@ -40,9 +40,17 @@
   <div class="bg-white dark:bg-[#121614] rounded-3xl p-6 sm:p-8 border border-gray-200/80 dark:border-white/10 shadow-xs transition-colors">
     <div class="flex items-center justify-between gap-3">
       <h2 class="font-display text-base font-black text-gray-950 dark:text-white">{{ t().dashboard.earnings }}</h2>
-      <span class="inline-flex items-center gap-1 text-xs font-bold text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-white/5 border border-gray-200/80 dark:border-white/10 px-2.5 py-1 rounded-lg">
-        {{ timeRange() }}
-      </span>
+      <select 
+        class="inline-flex items-center gap-1 text-xs font-bold text-gray-600 dark:text-gray-300 bg-gray-50 dark:bg-white/5 border border-gray-200/80 dark:border-white/10 px-2.5 py-1.5 rounded-lg focus:ring-1 focus:ring-gray-900 dark:focus:ring-[#c9ff3d] focus:outline-none cursor-pointer appearance-none pr-8 relative"
+        style="background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%239CA3AF%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E'); background-repeat: no-repeat; background-position: right 8px center; background-size: 8px auto;"
+        (change)="onPeriodChange($event)"
+        [value]="selectedPeriod()"
+      >
+        <option value="7d">Last 7 days</option>
+        <option value="30d">Last 30 days</option>
+        <option value="90d">Last 90 days</option>
+        <option value="all_time">All Time</option>
+      </select>
     </div>
 
     <!-- Monto Principal -->

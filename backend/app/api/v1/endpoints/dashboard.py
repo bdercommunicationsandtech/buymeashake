@@ -31,10 +31,11 @@ router = APIRouter()
 async def get_dashboard_metrics(
     athlete: CurrentAthlete,
     session: DatabaseSession,
+    period: str = "30d"
 ) -> DashboardMetricsResponse:
     """Obtiene el resumen financiero de los últimos 30 días, MRR y desglose por tipo."""
     service = DashboardService(session)
-    return await service.get_metrics(athlete)
+    return await service.get_metrics(athlete, period)
 
 
 @router.get("/dashboard/profile", response_model=AthleteProfileFullResponse)

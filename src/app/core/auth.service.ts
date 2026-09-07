@@ -3,7 +3,15 @@ import { inject, Injectable, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { BehaviorSubject, catchError, filter, Observable, switchMap, take, tap, throwError } from 'rxjs';
 import { environment } from '../../environments/environment';
-import { TokenResponse, UserLoginPayload, UserMe, UserRegisterPayload, FirebaseAuthPayload, FirebaseNeedsRoleDetails } from './api.models';
+import {
+  FirebaseAuthPayload,
+  FirebaseNeedsRoleDetails,
+  TokenResponse,
+  UpgradeToAthletePayload,
+  UserLoginPayload,
+  UserMe,
+  UserRegisterPayload,
+} from './api.models';
 
 @Injectable({
   providedIn: 'root',
@@ -144,6 +152,14 @@ export class AuthService {
 
   updateProfile(payload: { full_name?: string; password?: string; avatar_url?: string }): Observable<UserMe> {
     return this.http.put<UserMe>(`${this.apiUrl}/profile`, payload).pipe(
+      tap((user) => {
+        this.currentUser.set(user);
+      })
+    );
+  }
+
+  upgradeToAthlete(payload: UpgradeToAthletePayload): Observable<UserMe> {
+    return this.http.post<UserMe>(`${this.apiUrl}/upgrade-to-athlete`, payload).pipe(
       tap((user) => {
         this.currentUser.set(user);
       })

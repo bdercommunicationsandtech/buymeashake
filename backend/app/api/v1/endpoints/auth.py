@@ -9,6 +9,7 @@ from app.schemas.dtos import (
     RequestOtpResponse,
     TokenResponse,
     UpdateProfileRequest,
+    UpgradeToAthleteRequest,
     UserLoginRequest,
     UserMeResponse,
     UserRegisterRequest,
@@ -84,3 +85,15 @@ async def update_profile(
     """Actualiza los datos del perfil y contraseña del usuario autenticado."""
     service = AuthService(session)
     return await service.update_profile(user, dto)
+
+
+@router.post("/auth/upgrade-to-athlete", response_model=UserMeResponse)
+async def upgrade_to_athlete(
+    dto: UpgradeToAthleteRequest,
+    user: CurrentUser,
+    session: DatabaseSession,
+) -> UserMeResponse:
+    """Transforma una cuenta de supporter a atleta creando su perfil y asignando handle."""
+    service = AuthService(session)
+    return await service.upgrade_to_athlete(user, dto)
+

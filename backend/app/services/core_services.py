@@ -104,6 +104,7 @@ from app.schemas.dtos import (
     SupportersDashboardResponse,
     TokenResponse,
     UpdateProfileRequest,
+    UpgradeToAthleteRequest,
     UploadFileResponse,
     UserLoginRequest,
     UserMeResponse,
@@ -444,6 +445,53 @@ class AuthService:
         await self.session.flush()
         return await self.get_me(user)
 
+    async def upgrade_to_athlete(self, user: User, dto: UpgradeToAthleteRequest) -> UserMeResponse:
+        existing_profile = await self.athlete_repo.get_by_user_id(user.id)
+        if existing_profile:
+            # Si ya tenía perfil pero el rol no estaba sincronizado
+            user.role = "athlete"
+            await self.session.flush()
+            return await self.get_me(user)
+
+        existing_handle = await self.athlete_repo.get_by_handle(dto.handle)
+        if existing_handle:
+            raise EntityAlreadyExistsError("Atleta", "handle", dto.handle)
+
+        if dto.full_name:
+            user.full_name = dto.full_name
+        user.role = "athlete"
+
+        referral_code = f"{dto.handle}_{secrets.token_hex(3)}"
+        sport_item_id = await resolve_sport_item_id(self.session, dto.primary_sport_code)
+
+        athlete = AthleteProfile(
+            user_id=user.id,
+            handle=dto.handle,
+            bio=dto.bio,
+            city=dto.city,
+            primary_sport_item_id=sport_item_id,
+        )
+        await self.athlete_repo.create(athlete)
+        await ensure_child_rows(
+            self.session,
+            athlete,
+            referral_code=referral_code,
+        )
+
+        if dto.shake_price is not None:
+            if athlete.monetization:
+                athlete.monetization.shake_price = Decimal(str(dto.shake_price))
+            else:
+                athlete.monetization = AthleteMonetization(
+                    athlete_id=athlete.id,
+                    shake_price=Decimal(str(dto.shake_price)),
+                    currency="USD",
+                )
+                self.session.add(athlete.monetization)
+
+        await self.session.flush()
+        return await self.get_me(user)
+
 
 class SupporterService:
     def __init__(self, session: AsyncSession):
@@ -760,8 +808,8 @@ class DashboardService:
         self.post_repo = PostRepository(session)
         self.supporter_repo = SupporterRepository(session)
 
-    async def get_metrics(self, athlete: AthleteProfile) -> DashboardMetricsResponse:
-        metrics_dict = await self.dash_repo.get_metrics_30d(athlete.id)
+    async def get_metrics(self, athlete: AthleteProfile, period: str = "30d") -> DashboardMetricsResponse:
+        metrics_dict = await self.dash_repo.get_metrics(athlete.id, period)
         return DashboardMetricsResponse(**metrics_dict)
 
     # Perfil & Ajustes

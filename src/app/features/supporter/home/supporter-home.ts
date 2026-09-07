@@ -66,14 +66,24 @@ import { FollowedAthlete, PostResponse } from '../../../core/api.models';
             }
           </button>
 
-          <!-- Botón "Become a Creator" (Captura 4 BMC) -->
-          <a
-            routerLink="/auth/register"
-            class="rounded-xl bg-[#c9ff3d] hover:bg-[#bbf033] px-3.5 sm:px-4 py-2 text-xs font-black text-gray-950 transition shadow-xs flex items-center gap-1.5"
-          >
-            <span class="hidden sm:inline">{{ t().supporterArea.createAthletePage }}</span>
-            <span class="sm:hidden">{{ t().supporterArea.beCreator }}</span>
-          </a>
+          <!-- Botón según rol: Si ya es atleta va a su dashboard, si es supporter crea su página -->
+          @if (isAthlete()) {
+            <a
+              routerLink="/dashboard/home"
+              class="rounded-xl bg-[#c9ff3d] hover:bg-[#bbf033] px-3.5 sm:px-4 py-2 text-xs font-black text-gray-950 transition shadow-xs flex items-center gap-1.5"
+            >
+              <span class="hidden sm:inline">{{ t().dashboard.title }}</span>
+              <span class="sm:hidden">{{ t().dashboard.home }}</span>
+            </a>
+          } @else {
+            <a
+              routerLink="/onboarding"
+              class="rounded-xl bg-[#c9ff3d] hover:bg-[#bbf033] px-3.5 sm:px-4 py-2 text-xs font-black text-gray-950 transition shadow-xs flex items-center gap-1.5"
+            >
+              <span class="hidden sm:inline">{{ t().supporterArea.createAthletePage }}</span>
+              <span class="sm:hidden">{{ t().supporterArea.beCreator }}</span>
+            </a>
+          }
 
           <!-- User Menu Dropdown Trigger (Captura 4) -->
           <div class="relative">
@@ -83,7 +93,7 @@ import { FollowedAthlete, PostResponse } from '../../../core/api.models';
               class="h-9 w-9 rounded-full bg-gray-900 dark:bg-white/10 border border-gray-200 dark:border-white/15 text-[#c9ff3d] grid place-items-center text-xs font-black hover:ring-2 hover:ring-[#c9ff3d]/50 transition cursor-pointer"
               [attr.aria-label]="t().supporterArea.accountMenu"
             >
-              🥤
+              
             </button>
 
             <!-- Dropdown Menu (Fiel a Captura 4) -->
@@ -110,13 +120,23 @@ import { FollowedAthlete, PostResponse } from '../../../core/api.models';
                 >
                   👤 {{ t().supporterArea.myAccount }}
                 </a>
-                <a
-                  routerLink="/auth/register"
-                  (click)="userMenuOpen.set(false)"
-                  class="block px-4 py-2.5 text-xs font-black text-emerald-600 dark:text-[#c9ff3d] hover:bg-gray-50 dark:hover:bg-white/5 bg-[#c9ff3d]/5"
-                >
-                  ⚡ {{ t().supporterArea.becomeCreatorAthlete }}
-                </a>
+                @if (isAthlete()) {
+                  <a
+                    routerLink="/dashboard/home"
+                    (click)="userMenuOpen.set(false)"
+                    class="block px-4 py-2.5 text-xs font-black text-emerald-600 dark:text-[#c9ff3d] hover:bg-gray-50 dark:hover:bg-white/5 bg-[#c9ff3d]/5"
+                  >
+                    ⚡ {{ t().dashboard.title }}
+                  </a>
+                } @else {
+                  <a
+                    routerLink="/onboarding"
+                    (click)="userMenuOpen.set(false)"
+                    class="block px-4 py-2.5 text-xs font-black text-emerald-600 dark:text-[#c9ff3d] hover:bg-gray-50 dark:hover:bg-white/5 bg-[#c9ff3d]/5"
+                  >
+                    ⚡ {{ t().supporterArea.becomeCreatorAthlete }}
+                  </a>
+                }
                 <a
                   routerLink="/explore"
                   (click)="userMenuOpen.set(false)"
@@ -283,6 +303,10 @@ export class DashboardSupporterHome implements OnInit {
 
   readonly followedAthletes = signal<FollowedAthlete[]>([]);
   readonly feedPosts = signal<PostItem[]>([]);
+
+  isAthlete(): boolean {
+    return this.authService.isAthlete();
+  }
 
   ngOnInit(): void {
     this.authService.loadMe().subscribe({

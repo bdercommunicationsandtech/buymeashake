@@ -1,6 +1,7 @@
 import { Component, effect, inject, input, output, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DashboardService } from '../../core/dashboard.service';
+import { LanguageService } from '../../core/language.service';
 import { EditorSavePatch } from './editor-save-patch';
 
 @Component({
@@ -23,13 +24,13 @@ import { EditorSavePatch } from './editor-save-patch';
             type="button"
             (click)="close.emit()"
             class="absolute top-4 right-4 h-8 w-8 rounded-full bg-gray-100 dark:bg-white/10 text-gray-500 grid place-items-center text-xs font-bold cursor-pointer"
-            aria-label="Cerrar"
+            [attr.aria-label]="t().common.close"
           >
             ✕
           </button>
-          <h3 class="font-display text-xl font-black text-gray-950 dark:text-white pr-8">Mi agenda</h3>
+          <h3 class="font-display text-xl font-black text-gray-950 dark:text-white pr-8">{{ t().pageEditorModals.editAgendaTitle }}</h3>
           <p class="text-xs text-gray-500 dark:text-gray-400 mt-1 font-medium">
-            Título y descripción de la sección de agenda en tu página pública.
+            {{ t().pageEditorModals.editAgendaSubtitle }}
           </p>
 
           @if (error()) {
@@ -38,25 +39,25 @@ import { EditorSavePatch } from './editor-save-patch';
 
           <div class="mt-5">
             <label class="block text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 mb-1">
-              Imagen de la agenda
+              {{ t().pageEditorModals.editAgendaTitle }}
             </label>
-            <p class="text-[11px] text-gray-400 mb-2">Panel derecho de la tarjeta. Independiente del banner del hero.</p>
+            <p class="text-[11px] text-gray-400 mb-2">{{ t().pageEditorModals.agendaImageDesc }}</p>
             <div class="flex items-center gap-4">
               <div class="h-20 w-28 rounded-2xl overflow-hidden border border-gray-200 dark:border-white/10 bg-gray-100 dark:bg-white/5 shrink-0">
                 @if (imageUrl()) {
                   <img [src]="imageUrl()" alt="Agenda" class="h-full w-full object-cover" />
                 } @else {
-                  <div class="h-full w-full grid place-items-center text-gray-400 text-[10px] font-bold">Sin imagen</div>
+                  <div class="h-full w-full grid place-items-center text-gray-400 text-[10px] font-bold">{{ t().pageEditorModals.noImage }}</div>
                 }
               </div>
               <div class="flex flex-col gap-2">
                 <label class="inline-block rounded-xl border border-gray-200 dark:border-white/10 px-3 py-1.5 text-xs font-bold text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-white/5 cursor-pointer">
-                  {{ uploading() ? 'Subiendo...' : 'Subir imagen' }}
+                  {{ uploading() ? t().pageEditorModals.uploading : t().pageEditorModals.uploadImage }}
                   <input type="file" accept="image/*" class="hidden" (change)="onImageSelected($event)" [disabled]="uploading()" />
                 </label>
                 @if (imageUrl()) {
                   <button type="button" (click)="imageUrl.set(null)" class="text-xs font-bold text-red-500 cursor-pointer text-left">
-                    Quitar imagen
+                    {{ t().pageEditorModals.removeImage }}
                   </button>
                 }
               </div>
@@ -64,24 +65,24 @@ import { EditorSavePatch } from './editor-save-patch';
           </div>
 
           <label class="mt-5 block text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 mb-1">
-            Título
+            {{ t().pageEditorModals.titleLabel }}
           </label>
           <input
             type="text"
             maxlength="200"
-            placeholder="Entrena, mejora y alcanza tus metas"
+            [placeholder]="t().pageEditorModals.agendaTitlePlaceholder"
             class="w-full rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#191c1d] px-4 py-3 text-sm font-semibold text-gray-900 dark:text-white focus:border-[#c9ff3d] focus:outline-none"
             [value]="title()"
             (input)="title.set($any($event.target).value)"
           />
 
           <label class="mt-4 block text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 mb-1">
-            Descripción
+            {{ t().pageEditorModals.descriptionLabel }}
           </label>
           <textarea
             rows="4"
             maxlength="2000"
-            placeholder="Sesiones 1 a 1 para técnica, consultoría y seguimiento personalizado."
+            [placeholder]="t().pageEditorModals.agendaDescPlaceholder"
             class="w-full rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#191c1d] px-4 py-3 text-sm font-medium text-gray-900 dark:text-white focus:border-[#c9ff3d] focus:outline-none"
             [value]="description()"
             (input)="description.set($any($event.target).value)"
@@ -93,7 +94,7 @@ import { EditorSavePatch } from './editor-save-patch';
             [disabled]="saving()"
             class="mt-5 w-full rounded-2xl bg-[#c9ff3d] py-3.5 text-sm font-black text-gray-950 disabled:opacity-50 cursor-pointer"
           >
-            {{ saving() ? 'Guardando…' : 'Guardar' }}
+            {{ saving() ? t().pageEditorModals.saving : t().pageEditorModals.saveChanges }}
           </button>
         </div>
       </div>
@@ -106,6 +107,8 @@ export class AgendaCopyModalComponent {
   readonly saved = output<EditorSavePatch>();
 
   private readonly dashboard = inject(DashboardService);
+  readonly languageService = inject(LanguageService);
+  readonly t = this.languageService.currentTranslations;
 
   readonly title = signal('');
   readonly description = signal('');
@@ -124,7 +127,7 @@ export class AgendaCopyModalComponent {
           this.description.set(p.agenda_description || '');
           this.imageUrl.set(p.agenda_image_url || null);
         },
-        error: () => this.error.set('No se pudo cargar el perfil.'),
+        error: () => this.error.set(this.t().pageEditorModals.profileLoadError),
       });
     });
   }
@@ -144,7 +147,7 @@ export class AgendaCopyModalComponent {
       },
       error: () => {
         this.uploading.set(false);
-        this.error.set('Error al subir la imagen.');
+        this.error.set(this.languageService.currentLang() === 'en' ? 'Failed to upload image.' : 'Error al subir la imagen.');
       },
     });
   }
@@ -170,7 +173,7 @@ export class AgendaCopyModalComponent {
         },
         error: (err) => {
           this.saving.set(false);
-          this.error.set(err.error?.error?.message || 'Error al guardar.');
+          this.error.set(err.error?.error?.message || (this.languageService.currentLang() === 'en' ? 'Error saving changes.' : 'Error al guardar.'));
         },
       });
   }

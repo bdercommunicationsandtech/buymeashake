@@ -11,7 +11,7 @@
         </div>
       }
       <div class="min-w-0">
-        <h1 class="font-display text-xl sm:text-2xl font-black text-gray-950 dark:text-white truncate">Hola, {{ profile()?.full_name || 'Atleta' }}</h1>
+        <h1 class="font-display text-xl sm:text-2xl font-black text-gray-950 dark:text-white truncate">{{ t().supporterArea.hello }}, {{ profile()?.full_name || t().athlete.athleteRole }}</h1>
         <p class="text-xs text-gray-500 dark:text-gray-400 font-medium mt-0.5 truncate">buymeashake.fit/{{ profile()?.handle || '...' }}</p>
       </div>
     </div>
@@ -20,12 +20,12 @@
       <button
         type="button"
         (click)="openShareModal()"
-        class="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-full bg-gray-950 dark:bg-white text-white dark:text-gray-950 px-5 py-2.5 text-xs font-black transition hover:opacity-90 shadow-xs active:scale-95"
+        class="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-full bg-gray-950 dark:bg-white text-white dark:text-gray-950 px-5 py-2.5 text-xs font-black transition hover:opacity-90 shadow-xs active:scale-95 cursor-pointer"
       >
         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/>
         </svg>
-        <span>Compartir página</span>
+        <span>{{ t().dashboard.sharePage }}</span>
       </button>
     </div>
   </div>
@@ -39,7 +39,7 @@
   <!-- Tarjeta 2: Earnings con desglose de puntos -->
   <div class="bg-white dark:bg-[#121614] rounded-3xl p-6 sm:p-8 border border-gray-200/80 dark:border-white/10 shadow-xs transition-colors">
     <div class="flex items-center justify-between gap-3">
-      <h2 class="font-display text-base font-black text-gray-950 dark:text-white">Ganancias</h2>
+      <h2 class="font-display text-base font-black text-gray-950 dark:text-white">{{ t().dashboard.earnings }}</h2>
       <span class="inline-flex items-center gap-1 text-xs font-bold text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-white/5 border border-gray-200/80 dark:border-white/10 px-2.5 py-1 rounded-lg">
         {{ timeRange() }}
       </span>
@@ -56,19 +56,19 @@
     <div class="mt-5 grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-3 sm:gap-6 text-xs font-bold text-gray-600 dark:text-gray-300">
       <span class="inline-flex items-center gap-2">
         <span class="h-2.5 w-2.5 rounded-full bg-amber-400 shrink-0"></span>
-        <span>${{ metrics()?.earnings_by_type?.['shakes'] || '0.00' }} Shakes ({{ metrics()?.total_shakes_30d || 0 }})</span>
+        <span>${{ metrics()?.earnings_by_type?.['shakes'] || '0.00' }} {{ t().dashboard.shakesCount }} ({{ metrics()?.total_shakes_30d || 0 }})</span>
       </span>
       <span class="inline-flex items-center gap-2">
         <span class="h-2.5 w-2.5 rounded-full bg-rose-400 shrink-0"></span>
-        <span>${{ metrics()?.earnings_by_type?.['memberships'] || '0.00' }} Membresías ({{ metrics()?.active_members_count || 0 }})</span>
+        <span>${{ metrics()?.earnings_by_type?.['memberships'] || '0.00' }} {{ t().dashboard.membershipsCount }} ({{ metrics()?.active_members_count || 0 }})</span>
       </span>
       <span class="inline-flex items-center gap-2">
         <span class="h-2.5 w-2.5 rounded-full bg-cyan-400 shrink-0"></span>
-        <span>${{ metrics()?.earnings_by_type?.['shop'] || '0.00' }} Tienda</span>
+        <span>${{ metrics()?.earnings_by_type?.['shop'] || '0.00' }} {{ t().dashboard.shopCount }}</span>
       </span>
       <span class="inline-flex items-center gap-2">
         <span class="h-2.5 w-2.5 rounded-full bg-indigo-400 shrink-0"></span>
-        <span>${{ metrics()?.earnings_by_type?.['bookings'] || '0.00' }} Asesorías</span>
+        <span>${{ metrics()?.earnings_by_type?.['bookings'] || '0.00' }} {{ t().dashboard.consultingCount }}</span>
       </span>
     </div>
   </div>
@@ -80,15 +80,15 @@
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
       </svg>
     </div>
-    <h3 class="font-display text-base font-black text-gray-950 dark:text-white">¡Tu primer seguidor está más cerca de lo que crees!</h3>
+    <h3 class="font-display text-base font-black text-gray-950 dark:text-white">{{ t().dashboard.firstSupporterTitle }}</h3>
     <p class="text-xs text-gray-500 dark:text-gray-400 max-w-sm mx-auto mt-1.5 leading-relaxed font-medium">
-      Comparte tu página en tus redes sociales o en la biografía de tu gimnasio para que tus fans empiecen a apoyarte.
+      {{ t().dashboard.firstSupporterDesc }}
     </p>
   </div>
 
   <!-- Sección: More ways to earn -->
   <div>
-    <h2 class="font-display text-base font-black text-gray-950 dark:text-white mb-4">Más formas de monetizar</h2>
+    <h2 class="font-display text-base font-black text-gray-950 dark:text-white mb-4">{{ t().dashboard.moreWaysToEarn }}</h2>
     
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-5">
       
@@ -100,9 +100,9 @@
               <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"/>
             </svg>
           </div>
-          <h3 class="font-display font-black text-gray-900 dark:text-white text-sm group-hover:text-emerald-600 dark:group-hover:text-[#c9ff3d] transition">Membresías</h3>
+          <h3 class="font-display font-black text-gray-900 dark:text-white text-sm group-hover:text-emerald-600 dark:group-hover:text-[#c9ff3d] transition">{{ t().dashboard.membershipsCount }}</h3>
           <p class="mt-2 text-xs text-gray-500 dark:text-gray-400 leading-relaxed font-medium">
-            Suscripciones mensuales para tu comunidad fitness más comprometida.
+            {{ t().dashboard.membershipCardDesc }}
           </p>
         </div>
       </a>
@@ -115,9 +115,9 @@
               <path fill-rule="evenodd" d="M10 2a4 4 0 00-4 4v1H5a1 1 0 00-.994.89l-1 9A1 1 0 004 18h12a1 1 0 00.994-1.11l-1-9A1 1 0 0015 7h-1V6a4 4 0 00-4-4zm2 5V6a2 2 0 10-4 0v1h4zm-6 3a1 1 0 112 0 1 1 0 01-2 0zm7-1a1 1 0 100 2 1 1 0 000-2z" clip-rule="evenodd"/>
             </svg>
           </div>
-          <h3 class="font-display font-black text-gray-900 dark:text-white text-sm group-hover:text-emerald-600 dark:group-hover:text-[#c9ff3d] transition">Tienda Fitness</h3>
+          <h3 class="font-display font-black text-gray-900 dark:text-white text-sm group-hover:text-emerald-600 dark:group-hover:text-[#c9ff3d] transition">{{ t().dashboard.shopCardTitle }}</h3>
           <p class="mt-2 text-xs text-gray-500 dark:text-gray-400 leading-relaxed font-medium">
-            Vende rutinas en PDF, guías nutricionales y plantillas de levantamientos.
+            {{ t().dashboard.shopCardDesc }}
           </p>
         </div>
       </a>
@@ -130,9 +130,9 @@
               <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a1 1 0 110 2h-3a1 1 0 01-1-1v-2a1 1 0 00-1-1H9a1 1 0 00-1 1v2a1 1 0 01-1 1H4a1 1 0 110-2V4zm3 1h2v2H7V5zm4 0h2v2h-2V5zM7 9h2v2H7V9zm4 0h2v2h-2V9z" clip-rule="evenodd"/>
             </svg>
           </div>
-          <h3 class="font-display font-black text-gray-900 dark:text-white text-sm group-hover:text-emerald-600 dark:group-hover:text-[#c9ff3d] transition">Posts Exclusivos</h3>
+          <h3 class="font-display font-black text-gray-900 dark:text-white text-sm group-hover:text-emerald-600 dark:group-hover:text-[#c9ff3d] transition">{{ t().dashboard.exclusivePostsTitle }}</h3>
           <p class="mt-2 text-xs text-gray-500 dark:text-gray-400 leading-relaxed font-medium">
-            Publica tus videos y artículos de entrenamiento solo para miembros activos.
+            {{ t().dashboard.exclusivePostsDesc }}
           </p>
         </div>
       </a>

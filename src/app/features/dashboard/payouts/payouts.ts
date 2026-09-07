@@ -2,6 +2,7 @@ import { Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { PaymentService } from '../../../core/payment.service';
+import { LanguageService } from '../../../core/language.service';
 
 interface WithdrawalItem {
   id: number;
@@ -23,6 +24,8 @@ interface WithdrawalItem {
 })
 export class DashboardPayouts implements OnInit {
   private readonly paymentService = inject(PaymentService);
+  readonly languageService = inject(LanguageService);
+  readonly t = this.languageService.currentTranslations;
 
   readonly stripeConnected = signal(false);
   readonly detailsSubmitted = signal(false);
@@ -119,15 +122,24 @@ export class DashboardPayouts implements OnInit {
     this.withdrawError.set(null);
   }
 
+  formatRequestedDate(dateStr: string): string {
+    const d = new Date(dateStr);
+    if (Number.isNaN(d.getTime())) return dateStr;
+    const locale = this.languageService.currentLang() === 'en' ? 'en-US' : 'es-MX';
+    return d.toLocaleDateString(locale, { day: 'numeric', month: 'short', year: 'numeric' });
+  }
+
   submitWithdrawal(): void {
     const amount = Number(this.withdrawAmount());
     if (!amount || amount < 10) {
-      this.withdrawError.set('El monto mínimo para retirar es de $10.00 USD.');
+      this.withdrawError.set(this.t().dashboard.payoutsView.minAmountError);
       return;
     }
 
     if (amount > this.availableBalance()) {
-      this.withdrawError.set(`Fondos insuficientes. Tu balance disponible es de $${this.availableBalance().toFixed(2)} USD.`);
+      this.withdrawError.set(
+        this.t().dashboard.payoutsView.insufficientFundsError.replace('{balance}', this.availableBalance().toFixed(2))
+      );
       return;
     }
 
@@ -137,7 +149,7 @@ export class DashboardPayouts implements OnInit {
     this.paymentService.requestWithdrawal(amount, this.selectedCountry()).subscribe({
       next: () => {
         this.requestingWithdrawal.set(false);
-        this.withdrawSuccess.set('¡Solicitud de retiro enviada con éxito! Está en revisión.');
+        this.withdrawSuccess.set(this.t().dashboard.payoutsView.withdrawSuccessMsg);
         setTimeout(() => {
           this.closeWithdrawModal();
           this.refreshAll();
@@ -145,7 +157,7 @@ export class DashboardPayouts implements OnInit {
       },
       error: (err) => {
         this.requestingWithdrawal.set(false);
-        const msg = err?.error?.detail || 'Ocurrió un error al procesar tu solicitud.';
+        const msg = err?.error?.detail || this.t().dashboard.payoutsView.genericError;
         this.withdrawError.set(msg);
       },
     });

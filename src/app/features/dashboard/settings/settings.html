@@ -1,8 +1,8 @@
 <div class="space-y-6">
 
   <div>
-    <h1 class="text-2xl font-black text-gray-950 dark:text-white tracking-tight">Ajustes & Perfil</h1>
-    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Administra tu información pública de atleta, meta deportiva y métodos de pago.</p>
+    <h1 class="text-2xl font-black text-gray-950 dark:text-white tracking-tight">{{ t().dashboard.settingsTitle }}</h1>
+    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">{{ t().dashboard.settingsView.headerSubtitle }}</p>
   </div>
 
   <!-- Tabs -->
@@ -13,7 +13,7 @@
       class="pb-3 transition relative cursor-pointer"
       [class]="activeTab() === 'profile' ? 'text-gray-950 dark:text-[#c9ff3d] border-b-2 border-gray-950 dark:border-[#c9ff3d] -mb-px' : 'text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'"
     >
-      Perfil de Atleta
+      {{ t().dashboard.settingsView.tabProfile }}
     </button>
     <button
       type="button"
@@ -21,7 +21,7 @@
       class="pb-3 transition relative cursor-pointer"
       [class]="activeTab() === 'goals' ? 'text-gray-950 dark:text-[#c9ff3d] border-b-2 border-gray-950 dark:border-[#c9ff3d] -mb-px' : 'text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'"
     >
-      Meta Deportiva
+      {{ t().dashboard.settingsView.tabGoal }}
     </button>
     <button
       type="button"
@@ -29,7 +29,7 @@
       class="pb-3 transition relative cursor-pointer"
       [class]="activeTab() === 'settings' ? 'text-gray-950 dark:text-[#c9ff3d] border-b-2 border-gray-950 dark:border-[#c9ff3d] -mb-px' : 'text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'"
     >
-      Moneda & Precios
+      {{ t().dashboard.settingsView.tabCurrency }}
     </button>
   </div>
 
@@ -56,16 +56,16 @@
               </div>
             }
             <label class="absolute inset-0 bg-black/50 text-white rounded-full flex items-center justify-center text-[10px] font-bold opacity-0 group-hover:opacity-100 transition cursor-pointer">
-              {{ uploadingAvatar() ? 'Subiendo...' : 'Cambiar' }}
+              {{ uploadingAvatar() ? t().dashboard.settingsView.uploading : t().dashboard.settingsView.changeBtn }}
               <input type="file" accept="image/*" class="hidden" (change)="onAvatarSelected($event)" [disabled]="uploadingAvatar()" />
             </label>
           </div>
 
           <div>
-            <h3 class="text-sm font-black text-gray-900 dark:text-white">Foto de Perfil</h3>
-            <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Avatar circular para tu perfil y top de atletas.</p>
+            <h3 class="text-sm font-black text-gray-900 dark:text-white">{{ t().dashboard.settingsView.avatarTitle }}</h3>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{{ t().dashboard.settingsView.avatarDesc }}</p>
             <label class="mt-2 inline-block rounded-xl border border-gray-200 dark:border-white/10 px-3 py-1.5 text-xs font-bold text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-white/5 cursor-pointer transition">
-              {{ uploadingAvatar() ? 'Subiendo...' : 'Subir foto' }}
+              {{ uploadingAvatar() ? t().dashboard.settingsView.uploading : t().dashboard.settingsView.uploadAvatarBtn }}
               <input type="file" accept="image/*" class="hidden" (change)="onAvatarSelected($event)" [disabled]="uploadingAvatar()" />
             </label>
           </div>
@@ -84,16 +84,16 @@
               </div>
             }
             <label class="absolute inset-0 bg-black/50 text-white flex items-center justify-center text-[10px] font-bold opacity-0 group-hover:opacity-100 transition cursor-pointer">
-              {{ uploadingCover() ? 'Subiendo...' : 'Cambiar' }}
+              {{ uploadingCover() ? t().dashboard.settingsView.uploading : t().dashboard.settingsView.changeBtn }}
               <input type="file" accept="image/*" class="hidden" (change)="onCoverSelected($event)" [disabled]="uploadingCover()" />
             </label>
           </div>
 
           <div>
-            <h3 class="text-sm font-black text-gray-900 dark:text-white">Portada de Perfil</h3>
-            <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Banner principal del Hero en tu perfil público.</p>
+            <h3 class="text-sm font-black text-gray-900 dark:text-white">{{ t().dashboard.settingsView.coverTitle }}</h3>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{{ t().dashboard.settingsView.coverDesc }}</p>
             <label class="mt-2 inline-block rounded-xl border border-gray-200 dark:border-white/10 px-3 py-1.5 text-xs font-bold text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-white/5 cursor-pointer transition">
-              {{ uploadingCover() ? 'Subiendo...' : 'Subir portada' }}
+              {{ uploadingCover() ? t().dashboard.settingsView.uploading : t().dashboard.settingsView.uploadCoverBtn }}
               <input type="file" accept="image/*" class="hidden" (change)="onCoverSelected($event)" [disabled]="uploadingCover()" />
             </label>
           </div>
@@ -102,7 +102,7 @@
 
       <!-- Nombre Completo -->
       <div>
-        <label class="block text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 mb-1">Nombre Público</label>
+        <label class="block text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 mb-1">{{ t().dashboard.settingsView.fullNameLabel }}</label>
         <input
           type="text"
           class="w-full rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#191c1d] px-4 py-3 text-sm font-semibold text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:border-black dark:focus:border-[#c9ff3d] focus:outline-none"
@@ -113,10 +113,10 @@
 
       <!-- Biografía -->
       <div>
-        <label class="block text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 mb-1">Biografía Deportiva</label>
+        <label class="block text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 mb-1">{{ t().dashboard.settingsView.bioLabel }}</label>
         <textarea
           rows="3"
-          placeholder="Cuéntale a tu comunidad sobre tus entrenamientos, metas y trayectoria..."
+          [placeholder]="t().dashboard.settingsView.bioPlaceholder"
           class="w-full rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#191c1d] px-4 py-3 text-sm font-medium text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:border-black dark:focus:border-[#c9ff3d] focus:outline-none"
           [value]="bio()"
           (input)="bio.set($any($event.target).value)"
@@ -126,10 +126,10 @@
       <!-- Ciudad & Deporte -->
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
-          <label class="block text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 mb-1">Ciudad / País</label>
+          <label class="block text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 mb-1">{{ t().dashboard.settingsView.cityLabel }}</label>
           <input
             type="text"
-            placeholder="Ej. CDMX, México"
+            [placeholder]="t().dashboard.settingsView.cityPlaceholder"
             class="w-full rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#191c1d] px-4 py-3 text-sm font-semibold text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:border-black dark:focus:border-[#c9ff3d] focus:outline-none"
             [value]="city()"
             (input)="city.set($any($event.target).value)"
@@ -137,14 +137,14 @@
         </div>
 
         <div>
-          <label class="block text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 mb-1">Disciplina Principal</label>
+          <label class="block text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 mb-1">{{ t().dashboard.settingsView.disciplineLabel }}</label>
           <select
             class="w-full rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#191c1d] px-4 py-3 text-sm font-semibold text-gray-900 dark:text-white focus:border-black dark:focus:border-[#c9ff3d] focus:outline-none"
             [value]="primarySportCode()"
             (change)="primarySportCode.set(+$any($event.target).value)"
           >
             @for (sport of sports(); track sport.code) {
-              <option [value]="sport.code">{{ sport.label }}</option>
+              <option [value]="sport.code">{{ languageService.translateDiscipline(sport.label) }}</option>
             }
           </select>
         </div>
@@ -153,13 +153,13 @@
       <!-- Redes sociales -->
       <div class="pt-2 border-t border-gray-100 dark:border-white/10 space-y-4">
         <div>
-          <h3 class="text-sm font-black text-gray-900 dark:text-white">Redes sociales</h3>
-          <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Se muestran como iconos en tu página pública. Déjalas vacías si no quieres mostrarlas.</p>
+          <h3 class="text-sm font-black text-gray-900 dark:text-white">{{ t().dashboard.settingsView.socialTitle }}</h3>
+          <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{{ t().dashboard.settingsView.socialSubtitle }}</p>
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label class="block text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 mb-1">Instagram</label>
+            <label class="block text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 mb-1">{{ t().dashboard.settingsView.instagramLabel }}</label>
             <input
               type="url"
               placeholder="https://instagram.com/tu_usuario"
@@ -169,7 +169,7 @@
             />
           </div>
           <div>
-            <label class="block text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 mb-1">TikTok</label>
+            <label class="block text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 mb-1">{{ t().dashboard.settingsView.tiktokLabel }}</label>
             <input
               type="url"
               placeholder="https://tiktok.com/@tu_usuario"
@@ -179,7 +179,7 @@
             />
           </div>
           <div>
-            <label class="block text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 mb-1">Facebook</label>
+            <label class="block text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 mb-1">{{ t().dashboard.settingsView.facebookLabel }}</label>
             <input
               type="url"
               placeholder="https://facebook.com/tu_pagina"
@@ -189,7 +189,7 @@
             />
           </div>
           <div>
-            <label class="block text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 mb-1">Twitter / X</label>
+            <label class="block text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 mb-1">{{ t().dashboard.settingsView.twitterLabel }}</label>
             <input
               type="url"
               placeholder="https://x.com/tu_usuario"
@@ -209,7 +209,7 @@
           [disabled]="loading()"
           class="rounded-full bg-gray-950 dark:bg-[#c9ff3d] hover:opacity-90 text-white dark:text-gray-950 px-8 py-3 text-xs font-bold transition shadow-xs disabled:opacity-50"
         >
-          {{ saved() ? '¡Cambios guardados!' : 'Guardar Perfil' }}
+          {{ saved() ? t().dashboard.settingsView.savedSuccess : t().dashboard.settingsView.saveProfileBtn }}
         </button>
       </div>
 
@@ -223,7 +223,7 @@
       @if (activeGoal()) {
         <div class="p-6 rounded-2xl bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/40 space-y-3">
           <div class="flex items-center justify-between">
-            <span class="text-[10px] font-black uppercase text-amber-800 dark:text-[#c9ff3d] tracking-wider">Meta Activa</span>
+            <span class="text-[10px] font-black uppercase text-amber-800 dark:text-[#c9ff3d] tracking-wider">{{ t().dashboard.settingsView.activeGoalBadge }}</span>
             <span class="text-xs font-bold text-amber-900 dark:text-amber-200">
               ${{ activeGoal()?.raised }} / ${{ activeGoal()?.target }} USD
             </span>
@@ -241,15 +241,15 @@
       }
 
       <div>
-        <h2 class="text-base font-black text-gray-900 dark:text-white">Establecer Nueva Meta</h2>
-        <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Tus seguidores verán esta meta en tu perfil y cada shake aportará a alcanzarla.</p>
+        <h2 class="text-base font-black text-gray-900 dark:text-white">{{ t().dashboard.settingsView.newGoalTitle }}</h2>
+        <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{{ t().dashboard.settingsView.newGoalDesc }}</p>
       </div>
 
       <div>
-        <label class="block text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 mb-1">Título de la Meta</label>
+        <label class="block text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 mb-1">{{ t().dashboard.settingsView.goalTitleLabel }}</label>
         <input
           type="text"
-          placeholder="Ej. Campeonato Panamericano 2026 en Brasil"
+          [placeholder]="t().dashboard.settingsView.goalTitlePlaceholder"
           class="w-full rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#191c1d] px-4 py-3 text-sm font-semibold text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:border-black dark:focus:border-[#c9ff3d] focus:outline-none"
           [value]="goalTitle()"
           (input)="goalTitle.set($any($event.target).value)"
@@ -257,7 +257,7 @@
       </div>
 
       <div>
-        <label class="block text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 mb-1">Monto Objetivo (USD)</label>
+        <label class="block text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 mb-1">{{ t().dashboard.settingsView.goalTargetLabel }}</label>
         <input
           type="number"
           min="10"
@@ -274,7 +274,7 @@
           (click)="saveGoal()"
           class="rounded-full bg-gray-950 dark:bg-[#c9ff3d] hover:opacity-90 text-white dark:text-gray-950 px-8 py-3 text-xs font-bold transition shadow-xs"
         >
-          {{ goalSaved() ? '¡Meta activada!' : 'Activar Meta' }}
+          {{ goalSaved() ? t().dashboard.settingsView.goalSavedSuccess : t().dashboard.settingsView.activateGoalBtn }}
         </button>
       </div>
 
@@ -287,8 +287,8 @@
 
       <!-- Precio del Shake -->
       <div>
-        <label class="block text-sm font-black text-gray-900 dark:text-white">Precio de 1 Shake</label>
-        <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Monto base por cada shake que tus seguidores te inviten.</p>
+        <label class="block text-sm font-black text-gray-900 dark:text-white">{{ t().dashboard.settingsView.shakePriceTitle }}</label>
+        <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{{ t().dashboard.settingsView.shakePriceDesc }}</p>
 
         <div class="mt-3 flex items-center gap-3">
           <span class="text-lg font-black text-gray-900 dark:text-white">$</span>
@@ -308,8 +308,8 @@
 
       <!-- Moneda -->
       <div>
-        <label class="block text-sm font-black text-gray-900 dark:text-white">Moneda de Cobro</label>
-        <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Moneda principal en la que tus fans verán los precios.</p>
+        <label class="block text-sm font-black text-gray-900 dark:text-white">{{ t().dashboard.settingsView.currencyTitle }}</label>
+        <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{{ t().dashboard.settingsView.currencyDesc }}</p>
 
         <div class="mt-3">
           <select
@@ -317,7 +317,7 @@
             [value]="currency()"
             (change)="currency.set($any($event.target).value)"
           >
-            <option value="USD">Dólares Americanos (USD - $)</option>
+            <option value="USD">{{ t().dashboard.settingsView.usdOption }}</option>
           </select>
         </div>
       </div>
@@ -330,7 +330,7 @@
           [disabled]="loading()"
           class="rounded-full bg-gray-950 dark:bg-[#c9ff3d] hover:opacity-90 text-white dark:text-gray-950 px-8 py-3 text-xs font-bold transition shadow-xs disabled:opacity-50"
         >
-          {{ saved() ? '¡Ajustes guardados!' : 'Guardar Ajustes' }}
+          {{ saved() ? t().dashboard.settingsView.settingsSavedSuccess : t().dashboard.settingsView.saveSettingsBtn }}
         </button>
       </div>
 

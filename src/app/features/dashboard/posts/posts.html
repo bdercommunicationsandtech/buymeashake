@@ -1,19 +1,19 @@
 <div class="space-y-6 max-w-4xl">
   <div class="flex items-center justify-between">
     <div>
-      <h1 class="text-2xl font-black text-gray-950 dark:text-white tracking-tight">Publicaciones (Posts)</h1>
-      <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Comparte rutinas, artículos técnicos, fotos de entrenamientos o anuncios con tu comunidad.</p>
+      <h1 class="text-2xl font-black text-gray-950 dark:text-white tracking-tight">{{ t().dashboard.posts }}</h1>
+      <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">{{ t().dashboard.postsView.subtitle }}</p>
     </div>
     <a
       routerLink="/dashboard/posts/new"
       class="rounded-full bg-gray-950 dark:bg-[#c9ff3d] text-white dark:text-gray-950 px-5 py-2.5 text-xs font-black hover:opacity-90 transition flex items-center gap-1.5 shadow-sm cursor-pointer"
     >
-      <span>+ Crear publicación</span>
+      <span>+ {{ t().dashboard.newPost }}</span>
     </a>
   </div>
 
   @if (loading()) {
-    <p class="text-xs text-gray-500 dark:text-gray-400">Cargando publicaciones…</p>
+    <p class="text-xs text-gray-500 dark:text-gray-400">{{ t().common.loading }}</p>
   }
 
   @if (errorMessage()) {
@@ -38,7 +38,7 @@
               @if (post.is_members_only) {
                 <app-icon-lock size="11" />
               }
-              <span>{{ post.is_members_only ? 'Exclusivo Miembros' : 'Público' }}</span>
+              <span>{{ post.is_members_only ? t().post.membersOnly : t().post.public }}</span>
             </span>
             <span class="text-xs text-gray-400 font-medium">{{ formatDate(post.published_at) }}</span>
           </div>
@@ -52,7 +52,7 @@
             <span>{{ post.likes_count }}</span>
           </span>
           <button type="button" class="text-xs font-bold text-gray-700 dark:text-gray-300 hover:text-black dark:hover:text-white border border-gray-200 dark:border-white/10 rounded-xl px-3 py-1.5 transition cursor-pointer">
-            Editar
+            {{ t().dashboard.postsView.edit }}
           </button>
         </div>
       </article>
@@ -64,37 +64,37 @@
     <div class="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
       <div class="bg-white dark:bg-[#121614] rounded-3xl p-8 max-w-md w-full shadow-2xl relative animate-in fade-in zoom-in-95 duration-150 border border-gray-200 dark:border-white/10">
         <div class="flex items-center justify-between mb-6">
-          <h3 class="text-lg font-black text-gray-900">Choose to create</h3>
-          <button (click)="closeCreate()" class="text-gray-400 hover:text-gray-900 text-lg font-bold">✕</button>
+          <h3 class="text-lg font-black text-gray-900 dark:text-white">{{ t().dashboard.postsView.chooseToCreate }}</h3>
+          <button (click)="closeCreate()" class="text-gray-400 hover:text-gray-900 dark:hover:text-white text-lg font-bold">✕</button>
         </div>
 
         <div class="grid grid-cols-2 gap-4">
-          <button class="p-6 rounded-2xl border border-gray-200 hover:border-black hover:bg-gray-50 transition text-center flex flex-col items-center gap-2 group">
-            <svg class="w-7 h-7 text-gray-700 group-hover:text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <button class="p-6 rounded-2xl border border-gray-200 dark:border-white/10 hover:border-black dark:hover:border-white hover:bg-gray-50 dark:hover:bg-white/5 transition text-center flex flex-col items-center gap-2 group">
+            <svg class="w-7 h-7 text-gray-700 dark:text-gray-300 group-hover:text-black dark:group-hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
             </svg>
-            <span class="text-xs font-black text-gray-900">Post</span>
+            <span class="text-xs font-black text-gray-900 dark:text-white">{{ t().dashboard.postsView.postTypePost }}</span>
           </button>
 
-          <button class="p-6 rounded-2xl border border-gray-200 hover:border-black hover:bg-gray-50 transition text-center flex flex-col items-center gap-2 group">
-            <svg class="w-7 h-7 text-gray-700 group-hover:text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <button class="p-6 rounded-2xl border border-gray-200 dark:border-white/10 hover:border-black dark:hover:border-white hover:bg-gray-50 dark:hover:bg-white/5 transition text-center flex flex-col items-center gap-2 group">
+            <svg class="w-7 h-7 text-gray-700 dark:text-gray-300 group-hover:text-black dark:group-hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
             </svg>
-            <span class="text-xs font-black text-gray-900">Gallery</span>
+            <span class="text-xs font-black text-gray-900 dark:text-white">{{ t().dashboard.postsView.postTypeGallery }}</span>
           </button>
 
-          <button class="p-6 rounded-2xl border border-gray-200 hover:border-black hover:bg-gray-50 transition text-center flex flex-col items-center gap-2 group">
-            <svg class="w-7 h-7 text-gray-700 group-hover:text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <button class="p-6 rounded-2xl border border-gray-200 dark:border-white/10 hover:border-black dark:hover:border-white hover:bg-gray-50 dark:hover:bg-white/5 transition text-center flex flex-col items-center gap-2 group">
+            <svg class="w-7 h-7 text-gray-700 dark:text-gray-300 group-hover:text-black dark:group-hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 100-6 3 3 0 000 6z"/>
             </svg>
-            <span class="text-xs font-black text-gray-900">Audio / Workout</span>
+            <span class="text-xs font-black text-gray-900 dark:text-white">{{ t().dashboard.postsView.postTypeAudio }}</span>
           </button>
 
-          <button class="p-6 rounded-2xl border border-gray-200 hover:border-black hover:bg-gray-50 transition text-center flex flex-col items-center gap-2 group">
-            <svg class="w-7 h-7 text-gray-700 group-hover:text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <button class="p-6 rounded-2xl border border-gray-200 dark:border-white/10 hover:border-black dark:hover:border-white hover:bg-gray-50 dark:hover:bg-white/5 transition text-center flex flex-col items-center gap-2 group">
+            <svg class="w-7 h-7 text-gray-700 dark:text-gray-300 group-hover:text-black dark:group-hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
             </svg>
-            <span class="text-xs font-black text-gray-900">Shop</span>
+            <span class="text-xs font-black text-gray-900 dark:text-white">{{ t().dashboard.postsView.postTypeShop }}</span>
           </button>
         </div>
       </div>

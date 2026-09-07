@@ -1,10 +1,11 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/auth.service';
 import { DashboardService } from '../../../core/dashboard.service';
 import { AthleteProfileFull, DashboardMetrics } from '../../../core/api.models';
 import { ShareQrModalComponent } from '../../../shared/share-qr-modal/share-qr-modal.component';
+import { LanguageService } from '../../../core/language.service';
 
 @Component({
   selector: 'app-dashboard-home',
@@ -19,12 +20,14 @@ import { ShareQrModalComponent } from '../../../shared/share-qr-modal/share-qr-m
 export class DashboardHome implements OnInit {
   private readonly dashboardService = inject(DashboardService);
   private readonly authService = inject(AuthService);
+  readonly languageService = inject(LanguageService);
+  readonly t = this.languageService.currentTranslations;
 
   readonly profile = signal<AthleteProfileFull | null>(null);
   readonly metrics = signal<DashboardMetrics | null>(null);
   readonly loading = signal(true);
 
-  readonly timeRange = signal('Últimos 30 días');
+  readonly timeRange = computed(() => this.t().dashboard.last30Days);
   readonly shareModalOpen = signal(false);
 
   ngOnInit(): void {

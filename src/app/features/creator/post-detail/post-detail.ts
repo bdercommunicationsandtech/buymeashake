@@ -5,6 +5,7 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { ExploreService } from '../../../core/explore.service';
 import { PostItemDto } from '../../../core/api.models';
+import { LanguageService } from '../../../core/language.service';
 
 function extractFirstImageUrl(content: string): string | null {
   const htmlMatch = content.match(/<img[^>]+src=["']([^"']+)["']/i);
@@ -52,6 +53,8 @@ export class PostDetail implements OnDestroy {
   private readonly route = inject(ActivatedRoute);
   private readonly exploreService = inject(ExploreService);
   private readonly sanitizer = inject(DomSanitizer);
+  readonly i18n = inject(LanguageService);
+  readonly t = this.i18n.t;
   private readonly paramsSub: Subscription;
 
   readonly loading = signal(true);
@@ -77,7 +80,8 @@ export class PostDetail implements OnDestroy {
     if (!p?.published_at) return '';
     const date = new Date(p.published_at);
     if (Number.isNaN(date.getTime())) return p.published_at;
-    return date.toLocaleDateString('es-MX', {
+    const locale = this.i18n.lang() === 'es' ? 'es-MX' : 'en-US';
+    return date.toLocaleDateString(locale, {
       day: 'numeric',
       month: 'long',
       year: 'numeric',
@@ -85,7 +89,7 @@ export class PostDetail implements OnDestroy {
   });
 
   readonly authorName = computed(
-    () => this.post()?.author_name || this.handle() || 'Atleta',
+    () => this.post()?.author_name || this.handle() || this.t().athlete.athleteRole,
   );
 
   constructor() {

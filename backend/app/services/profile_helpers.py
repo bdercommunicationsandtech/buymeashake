@@ -122,13 +122,13 @@ async def resolve_sport_item_id(session: AsyncSession, sport_code: int | None) -
 
 async def ensure_child_rows(session: AsyncSession, athlete: AthleteProfile, *, referral_code: str, referred_by_id: int | None = None) -> None:
     """Create default child rows for a new athlete profile."""
-    if not athlete.page_settings:
+    if not await session.get(AthletePageSettings, athlete.id):
         session.add(AthletePageSettings(athlete_id=athlete.id))
-    if not athlete.monetization:
+    if not await session.get(AthleteMonetization, athlete.id):
         session.add(AthleteMonetization(athlete_id=athlete.id, shake_price=Decimal("3.00"), currency="USD"))
-    if not athlete.payouts:
+    if not await session.get(AthletePayouts, athlete.id):
         session.add(AthletePayouts(athlete_id=athlete.id, payouts_enabled=False))
-    if not athlete.referrals:
+    if not await session.get(AthleteReferrals, athlete.id):
         session.add(
             AthleteReferrals(
                 athlete_id=athlete.id,

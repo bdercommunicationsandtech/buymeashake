@@ -5,6 +5,7 @@ import { Router, RouterLink } from '@angular/router';
 import { DashboardService } from '../../core/dashboard.service';
 import { LookupService } from '../../core/lookup.service';
 import { LookupItemDto } from '../../core/api.models';
+import { LanguageService } from '../../core/language.service';
 
 @Component({
   selector: 'app-onboarding',
@@ -16,6 +17,8 @@ export class Onboarding implements OnInit {
   private readonly dashboardService = inject(DashboardService);
   private readonly lookupService = inject(LookupService);
   private readonly router = inject(Router);
+  readonly languageService = inject(LanguageService);
+  readonly t = this.languageService.currentTranslations;
 
   readonly loading = signal(true);
   readonly saving = signal(false);
@@ -68,7 +71,7 @@ export class Onboarding implements OnInit {
         },
         error: () => {
           this.saving.set(false);
-          this.errorMessage.set('No se pudo guardar el perfil. Intenta de nuevo.');
+          this.errorMessage.set(this.t().onboarding.errorMessage);
         },
       });
   }

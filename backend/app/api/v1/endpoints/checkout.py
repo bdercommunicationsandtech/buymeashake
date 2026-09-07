@@ -71,6 +71,7 @@ async def create_stripe_checkout_session(
         supporter_message=dto.shake_details.supporter_message,
         is_anonymous=dto.shake_details.is_anonymous,
         supporter_user=user,
+        recurring=dto.recurring,
     )
     # Persistir tx pendiente ANTES de devolver la URL de Stripe
     await session.commit()

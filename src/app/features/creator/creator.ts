@@ -829,6 +829,7 @@ export class Creator {
           supporter_message: this.message(),
           is_anonymous: this.isAnonymous(),
         },
+        recurring: this.supportMode() === 'recurring',
       })
       .subscribe({
         next: (sessionRes) => {

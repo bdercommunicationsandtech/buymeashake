@@ -123,16 +123,14 @@
         ></textarea>
       </div>
 
-      <!-- Ciudad & Deporte -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <!-- Ubicación & Deporte -->
+      <div class="space-y-4">
         <div>
-          <label class="block text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 mb-1">{{ t().dashboard.settingsView.cityLabel }}</label>
-          <input
-            type="text"
-            [placeholder]="t().dashboard.settingsView.cityPlaceholder"
-            class="w-full rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#191c1d] px-4 py-3 text-sm font-semibold text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:border-black dark:focus:border-[#c9ff3d] focus:outline-none"
-            [value]="city()"
-            (input)="city.set($any($event.target).value)"
+          <label class="block text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 mb-2">{{ t().dashboard.settingsView.cityLabel }}</label>
+          <app-location-picker
+            [initialCityId]="cityId()"
+            (cityIdChange)="cityId.set($event)"
+            (labelChange)="city.set($event || '')"
           />
         </div>
 

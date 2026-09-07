@@ -58,6 +58,77 @@ CREATE TABLE app_versions (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ==============================================================================
+-- MÓDULO 0b: CATÁLOGO GEO (countries / states / cities) — sin currency
+-- ==============================================================================
+
+DROP TABLE IF EXISTS cities;
+DROP TABLE IF EXISTS states;
+DROP TABLE IF EXISTS countries;
+
+CREATE TABLE countries (
+    id MEDIUMINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    iso3 CHAR(3) NULL,
+    numeric_code CHAR(3) NULL,
+    iso2 CHAR(2) NULL,
+    phonecode VARCHAR(255) NULL,
+    capital VARCHAR(255) NULL,
+    tld VARCHAR(255) NULL,
+    native VARCHAR(255) NULL,
+    nationality VARCHAR(255) NULL,
+    latitude DECIMAL(10,8) NULL,
+    longitude DECIMAL(11,8) NULL,
+    emoji VARCHAR(191) NULL,
+    flag TINYINT(1) NOT NULL DEFAULT 1,
+    wikiDataId VARCHAR(255) NULL,
+    created_at TIMESTAMP NULL DEFAULT NULL,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_countries_iso2 (iso2),
+    INDEX idx_countries_name (name)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE states (
+    id MEDIUMINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    country_id MEDIUMINT UNSIGNED NOT NULL,
+    country_code CHAR(2) NOT NULL,
+    iso2 VARCHAR(255) NULL,
+    type VARCHAR(191) NULL,
+    latitude DECIMAL(10,8) NULL,
+    longitude DECIMAL(11,8) NULL,
+    flag TINYINT(1) NOT NULL DEFAULT 1,
+    wikiDataId VARCHAR(255) NULL,
+    created_at TIMESTAMP NULL DEFAULT NULL,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (country_id) REFERENCES countries(id),
+    INDEX idx_states_country_id (country_id),
+    INDEX idx_states_country_code (country_code),
+    INDEX idx_states_name (name)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE cities (
+    id MEDIUMINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    state_id MEDIUMINT UNSIGNED NOT NULL,
+    state_code VARCHAR(255) NOT NULL,
+    country_id MEDIUMINT UNSIGNED NOT NULL,
+    country_code CHAR(2) NOT NULL,
+    latitude DECIMAL(10,8) NOT NULL,
+    longitude DECIMAL(11,8) NOT NULL,
+    flag TINYINT(1) NOT NULL DEFAULT 1,
+    wikiDataId VARCHAR(255) NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT '2014-01-01 06:31:01',
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (state_id) REFERENCES states(id),
+    FOREIGN KEY (country_id) REFERENCES countries(id),
+    INDEX idx_cities_state_id (state_id),
+    INDEX idx_cities_country_id (country_id),
+    INDEX idx_cities_country_code (country_code),
+    INDEX idx_cities_state_name (state_id, name),
+    INDEX idx_cities_country_name (country_id, name)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ==============================================================================
 -- MÓDULO 1: USUARIOS Y PERFILES DE ATLETAS (NORMALIZADO)
 -- ==============================================================================
 
@@ -65,7 +136,8 @@ DROP TABLE IF EXISTS users;
 CREATE TABLE users (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     email VARCHAR(191) NOT NULL UNIQUE,
-    password_hash VARCHAR(255) NOT NULL,
+    firebase_uid VARCHAR(128) NULL UNIQUE,
+    password_hash VARCHAR(255) NULL,
     full_name VARCHAR(150) NOT NULL,
     avatar_url VARCHAR(255) NULL,
     role ENUM('supporter', 'athlete', 'admin') DEFAULT 'supporter',
@@ -81,7 +153,8 @@ CREATE TABLE athlete_profiles (
     user_id BIGINT UNSIGNED NOT NULL UNIQUE,
     handle VARCHAR(50) NOT NULL UNIQUE,
     bio TEXT NULL,
-    city VARCHAR(100) NULL,
+    city VARCHAR(255) NULL,
+    city_id MEDIUMINT UNSIGNED NULL,
     primary_sport_item_id BIGINT UNSIGNED NULL,
     is_verified BOOLEAN DEFAULT FALSE,
     is_nsfw BOOLEAN DEFAULT FALSE,
@@ -89,8 +162,10 @@ CREATE TABLE athlete_profiles (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (primary_sport_item_id) REFERENCES lookup_items(id) ON DELETE SET NULL,
+    FOREIGN KEY (city_id) REFERENCES cities(id) ON DELETE SET NULL,
     INDEX idx_handle (handle),
-    INDEX idx_primary_sport_item (primary_sport_item_id)
+    INDEX idx_primary_sport_item (primary_sport_item_id),
+    INDEX idx_athlete_city_id (city_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 DROP TABLE IF EXISTS athlete_page_settings;

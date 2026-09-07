@@ -5,11 +5,12 @@ import { DashboardService } from '../../../core/dashboard.service';
 import { LookupService } from '../../../core/lookup.service';
 import { AthleteProfileFull, LookupItemDto } from '../../../core/api.models';
 import { LanguageService } from '../../../core/language.service';
+import { LocationPickerComponent } from '../../../shared/location-picker/location-picker.component';
 
 @Component({
   selector: 'app-dashboard-settings',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, LocationPickerComponent],
   templateUrl: './settings.html',
 })
 export class DashboardSettings implements OnInit {
@@ -32,10 +33,10 @@ export class DashboardSettings implements OnInit {
   readonly saved = signal(false);
   readonly errorMessage = signal<string | null>(null);
 
-  // Perfil & Ajustes
   readonly fullName = signal('');
   readonly bio = signal('');
   readonly city = signal('');
+  readonly cityId = signal<number | null>(null);
   readonly primarySportCode = signal<number>(101);
   readonly shakePrice = signal<number>(3);
   readonly currency = signal<'USD'>('USD');
@@ -48,7 +49,6 @@ export class DashboardSettings implements OnInit {
   readonly facebookUrl = signal('');
   readonly twitterUrl = signal('');
 
-  // Metas
   readonly goalTitle = signal('');
   readonly goalTarget = signal<number>(1000);
   readonly activeGoal = signal<{ title: string; target: number; raised: number } | null>(null);
@@ -71,6 +71,7 @@ export class DashboardSettings implements OnInit {
         this.fullName.set(p.full_name);
         this.bio.set(p.bio || '');
         this.city.set(p.city || '');
+        this.cityId.set(p.city_id ?? null);
         this.primarySportCode.set(p.primary_sport_code || 101);
         this.shakePrice.set(Number(p.shake_price) || 3);
         this.currency.set('USD');
@@ -156,7 +157,7 @@ export class DashboardSettings implements OnInit {
     this.dashboardService.updateProfile({
       full_name: this.fullName(),
       bio: this.bio(),
-      city: this.city(),
+      city_id: this.cityId(),
       primary_sport_code: this.primarySportCode(),
       shake_price: this.shakePrice(),
       currency: this.currency(),

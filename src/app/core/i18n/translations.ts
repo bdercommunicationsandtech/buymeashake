@@ -607,6 +607,16 @@ export interface TranslationSchema {
     loginGeneralError: string;
     sendOtpError: string;
     invalidOtpError: string;
+    socialRoleTitle: string;
+    socialRoleSubtitle: string;
+    socialRoleAthlete: string;
+    socialRoleAthleteHint: string;
+    socialRoleSupporter: string;
+    socialRoleSupporterHint: string;
+    socialRoleCancel: string;
+    socialLoginCancelled: string;
+    socialLoginNotConfigured: string;
+    socialLoginError: string;
     resendCode: string;
     resendCodeIn: string;
     resendCodePrompt: string;

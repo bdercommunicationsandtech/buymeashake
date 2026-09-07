@@ -3,7 +3,9 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/auth.service';
+import { FirebaseAuthService, SocialProvider } from '../../../core/firebase-auth.service';
 import { LanguageService } from '../../../core/language.service';
+import { FirebaseNeedsRoleDetails } from '../../../core/api.models';
 
 type ErrorDescriptor =
   | { type: 'userNotFound' }
@@ -28,6 +30,7 @@ type InfoKey = 'activeOtpNotice' | 'codeResentSuccess' | 'activeSessionRedirect'
 })
 export class Login implements OnInit, OnDestroy {
   private readonly auth = inject(AuthService);
+  private readonly firebaseAuth = inject(FirebaseAuthService);
   private readonly router = inject(Router);
   readonly i18n = inject(LanguageService);
   readonly t = this.i18n.t;
@@ -39,10 +42,14 @@ export class Login implements OnInit, OnDestroy {
   readonly loginMode = signal<'password' | 'otp'>('password');
   readonly otpStep = signal<'email' | 'verify'>('email');
   readonly loading = signal(false);
+  readonly socialLoading = signal<SocialProvider | null>(null);
   readonly errorState = signal<ErrorDescriptor | null>(null);
   readonly infoState = signal<InfoKey | null>(null);
   readonly resendCooldown = signal<number>(0);
-  private cooldownInterval: any = null;
+  private cooldownInterval: ReturnType<typeof setInterval> | null = null;
+
+  readonly pendingIdToken = signal<string | null>(null);
+  readonly needsRoleInfo = signal<FirebaseNeedsRoleDetails | null>(null);
 
   readonly errorMessage = computed<string | null>(() => {
     const err = this.errorState();
@@ -91,7 +98,7 @@ export class Login implements OnInit, OnDestroy {
   constructor() {
     effect(() => {
       const user = this.auth.currentUser();
-      if (this.auth.isAuthenticated() && user) {
+      if (this.auth.isAuthenticated() && user && !this.needsRoleInfo()) {
         this.infoState.set('activeSessionRedirect');
         void this.router.navigateByUrl(this.auth.getDefaultRoute());
       }
@@ -116,8 +123,8 @@ export class Login implements OnInit, OnDestroy {
     }
     this.cooldownInterval = setInterval(() => {
       if (this.resendCooldown() > 0) {
-        this.resendCooldown.update(v => v - 1);
-      } else {
+        this.resendCooldown.update((v) => v - 1);
+      } else if (this.cooldownInterval) {
         clearInterval(this.cooldownInterval);
       }
     }, 1000);
@@ -174,7 +181,6 @@ export class Login implements OnInit, OnDestroy {
       return;
     }
 
-    // Si ya hay un cooldown activo para este correo, avanzamos directo a ingresar el código
     if (this.resendCooldown() > 0) {
       this.otpStep.set('verify');
       this.infoState.set('activeOtpNotice');
@@ -200,9 +206,6 @@ export class Login implements OnInit, OnDestroy {
         const rawWait = err.error?.error?.details?.wait_seconds;
         const waitSeconds = Math.min(Math.max(1, rawWait || 60), 60);
 
-        // Transición inteligente: Si el servidor responde 429 / RATE_LIMIT_EXCEEDED,
-        // significa que ya hay un código activo generado recientemente.
-        // Avanzamos automáticamente al paso de verificación con el tiempo restante.
         if (err.status === 429 || err.error?.error?.code === 'RATE_LIMIT_EXCEEDED') {
           this.startResendCooldown(waitSeconds);
           this.otpStep.set('verify');
@@ -336,6 +339,93 @@ export class Login implements OnInit, OnDestroy {
     });
   }
 
+  async onSocialLogin(provider: SocialProvider): Promise<void> {
+    if (this.redirectIfAlreadyLoggedIn()) {
+      return;
+    }
+
+    this.errorState.set(null);
+    this.infoState.set(null);
+    this.socialLoading.set(provider);
+
+    try {
+      const idToken =
+        provider === 'google'
+          ? await this.firebaseAuth.signInWithGoogle()
+          : await this.firebaseAuth.signInWithApple();
+      this.exchangeFirebaseToken(idToken);
+    } catch (err) {
+      this.socialLoading.set(null);
+      this.errorState.set({ type: 'custom', message: this.mapSocialError(err) });
+    }
+  }
+
+  chooseRole(role: 'athlete' | 'supporter'): void {
+    const idToken = this.pendingIdToken();
+    if (!idToken) {
+      this.clearRolePrompt();
+      return;
+    }
+    this.exchangeFirebaseToken(idToken, role);
+  }
+
+  cancelRolePrompt(): void {
+    this.clearRolePrompt();
+    this.socialLoading.set(null);
+  }
+
+  private exchangeFirebaseToken(idToken: string, role?: 'athlete' | 'supporter'): void {
+    this.socialLoading.set(this.socialLoading() ?? 'google');
+    this.errorState.set(null);
+
+    this.auth.loginWithFirebase({ id_token: idToken, role }).subscribe({
+      next: () => {
+        this.clearRolePrompt();
+        this.socialLoading.set(null);
+        this.loading.set(false);
+        void this.router.navigateByUrl(this.auth.getDefaultRoute());
+      },
+      error: (err) => {
+        const needsRole = AuthService.parseNeedsRole(err);
+        if (needsRole) {
+          this.pendingIdToken.set(idToken);
+          this.needsRoleInfo.set(needsRole);
+          this.socialLoading.set(null);
+          return;
+        }
+
+        this.socialLoading.set(null);
+        this.errorState.set({
+          type: 'custom',
+          message: err.error?.error?.message || this.t().auth.socialLoginError,
+        });
+      },
+    });
+  }
+
+  private clearRolePrompt(): void {
+    this.pendingIdToken.set(null);
+    this.needsRoleInfo.set(null);
+  }
+
+  private mapSocialError(err: unknown): string {
+    const code =
+      (err as { code?: string; message?: string })?.code
+      || (err as { message?: string })?.message;
+
+    if (code === 'FIREBASE_NOT_CONFIGURED') {
+      return this.t().auth.socialLoginNotConfigured;
+    }
+    if (
+      code === 'auth/popup-closed-by-user'
+      || code === 'auth/cancelled-popup-request'
+      || code === 'auth/user-cancelled'
+    ) {
+      return this.t().auth.socialLoginCancelled;
+    }
+    return this.t().auth.socialLoginError;
+  }
+
   private setBackendError(err: any, fallback: ErrorDescriptor['type'] = 'sendOtp'): void {
     const errorObj = err?.error?.error || err?.error;
     const code = errorObj?.code;
@@ -369,6 +459,8 @@ export class Login implements OnInit, OnDestroy {
       this.errorState.set({ type: 'loginGeneral' });
     } else if (fallback === 'noActiveOtp') {
       this.errorState.set({ type: 'noActiveOtp' });
+    } else if (fallback === 'invalidOtp') {
+      this.errorState.set({ type: 'invalidOtp' });
     } else {
       this.errorState.set({ type: 'sendOtp' });
     }
@@ -394,7 +486,6 @@ export class Login implements OnInit, OnDestroy {
       if (!data.email) return;
 
       const elapsedMs = Date.now() - (data.timestamp || 0);
-      // Códigos vigentes por hasta 15 minutos (900,000 ms)
       if (elapsedMs < 15 * 60 * 1000) {
         this.email = data.email;
         this.loginMode.set('otp');

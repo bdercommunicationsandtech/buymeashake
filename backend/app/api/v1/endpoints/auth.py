@@ -2,6 +2,7 @@ from fastapi import APIRouter, status
 
 from app.api.dependencies import CurrentUser, DatabaseSession
 from app.schemas.dtos import (
+    FirebaseAuthRequest,
     RefreshTokenRequest,
     RequestOtpRequest,
     RequestOtpResponse,
@@ -50,6 +51,13 @@ async def login(dto: UserLoginRequest, session: DatabaseSession) -> TokenRespons
     """Inicia sesión con credenciales y retorna tokens JWT."""
     service = AuthService(session)
     return await service.login(dto)
+
+
+@router.post("/auth/firebase", response_model=TokenResponse)
+async def login_with_firebase(dto: FirebaseAuthRequest, session: DatabaseSession) -> TokenResponse:
+    """Login/registro con Google o Apple vía Firebase ID token."""
+    service = AuthService(session)
+    return await service.login_with_firebase(dto)
 
 
 @router.post("/auth/refresh", response_model=TokenResponse)

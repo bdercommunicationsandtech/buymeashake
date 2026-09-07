@@ -3,7 +3,7 @@ import { inject, Injectable, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { BehaviorSubject, catchError, filter, Observable, switchMap, take, tap, throwError } from 'rxjs';
 import { environment } from '../../environments/environment';
-import { TokenResponse, UserLoginPayload, UserMe, UserRegisterPayload } from './api.models';
+import { TokenResponse, UserLoginPayload, UserMe, UserRegisterPayload, FirebaseAuthPayload, FirebaseNeedsRoleDetails } from './api.models';
 
 @Injectable({
   providedIn: 'root',
@@ -111,6 +111,26 @@ export class AuthService {
       tap((res) => this.saveTokens(res)),
       switchMap(() => this.loadMe())
     );
+  }
+
+  /**
+   * Exchange a Firebase ID token for app JWTs.
+   * On first signup without role, the API returns 409 NEEDS_ROLE.
+   */
+  loginWithFirebase(payload: FirebaseAuthPayload): Observable<UserMe> {
+    return this.http.post<TokenResponse>(`${this.apiUrl}/firebase`, payload).pipe(
+      tap((res) => this.saveTokens(res)),
+      switchMap(() => this.loadMe())
+    );
+  }
+
+  static parseNeedsRole(err: unknown): FirebaseNeedsRoleDetails | null {
+    const details = (err as { error?: { error?: { code?: string; details?: FirebaseNeedsRoleDetails } } })
+      ?.error?.error;
+    if (details?.code !== 'NEEDS_ROLE' || !details.details?.needs_role) {
+      return null;
+    }
+    return details.details;
   }
 
   loadMe(): Observable<UserMe> {

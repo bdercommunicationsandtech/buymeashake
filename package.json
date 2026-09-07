@@ -19,6 +19,7 @@
     "@angular/platform-browser": "21.2.14",
     "@angular/router": "21.2.14",
     "angular-three": "^4.2.4",
+    "firebase": "^12.18.0",
     "gsap": "^3.15.0",
     "ngxtension": "^7.3.0",
     "qrcode": "^1.5.4",

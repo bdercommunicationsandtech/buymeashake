@@ -60,6 +60,21 @@ class BusinessLogicError(DomainException):
         super().__init__(message=message, code="BUSINESS_LOGIC_ERROR", details=details)
 
 
+class NeedsRoleError(DomainException):
+    """Usuario social nuevo: el cliente debe elegir athlete o supporter."""
+
+    def __init__(self, email: str, full_name: str):
+        super().__init__(
+            message="Elige si quieres ser atleta o apoyar a tus atletas favoritos.",
+            code="NEEDS_ROLE",
+            details={
+                "needs_role": True,
+                "email": email,
+                "full_name": full_name,
+            },
+        )
+
+
 def register_exception_handlers(app: FastAPI) -> None:
     """Registra los manejadores globales de excepciones de dominio en FastAPI."""
     
@@ -72,6 +87,13 @@ def register_exception_handlers(app: FastAPI) -> None:
 
     @app.exception_handler(EntityAlreadyExistsError)
     async def entity_exists_handler(request: Request, exc: EntityAlreadyExistsError) -> JSONResponse:
+        return JSONResponse(
+            status_code=status.HTTP_409_CONFLICT,
+            content={"error": {"code": exc.code, "message": exc.message, "details": exc.details}},
+        )
+
+    @app.exception_handler(NeedsRoleError)
+    async def needs_role_handler(request: Request, exc: NeedsRoleError) -> JSONResponse:
         return JSONResponse(
             status_code=status.HTTP_409_CONFLICT,
             content={"error": {"code": exc.code, "message": exc.message, "details": exc.details}},

@@ -71,6 +71,12 @@ htmlcov/
 .env.local
 .env.*.local
 
+# Firebase / Google service account keys (nunca subir)
+*-firebase-adminsdk*.json
+backend/*-firebase-adminsdk*.json
+firebase-service-account.json
+**/serviceAccount*.json
+
 # ==============================================================================
 # Logs & Databases
 # ==============================================================================

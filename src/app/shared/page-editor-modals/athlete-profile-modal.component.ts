@@ -4,12 +4,13 @@ import { DashboardService } from '../../core/dashboard.service';
 import { LookupService } from '../../core/lookup.service';
 import { LookupItemDto } from '../../core/api.models';
 import { LanguageService } from '../../core/language.service';
+import { LocationPickerComponent } from '../location-picker/location-picker.component';
 import { EditorSavePatch } from './editor-save-patch';
 
 @Component({
   selector: 'app-athlete-profile-modal',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, LocationPickerComponent],
   template: `
     @if (open()) {
       <div
@@ -102,29 +103,25 @@ import { EditorSavePatch } from './editor-save-patch';
                 (input)="bio.set($any($event.target).value)"
               ></textarea>
             </div>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label class="block text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 mb-1">{{ t().pageEditorModals.cityLabel }}</label>
-                <input
-                  type="text"
-                  [placeholder]="t().pageEditorModals.cityPlaceholder"
-                  class="w-full rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#191c1d] px-4 py-3 text-sm font-semibold text-gray-900 dark:text-white focus:border-[#c9ff3d] focus:outline-none"
-                  [value]="city()"
-                  (input)="city.set($any($event.target).value)"
-                />
-              </div>
-              <div>
-                <label class="block text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 mb-1">{{ t().pageEditorModals.disciplineLabel }}</label>
-                <select
-                  class="w-full rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#191c1d] px-4 py-3 text-sm font-semibold text-gray-900 dark:text-white focus:border-[#c9ff3d] focus:outline-none"
-                  [value]="primarySportCode()"
-                  (change)="primarySportCode.set(+$any($event.target).value)"
-                >
-                  @for (sport of sports(); track sport.code) {
-                    <option [value]="sport.code">{{ languageService.translateDiscipline(sport.label) }}</option>
-                  }
-                </select>
-              </div>
+            <div>
+              <label class="block text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 mb-2">{{ t().pageEditorModals.cityLabel }}</label>
+              <app-location-picker
+                [initialCityId]="cityId()"
+                (cityIdChange)="cityId.set($event)"
+                (labelChange)="city.set($event || '')"
+              />
+            </div>
+            <div>
+              <label class="block text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 mb-1">{{ t().pageEditorModals.disciplineLabel }}</label>
+              <select
+                class="w-full rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#191c1d] px-4 py-3 text-sm font-semibold text-gray-900 dark:text-white focus:border-[#c9ff3d] focus:outline-none"
+                [value]="primarySportCode()"
+                (change)="primarySportCode.set(+$any($event.target).value)"
+              >
+                @for (sport of sports(); track sport.code) {
+                  <option [value]="sport.code">{{ languageService.translateDiscipline(sport.label) }}</option>
+                }
+              </select>
             </div>
 
             <div class="pt-2 border-t border-gray-100 dark:border-white/10 space-y-4">
@@ -180,6 +177,7 @@ export class AthleteProfileModalComponent {
   readonly fullName = signal('');
   readonly bio = signal('');
   readonly city = signal('');
+  readonly cityId = signal<number | null>(null);
   readonly primarySportCode = signal(101);
   readonly avatarUrl = signal<string | null>(null);
   readonly coverImageUrl = signal<string | null>(null);
@@ -206,6 +204,7 @@ export class AthleteProfileModalComponent {
           this.fullName.set(p.full_name);
           this.bio.set(p.bio || '');
           this.city.set(p.city || '');
+          this.cityId.set(p.city_id ?? null);
           this.primarySportCode.set(p.primary_sport_code || 101);
           this.avatarUrl.set(p.avatar_url);
           this.coverImageUrl.set(p.cover_image_url);
@@ -262,7 +261,7 @@ export class AthleteProfileModalComponent {
       .updateProfile({
         full_name: this.fullName(),
         bio: this.bio(),
-        city: this.city(),
+        city_id: this.cityId(),
         primary_sport_code: this.primarySportCode(),
         avatar_url: this.avatarUrl() || undefined,
         cover_image_url: this.coverImageUrl() || undefined,

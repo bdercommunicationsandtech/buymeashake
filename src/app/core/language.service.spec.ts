@@ -11,9 +11,56 @@ describe('LanguageService', () => {
     service = new LanguageService();
   });
 
-  it('debe inicializarse con el idioma por defecto (es) si no hay storage', () => {
-    expect(service.lang()).toBe('es');
-    expect(service.t().nav.exploreAthletes).toBe('Explorar atletas');
+  it('debe inicializarse con es si navigator.language es es-ES cuando no hay storage', () => {
+    Object.defineProperty(window.navigator, 'language', { value: 'es-ES', configurable: true });
+    const esService = new LanguageService();
+    expect(esService.lang()).toBe('es');
+    expect(esService.t().nav.exploreAthletes).toBe('Explorar atletas');
+  });
+
+  it('debe inicializarse con en si navigator.language es en-US cuando no hay storage', () => {
+    Object.defineProperty(window.navigator, 'language', { value: 'en-US', configurable: true });
+    const enService = new LanguageService();
+    expect(enService.lang()).toBe('en');
+    expect(enService.t().nav.exploreAthletes).toBe('Explore athletes');
+  });
+
+  it('debe inicializarse con en si navigator.language es otro idioma internacional (ej. pt-BR o fr-FR)', () => {
+    Object.defineProperty(window.navigator, 'language', { value: 'pt-BR', configurable: true });
+    const ptService = new LanguageService();
+    expect(ptService.lang()).toBe('en');
+
+    Object.defineProperty(window.navigator, 'language', { value: 'fr-FR', configurable: true });
+    const frService = new LanguageService();
+    expect(frService.lang()).toBe('en');
+  });
+
+  it('debe priorizar el idioma guardado en localStorage sobre navigator.language', () => {
+    localStorage.setItem(LANGUAGE_STORAGE_KEY, 'en');
+    Object.defineProperty(window.navigator, 'language', { value: 'es-ES', configurable: true });
+    const newService = new LanguageService();
+    expect(newService.lang()).toBe('en');
+    expect(newService.t().common.save).toBe('Save');
+
+    localStorage.setItem(LANGUAGE_STORAGE_KEY, 'es');
+    Object.defineProperty(window.navigator, 'language', { value: 'en-US', configurable: true });
+    const esService = new LanguageService();
+    expect(esService.lang()).toBe('es');
+    expect(esService.t().common.save).toBe('Guardar');
+  });
+
+  it('debe respetar la clave legacy de almacenamiento buymeashake_lang si no existe la principal', () => {
+    localStorage.setItem('buymeashake_lang', 'en');
+    Object.defineProperty(window.navigator, 'language', { value: 'es-ES', configurable: true });
+    const legacyService = new LanguageService();
+    expect(legacyService.lang()).toBe('en');
+  });
+
+  it('debe sincronizar el atributo document.documentElement.lang al crearse y al cambiar de idioma', () => {
+    service.setLanguage('en');
+    expect(document.documentElement.lang).toBe('en');
+    service.setLanguage('es');
+    expect(document.documentElement.lang).toBe('es');
   });
 
   it('debe alternar de es a en al invocar toggleLanguage', () => {
@@ -40,13 +87,6 @@ describe('LanguageService', () => {
     service.setLanguage('es');
     expect(service.lang()).toBe('es');
     expect(service.t().dashboard.title).toBe('Panel de Control');
-  });
-
-  it('debe respetar el idioma guardado en localStorage al crearse', () => {
-    localStorage.setItem(LANGUAGE_STORAGE_KEY, 'en');
-    const newService = new LanguageService();
-    expect(newService.lang()).toBe('en');
-    expect(newService.t().common.save).toBe('Save');
   });
 
   it('debe traducir disciplinas deportivas correctamente según el idioma activo', () => {

@@ -9,8 +9,13 @@ import { LanguageService } from '../../core/language.service';
 })
 export class Footer {
   private readonly languageService = inject(LanguageService);
+  readonly lang = this.languageService.lang;
   readonly t = this.languageService.t;
   readonly year = new Date().getFullYear();
+
+  toggleLanguage(): void {
+    this.languageService.toggleLanguage();
+  }
 
   readonly columns = computed(() => {
     const t = this.t();

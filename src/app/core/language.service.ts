@@ -1,7 +1,8 @@
 import { Injectable, signal, computed } from '@angular/core';
 import { AppLanguage, TRANSLATIONS, TranslationSchema } from './i18n';
+import { getStorageItem, setStorageItem } from './utils/storage.util';
 
-export const DEFAULT_LANGUAGE: AppLanguage = 'es';
+export const DEFAULT_LANGUAGE: AppLanguage = 'en';
 export const LANGUAGE_STORAGE_KEY = 'buymeashake.language';
 const LEGACY_STORAGE_KEY = 'buymeashake_lang';
 
@@ -73,26 +74,17 @@ export class LanguageService {
   private resolveInitialLanguage(): AppLanguage {
     if (typeof window === 'undefined') return DEFAULT_LANGUAGE;
 
-    try {
-      const stored = localStorage.getItem(LANGUAGE_STORAGE_KEY) || localStorage.getItem(LEGACY_STORAGE_KEY);
-      if (stored === 'es' || stored === 'en') {
-        return stored;
-      }
-    } catch {
-      // Ignorar errores en caso de acceso restringido a localStorage
+    const stored = getStorageItem(LANGUAGE_STORAGE_KEY) || getStorageItem(LEGACY_STORAGE_KEY);
+    if (stored === 'es' || stored === 'en') {
+      return stored;
     }
 
-    const browserLang = (typeof window !== 'undefined' && window.navigator?.language ? window.navigator.language : '').toLowerCase();
-    return browserLang.startsWith('en') ? 'en' : 'es';
+    const browserLang = (window.navigator?.language || '').toLowerCase();
+    return browserLang.startsWith('es') ? 'es' : 'en';
   }
 
   private persistLanguage(language: AppLanguage): void {
-    if (typeof window === 'undefined') return;
-    try {
-      localStorage.setItem(LANGUAGE_STORAGE_KEY, language);
-    } catch {
-      // Ignorar errores en caso de almacenamiento no disponible
-    }
+    setStorageItem(LANGUAGE_STORAGE_KEY, language);
   }
 
   private syncDocumentLang(language: AppLanguage): void {

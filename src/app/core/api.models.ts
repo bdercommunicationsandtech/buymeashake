@@ -48,6 +48,17 @@ export interface UserLoginPayload {
   password: string;
 }
 
+export interface FirebaseAuthPayload {
+  id_token: string;
+  role?: 'supporter' | 'athlete';
+}
+
+export interface FirebaseNeedsRoleDetails {
+  needs_role: boolean;
+  email: string;
+  full_name: string;
+}
+
 export interface TokenResponse {
   access_token: string;
   refresh_token: string;
@@ -205,6 +216,7 @@ export interface AthleteProfileFull {
   agenda_description?: string | null;
   agenda_image_url?: string | null;
   city: string | null;
+  city_id?: number | null;
   primary_sport_code: number | null;
   shake_price: number;
   currency: string;
@@ -228,6 +240,7 @@ export interface AthleteProfileUpdatePayload {
   agenda_description?: string | null;
   agenda_image_url?: string | null;
   city?: string;
+  city_id?: number | null;
   primary_sport_code?: number;
   shake_price?: number;
   currency?: string;

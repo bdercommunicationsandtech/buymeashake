@@ -7,9 +7,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.exceptions import (
     EntityAlreadyExistsError,
     EntityNotFoundError,
+    NeedsRoleError,
     RateLimitExceededError,
     UnauthorizedError,
 )
+from app.core.firebase_auth import verify_firebase_id_token
 from app.core.security import (
     create_access_token,
     create_refresh_token,
@@ -34,6 +36,7 @@ from app.services.profile_helpers import (
     ensure_monetization,
     ensure_page_settings,
     flatten_social,
+    format_city_label,
     get_cover_url,
     get_currency,
     get_page_field,
@@ -42,6 +45,7 @@ from app.services.profile_helpers import (
     get_thank_you,
     primary_sport_code,
     primary_sport_label,
+    resolve_city_display,
     resolve_sport_item_id,
     upsert_social_links,
 )
@@ -94,6 +98,7 @@ from app.schemas.dtos import (
     RefreshTokenRequest,
     RequestOtpRequest,
     RequestOtpResponse,
+    FirebaseAuthRequest,
     ShakeCheckoutCreateRequest,
     SupporterItemResponse,
     SupportersDashboardResponse,
@@ -168,12 +173,76 @@ class AuthService:
 
     async def login(self, dto: UserLoginRequest) -> TokenResponse:
         user = await self.user_repo.get_by_email(dto.email)
-        if not user or not verify_password(dto.password, user.password_hash):
+        if not user:
+            raise UnauthorizedError("Correo electrónico o contraseña incorrectos.")
+        if not user.password_hash:
+            raise UnauthorizedError(
+                "Esta cuenta usa Google o Apple. Inicia sesión con ese proveedor."
+            )
+        if not verify_password(dto.password, user.password_hash):
             raise UnauthorizedError("Correo electrónico o contraseña incorrectos.")
 
+        return self._issue_tokens(user)
+
+    async def login_with_firebase(self, dto: FirebaseAuthRequest) -> TokenResponse:
+        claims = verify_firebase_id_token(dto.id_token)
+        firebase_uid = str(claims.get("uid") or claims.get("user_id") or "").strip()
+        if not firebase_uid:
+            raise UnauthorizedError("Token de Firebase sin identificador de usuario.")
+
+        email = (claims.get("email") or "").strip().lower()
+        if not email:
+            raise UnauthorizedError(
+                "No pudimos obtener el correo de tu cuenta. Revisa los permisos de Google/Apple."
+            )
+
+        full_name = (
+            (claims.get("name") or "").strip()
+            or email.split("@")[0]
+            or "Usuario"
+        )
+        avatar_url = claims.get("picture")
+        if isinstance(avatar_url, str):
+            avatar_url = avatar_url[:255] or None
+        else:
+            avatar_url = None
+
+        user = await self.user_repo.get_by_firebase_uid(firebase_uid)
+        if not user:
+            user = await self.user_repo.get_by_email(email)
+
+        if user:
+            if not user.firebase_uid:
+                user.firebase_uid = firebase_uid
+            elif user.firebase_uid != firebase_uid:
+                raise UnauthorizedError(
+                    "Este correo ya está vinculado a otra cuenta de Google/Apple."
+                )
+            if not user.is_email_verified and claims.get("email_verified", True):
+                user.is_email_verified = True
+            if avatar_url and not user.avatar_url:
+                user.avatar_url = avatar_url
+            await self.session.flush()
+            return self._issue_tokens(user)
+
+        if not dto.role:
+            raise NeedsRoleError(email=email, full_name=full_name)
+
+        user = User(
+            email=email,
+            firebase_uid=firebase_uid,
+            password_hash=None,
+            full_name=full_name[:150],
+            avatar_url=avatar_url,
+            role=dto.role,
+            is_email_verified=True,
+        )
+        await self.user_repo.create(user)
+        return self._issue_tokens(user)
+
+    def _issue_tokens(self, user: User) -> TokenResponse:
         access_token = create_access_token(user.id)
         refresh_token = create_refresh_token(user.id)
-
         return TokenResponse(
             access_token=access_token,
             refresh_token=refresh_token,
@@ -555,7 +624,9 @@ class AthleteService:
             print(f"[WARN] reconcile_pending_shake_transactions: {e}")
 
         user = profile.user
-        active_goal = next((g for g in profile.goals if g.is_active), None)
+        active_goal = await GoalRepository(self.session).get_active_goal(profile.id)
+        if not active_goal:
+            active_goal = next((g for g in (profile.goals or []) if bool(g.is_active)), None)
 
         booking_services = [
             CreatorBookingServiceResponse(
@@ -620,7 +691,7 @@ class AthleteService:
             agenda_description=get_page_field(profile, "agenda_description"),
             agenda_image_url=get_page_field(profile, "agenda_image_url"),
             primary_sport=sport_label,
-            city=profile.city,
+            city=resolve_city_display(profile),
             avatar_url=user.avatar_url if user else None,
             cover_image_url=get_cover_url(profile),
             instagram_url=social.get("instagram_url"),
@@ -756,7 +827,8 @@ class DashboardService:
             agenda_title=get_page_field(athlete, "agenda_title"),
             agenda_description=get_page_field(athlete, "agenda_description"),
             agenda_image_url=get_page_field(athlete, "agenda_image_url"),
-            city=athlete.city,
+            city=resolve_city_display(athlete),
+            city_id=athlete.city_id,
             primary_sport_code=primary_sport_code(athlete),
             shake_price=get_shake_price(athlete),
             currency=get_currency(athlete),
@@ -774,10 +846,32 @@ class DashboardService:
     async def update_profile(self, athlete: AthleteProfile, dto: AthleteProfileUpdateRequest) -> AthleteProfileFullResponse:
         if dto.bio is not None:
             athlete.bio = dto.bio
-        if dto.city is not None:
-            athlete.city = dto.city
 
         updates = dto.model_dump(exclude_unset=True)
+
+        if "city_id" in updates:
+            city_id = updates["city_id"]
+            if city_id is None:
+                athlete.city_id = None
+                if "city" in updates and updates["city"] is not None:
+                    athlete.city = updates["city"].strip() or None if isinstance(updates["city"], str) else updates["city"]
+            else:
+                from app.models.entities import City
+                from sqlalchemy.orm import selectinload
+                from sqlalchemy import select
+
+                city_res = await self.session.execute(
+                    select(City)
+                    .options(selectinload(City.state), selectinload(City.country))
+                    .where(City.id == city_id)
+                )
+                city_row = city_res.scalar_one_or_none()
+                if not city_row:
+                    raise EntityNotFoundError("Ciudad", str(city_id))
+                athlete.city_id = city_row.id
+                athlete.city = format_city_label(city_row)
+        elif dto.city is not None:
+            athlete.city = dto.city.strip() or None
 
         page_fields = (
             "page_title",

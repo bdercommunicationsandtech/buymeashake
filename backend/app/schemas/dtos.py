@@ -106,6 +106,11 @@ class RefreshTokenRequest(BaseModel):
     refresh_token: str
 
 
+class FirebaseAuthRequest(BaseModel):
+    id_token: str = Field(min_length=10)
+    role: str | None = Field(default=None, pattern="^(supporter|athlete)$")
+
+
 class UserMeResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -432,7 +437,8 @@ class AthleteProfileUpdateRequest(BaseModel):
     agenda_title: str | None = Field(default=None, max_length=200)
     agenda_description: str | None = Field(default=None, max_length=2000)
     agenda_image_url: str | None = None
-    city: str | None = Field(default=None, max_length=100)
+    city: str | None = Field(default=None, max_length=255)
+    city_id: int | None = None
     primary_sport_code: int | None = None
     shake_price: Decimal | None = Field(default=None, gt=0)
     currency: str | None = Field(default=None, pattern="^USD$")
@@ -468,6 +474,7 @@ class AthleteProfileFullResponse(BaseModel):
     agenda_description: str | None = None
     agenda_image_url: str | None = None
     city: str | None
+    city_id: int | None = None
     primary_sport_code: int | None
     shake_price: Decimal
     currency: str

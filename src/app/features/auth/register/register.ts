@@ -19,6 +19,7 @@ export class Register implements OnInit {
   private readonly lookupService = inject(LookupService);
   readonly i18n = inject(LanguageService);
   readonly t = this.i18n.t;
+  readonly lang = this.i18n.lang;
 
   constructor() {
     effect(() => {

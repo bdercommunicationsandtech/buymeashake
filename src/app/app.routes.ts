@@ -13,6 +13,26 @@ export const routes: Routes = [
     title: 'Explorar atletas — buymeashake',
     loadComponent: () => import('./features/explore/explore').then((m) => m.Explore),
   },
+  {
+    path: 'terms',
+    title: 'Términos de Servicio — buymeashake',
+    loadComponent: () => import('./features/legal/terms/terms').then((m) => m.TermsOfService),
+  },
+  {
+    path: 'terminos',
+    redirectTo: 'terms',
+    pathMatch: 'full',
+  },
+  {
+    path: 'privacy',
+    title: 'Política de Privacidad — buymeashake',
+    loadComponent: () => import('./features/legal/privacy/privacy').then((m) => m.PrivacyPolicy),
+  },
+  {
+    path: 'privacidad',
+    redirectTo: 'privacy',
+    pathMatch: 'full',
+  },
 
   // 2. Flujo de Autenticación y Onboarding
   {

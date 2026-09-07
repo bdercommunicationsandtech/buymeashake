@@ -36,6 +36,13 @@ export class Footer {
           { path: '/dashboard/referrals', label: t.footer.referrals },
         ],
       },
+      {
+        title: t.footer.legal,
+        links: [
+          { path: '/terms', label: t.footer.terms },
+          { path: '/privacy', label: t.footer.privacy },
+        ],
+      },
     ];
   });
 }

@@ -1,0 +1,542 @@
+<div class="min-h-screen bg-[#fafafb] dark:bg-void text-gray-900 dark:text-white selection:bg-lime selection:text-void py-10 px-4 sm:px-6 lg:px-8 transition-colors duration-300">
+  <div class="max-w-7xl mx-auto">
+    
+    <!-- Top Breadcrumb & Language Switch -->
+    <div class="flex flex-wrap items-center justify-between gap-4 mb-8 pb-6 border-b border-gray-200 dark:border-white/10">
+      <div class="flex items-center gap-2 text-xs text-gray-500 dark:text-white/50">
+        <a routerLink="/" class="hover:text-emerald-600 dark:hover:text-lime transition">buymeashake.fit</a>
+        <span>/</span>
+        <span class="text-gray-700 dark:text-white/80 font-semibold">{{ lang() === 'es' ? 'Legal' : 'Legal' }}</span>
+        <span>/</span>
+        <span class="text-emerald-600 dark:text-lime font-bold">{{ lang() === 'es' ? 'Política de Privacidad' : 'Privacy Policy' }}</span>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <span class="text-xs text-gray-400 dark:text-white/40 font-mono">
+          {{ lang() === 'es' ? 'Versión 2.0 · Actualizado: Sep 2026' : 'Version 2.0 · Updated: Sep 2026' }}
+        </span>
+        <button
+          type="button"
+          (click)="toggleLanguage()"
+          class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-gray-300 dark:border-white/15 bg-white dark:bg-white/5 text-xs font-semibold text-gray-700 dark:text-white/80 hover:border-emerald-600 dark:hover:border-lime hover:text-emerald-600 dark:hover:text-lime transition cursor-pointer shadow-xs"
+        >
+          <svg class="w-3.5 h-3.5 text-emerald-600 dark:text-lime" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <span>{{ lang() === 'es' ? 'Switch to English' : 'Cambiar a Español' }}</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Hero Header -->
+    <div class="mb-12">
+      <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 dark:bg-lime/10 border border-emerald-200 dark:border-lime/25 text-emerald-700 dark:text-lime text-xs font-bold uppercase tracking-wider mb-4">
+        <span class="w-2 h-2 rounded-full bg-emerald-500 dark:bg-lime animate-pulse"></span>
+        {{ lang() === 'es' ? 'Protección de Datos & Seguridad Deportiva' : 'Data Protection & Athletic Privacy' }}
+      </div>
+      <h1 class="text-3xl sm:text-5xl font-black tracking-tight text-gray-900 dark:text-white font-display uppercase">
+        {{ lang() === 'es' ? 'Aviso y Política de Privacidad' : 'Privacy Notice & Policy' }}
+      </h1>
+      <p class="mt-4 text-base sm:text-lg text-gray-600 dark:text-white/60 max-w-3xl leading-relaxed">
+        @if (lang() === 'es') {
+          En <strong>Buymeashake.fit</strong> nos tomamos muy en serio la privacidad de tus datos personales, deportivos y financieros. Explicamos con claridad qué información tratamos, cómo protegemos tus pagos y por qué jamás vendemos tus datos a terceros.
+        } @else {
+          At <strong>Buymeashake.fit</strong>, your personal, athletic, and financial privacy is a top priority. Here we explain what information we process, how we secure transactions, and why we never sell your personal data.
+        }
+      </p>
+    </div>
+
+    <!-- Layout Grid: Table of Contents + Content Body -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
+      
+      <!-- Sidebar Navigation (Sticky on desktop) -->
+      <aside class="lg:col-span-4 lg:sticky lg:top-28">
+        <div class="bg-white dark:bg-[#121614] border border-gray-200 dark:border-white/10 rounded-2xl p-6 shadow-xl dark:shadow-2xl">
+          <h3 class="text-xs font-bold uppercase tracking-widest text-gray-400 dark:text-white/40 mb-4 flex items-center gap-2">
+            <svg class="w-4 h-4 text-emerald-600 dark:text-lime" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            {{ lang() === 'es' ? 'Índice de Privacidad' : 'Privacy Sections' }}
+          </h3>
+
+          <nav class="space-y-1">
+            @for (sec of sections; track sec.id) {
+              <button
+                type="button"
+                (click)="scrollTo(sec.id)"
+                class="w-full text-left px-3 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-200 flex items-center justify-between group cursor-pointer"
+                [ngClass]="activeSection() === sec.id 
+                  ? 'bg-emerald-600 text-white dark:bg-lime dark:text-void font-bold shadow-md shadow-emerald-600/20 dark:shadow-lime/20 scale-[1.01]' 
+                  : 'text-gray-600 dark:text-white/60 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/5'"
+              >
+                <span class="truncate">{{ lang() === 'es' ? sec.titleEs : sec.titleEn }}</span>
+                <span 
+                  class="ml-2 text-xs transition-transform group-hover:translate-x-0.5"
+                  [ngClass]="activeSection() === sec.id ? 'text-white dark:text-void' : 'text-emerald-600 dark:text-lime'"
+                >→</span>
+              </button>
+            }
+          </nav>
+
+          <!-- Quick Need Help Card -->
+          <div class="mt-8 pt-6 border-t border-gray-200 dark:border-white/10 text-xs text-gray-500 dark:text-white/50">
+            <p class="font-bold text-gray-800 dark:text-white mb-1">
+              {{ lang() === 'es' ? 'Delegado de Protección de Datos:' : 'Data Protection Officer:' }}
+            </p>
+            <p class="leading-relaxed mb-3">
+              {{ lang() === 'es' ? 'Para ejercer derechos ARCO o consultar sobre tus datos:' : 'To exercise data rights or request info:' }}
+            </p>
+            <a 
+              href="mailto:bdercommunications@gmail.com" 
+              class="inline-flex items-center gap-1.5 font-bold text-emerald-600 dark:text-lime hover:underline"
+            >
+              bdercommunications&#64;gmail.com
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+              </svg>
+            </a>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Main Content Column -->
+      <div class="lg:col-span-8 space-y-12">
+        
+        @if (lang() === 'es') {
+          <!-- CONTENIDO EN ESPAÑOL -->
+
+          <!-- 1. Responsable del Tratamiento -->
+          <section id="responsible" class="scroll-mt-28 bg-white dark:bg-[#121614] border border-gray-200 dark:border-white/10 rounded-2xl p-6 sm:p-8 shadow-sm">
+            <div class="flex items-center gap-3 mb-4">
+              <span class="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-lime/10 text-emerald-700 dark:text-lime font-bold text-sm flex items-center justify-center font-mono">01</span>
+              <h2 class="text-xl sm:text-2xl font-extrabold text-gray-900 dark:text-white font-display">Identidad y Domicilio del Responsable</h2>
+            </div>
+            <div class="space-y-4 text-sm sm:text-base text-gray-700 dark:text-white/75 leading-relaxed">
+              <p>
+                <strong>BDER COMMUNICATIONS AND TECHNOLOGIES</strong> (en lo sucesivo, <strong>"Buymeashake"</strong> o el "Responsable"), operadora de la plataforma <strong>buymeashake.fit</strong>, es la entidad responsable del tratamiento y salvaguarda de sus datos personales conforme a los principios de licitud, consentimiento, información, calidad, finalidad, lealtad, proporcionalidad y responsabilidad.
+              </p>
+              <p>
+                Para cualquier asunto concerniente a este aviso o a la protección de sus datos personales, ponemos a su disposición el canal directo: <a href="mailto:bdercommunications@gmail.com" class="text-emerald-600 dark:text-lime font-bold underline">bdercommunications&#64;gmail.com</a>.
+              </p>
+              <div class="p-4 rounded-xl bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-xs sm:text-sm text-gray-800 dark:text-white/90">
+                <strong class="text-emerald-700 dark:text-lime">Compromiso Cero Venta:</strong> Buymeashake jamás vende, alquila ni comercializa bases de datos personales a empresas de publicidad o intermediarios externos de datos.
+              </div>
+            </div>
+          </section>
+
+          <!-- 2. Datos Personales Recabados -->
+          <section id="data-collected" class="scroll-mt-28 bg-white dark:bg-[#121614] border border-gray-200 dark:border-white/10 rounded-2xl p-6 sm:p-8 shadow-sm">
+            <div class="flex items-center gap-3 mb-4">
+              <span class="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-lime/10 text-emerald-700 dark:text-lime font-bold text-sm flex items-center justify-center font-mono">02</span>
+              <h2 class="text-xl sm:text-2xl font-extrabold text-gray-900 dark:text-white font-display">Datos Personales que Recabamos</h2>
+            </div>
+            <div class="space-y-4 text-sm sm:text-base text-gray-700 dark:text-white/75 leading-relaxed">
+              <p>Según la forma en que interactúes con Buymeashake, recabamos las siguientes categorías de datos:</p>
+              
+              <ul class="list-disc pl-5 space-y-2">
+                <li>
+                  <strong class="text-gray-900 dark:text-white">Perfil del Atleta / Creador:</strong> Nombre completo, nombre de usuario público (<code class="text-emerald-700 dark:text-lime bg-gray-100 dark:bg-white/5 px-1 py-0.5 rounded text-xs font-mono">&#64;tu_handle</code>), correo electrónico, contraseña cifrada (hash bcrypt), disciplina deportiva (fuerza, running, crossfit, etc.), biografía, enlaces a perfiles de redes sociales, fotos de perfil y metas activas.
+                </li>
+                <li>
+                  <strong class="text-gray-900 dark:text-white">Perfil del Seguidor / Donante (Supporter):</strong> Correo electrónico, nombre o alias público visible en los mensajes de apoyo, historial de Shakes invitados y tiers de membresía activos. Si el donante elige la casilla de <em>"Apoyo anónimo"</em>, su nombre se mantiene privado y no se muestra al público.
+                </li>
+                <li>
+                  <strong class="text-gray-900 dark:text-white">Contenido y Mensajes:</strong> Mensajes de aliento adjuntos al invitar Shakers, comentarios en publicaciones públicas y archivos cargados (ej. fotos de portada o documentos PDF de rutinas deportivas).
+                </li>
+                <li>
+                  <strong class="text-gray-900 dark:text-white">Datos Técnicos de Navegación:</strong> Dirección IP, tipo y versión de navegador, idioma preferente, sistema operativo y registros de auditoría indispensables para mitigar ataques cibernéticos y accesos no autorizados.
+                </li>
+              </ul>
+            </div>
+          </section>
+
+          <!-- 3. Datos de Salud y Rendimiento -->
+          <section id="health-data" class="scroll-mt-28 bg-amber-50/50 dark:bg-[#151a17] border-2 border-amber-300 dark:border-lime/40 rounded-2xl p-6 sm:p-8 relative overflow-hidden shadow-sm">
+            <div class="absolute top-0 right-0 px-4 py-1.5 bg-amber-500 text-white dark:bg-lime dark:text-void text-[10px] font-black uppercase tracking-widest rounded-bl-xl">
+              Cláusula Especial Fitness
+            </div>
+
+            <div class="flex items-center gap-3 mb-4">
+              <span class="w-8 h-8 rounded-lg bg-amber-500 text-white dark:bg-lime dark:text-void font-black text-sm flex items-center justify-center font-mono">03</span>
+              <h2 class="text-xl sm:text-2xl font-black text-gray-900 dark:text-white font-display uppercase tracking-tight">
+                Datos de Salud y Condición Fisiológica (Datos Sensibles)
+              </h2>
+            </div>
+
+            <div class="space-y-4 text-sm sm:text-base text-gray-800 dark:text-white/80 leading-relaxed">
+              <div class="p-4 rounded-xl bg-red-100 dark:bg-flame/15 border border-red-200 dark:border-flame/30 text-xs sm:text-sm text-red-900 dark:text-white">
+                <strong class="text-red-700 dark:text-flame font-black uppercase block mb-1">TRATAMIENTO DE DATOS FISIOLÓGICOS:</strong>
+                Buymeashake.fit NO almacena historiales médicos ni expedientes clínicos en sus bases de datos.
+              </div>
+
+              <p>
+                <strong>1. Comunicaciones Directas de Coaching:</strong> Durante las sesiones de asesoría 1-a-1 o en la personalización de planes de entrenamiento, el usuario puede compartir voluntariamente con su coach datos como peso corporal, porcentaje graso, lesiones deportivas pasadas o pautas nutricionales.
+              </p>
+              <p>
+                <strong>2. Confidencialidad Profesional:</strong> Dicha información es transmitida de forma confidencial y directa entre el atleta/coach y su cliente. Buymeashake no indexa, no procesa con algoritmos predictivos de salud ni utiliza estos datos para perfilar publicidad comercial.
+              </p>
+            </div>
+          </section>
+
+          <!-- 4. Pagos y Stripe Connect -->
+          <section id="payments-security" class="scroll-mt-28 bg-white dark:bg-[#121614] border border-gray-200 dark:border-white/10 rounded-2xl p-6 sm:p-8 shadow-sm">
+            <div class="flex items-center gap-3 mb-4">
+              <span class="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-lime/10 text-emerald-700 dark:text-lime font-bold text-sm flex items-center justify-center font-mono">04</span>
+              <h2 class="text-xl sm:text-2xl font-extrabold text-gray-900 dark:text-white font-display">Procesamiento de Pagos y Seguridad Financiera</h2>
+            </div>
+            <div class="space-y-4 text-sm sm:text-base text-gray-700 dark:text-white/75 leading-relaxed">
+              <p>
+                La gestión de transacciones bancarias, donaciones y retiros se procesa íntegramente a través de <strong>Stripe Inc.</strong> y <strong>Stripe Connect Express</strong>, un proveedor de pagos certificado con el nivel más exigente de la industria: <strong>PCI-DSS Nivel 1</strong>.
+              </p>
+              <ul class="list-disc pl-5 space-y-1.5">
+                <li>
+                  <strong class="text-gray-900 dark:text-white">Lo que NUNCA almacenamos:</strong> Buymeashake no tiene acceso ni almacena los 16 dígitos de tu tarjeta de crédito o débito, ni la fecha de caducidad ni el código de seguridad (CVV/CVC).
+                </li>
+                <li>
+                  <strong class="text-gray-900 dark:text-white">Lo que recibimos de Stripe:</strong> Recibimos un token cifrado de transacción, la marca de la tarjeta (ej. Visa, Mastercard), los últimos cuatro dígitos de la tarjeta (para que identifiques tu recibo) y el identificador de la transacción.
+                </li>
+                <li>
+                  <strong class="text-gray-900 dark:text-white">Datos KYC para Atletas:</strong> Los datos bancarios y comprobantes de identidad para retiros (*payouts*) son administrados directamente por Stripe Connect conforme a normativas internacionales antiblanqueo de capitales.
+                </li>
+              </ul>
+            </div>
+          </section>
+
+          <!-- 5. Videollamadas 1-a-1 -->
+          <section id="sessions-privacy" class="scroll-mt-28 bg-white dark:bg-[#121614] border border-gray-200 dark:border-white/10 rounded-2xl p-6 sm:p-8 shadow-sm">
+            <div class="flex items-center gap-3 mb-4">
+              <span class="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-lime/10 text-emerald-700 dark:text-lime font-bold text-sm flex items-center justify-center font-mono">05</span>
+              <h2 class="text-xl sm:text-2xl font-extrabold text-gray-900 dark:text-white font-display">Videollamadas 1-a-1 y Gestión de Agenda</h2>
+            </div>
+            <div class="space-y-4 text-sm sm:text-base text-gray-700 dark:text-white/75 leading-relaxed">
+              <p>
+                Al reservar una sesión técnica o asesoría deportiva, Buymeashake facilita la sincronización de horarios mediante Google Calendar y genera un enlace seguro de <strong>Google Meet</strong>.
+              </p>
+              <div class="p-4 rounded-xl bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10">
+                <strong class="text-emerald-700 dark:text-lime block mb-1">Cero Grabación en Plataforma:</strong>
+                Buymeashake NO graba, no interviene, no transcribe ni almacena las transmisiones audiovisuales realizadas durante las sesiones de videollamada. La sesión transcurre exclusivamente en la infraestructura segura de videoconferencia acordada.
+              </div>
+            </div>
+          </section>
+
+          <!-- 6. Finalidades del Tratamiento -->
+          <section id="purposes" class="scroll-mt-28 bg-white dark:bg-[#121614] border border-gray-200 dark:border-white/10 rounded-2xl p-6 sm:p-8 shadow-sm">
+            <div class="flex items-center gap-3 mb-4">
+              <span class="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-lime/10 text-emerald-700 dark:text-lime font-bold text-sm flex items-center justify-center font-mono">06</span>
+              <h2 class="text-xl sm:text-2xl font-extrabold text-gray-900 dark:text-white font-display">Finalidades del Tratamiento</h2>
+            </div>
+            <div class="space-y-4 text-sm sm:text-base text-gray-700 dark:text-white/75 leading-relaxed">
+              <h3 class="font-bold text-gray-900 dark:text-white text-sm uppercase tracking-wider">Finalidades Primarias (Necesarias para el Servicio):</h3>
+              <ul class="list-disc pl-5 space-y-1 text-sm">
+                <li>Crear y administrar tu cuenta de atleta o seguidor.</li>
+                <li>Procesar cobros por donación de Shakes, membresías por niveles, compra de PDFs y reservas de citas.</li>
+                <li>Permitir la descarga segura de guías y archivos fitness adquiridos.</li>
+                <li>Prevenir fraudes con tarjetas, ataques de denegación de servicio o accesos ilegítimos.</li>
+                <li>Generar comprobantes y notificaciones operativas por correo electrónico.</li>
+              </ul>
+
+              <h3 class="font-bold text-gray-900 dark:text-white text-sm uppercase tracking-wider mt-4">Finalidades Secundarias:</h3>
+              <ul class="list-disc pl-5 space-y-1 text-sm">
+                <li>Enviar boletines informativos sobre nuevas funcionalidades o destacados deportivos (puedes darte de baja en cualquier momento).</li>
+                <li>Generar estadísticas agregadas y disociadas de rendimiento de la plataforma.</li>
+              </ul>
+            </div>
+          </section>
+
+          <!-- 7. Cookies y Almacenamiento Local -->
+          <section id="cookies-storage" class="scroll-mt-28 bg-white dark:bg-[#121614] border border-gray-200 dark:border-white/10 rounded-2xl p-6 sm:p-8 shadow-sm">
+            <div class="flex items-center gap-3 mb-4">
+              <span class="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-lime/10 text-emerald-700 dark:text-lime font-bold text-sm flex items-center justify-center font-mono">07</span>
+              <h2 class="text-xl sm:text-2xl font-extrabold text-gray-900 dark:text-white font-display">Cookies y Almacenamiento Local</h2>
+            </div>
+            <div class="space-y-4 text-sm sm:text-base text-gray-700 dark:text-white/75 leading-relaxed">
+              <p>
+                Utilizamos tecnologías de almacenamiento local en el navegador (<code class="text-emerald-700 dark:text-lime bg-gray-100 dark:bg-white/5 px-1 py-0.5 rounded text-xs font-mono">localStorage</code>) y cookies técnicas estrictamente indispensables:
+              </p>
+              <ul class="list-disc pl-5 space-y-2 text-sm">
+                <li><strong>Tokens de Sesión (JWT):</strong> Permiten mantener activa tu sesión iniciada de manera segura sin pedirte credenciales en cada página.</li>
+                <li><strong>Preferencia de Tema:</strong> Guarda tu elección de modo oscuro (*Dark Athletic*) o modo claro.</li>
+                <li><strong>Preferencia de Idioma:</strong> Almacena tu selección entre español o inglés.</li>
+              </ul>
+              <p class="text-xs text-gray-500 dark:text-white/50">
+                Puedes limpiar o bloquear cookies y almacenamiento local desde la configuración de tu navegador web, teniendo en cuenta que algunas funciones de sesión podrían verse afectadas.
+              </p>
+            </div>
+          </section>
+
+          <!-- 8. Derechos ARCO y Supresión -->
+          <section id="user-rights" class="scroll-mt-28 bg-white dark:bg-[#121614] border border-gray-200 dark:border-white/10 rounded-2xl p-6 sm:p-8 shadow-sm">
+            <div class="flex items-center gap-3 mb-4">
+              <span class="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-lime/10 text-emerald-700 dark:text-lime font-bold text-sm flex items-center justify-center font-mono">08</span>
+              <h2 class="text-xl sm:text-2xl font-extrabold text-gray-900 dark:text-white font-display">Tus Derechos ARCO y Supresión de Datos</h2>
+            </div>
+            <div class="space-y-4 text-sm sm:text-base text-gray-700 dark:text-white/75 leading-relaxed">
+              <p>
+                Como titular de tus datos personales, tienes derecho a ejercer tus facultades de <strong>Acceso, Rectificación, Cancelación y Oposición (ARCO)</strong>, así como el <strong>Derecho al Olvido</strong> y la <strong>Portabilidad de Datos</strong>:
+              </p>
+              <ul class="list-disc pl-5 space-y-1.5 text-sm">
+                <li><strong>Acceso y Rectificación:</strong> Consultar y actualizar tus datos personales desde el panel de ajustes de tu cuenta.</li>
+                <li><strong>Portabilidad:</strong> Solicitar una copia de tus publicaciones e información de cuenta en formato digital.</li>
+                <li><strong>Cancelación y Borrado:</strong> Solicitar la eliminación total de tu cuenta y desindexación de tu perfil público.</li>
+              </ul>
+              <p>
+                Para ejercer cualquiera de estos derechos, envía un correo a <a href="mailto:bdercommunications@gmail.com" class="text-emerald-600 dark:text-lime font-bold underline">bdercommunications&#64;gmail.com</a> indicando tu nombre de usuario y tu petición. Daremos respuesta en un plazo no mayor a 20 días hábiles.
+              </p>
+            </div>
+          </section>
+
+          <!-- 9. Transferencias y Retención -->
+          <section id="international-retention" class="scroll-mt-28 bg-white dark:bg-[#121614] border border-gray-200 dark:border-white/10 rounded-2xl p-6 sm:p-8 shadow-sm">
+            <div class="flex items-center gap-3 mb-4">
+              <span class="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-lime/10 text-emerald-700 dark:text-lime font-bold text-sm flex items-center justify-center font-mono">09</span>
+              <h2 class="text-xl sm:text-2xl font-extrabold text-gray-900 dark:text-white font-display">Transferencias Internacionales y Retención de Información</h2>
+            </div>
+            <div class="space-y-4 text-sm sm:text-base text-gray-700 dark:text-white/75 leading-relaxed">
+              <p>
+                <strong>Infraestructura Internacional:</strong> Para ofrecer alta velocidad y disponibilidad global, nuestra arquitectura utiliza servidores en la nube y procesadores internacionales (Stripe, Google Cloud) que pueden transferir y almacenar datos en servidores de EE.UU. o la Unión Europea bajo cláusulas contractuales estándar y cifrado en reposo y en tránsito (TLS 1.3).
+              </p>
+              <p>
+                <strong>Retención por Requerimiento Fiscal:</strong> Si un usuario solicita el borrado de su cuenta, sus datos de perfil público se eliminan de inmediato; no obstante, conservaremos de forma disociada y anonimizada los registros de transacciones comerciales durante el plazo legal obligatorio (generalmente 5 años) exigido por autoridades tributarias y bancarias.
+              </p>
+            </div>
+          </section>
+
+          <!-- 10. Contacto y Modificaciones -->
+          <section id="contact-updates" class="scroll-mt-28 bg-white dark:bg-[#121614] border border-gray-200 dark:border-white/10 rounded-2xl p-6 sm:p-8 shadow-sm">
+            <div class="flex items-center gap-3 mb-4">
+              <span class="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-lime/10 text-emerald-700 dark:text-lime font-bold text-sm flex items-center justify-center font-mono">10</span>
+              <h2 class="text-xl sm:text-2xl font-extrabold text-gray-900 dark:text-white font-display">Contacto y Modificaciones al Aviso de Privacidad</h2>
+            </div>
+            <div class="space-y-4 text-sm sm:text-base text-gray-700 dark:text-white/75 leading-relaxed">
+              <p>
+                Nos reservamos el derecho de actualizar o modificar este Aviso de Privacidad cuando sea necesario para adaptarlo a reformas legislativas o mejoras operativas en Buymeashake.
+              </p>
+              <p>
+                Cualquier cambio relevante será comunicado mediante un banner visible en la plataforma o mediante correo electrónico a los usuarios registrados. El uso continuo del servicio tras la publicación de los cambios constituye tu aceptación.
+              </p>
+              <div class="pt-4 border-t border-gray-200 dark:border-white/10 text-xs text-gray-500 dark:text-white/50">
+                BDER COMMUNICATIONS AND TECHNOLOGIES · Hermosillo, Sonora, México · Correo oficial: <a href="mailto:bdercommunications@gmail.com" class="text-emerald-600 dark:text-lime underline">bdercommunications&#64;gmail.com</a>
+              </div>
+            </div>
+          </section>
+
+        } @else {
+          <!-- ENGLISH CONTENT -->
+
+          <!-- 1. Data Controller -->
+          <section id="responsible" class="scroll-mt-28 bg-white dark:bg-[#121614] border border-gray-200 dark:border-white/10 rounded-2xl p-6 sm:p-8 shadow-sm">
+            <div class="flex items-center gap-3 mb-4">
+              <span class="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-lime/10 text-emerald-700 dark:text-lime font-bold text-sm flex items-center justify-center font-mono">01</span>
+              <h2 class="text-xl sm:text-2xl font-extrabold text-gray-900 dark:text-white font-display">Data Controller & Scope</h2>
+            </div>
+            <div class="space-y-4 text-sm sm:text-base text-gray-700 dark:text-white/75 leading-relaxed">
+              <p>
+                <strong>BDER COMMUNICATIONS AND TECHNOLOGIES</strong> ("Buymeashake" or "Data Controller"), operating <strong>buymeashake.fit</strong>, is responsible for processing and safeguarding your personal information in accordance with international data privacy standards and fair information practices.
+              </p>
+              <p>
+                For any inquiries regarding this policy or data management, contact our privacy desk directly at: <a href="mailto:bdercommunications@gmail.com" class="text-emerald-600 dark:text-lime font-bold underline">bdercommunications&#64;gmail.com</a>.
+              </p>
+              <div class="p-4 rounded-xl bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-xs sm:text-sm text-gray-800 dark:text-white/90">
+                <strong class="text-emerald-700 dark:text-lime">Zero Sale Commitment:</strong> Buymeashake never sells, rents, or monetizes personal records to third-party advertisers or data brokers.
+              </div>
+            </div>
+          </section>
+
+          <!-- 2. Data We Collect -->
+          <section id="data-collected" class="scroll-mt-28 bg-white dark:bg-[#121614] border border-gray-200 dark:border-white/10 rounded-2xl p-6 sm:p-8 shadow-sm">
+            <div class="flex items-center gap-3 mb-4">
+              <span class="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-lime/10 text-emerald-700 dark:text-lime font-bold text-sm flex items-center justify-center font-mono">02</span>
+              <h2 class="text-xl sm:text-2xl font-extrabold text-gray-900 dark:text-white font-display">Categories of Personal Data We Collect</h2>
+            </div>
+            <div class="space-y-4 text-sm sm:text-base text-gray-700 dark:text-white/75 leading-relaxed">
+              <p>Depending on how you use Buymeashake, we collect the following types of information:</p>
+              
+              <ul class="list-disc pl-5 space-y-2">
+                <li>
+                  <strong class="text-gray-900 dark:text-white">Athlete / Creator Profile:</strong> Full name, public username (<code class="text-emerald-700 dark:text-lime bg-gray-100 dark:bg-white/5 px-1 py-0.5 rounded text-xs font-mono">&#64;your_handle</code>), email address, encrypted password (bcrypt hash), primary athletic discipline, biography, social media URLs, action avatar, and active sports goals.
+                </li>
+                <li>
+                  <strong class="text-gray-900 dark:text-white">Supporter Profile:</strong> Email address, public name or alias, shaker contribution history, and active membership tiers. Supporters may choose to contribute anonymously, in which case their identity is concealed from public display.
+                </li>
+                <li>
+                  <strong class="text-gray-900 dark:text-white">Content & Messaging:</strong> Notes attached to Shaker tips, comments on public updates, and uploaded files (cover images, digital routine PDFs).
+                </li>
+                <li>
+                  <strong class="text-gray-900 dark:text-white">Technical & Usage Logs:</strong> IP addresses, browser specifications, operating systems, and audit security logs used to protect the service against unauthorized intrusion.
+                </li>
+              </ul>
+            </div>
+          </section>
+
+          <!-- 3. Health & Fitness Data -->
+          <section id="health-data" class="scroll-mt-28 bg-amber-50/50 dark:bg-[#151a17] border-2 border-amber-300 dark:border-lime/40 rounded-2xl p-6 sm:p-8 relative overflow-hidden shadow-sm">
+            <div class="absolute top-0 right-0 px-4 py-1.5 bg-amber-500 text-white dark:bg-lime dark:text-void text-[10px] font-black uppercase tracking-widest rounded-bl-xl">
+              Special Fitness Clause
+            </div>
+
+            <div class="flex items-center gap-3 mb-4">
+              <span class="w-8 h-8 rounded-lg bg-amber-500 text-white dark:bg-lime dark:text-void font-black text-sm flex items-center justify-center font-mono">03</span>
+              <h2 class="text-xl sm:text-2xl font-black text-gray-900 dark:text-white font-display uppercase tracking-tight">
+                Health, Body Metrics & Sensitive Data
+              </h2>
+            </div>
+
+            <div class="space-y-4 text-sm sm:text-base text-gray-800 dark:text-white/80 leading-relaxed">
+              <div class="p-4 rounded-xl bg-red-100 dark:bg-flame/15 border border-red-200 dark:border-flame/30 text-xs sm:text-sm text-red-900 dark:text-white">
+                <strong class="text-red-700 dark:text-flame font-black uppercase block mb-1">NO CLINICAL DATA STORAGE:</strong>
+                Buymeashake.fit does NOT store medical histories or clinical health records.
+              </div>
+
+              <p>
+                <strong>1. Direct Coaching Consultations:</strong> During 1-on-1 advisory sessions or routine customization, users may voluntarily share physical metrics (weight, body fat percentage, lifting maxes, previous sports injuries) directly with their coach.
+              </p>
+              <p>
+                <strong>2. Coach-Client Privacy:</strong> This information remains strictly confidential between the athlete and client. Buymeashake does not harvest, algorithmically analyze, or monetize body metrics.
+              </p>
+            </div>
+          </section>
+
+          <!-- 4. Payments & Stripe Connect -->
+          <section id="payments-security" class="scroll-mt-28 bg-white dark:bg-[#121614] border border-gray-200 dark:border-white/10 rounded-2xl p-6 sm:p-8 shadow-sm">
+            <div class="flex items-center gap-3 mb-4">
+              <span class="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-lime/10 text-emerald-700 dark:text-lime font-bold text-sm flex items-center justify-center font-mono">04</span>
+              <h2 class="text-xl sm:text-2xl font-extrabold text-gray-900 dark:text-white font-display">Payment Security & Stripe Connect</h2>
+            </div>
+            <div class="space-y-4 text-sm sm:text-base text-gray-700 dark:text-white/75 leading-relaxed">
+              <p>
+                Financial transactions, contributions, and athlete payouts are handled through <strong>Stripe Inc.</strong> and <strong>Stripe Connect Express</strong>, audited under <strong>PCI-DSS Level 1</strong> compliance.
+              </p>
+              <ul class="list-disc pl-5 space-y-1.5">
+                <li>
+                  <strong class="text-gray-900 dark:text-white">What we NEVER store:</strong> Buymeashake does not store full 16-digit credit card numbers, expiration dates, or CVV/CVC security codes on its servers.
+                </li>
+                <li>
+                  <strong class="text-gray-900 dark:text-white">Tokenized Receipt Data:</strong> We receive a token, card brand (e.g. Visa, Amex), last four digits, and transaction receipt identifiers.
+                </li>
+                <li>
+                  <strong class="text-gray-900 dark:text-white">Athlete KYC & Bank Details:</strong> Payout accounts and identity documents are managed securely by Stripe Connect under banking compliance regulations.
+                </li>
+              </ul>
+            </div>
+          </section>
+
+          <!-- 5. 1-on-1 Calls & Scheduling -->
+          <section id="sessions-privacy" class="scroll-mt-28 bg-white dark:bg-[#121614] border border-gray-200 dark:border-white/10 rounded-2xl p-6 sm:p-8 shadow-sm">
+            <div class="flex items-center gap-3 mb-4">
+              <span class="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-lime/10 text-emerald-700 dark:text-lime font-bold text-sm flex items-center justify-center font-mono">05</span>
+              <h2 class="text-xl sm:text-2xl font-extrabold text-gray-900 dark:text-white font-display">1-on-1 Coaching Calls & Calendar Privacy</h2>
+            </div>
+            <div class="space-y-4 text-sm sm:text-base text-gray-700 dark:text-white/75 leading-relaxed">
+              <p>
+                When booking a lifting technique or advisory session, Buymeashake schedules the calendar event and generates a direct <strong>Google Meet</strong> link.
+              </p>
+              <div class="p-4 rounded-xl bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10">
+                <strong class="text-emerald-700 dark:text-lime block mb-1">Zero Audio/Video Recording:</strong>
+                Buymeashake does NOT record, transcribe, monitor, or store any video or audio from private coaching calls.
+              </div>
+            </div>
+          </section>
+
+          <!-- 6. Purposes of Processing -->
+          <section id="purposes" class="scroll-mt-28 bg-white dark:bg-[#121614] border border-gray-200 dark:border-white/10 rounded-2xl p-6 sm:p-8 shadow-sm">
+            <div class="flex items-center gap-3 mb-4">
+              <span class="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-lime/10 text-emerald-700 dark:text-lime font-bold text-sm flex items-center justify-center font-mono">06</span>
+              <h2 class="text-xl sm:text-2xl font-extrabold text-gray-900 dark:text-white font-display">Purposes of Processing</h2>
+            </div>
+            <div class="space-y-4 text-sm sm:text-base text-gray-700 dark:text-white/75 leading-relaxed">
+              <h3 class="font-bold text-gray-900 dark:text-white text-sm uppercase tracking-wider">Primary Purposes (Essential for Services):</h3>
+              <ul class="list-disc pl-5 space-y-1 text-sm">
+                <li>Create and manage athlete and supporter profiles.</li>
+                <li>Process shaker donations, membership renewals, PDF purchases, and calendar bookings.</li>
+                <li>Deliver instant secure download links for purchased fitness files.</li>
+                <li>Detect payment fraud and enforce platform security.</li>
+                <li>Transmit transactional email receipts and confirmations.</li>
+              </ul>
+
+              <h3 class="font-bold text-gray-900 dark:text-white text-sm uppercase tracking-wider mt-4">Secondary Purposes:</h3>
+              <ul class="list-disc pl-5 space-y-1 text-sm">
+                <li>Send platform updates and community news (opt-out available at any time).</li>
+                <li>Compute aggregated performance statistics.</li>
+              </ul>
+            </div>
+          </section>
+
+          <!-- 7. Cookies & Local Storage -->
+          <section id="cookies-storage" class="scroll-mt-28 bg-white dark:bg-[#121614] border border-gray-200 dark:border-white/10 rounded-2xl p-6 sm:p-8 shadow-sm">
+            <div class="flex items-center gap-3 mb-4">
+              <span class="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-lime/10 text-emerald-700 dark:text-lime font-bold text-sm flex items-center justify-center font-mono">07</span>
+              <h2 class="text-xl sm:text-2xl font-extrabold text-gray-900 dark:text-white font-display">Cookies & Local Storage</h2>
+            </div>
+            <div class="space-y-4 text-sm sm:text-base text-gray-700 dark:text-white/75 leading-relaxed">
+              <p>
+                We utilize minimal client-side storage (<code class="text-emerald-700 dark:text-lime bg-gray-100 dark:bg-white/5 px-1 py-0.5 rounded text-xs font-mono">localStorage</code>) and strictly necessary tokens:
+              </p>
+              <ul class="list-disc pl-5 space-y-2 text-sm">
+                <li><strong>Session Tokens (JWT):</strong> Securely preserves your authenticated session across app navigation.</li>
+                <li><strong>Theme Preference:</strong> Saves your dark or light mode preference.</li>
+                <li><strong>Language Preference:</strong> Stores your choice between Spanish and English.</li>
+              </ul>
+            </div>
+          </section>
+
+          <!-- 8. User Rights -->
+          <section id="user-rights" class="scroll-mt-28 bg-white dark:bg-[#121614] border border-gray-200 dark:border-white/10 rounded-2xl p-6 sm:p-8 shadow-sm">
+            <div class="flex items-center gap-3 mb-4">
+              <span class="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-lime/10 text-emerald-700 dark:text-lime font-bold text-sm flex items-center justify-center font-mono">08</span>
+              <h2 class="text-xl sm:text-2xl font-extrabold text-gray-900 dark:text-white font-display">Your Privacy Rights & Account Deletion</h2>
+            </div>
+            <div class="space-y-4 text-sm sm:text-base text-gray-700 dark:text-white/75 leading-relaxed">
+              <p>
+                You hold full control over your personal data, including the right to access, rectify, delete, or retrieve your information:
+              </p>
+              <ul class="list-disc pl-5 space-y-1.5 text-sm">
+                <li><strong>Access & Update:</strong> Modify personal details directly from your account settings.</li>
+                <li><strong>Data Portability:</strong> Request an export of your content and transaction history.</li>
+                <li><strong>Deletion & Right to be Forgotten:</strong> Request full profile closure and public erasure.</li>
+              </ul>
+              <p>
+                To submit a privacy request, email us at <a href="mailto:bdercommunications@gmail.com" class="text-emerald-600 dark:text-lime font-bold underline">bdercommunications&#64;gmail.com</a>.
+              </p>
+            </div>
+          </section>
+
+          <!-- 9. International Transfers -->
+          <section id="international-retention" class="scroll-mt-28 bg-white dark:bg-[#121614] border border-gray-200 dark:border-white/10 rounded-2xl p-6 sm:p-8 shadow-sm">
+            <div class="flex items-center gap-3 mb-4">
+              <span class="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-lime/10 text-emerald-700 dark:text-lime font-bold text-sm flex items-center justify-center font-mono">09</span>
+              <h2 class="text-xl sm:text-2xl font-extrabold text-gray-900 dark:text-white font-display">International Transfers & Statutory Retention</h2>
+            </div>
+            <div class="space-y-4 text-sm sm:text-base text-gray-700 dark:text-white/75 leading-relaxed">
+              <p>
+                <strong>Cross-Border Operations:</strong> To serve global athletes, our cloud architecture operates with encrypted international services (Stripe, Google Cloud) adhering to standard contractual clauses and TLS 1.3 encryption.
+              </p>
+              <p>
+                <strong>Tax & Accounting Retention:</strong> In the event of account deletion, public profiles are erased immediately; however, financial transaction records are retained in an anonymized state for the legally required period (typically 5 years) for tax audit compliance.
+              </p>
+            </div>
+          </section>
+
+          <!-- 10. Contact -->
+          <section id="contact-updates" class="scroll-mt-28 bg-white dark:bg-[#121614] border border-gray-200 dark:border-white/10 rounded-2xl p-6 sm:p-8 shadow-sm">
+            <div class="flex items-center gap-3 mb-4">
+              <span class="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-lime/10 text-emerald-700 dark:text-lime font-bold text-sm flex items-center justify-center font-mono">10</span>
+              <h2 class="text-xl sm:text-2xl font-extrabold text-gray-900 dark:text-white font-display">Contact & Policy Updates</h2>
+            </div>
+            <div class="space-y-4 text-sm sm:text-base text-gray-700 dark:text-white/75 leading-relaxed">
+              <p>
+                We may periodically update this policy to reflect platform updates or legal developments. Material updates will be communicated through platform notices or email.
+              </p>
+              <div class="pt-4 border-t border-gray-200 dark:border-white/10 text-xs text-gray-500 dark:text-white/50">
+                BDER COMMUNICATIONS AND TECHNOLOGIES · Hermosillo, Sonora, Mexico · Official email: <a href="mailto:bdercommunications@gmail.com" class="text-emerald-600 dark:text-lime underline">bdercommunications&#64;gmail.com</a>
+              </div>
+            </div>
+          </section>
+
+        }
+
+      </div>
+
+    </div>
+
+  </div>
+</div>

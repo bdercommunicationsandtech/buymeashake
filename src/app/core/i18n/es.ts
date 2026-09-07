@@ -45,6 +45,9 @@ export const es: TranslationSchema = {
     rights: 'Todos los derechos reservados.',
     tagline: 'La plataforma para que atletas y aficionados conecten mediante apoyo real.',
     disclaimer: 'Sin pagos reales: el checkout replica el diseño de Stripe únicamente con fines de prototipado.',
+    legal: 'Legal',
+    terms: 'Términos de servicio',
+    privacy: 'Política de privacidad',
   },
   dashboard: {
     title: 'Panel de Control',

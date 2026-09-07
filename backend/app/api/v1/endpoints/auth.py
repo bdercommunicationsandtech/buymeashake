@@ -1,3 +1,4 @@
+from typing import Any
 from fastapi import APIRouter, status
 
 from app.api.dependencies import CurrentUser, DatabaseSession

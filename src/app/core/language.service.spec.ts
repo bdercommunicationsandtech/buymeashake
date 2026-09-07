@@ -161,5 +161,57 @@ describe('LanguageService', () => {
     expect(service.t().pageEditorModals.editGoalTitle).toBe('Active goal');
     expect(service.t().pageEditorModals.saveChanges).toBe('Save changes');
   });
+
+  it('debe traducir reactivamente los títulos de notificaciones y normalizar singular/plural de shakes', () => {
+    // ES (por defecto)
+    expect(service.translateNotificationTitle('¡Recibiste 1 Shakes!')).toBe('¡Recibiste 1 Shake!');
+    expect(service.translateNotificationTitle('¡Recibiste 5 Shakes!')).toBe('¡Recibiste 5 Shakes!');
+    expect(service.translateNotificationTitle('1 Shakes received!')).toBe('¡Recibiste 1 Shake!');
+    expect(service.translateNotificationTitle('3 Shakes received!')).toBe('¡Recibiste 3 Shakes!');
+    expect(service.translateNotificationTitle('¡Nuevo Miembro en tu Comunidad! ⭐️')).toBe('¡Nuevo Miembro en tu Comunidad! ⭐️');
+    expect(service.translateNotificationTitle('Nuevo comentario en tu publicación')).toBe('Nuevo comentario en tu publicación');
+    expect(service.translateNotificationTitle('@carlosfit te ha respondido')).toBe('@carlosfit te ha respondido');
+
+    // EN
+    service.setLanguage('en');
+    expect(service.translateNotificationTitle('¡Recibiste 1 Shakes!')).toBe('You received 1 Shake!');
+    expect(service.translateNotificationTitle('¡Recibiste 5 Shakes!')).toBe('You received 5 Shakes!');
+    expect(service.translateNotificationTitle('1 Shakes received!')).toBe('You received 1 Shake!');
+    expect(service.translateNotificationTitle('3 Shakes received!')).toBe('You received 3 Shakes!');
+    expect(service.translateNotificationTitle('¡Nuevo Miembro en tu Comunidad! ⭐️')).toBe('New Member in your Community! ⭐️');
+    expect(service.translateNotificationTitle('Nuevo comentario en tu publicación')).toBe('New comment on your post');
+    expect(service.translateNotificationTitle('@carlosfit te ha respondido')).toBe('@carlosfit replied to you');
+  });
+
+  it('debe traducir reactivamente los mensajes de notificaciones y supporters anónimos/fan', () => {
+    // Caso de la captura de pantalla del usuario: "Un Fan te apoyó con 1 Shakes ($3.00 USD)."
+    // ES
+    expect(service.translateNotificationMessage('Un Fan te apoyó con 1 Shakes ($3.00 USD).')).toBe('Un Fan te apoyó con 1 Shake ($3.00 USD).');
+    expect(service.translateNotificationMessage('Alguien anónimo te apoyó con 5 Shakes ($15.00 USD).')).toBe('Alguien anónimo te apoyó con 5 Shakes ($15.00 USD).');
+    expect(service.translateNotificationMessage('Un seguidor se acaba de suscribir a tu nivel de membresía.')).toBe('Un seguidor se acaba de suscribir a tu nivel de membresía.');
+    expect(service.translateNotificationMessage('Juan Pérez comentó: "Gran entrenamiento!"')).toBe('Juan Pérez comentó: "Gran entrenamiento!"');
+
+    // EN
+    service.setLanguage('en');
+    expect(service.translateNotificationMessage('Un Fan te apoyó con 1 Shakes ($3.00 USD).')).toBe('A Fan supported you with 1 Shake ($3.00 USD).');
+    expect(service.translateNotificationMessage('Alguien anónimo te apoyó con 5 Shakes ($15.00 USD).')).toBe('Someone anonymous supported you with 5 Shakes ($15.00 USD).');
+    expect(service.translateNotificationMessage('Un seguidor se acaba de suscribir a tu nivel de membresía.')).toBe('A supporter just subscribed to your membership tier.');
+    expect(service.translateNotificationMessage('Juan Pérez comentó: "Gran entrenamiento!"')).toBe('Juan Pérez commented: "Gran entrenamiento!"');
+
+    // Mensajes provenientes de backend en inglés también se traducen reactivamente al cambiar idioma a ES
+    service.setLanguage('es');
+    expect(service.translateNotificationMessage('A Fan bought you 1 Shakes ($3.00 USD).')).toBe('Un Fan te apoyó con 1 Shake ($3.00 USD).');
+  });
+
+  it('debe tener las claves de supporterArea sincronizadas en ambos idiomas', () => {
+    expect(service.t().supporterArea.supporterAccount).toBe('Cuenta de Seguidor');
+    expect(service.t().supporterArea.followingFeed).toBe('Feed de Siguiendo');
+    expect(service.t().supporterArea.feedEmptyTitle).toBe('Tu feed está vacío');
+
+    service.setLanguage('en');
+    expect(service.t().supporterArea.supporterAccount).toBe('Supporter Account');
+    expect(service.t().supporterArea.followingFeed).toBe('Following Feed');
+    expect(service.t().supporterArea.feedEmptyTitle).toBe('Your feed is empty');
+  });
 });
 

@@ -1038,12 +1038,13 @@ class CheckoutService:
         else:
             supporter_display_name = "A Supporter"
 
+        shake_word = "Shake" if details.shakes_count == 1 else "Shakes"
         notif_repo = NotificationRepository(self.session)
         if profile.user_id:
             await notif_repo.create(
                 user_id=profile.user_id,
-                title=f"{details.shakes_count} Shakes received!",
-                message=f"{supporter_display_name} bought you {details.shakes_count} Shakes (${gross_amount} {dto.currency}).",
+                title=f"{details.shakes_count} {shake_word} received!",
+                message=f"{supporter_display_name} bought you {details.shakes_count} {shake_word} (${gross_amount} {dto.currency}).",
                 type_code=401,
                 action_url=f"/dashboard/supporters",
             )
@@ -1068,7 +1069,7 @@ class CheckoutService:
 
         return {
             "success": True,
-            "message": f"Successfully sent {details.shakes_count} Shakes to @{dto.athlete_handle}!",
+            "message": f"Successfully sent {details.shakes_count} {shake_word} to @{dto.athlete_handle}!",
             "transaction_uuid": tx.transaction_uuid,
             "gross_amount": float(gross_amount),
             "new_goal_raised": float(active_goal.raised_amount) if active_goal else None,

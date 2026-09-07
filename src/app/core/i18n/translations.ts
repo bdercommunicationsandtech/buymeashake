@@ -747,6 +747,21 @@ export interface TranslationSchema {
     saving: string;
     changesSaved: string;
     passwordLengthError: string;
+    supporterAccount: string;
+    followingFeed: string;
+    becomeCreatorAthlete: string;
+    followingTitle: string;
+    followedAthletesCount: string;
+    loadingFeed: string;
+    feedEmptyTitle: string;
+    feedEmptyDesc: string;
+    discoverAthletes: string;
+    followingSidebar: string;
+    findMoreAthletes: string;
+    athleteRole: string;
+    accountMenu: string;
+    createAthletePage: string;
+    beCreator: string;
   };
   pageEditorModals: {
     editProfileTitle: string;

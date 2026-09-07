@@ -444,7 +444,9 @@ class AthleteService:
             print(f"[WARN] reconcile_pending_shake_transactions: {e}")
 
         user = profile.user
-        active_goal = next((g for g in profile.goals if g.is_active), None)
+        active_goal = await GoalRepository(self.session).get_active_goal(profile.id)
+        if not active_goal:
+            active_goal = next((g for g in (profile.goals or []) if bool(g.is_active)), None)
 
         booking_services = [
             CreatorBookingServiceResponse(

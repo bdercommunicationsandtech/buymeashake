@@ -212,8 +212,18 @@ export class Creator {
       'Sesiones 1 a 1 para técnica, consultoría y seguimiento personalizado.',
   );
 
-  /** Hay agenda usable si el atleta publicó al menos un servicio de booking. */
-  readonly hasAgendaAvailable = computed(() => this.bookingServices().length > 0);
+  /**
+   * Agenda "activa" si hay copy/imagen configurados o servicios publicables.
+   * Antes solo mirábamos bookingServices y ocultábamos el texto guardado.
+   */
+  readonly hasAgendaAvailable = computed(() => {
+    if (this.bookingServices().length > 0) return true;
+    const c = this.creatorView();
+    if (!c) return false;
+    return Boolean(
+      c.agendaTitle?.trim() || c.agendaDescription?.trim() || c.agendaImageUrl?.trim(),
+    );
+  });
 
   readonly hasActiveGoal = computed(() => Boolean(this.creatorView()?.hasActiveGoal));
 
@@ -616,11 +626,11 @@ export class Creator {
         .join('')
         .slice(0, 2)
         .toUpperCase(),
-      goalTitle: profile.active_goal_title || '',
+      goalTitle: profile.active_goal_title?.trim() || '',
       goalTarget: goalTarget,
       goalRaised: goalRaised,
       goalCoverImageUrl: profile.active_goal_cover_image_url ?? null,
-      hasActiveGoal: Boolean(profile.active_goal_title),
+      hasActiveGoal: Boolean(profile.active_goal_title?.trim()),
       supporters: followersCount,
       shakesReceived,
       disciplines: [profile.primary_sport],

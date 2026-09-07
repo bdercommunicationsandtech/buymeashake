@@ -297,14 +297,19 @@ class GoalRepository:
         return result.scalar_one_or_none()
 
     async def create_goal(self, goal: Goal) -> Goal:
-        # Desactivar todas las otras metas del atleta si esta nueva viene activa
+        # Desactivar otras metas; excluir esta instancia si ya tiene id
         if goal.is_active:
             from sqlalchemy import update
-            await self.session.execute(
-                update(Goal).where(Goal.athlete_id == goal.athlete_id).values(is_active=False)
-            )
+
+            stmt = update(Goal).where(Goal.athlete_id == goal.athlete_id).values(is_active=False)
+            if goal.id is not None:
+                stmt = stmt.where(Goal.id != goal.id)
+            await self.session.execute(stmt)
 
         self.session.add(goal)
+        await self.session.flush()
+        # Asegurar que quede activa tras el bulk update
+        goal.is_active = True
         await self.session.flush()
         await self.session.refresh(goal)
         return goal

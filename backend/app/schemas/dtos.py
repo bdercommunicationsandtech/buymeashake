@@ -118,6 +118,14 @@ class UserMeResponse(BaseModel):
     referral_code: str | None = None
 
 
+class UpgradeToAthleteRequest(BaseModel):
+    handle: str = Field(min_length=3, max_length=30, pattern="^[a-z0-9_]{3,30}$")
+    full_name: str | None = Field(default=None, min_length=2, max_length=150)
+    primary_sport_code: int | None = Field(default=None)
+    bio: str | None = None
+    city: str | None = None
+    shake_price: Decimal | None = Field(default=None, ge=1)
+
 
 # ==============================================================================
 # 2. LOOKUPS & APP VERSION

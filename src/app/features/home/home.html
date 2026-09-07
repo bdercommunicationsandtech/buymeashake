@@ -97,42 +97,83 @@
           <span>{{ t().home.activeDisciplines }}</span>
         </span>
         
-        <div class="flex flex-wrap items-center gap-2.5">
-          <!-- 1. Hipertrofia / Gym (Mancuerna sola) -->
-          <div class="flex items-center gap-2.5 bg-white dark:bg-[#121614] border border-gray-200/80 dark:border-white/10 rounded-2xl px-3.5 py-2 shadow-xs text-gray-900 dark:text-white hover:text-emerald-600 dark:hover:text-[#c9ff3d] hover:border-[#c9ff3d]/60 transition group cursor-pointer">
-            <app-animated-dumbbell [size]="20" customClass="text-emerald-600 dark:text-[#c9ff3d]" />
-            <span class="text-xs font-black">{{ t().home.disciplines.hypertrophy }}</span>
+        <!-- Contenedor del Carrusel Animado (Marquee) -->
+        <style>
+          @keyframes marquee {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-100%); }
+          }
+          .animate-marquee-infinite {
+            display: flex;
+            flex-shrink: 0;
+            min-width: 100%;
+            animation: marquee 30s linear infinite;
+          }
+          .marquee-container:hover .animate-marquee-infinite {
+            animation-play-state: paused;
+          }
+        </style>
+
+        <div class="marquee-container flex items-center overflow-hidden relative w-full flex-1" style="mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent);">
+          
+          <ng-template #disciplinePill let-discipline>
+            <a routerLink="/explore" [queryParams]="{category: discipline.label}" class="shrink-0 flex items-center gap-2.5 bg-white dark:bg-[#121614] border border-gray-200/80 dark:border-white/10 rounded-2xl px-3.5 py-2 shadow-xs text-gray-900 dark:text-white hover:text-emerald-600 dark:hover:text-[#c9ff3d] hover:border-[#c9ff3d]/60 transition group cursor-pointer">
+              @switch (discipline.icon) {
+                @case ('dumbbell') {
+                  <app-animated-dumbbell [size]="20" customClass="text-emerald-600 dark:text-[#c9ff3d]" />
+                }
+                @case ('fire') {
+                  <app-animated-kettlebell [size]="20" customClass="text-emerald-600 dark:text-[#c9ff3d]" />
+                }
+                @case ('running') {
+                  <app-animated-runner [size]="20" customClass="text-emerald-600 dark:text-[#c9ff3d]" />
+                }
+                @case ('boxing-glove') {
+                  <app-animated-boxing-icon [size]="20" customClass="text-red-500" />
+                }
+                @case ('football') {
+                  <app-animated-football [size]="20" customClass="text-gray-900 dark:text-white" />
+                }
+                @case ('soccer-ball') {
+                  <app-animated-soccer [size]="20" customClass="text-gray-900 dark:text-white" />
+                }
+                @case ('water') {
+                  <app-animated-shaker [size]="20" customClass="text-emerald-600 dark:text-[#c9ff3d]" />
+                }
+                @case ('bicycle') {
+                  <app-animated-bicycle [size]="20" customClass="text-emerald-600 dark:text-[#c9ff3d]" />
+                }
+                @case ('swimmer') {
+                  <app-animated-swimmer [size]="20" customClass="text-emerald-600 dark:text-[#c9ff3d]" />
+                }
+                @case ('spa') {
+                  <app-animated-spa [size]="20" customClass="text-emerald-600 dark:text-[#c9ff3d]" />
+                }
+                @case ('body') {
+                  <app-animated-body [size]="20" customClass="text-emerald-600 dark:text-[#c9ff3d]" />
+                }
+                @default {
+                  <app-icon-dumbbell size="20" customClass="text-gray-400" />
+                }
+              }
+              <span class="text-xs font-black">{{ languageService.translateDiscipline(discipline.label) }}</span>
+            </a>
+          </ng-template>
+
+          <!-- Primer grupo -->
+          <div class="animate-marquee-infinite gap-2.5 items-center pr-2.5">
+            @for (discipline of disciplines(); track discipline.code) {
+              <ng-container *ngTemplateOutlet="disciplinePill; context: { $implicit: discipline }"></ng-container>
+            }
           </div>
 
-          <!-- 2. CrossFit (Kettlebell / Pesa Rusa) -->
-          <div class="flex items-center gap-2.5 bg-white dark:bg-[#121614] border border-gray-200/80 dark:border-white/10 rounded-2xl px-3.5 py-2 shadow-xs text-gray-900 dark:text-white hover:text-emerald-600 dark:hover:text-[#c9ff3d] hover:border-[#c9ff3d]/60 transition group cursor-pointer">
-            <app-animated-kettlebell [size]="20" customClass="text-emerald-600 dark:text-[#c9ff3d]" />
-            <span class="text-xs font-black">{{ t().home.disciplines.crossfit }}</span>
+          <!-- Segundo grupo (clonado para loop infinito) -->
+          <div class="animate-marquee-infinite gap-2.5 items-center pr-2.5" aria-hidden="true">
+            @for (discipline of disciplines(); track discipline.code + '_dup') {
+              <ng-container *ngTemplateOutlet="disciplinePill; context: { $implicit: discipline }"></ng-container>
+            }
           </div>
 
-          <!-- 3. Boxeo / Combate (Guantes de boxeo rojos colgantes) -->
-          <div class="flex items-center gap-2.5 bg-white dark:bg-[#121614] border border-gray-200/80 dark:border-white/10 rounded-2xl px-3.5 py-2 shadow-xs text-gray-900 dark:text-white hover:text-emerald-600 dark:hover:text-[#c9ff3d] hover:border-[#c9ff3d]/60 transition group cursor-pointer">
-            <app-animated-boxing-icon [size]="20" customClass="text-red-500" />
-            <span class="text-xs font-black">{{ t().home.disciplines.boxing }}</span>
-          </div>
-
-          <!-- 4. Fútbol (Balón clásico animado) -->
-          <div class="flex items-center gap-2.5 bg-white dark:bg-[#121614] border border-gray-200/80 dark:border-white/10 rounded-2xl px-3.5 py-2 shadow-xs text-gray-900 dark:text-white hover:text-emerald-600 dark:hover:text-[#c9ff3d] hover:border-[#c9ff3d]/60 transition group cursor-pointer">
-            <app-animated-soccer [size]="20" customClass="text-gray-900 dark:text-white" />
-            <span class="text-xs font-black">{{ t().home.disciplines.soccer }}</span>
-          </div>
-
-          <!-- 5. Nutrición (Shaker con líquido verde) -->
-          <div class="flex items-center gap-2.5 bg-white dark:bg-[#121614] border border-gray-200/80 dark:border-white/10 rounded-2xl px-3.5 py-2 shadow-xs text-gray-900 dark:text-white hover:text-emerald-600 dark:hover:text-[#c9ff3d] hover:border-[#c9ff3d]/60 transition group cursor-pointer">
-            <app-animated-shaker [size]="20" customClass="text-emerald-600 dark:text-[#c9ff3d]" />
-            <span class="text-xs font-black">{{ t().home.disciplines.nutrition }}</span>
-          </div>
-
-          <!-- 6. Running / Atletismo -->
-          <div class="flex items-center gap-2.5 bg-white dark:bg-[#121614] border border-gray-200/80 dark:border-white/10 rounded-2xl px-3.5 py-2 shadow-xs text-gray-900 dark:text-white hover:text-emerald-600 dark:hover:text-[#c9ff3d] hover:border-[#c9ff3d]/60 transition group cursor-pointer">
-            <app-animated-runner [size]="20" customClass="text-emerald-600 dark:text-[#c9ff3d]" />
-            <span class="text-xs font-black">{{ t().home.disciplines.running }}</span>
-          </div>
         </div>
       </div>
 

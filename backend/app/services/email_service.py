@@ -23,7 +23,7 @@ def generate_otp_html(code: str, athlete_name: str | None = None) -> str:
         <tr>
           <td align="center" style="padding: 36px 24px 20px 24px;">
             <div style="display: inline-block; background-color: #c9ff3d; color: #070a08; font-weight: 900; font-size: 20px; padding: 10px 14px; border-radius: 16px; margin-bottom: 12px;">
-              🥤
+              
             </div>
             <h1 style="margin: 0; font-size: 22px; font-weight: 900; letter-spacing: -0.5px; color: #ffffff;">
               buymeashake<span style="color: #c9ff3d;">.fit</span>
@@ -121,7 +121,7 @@ def generate_thank_you_html(athlete_name: str, athlete_handle: str, shakes_count
         <tr>
           <td align="center" style="padding: 36px 24px 20px 24px;">
             <div style="display: inline-block; background-color: #c9ff3d; color: #070a08; font-weight: 900; font-size: 20px; padding: 10px 14px; border-radius: 16px; margin-bottom: 12px;">
-              🥤
+              
             </div>
             <h1 style="margin: 0; font-size: 22px; font-weight: 900; letter-spacing: -0.5px; color: #ffffff;">
               buymeashake<span style="color: #c9ff3d;">.fit</span>

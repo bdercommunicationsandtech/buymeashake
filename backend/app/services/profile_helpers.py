@@ -122,20 +122,40 @@ async def resolve_sport_item_id(session: AsyncSession, sport_code: int | None) -
 
 async def ensure_child_rows(session: AsyncSession, athlete: AthleteProfile, *, referral_code: str, referred_by_id: int | None = None) -> None:
     """Create default child rows for a new athlete profile."""
-    if not athlete.page_settings:
-        session.add(AthletePageSettings(athlete_id=athlete.id))
-    if not athlete.monetization:
-        session.add(AthleteMonetization(athlete_id=athlete.id, shake_price=Decimal("3.00"), currency="USD"))
-    if not athlete.payouts:
-        session.add(AthletePayouts(athlete_id=athlete.id, payouts_enabled=False))
-    if not athlete.referrals:
-        session.add(
-            AthleteReferrals(
-                athlete_id=athlete.id,
-                referral_code=referral_code,
-                referred_by_id=referred_by_id,
-            )
+    if athlete.id:
+        from sqlalchemy import inspect
+        state = inspect(athlete)
+        has_page_settings = "page_settings" not in state.unloaded and athlete.page_settings is not None
+        has_monetization = "monetization" not in state.unloaded and athlete.monetization is not None
+        has_payouts = "payouts" not in state.unloaded and athlete.payouts is not None
+        has_referrals = "referrals" not in state.unloaded and athlete.referrals is not None
+    else:
+        has_page_settings = False
+        has_monetization = False
+        has_payouts = False
+        has_referrals = False
+
+    if not has_page_settings:
+        ps = AthletePageSettings(athlete_id=athlete.id)
+        session.add(ps)
+        athlete.page_settings = ps
+    if not has_monetization:
+        mon = AthleteMonetization(athlete_id=athlete.id, shake_price=Decimal("3.00"), currency="USD")
+        session.add(mon)
+        athlete.monetization = mon
+    if not has_payouts:
+        payouts = AthletePayouts(athlete_id=athlete.id, payouts_enabled=False)
+        session.add(payouts)
+        athlete.payouts = payouts
+    if not has_referrals:
+        referrals = AthleteReferrals(
+            athlete_id=athlete.id,
+            referral_code=referral_code,
+            referred_by_id=referred_by_id,
         )
+        session.add(referrals)
+        athlete.referrals = referrals
+
     await session.flush()
 
 
@@ -160,7 +180,9 @@ async def upsert_social_links(session: AsyncSession, athlete: AthleteProfile, ur
 
 
 def ensure_page_settings(session: AsyncSession, athlete: AthleteProfile) -> AthletePageSettings:
-    if athlete.page_settings:
+    from sqlalchemy import inspect
+    state = inspect(athlete)
+    if "page_settings" not in state.unloaded and athlete.page_settings:
         return athlete.page_settings
     ps = AthletePageSettings(athlete_id=athlete.id)
     session.add(ps)
@@ -169,7 +191,9 @@ def ensure_page_settings(session: AsyncSession, athlete: AthleteProfile) -> Athl
 
 
 def ensure_monetization(session: AsyncSession, athlete: AthleteProfile) -> AthleteMonetization:
-    if athlete.monetization:
+    from sqlalchemy import inspect
+    state = inspect(athlete)
+    if "monetization" not in state.unloaded and athlete.monetization:
         return athlete.monetization
     m = AthleteMonetization(athlete_id=athlete.id)
     session.add(m)
@@ -178,7 +202,9 @@ def ensure_monetization(session: AsyncSession, athlete: AthleteProfile) -> Athle
 
 
 def ensure_payouts(session: AsyncSession, athlete: AthleteProfile) -> AthletePayouts:
-    if athlete.payouts:
+    from sqlalchemy import inspect
+    state = inspect(athlete)
+    if "payouts" not in state.unloaded and athlete.payouts:
         return athlete.payouts
     p = AthletePayouts(athlete_id=athlete.id)
     session.add(p)

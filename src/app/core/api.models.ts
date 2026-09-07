@@ -34,6 +34,15 @@ export interface UserRegisterPayload {
   referral_code?: string;
 }
 
+export interface UpgradeToAthletePayload {
+  handle: string;
+  full_name?: string;
+  primary_sport_code?: number;
+  bio?: string;
+  city?: string;
+  shake_price?: number;
+}
+
 export interface UserLoginPayload {
   email: string;
   password: string;

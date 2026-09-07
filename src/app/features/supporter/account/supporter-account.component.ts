@@ -114,7 +114,7 @@ import { ThemeService } from '../../../core/theme.service';
             <!-- Avatar -->
             <div class="flex items-center gap-4">
               <div class="h-16 w-16 rounded-full bg-amber-800 text-white grid place-items-center font-black text-xl shadow-xs border-2 border-white dark:border-white/10">
-                🥤
+                
               </div>
               <div>
                 <p class="text-xs font-bold text-gray-900 dark:text-white">Foto de Perfil</p>

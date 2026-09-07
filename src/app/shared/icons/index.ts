@@ -21,3 +21,8 @@ export * from './animated-dumbbell';
 export * from './animated-soccer';
 export * from './animated-boxing-icon';
 
+export * from './animated-bicycle';
+export * from './animated-swimmer';
+export * from './animated-football';
+export * from './animated-spa';
+export * from './animated-body';

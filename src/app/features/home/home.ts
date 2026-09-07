@@ -1,7 +1,9 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { CheckoutService } from '../../core/checkout.service';
+import { LookupService } from '../../core/lookup.service';
+import { LookupItemDto } from '../../core/api.models';
 import { LanguageService } from '../../core/language.service';
 import { SHAKE_PRICE } from '../../core/demo';
 import {
@@ -11,6 +13,11 @@ import {
   AnimatedDumbbellComponent,
   AnimatedSoccerComponent,
   AnimatedBoxingIconComponent,
+  AnimatedBicycleComponent,
+  AnimatedSwimmerComponent,
+  AnimatedFootballComponent,
+  AnimatedSpaComponent,
+  AnimatedBodyComponent,
   IconButtonShareComponent,
   IconButtonSupportComponent,
   IconDumbbellComponent,
@@ -46,18 +53,25 @@ export interface FloatingAthlete {
     AnimatedDumbbellComponent,
     AnimatedSoccerComponent,
     AnimatedBoxingIconComponent,
+  AnimatedBicycleComponent,
+  AnimatedSwimmerComponent,
+  AnimatedFootballComponent,
+  AnimatedSpaComponent,
+  AnimatedBodyComponent,
   ],
   templateUrl: './home.html',
 })
-export class Home {
+export class Home implements OnInit {
   private readonly checkout = inject(CheckoutService);
-  private readonly languageService = inject(LanguageService);
+  readonly languageService = inject(LanguageService);
+  private readonly lookupService = inject(LookupService);
 
   readonly t = this.languageService.t;
 
   readonly shakePrice = SHAKE_PRICE;
   readonly shakesCount = signal(3);
   readonly supportMessage = signal('');
+  readonly disciplines = signal<LookupItemDto[]>([]);
 
   readonly leftAthletes = computed<FloatingAthlete[]>(() => {
     const isEn = this.languageService.lang() === 'en';
@@ -94,6 +108,12 @@ export class Home {
     { rank: 2, name: 'Mateo Vargas', handle: 'mateorun', sport: 'Ultra Running', shakes: 289, initials: 'MV' },
     { rank: 3, name: 'Camila Ortiz', handle: 'cami_cross', sport: 'CrossFit', shakes: 215, initials: 'CO' },
   ];
+
+  ngOnInit(): void {
+    this.lookupService.getSportDisciplines().subscribe({
+      next: (items) => this.disciplines.set(items),
+    });
+  }
 
   setShakes(n: number): void {
     this.shakesCount.set(n);

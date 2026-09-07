@@ -143,6 +143,7 @@ export interface TranslationSchema {
   };
   explore: {
     badge: string;
+    monthlyRanking: string;
     title: string;
     subtitle: string;
     searchPlaceholder: string;
@@ -152,10 +153,18 @@ export interface TranslationSchema {
     firstPlace: string;
     secondPlace: string;
     thirdPlace: string;
+    champion: string;
     shakesThisMonth: string;
+    raised: string;
     inviteShake: string;
     rankAndAthlete: string;
     shakesReceived: string;
+    fullRanking: string;
+    showingRanks4To10: string;
+    rank: string;
+    athlete: string;
+    discipline: string;
+    action: string;
     support: string;
     exploreByDiscipline: string;
     all: string;

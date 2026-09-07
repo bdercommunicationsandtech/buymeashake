@@ -17,7 +17,7 @@ import { Creator } from '../../creator/creator';
           <a
             [routerLink]="['/', handle()]"
             class="shrink-0 text-xs font-black text-[#c9ff3d] hover:underline"
-          >Ver como visitante ↗</a>
+          >Ver como visitante </a>
         </div>
       </div>
       <app-creator [username]="handle()!" [editMode]="true" />

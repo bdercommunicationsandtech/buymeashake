@@ -458,6 +458,8 @@ export interface TranslationSchema {
     noGoalsDesc: string;
     joinFor: string;
     perMonth: string;
+    supportMonthlyPrefix: string;
+    orJoinTier: string;
     secureCheckoutNote: string;
     postsTitle: string;
     postsSubtitle: string;

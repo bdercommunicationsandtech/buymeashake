@@ -829,11 +829,15 @@ export class Creator {
 
     this.openingStripe.set(true);
 
+    const isEn = this.languageService.currentLang() === 'en';
+    const defaultAnon = isEn ? 'Someone anonymous' : 'Alguien anónimo';
+    const defaultFan = isEn ? 'A Fan' : 'Un Fan';
+
     this.paymentService
       .createStripeCheckoutSession({
         athlete_handle: c.handle,
         currency: this.currency(),
-        supporter_name: this.isAnonymous() ? 'Alguien anónimo' : (this.supporterName() || 'Un Fan'),
+        supporter_name: this.isAnonymous() ? defaultAnon : (this.supporterName() || defaultFan),
         shake_details: {
           shakes_count: this.shakes(),
           supporter_message: this.message(),

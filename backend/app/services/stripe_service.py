@@ -489,12 +489,13 @@ class StripeService:
         athlete_res = await self.session.execute(athlete_stmt)
         athlete = athlete_res.scalar_one_or_none()
 
+        shake_word = "Shake" if shakes_count == 1 else "Shakes"
         supporter_display = "Alguien anónimo" if is_anonymous else (tx.supporter_name or "Un Supporter")
         if athlete and athlete.user_id:
             notif = Notification(
                 user_id=athlete.user_id,
-                title=f"¡Recibiste {shakes_count} Shakes!",
-                message=f"{supporter_display} te apoyó con {shakes_count} Shakes (${tx.gross_amount} USD).",
+                title=f"¡Recibiste {shakes_count} {shake_word}!",
+                message=f"{supporter_display} te apoyó con {shakes_count} {shake_word} (${tx.gross_amount} USD).",
                 type_code=401,
                 action_url="/dashboard/supporters",
             )
@@ -1133,12 +1134,13 @@ class StripeService:
         )
 
         # Crear notificación para el atleta
+        shake_word = "Shake" if shakes_count == 1 else "Shakes"
         supporter_display = "Alguien anónimo" if is_anonymous else (supporter_name or "Un Supporter")
         if athlete.user_id:
             notif = Notification(
                 user_id=athlete.user_id,
-                title=f"¡Recibiste {shakes_count} Shakes!",
-                message=f"{supporter_display} te apoyó con {shakes_count} Shakes (${gross_amount} USD).",
+                title=f"¡Recibiste {shakes_count} {shake_word}!",
+                message=f"{supporter_display} te apoyó con {shakes_count} {shake_word} (${gross_amount} USD).",
                 type_code=401,
                 action_url="/dashboard/supporters",
             )

@@ -205,7 +205,7 @@
     <div class="flex-1 flex flex-col min-w-0 overflow-y-auto">
       
       <!-- Topbar Header con botón hamburguesa móvil, avatar y notificaciones -->
-      <header class="h-16 bg-white dark:bg-[#121614] border-b border-gray-200/80 dark:border-white/10 px-4 sm:px-10 flex items-center justify-between sticky top-0 z-30 transition-colors">
+      <header class="relative h-16 bg-white dark:bg-[#121614] border-b border-gray-200/80 dark:border-white/10 px-4 sm:px-10 flex items-center justify-between sticky top-0 z-30 transition-colors">
         
         <!-- Botón Hamburguesa (Solo Móvil) -->
         <button
@@ -219,7 +219,7 @@
           </svg>
         </button>
 
-        <div class="flex items-center gap-3 ml-auto">
+        <div class="flex items-center gap-2 sm:gap-3 ml-auto">
           <!-- Botón Selector de Idioma (ES / EN) -->
           <button
             type="button"
@@ -254,12 +254,12 @@
           </button>
 
           <!-- Notificaciones con Dropdown -->
-          <div class="relative">
+          <div class="sm:relative">
             <button
               type="button"
               (click)="toggleNotifMenu()"
               class="relative h-9 w-9 rounded-full bg-gray-50 dark:bg-white/5 hover:bg-gray-100 dark:hover:bg-white/10 grid place-items-center text-gray-600 dark:text-gray-300 transition cursor-pointer"
-              aria-label="Ver notificaciones"
+              [attr.aria-label]="t().dashboard.notifications"
             >
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
@@ -271,12 +271,25 @@
 
             <!-- Popover de Notificaciones -->
             @if (notifMenuOpen()) {
-              <div class="absolute right-0 mt-2 w-80 bg-white dark:bg-[#121614] rounded-2xl shadow-xl border border-gray-200/80 dark:border-white/10 py-2 z-50 animate-in fade-in zoom-in-95 duration-100">
+              <!-- Backdrop para cerrar al hacer clic afuera -->
+              <div class="fixed inset-0 z-40" (click)="notifMenuOpen.set(false)" aria-hidden="true"></div>
+
+              <div class="absolute left-3 right-3 sm:left-auto sm:right-0 top-full mt-2 sm:w-80 max-w-sm sm:max-w-none mx-auto sm:mx-0 bg-white dark:bg-[#121614] rounded-2xl shadow-2xl border border-gray-200/80 dark:border-white/10 py-2 z-50 animate-in fade-in zoom-in-95 duration-100">
                 <div class="px-4 py-2.5 border-b border-gray-100 dark:border-white/5 flex items-center justify-between">
                   <p class="text-xs font-bold text-gray-900 dark:text-white">{{ t().dashboard.notifications }}</p>
-                  <span class="text-[10px] font-extrabold bg-[#c9ff3d]/20 text-[#c9ff3d] px-2 py-0.5 rounded-full">
-                    {{ notifications().length }}
-                  </span>
+                  <div class="flex items-center gap-2">
+                    <span class="text-[10px] font-extrabold bg-[#c9ff3d]/20 text-[#c9ff3d] px-2 py-0.5 rounded-full">
+                      {{ notifications().length }}
+                    </span>
+                    <button
+                      type="button"
+                      (click)="notifMenuOpen.set(false)"
+                      class="sm:hidden text-gray-400 hover:text-gray-600 dark:hover:text-white text-xs p-1 leading-none"
+                      aria-label="Cerrar notificaciones"
+                    >
+                      ✕
+                    </button>
+                  </div>
                 </div>
 
                 <div class="max-h-72 overflow-y-auto divide-y divide-gray-100 dark:divide-white/5">
@@ -290,8 +303,12 @@
                         🥤
                       </div>
                       <div class="min-w-0 flex-1">
-                        <p class="text-xs font-bold text-gray-900 dark:text-white leading-tight">{{ n.title }}</p>
-                        <p class="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5 line-clamp-2">{{ n.message }}</p>
+                        <p class="text-xs font-bold text-gray-900 dark:text-white leading-tight">
+                          {{ languageService.translateNotificationTitle(n.title) }}
+                        </p>
+                        <p class="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5 line-clamp-2">
+                          {{ languageService.translateNotificationMessage(n.message) }}
+                        </p>
                         <span class="text-[9px] text-gray-400 mt-1 block">
                           {{ n.created_at | date:'short' }}
                         </span>
@@ -312,18 +329,21 @@
             <button
               type="button"
               (click)="toggleUserMenu()"
-              class="flex items-center gap-2 bg-gray-50 dark:bg-white/5 border border-gray-200/80 dark:border-white/10 rounded-full py-1 pl-1 pr-3 cursor-pointer hover:bg-gray-100 dark:hover:bg-white/10 transition"
+              class="flex items-center gap-2 bg-gray-50 dark:bg-white/5 border border-gray-200/80 dark:border-white/10 rounded-full py-1 pl-1 pr-1.5 sm:pr-3 cursor-pointer hover:bg-gray-100 dark:hover:bg-white/10 transition"
             >
               <div class="h-7 w-7 rounded-full bg-gray-900 dark:bg-white/15 text-[#c9ff3d] grid place-items-center text-[10px] font-black">
                 {{ (profile()?.full_name || 'Atleta').slice(0, 2).toUpperCase() }}
               </div>
-              <span class="text-xs font-bold text-gray-700 dark:text-gray-200 max-w-[120px] truncate">
+              <span class="hidden sm:inline text-xs font-bold text-gray-700 dark:text-gray-200 max-w-[120px] truncate">
                 {{ profile()?.full_name || profile()?.handle || 'Mi Perfil' }}
               </span>
             </button>
 
             <!-- Dropdown Menu de Atleta -->
             @if (userMenuOpen()) {
+              <!-- Backdrop para cerrar al hacer clic afuera -->
+              <div class="fixed inset-0 z-40" (click)="userMenuOpen.set(false)" aria-hidden="true"></div>
+
               <div class="absolute right-0 mt-2 w-52 bg-white dark:bg-[#121614] rounded-2xl shadow-xl border border-gray-200/80 dark:border-white/10 py-2 z-50 animate-in fade-in zoom-in-95 duration-100">
                 <div class="px-4 py-2 border-b border-gray-100 dark:border-white/5">
                   <p class="text-xs font-bold text-gray-500 dark:border-white/5">{{ t().dashboard.accountType }}</p>

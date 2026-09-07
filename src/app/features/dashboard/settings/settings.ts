@@ -17,7 +17,12 @@ export class DashboardSettings implements OnInit {
   private readonly dashboardService = inject(DashboardService);
   private readonly lookupService = inject(LookupService);
   readonly languageService = inject(LanguageService);
+  readonly lang = this.languageService.lang;
   readonly t = this.languageService.currentTranslations;
+
+  setLanguage(l: 'es' | 'en'): void {
+    this.languageService.setLanguage(l);
+  }
 
   readonly Math = Math;
 

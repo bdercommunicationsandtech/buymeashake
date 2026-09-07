@@ -13,9 +13,10 @@ class DomainException(Exception):
 
 
 class EntityNotFoundError(DomainException):
-    def __init__(self, entity_name: str, identifier: Any):
+    def __init__(self, entity_name: str, identifier: Any, message: str | None = None):
+        msg = message or f"{entity_name} not found."
         super().__init__(
-            message=f"{entity_name} not found.",
+            message=msg,
             code="ENTITY_NOT_FOUND",
             details={"entity": entity_name, "identifier": str(identifier)},
         )
@@ -31,8 +32,8 @@ class EntityAlreadyExistsError(DomainException):
 
 
 class UnauthorizedError(DomainException):
-    def __init__(self, message: str = "Invalid credentials or session expired."):
-        super().__init__(message=message, code="UNAUTHORIZED")
+    def __init__(self, message: str = "Invalid credentials or session expired.", details: dict[str, Any] | None = None):
+        super().__init__(message=message, code="UNAUTHORIZED", details=details)
 
 
 class ForbiddenError(DomainException):
@@ -46,7 +47,7 @@ class RateLimitExceededError(DomainException):
         super().__init__(
             message=msg,
             code="RATE_LIMIT_EXCEEDED",
-            details={"wait_seconds": wait_seconds},
+            details={"wait_seconds": wait_seconds, "has_active_otp": True},
         )
 
 

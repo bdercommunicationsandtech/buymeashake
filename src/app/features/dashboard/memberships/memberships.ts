@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DashboardService } from '../../../core/dashboard.service';
 import { MembershipTierItem } from '../../../core/api.models';
+import { LanguageService } from '../../../core/language.service';
 
 @Component({
   selector: 'app-dashboard-memberships',
@@ -12,6 +13,8 @@ import { MembershipTierItem } from '../../../core/api.models';
 })
 export class DashboardMemberships implements OnInit {
   private readonly dashboardService = inject(DashboardService);
+  readonly languageService = inject(LanguageService);
+  readonly t = this.languageService.currentTranslations;
 
   readonly loading = signal(true);
   readonly saving = signal(false);

@@ -66,6 +66,7 @@ class RequestOtpRequest(BaseModel):
     email: EmailStr
     name: str | None = None
     athlete_handle: str | None = None
+    purpose: str | None = "login"
 
 
 class VerifyOtpRequest(BaseModel):

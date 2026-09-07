@@ -1,6 +1,7 @@
 import secrets
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from decimal import Decimal
+from typing import Any
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import (
@@ -199,31 +200,48 @@ class AuthService:
         )
 
     async def request_otp(self, dto: RequestOtpRequest) -> RequestOtpResponse:
+        clean_email = dto.email.strip().lower()
+        # 0. Si el propósito es iniciar sesión, validar que el usuario exista en la base de datos
+        if dto.purpose == "login" and not dto.athlete_handle:
+            user = await self.user_repo.get_by_email(clean_email)
+            if not user:
+                raise EntityNotFoundError(
+                    "Usuario",
+                    clean_email,
+                    message="No existe ninguna cuenta registrada con este correo electrónico. Por favor regístrate primero."
+                )
+
         otp_repo = OtpRepository(self.session)
 
         # 1. Limpieza preventiva de registros expirados (>24h)
         await otp_repo.clean_expired_otps()
 
         # 2. Rate Limiting: verificar si solicitó un código hace menos de 60 segundos
-        latest = await otp_repo.get_latest_active_otp(dto.email, purpose="supporter_follow")
+        latest = await otp_repo.get_latest_otp(clean_email, purpose="supporter_follow")
         if latest and latest.created_at:
-            time_since_last = (datetime.now() - latest.created_at).total_seconds()
-            if time_since_last < 60:
-                wait_time = int(60 - time_since_last)
+            now_utc = datetime.now(timezone.utc).replace(tzinfo=None)
+            created_at = latest.created_at.replace(tzinfo=None) if latest.created_at.tzinfo else latest.created_at
+            time_since_last = (now_utc - created_at).total_seconds()
+            if time_since_last < 0:
+                # Discrepancia por registros preexistentes guardados con hora local
+                time_since_last = (datetime.now() - created_at).total_seconds()
+
+            if 0 <= time_since_last < 60:
+                wait_time = max(1, min(60, int(60 - time_since_last)))
                 raise RateLimitExceededError(wait_seconds=wait_time, message=f"Por favor espera {wait_time} segundos antes de solicitar otro código.")
 
         # 3. Invalidar cualquier código anterior pendiente de este correo
-        await otp_repo.invalidate_previous_otps(dto.email, purpose="supporter_follow")
+        await otp_repo.invalidate_previous_otps(clean_email, purpose="supporter_follow")
 
         # 4. Generar nuevo código numérico de 6 dígitos con vigencia de 15 min
         code = f"{secrets.randbelow(900000) + 100000}"
-        expires_at = datetime.now() + timedelta(minutes=15)
+        expires_at = datetime.now(timezone.utc).replace(tzinfo=None) + timedelta(minutes=15)
         metadata = {
             "name": dto.name,
             "athlete_handle": dto.athlete_handle,
         }
         await otp_repo.create(
-            email=dto.email,
+            email=clean_email,
             code=code,
             purpose="supporter_follow",
             metadata=metadata,
@@ -232,7 +250,7 @@ class AuthService:
 
         # 5. Enviar correo HTML estilizado con el servicio SMTP del proyecto
         from app.services.email_service import send_otp_email
-        await send_otp_email(to_email=dto.email, code=code, athlete_name=dto.name or dto.athlete_handle)
+        await send_otp_email(to_email=clean_email, code=code, athlete_name=dto.name or dto.athlete_handle)
 
         return RequestOtpResponse(
             message=f"Código de 6 dígitos enviado a {dto.email}",
@@ -240,16 +258,61 @@ class AuthService:
             demo_code=code,
         )
 
-    async def verify_otp(self, dto: VerifyOtpRequest) -> TokenResponse:
+    async def check_otp_status(self, email: str) -> dict[str, Any]:
+        """Comprueba si un correo cuenta con un código activo y si el usuario está registrado."""
+        clean_email = email.strip().lower()
+        user = await self.user_repo.get_by_email(clean_email)
+        if not user:
+            return {
+                "has_active_otp": False,
+                "user_exists": False,
+                "wait_seconds": 0,
+                "message": "No existe ninguna cuenta registrada con este correo electrónico. Por favor regístrate primero.",
+            }
+
         otp_repo = OtpRepository(self.session)
-        otp_record = await otp_repo.get_valid_otp(dto.email, dto.code)
+        active = await otp_repo.get_latest_active_otp(clean_email, purpose="supporter_follow")
+        if not active:
+            return {"has_active_otp": False, "user_exists": True, "wait_seconds": 0}
+
+        now_utc = datetime.now(timezone.utc).replace(tzinfo=None)
+        created_at = active.created_at.replace(tzinfo=None) if active.created_at.tzinfo else active.created_at
+        time_since_last = (now_utc - created_at).total_seconds()
+        if time_since_last < 0:
+            time_since_last = (datetime.now() - created_at).total_seconds()
+
+        wait_seconds = max(0, min(60, int(60 - time_since_last))) if 0 <= time_since_last < 60 else 0
+
+        return {
+            "has_active_otp": True,
+            "user_exists": True,
+            "wait_seconds": wait_seconds,
+        }
+
+    async def verify_otp(self, dto: VerifyOtpRequest) -> TokenResponse:
+        clean_email = dto.email.strip().lower()
+        clean_code = dto.code.strip()
+        otp_repo = OtpRepository(self.session)
+        otp_record = await otp_repo.get_valid_otp(clean_email, clean_code)
         if not otp_record:
-            raise UnauthorizedError("El código de verificación es inválido o ha expirado.")
+            attempts = await otp_repo.record_failed_attempt(clean_email, purpose="supporter_follow", max_attempts=5)
+            if attempts >= 5:
+                raise UnauthorizedError(
+                    "Has superado el número máximo de intentos permitidos. El código ha sido invalidado por seguridad; solicita uno nuevo.",
+                    details={"max_attempts_exceeded": True}
+                )
+            if attempts > 0:
+                remaining = max(0, 5 - attempts)
+                raise UnauthorizedError(
+                    f"Código incorrecto o expirado. Te quedan {remaining} intento{'s' if remaining != 1 else ''}.",
+                    details={"remaining_attempts": remaining}
+                )
+            raise UnauthorizedError("El código de verificación es inválido o ha expirado.", details={"invalid_otp": True})
 
         await otp_repo.mark_used(otp_record)
 
         # Buscar usuario o crearlo como supporter
-        user = await self.user_repo.get_by_email(dto.email)
+        user = await self.user_repo.get_by_email(clean_email)
         metadata = otp_record.metadata_ or {}
         name = metadata.get("name") or "Supporter"
 
@@ -1086,12 +1149,13 @@ class CheckoutService:
         else:
             supporter_display_name = "A Supporter"
 
+        shake_word = "Shake" if details.shakes_count == 1 else "Shakes"
         notif_repo = NotificationRepository(self.session)
         if profile.user_id:
             await notif_repo.create(
                 user_id=profile.user_id,
-                title=f"{details.shakes_count} Shakes received!",
-                message=f"{supporter_display_name} bought you {details.shakes_count} Shakes (${gross_amount} {dto.currency}).",
+                title=f"{details.shakes_count} {shake_word} received!",
+                message=f"{supporter_display_name} bought you {details.shakes_count} {shake_word} (${gross_amount} {dto.currency}).",
                 type_code=401,
                 action_url=f"/dashboard/supporters",
             )
@@ -1116,7 +1180,7 @@ class CheckoutService:
 
         return {
             "success": True,
-            "message": f"Successfully sent {details.shakes_count} Shakes to @{dto.athlete_handle}!",
+            "message": f"Successfully sent {details.shakes_count} {shake_word} to @{dto.athlete_handle}!",
             "transaction_uuid": tx.transaction_uuid,
             "gross_amount": float(gross_amount),
             "new_goal_raised": float(active_goal.raised_amount) if active_goal else None,

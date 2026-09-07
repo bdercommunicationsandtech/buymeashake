@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DashboardService } from '../../../core/dashboard.service';
 import { SupporterItemDto } from '../../../core/api.models';
+import { LanguageService } from '../../../core/language.service';
 
 @Component({
   selector: 'app-dashboard-supporters',
@@ -12,6 +13,8 @@ import { SupporterItemDto } from '../../../core/api.models';
 })
 export class DashboardSupporters implements OnInit {
   private readonly dashboardService = inject(DashboardService);
+  readonly languageService = inject(LanguageService);
+  readonly t = this.languageService.currentTranslations;
 
   readonly loading = signal(true);
   readonly activeTab = signal<'one-time' | 'settings'>('one-time');

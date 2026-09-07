@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/auth.service';
 import { ThemeService } from '../../../core/theme.service';
+import { LanguageService } from '../../../core/language.service';
 
 @Component({
   selector: 'app-supporter-account',
@@ -29,6 +30,18 @@ import { ThemeService } from '../../../core/theme.service';
         </a>
 
         <div class="flex items-center gap-3">
+          <!-- Language Toggle Button -->
+          <button
+            type="button"
+            (click)="languageService.toggleLanguage()"
+            [title]="lang() === 'es' ? 'Switch to English' : 'Cambiar a Español'"
+            [attr.aria-label]="t().nav.switchLanguage"
+            class="h-9 px-2.5 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 text-gray-700 dark:text-gray-200 flex items-center gap-1.5 hover:bg-gray-100 dark:hover:bg-white/10 transition cursor-pointer select-none"
+          >
+            <span class="text-emerald-600 dark:text-[#c9ff3d] text-sm leading-none">🌐</span>
+            <span class="text-[11px] font-black tracking-wider uppercase">{{ lang() === 'es' ? 'ES' : 'EN' }}</span>
+          </button>
+
           <button
             type="button"
             (click)="themeService.toggleTheme()"
@@ -49,7 +62,7 @@ import { ThemeService } from '../../../core/theme.service';
             routerLink="/auth/register"
             class="rounded-xl bg-[#c9ff3d] hover:bg-[#bbf033] px-3.5 sm:px-4 py-2 text-xs font-black text-gray-950 transition shadow-xs"
           >
-            ⚡ Become a creator
+            ⚡ {{ t().supporterArea.becomeCreator }}
           </a>
         </div>
       </header>
@@ -67,7 +80,7 @@ import { ThemeService } from '../../../core/theme.service';
               <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
               </svg>
-              <span>Home (Feed)</span>
+              <span>{{ t().supporterArea.feed }}</span>
             </a>
 
             <a
@@ -77,7 +90,7 @@ import { ThemeService } from '../../../core/theme.service';
               <svg class="w-4 h-4 text-[#f5b300]" fill="currentColor" viewBox="0 0 20 20">
                 <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" />
               </svg>
-              <span>My account</span>
+              <span>{{ t().supporterArea.myAccount }}</span>
             </a>
           </nav>
         </aside>
@@ -86,17 +99,17 @@ import { ThemeService } from '../../../core/theme.service';
         <div class="md:col-span-9 space-y-6">
           <div>
             <h1 class="font-display text-2xl font-black text-gray-950 dark:text-white">
-              My account
+              {{ t().supporterArea.myAccount }}
             </h1>
             <p class="text-xs font-bold text-gray-500 dark:text-gray-400 mt-1">
-              Edit profile & Security
+              {{ t().supporterArea.editProfileSecurity }}
             </p>
           </div>
 
           <!-- Card Personal Info (Fiel a Captura BMC) -->
           <div class="bg-white dark:bg-[#121614] rounded-3xl p-6 sm:p-8 border border-gray-200/80 dark:border-white/10 shadow-xs space-y-6">
             <h2 class="font-display text-sm font-black uppercase tracking-wider text-gray-900 dark:text-white">
-              Personal Info
+              {{ t().supporterArea.personalInfo }}
             </h2>
 
             @if (successMessage()) {
@@ -117,8 +130,8 @@ import { ThemeService } from '../../../core/theme.service';
                 
               </div>
               <div>
-                <p class="text-xs font-bold text-gray-900 dark:text-white">Foto de Perfil</p>
-                <p class="text-[11px] text-gray-400">Tu avatar en comentarios y mensajes de apoyo</p>
+                <p class="text-xs font-bold text-gray-900 dark:text-white">{{ t().supporterArea.profilePhoto }}</p>
+                <p class="text-[11px] text-gray-400">{{ t().supporterArea.avatarNote }}</p>
               </div>
             </div>
 
@@ -126,19 +139,19 @@ import { ThemeService } from '../../../core/theme.service';
             <div class="space-y-4 pt-2">
               <div>
                 <label class="block text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 mb-1.5">
-                  Name
+                  {{ t().supporterArea.name }}
                 </label>
                 <input
                   type="text"
                   [(ngModel)]="fullName"
-                  placeholder="Tu nombre o usuario"
+                  [placeholder]="t().supporterArea.namePlaceholder"
                   class="block w-full px-4 py-3 border border-gray-300 dark:border-white/15 rounded-xl bg-gray-50 dark:bg-[#191c1d] text-gray-900 dark:text-white text-sm font-semibold focus:bg-white focus:border-[#c9ff3d] outline-none transition"
                 />
               </div>
 
               <div>
                 <label class="block text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 mb-1.5">
-                  Email
+                  {{ t().supporterArea.email }}
                 </label>
                 <input
                   type="email"
@@ -151,19 +164,19 @@ import { ThemeService } from '../../../core/theme.service';
               <!-- Asignar o Cambiar Contraseña -->
               <div class="pt-4 border-t border-gray-100 dark:border-white/5">
                 <h3 class="font-display text-xs font-black uppercase tracking-wider text-gray-900 dark:text-white mb-3">
-                  Seguridad (Establecer Contraseña)
+                  {{ t().supporterArea.security }}
                 </h3>
                 <label class="block text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 mb-1.5">
-                  Nueva Contraseña (opcional para entrar con clave fija)
+                  {{ t().supporterArea.newPassword }}
                 </label>
                 <input
                   type="password"
                   [(ngModel)]="newPassword"
-                  placeholder="•••••••••••• (mínimo 8 caracteres)"
+                  [placeholder]="t().supporterArea.passwordMinLength"
                   class="block w-full px-4 py-3 border border-gray-300 dark:border-white/15 rounded-xl bg-gray-50 dark:bg-[#191c1d] text-gray-900 dark:text-white text-sm font-semibold focus:bg-white focus:border-[#c9ff3d] outline-none transition"
                 />
                 <p class="text-[11px] text-gray-400 mt-1">
-                  Si dejas este campo vacío, tu método de acceso seguirá siendo mediante código OTP al correo.
+                  {{ t().supporterArea.otpNote }}
                 </p>
               </div>
             </div>
@@ -176,7 +189,7 @@ import { ThemeService } from '../../../core/theme.service';
                 [disabled]="saving()"
                 class="rounded-2xl bg-[#ffd43f] hover:bg-[#f5c623] px-8 py-3.5 text-xs sm:text-sm font-black text-gray-950 transition shadow-xs cursor-pointer active:scale-95 disabled:opacity-50"
               >
-                {{ saving() ? 'Guardando...' : 'Save Changes' }}
+                {{ saving() ? t().supporterArea.saving : t().supporterArea.saveChanges }}
               </button>
             </div>
           </div>
@@ -189,6 +202,9 @@ import { ThemeService } from '../../../core/theme.service';
 export class SupporterAccountComponent implements OnInit {
   private readonly authService = inject(AuthService);
   readonly themeService = inject(ThemeService);
+  readonly languageService = inject(LanguageService);
+  readonly lang = this.languageService.currentLang;
+  readonly t = this.languageService.currentTranslations;
 
   readonly email = signal<string>('');
   fullName = '';
@@ -205,7 +221,7 @@ export class SupporterAccountComponent implements OnInit {
         this.fullName = user.full_name;
       },
       error: () => {
-        this.errorMessage.set('No se pudo cargar la información del usuario.');
+        this.errorMessage.set(this.t().common.error);
       },
     });
   }
@@ -222,7 +238,7 @@ export class SupporterAccountComponent implements OnInit {
     if (this.newPassword.trim()) {
       if (this.newPassword.trim().length < 8) {
         this.saving.set(false);
-        this.errorMessage.set('La contraseña debe tener al menos 8 caracteres.');
+        this.errorMessage.set(this.t().supporterArea.passwordLengthError);
         return;
       }
       payload.password = this.newPassword.trim();
@@ -231,12 +247,12 @@ export class SupporterAccountComponent implements OnInit {
     this.authService.updateProfile(payload).subscribe({
       next: () => {
         this.saving.set(false);
-        this.successMessage.set('¡Tus cambios han sido guardados exitosamente!');
+        this.successMessage.set(this.t().supporterArea.changesSaved);
         this.newPassword = '';
       },
       error: (err) => {
         this.saving.set(false);
-        this.errorMessage.set(err.error?.message || 'Error al guardar los cambios.');
+        this.errorMessage.set(err.error?.message || this.t().common.error);
       },
     });
   }

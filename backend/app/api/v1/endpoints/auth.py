@@ -1,3 +1,4 @@
+from typing import Any
 from fastapi import APIRouter, status
 
 from app.api.dependencies import CurrentUser, DatabaseSession
@@ -30,6 +31,13 @@ async def request_otp(dto: RequestOtpRequest, session: DatabaseSession) -> Reque
     """Genera y envía un código OTP de 6 dígitos al correo del supporter."""
     service = AuthService(session)
     return await service.request_otp(dto)
+
+
+@router.get("/auth/check-otp-status")
+async def check_otp_status(email: str, session: DatabaseSession) -> dict[str, Any]:
+    """Comprueba si un correo cuenta con un código OTP activo no expirado."""
+    service = AuthService(session)
+    return await service.check_otp_status(email)
 
 
 @router.post("/auth/verify-otp", response_model=TokenResponse)

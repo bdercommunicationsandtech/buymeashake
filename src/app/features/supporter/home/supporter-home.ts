@@ -5,6 +5,7 @@ import { PostCardComponent, PostItem } from '../../../shared/post-card/post-card
 import { ThemeService } from '../../../core/theme.service';
 import { AuthService } from '../../../core/auth.service';
 import { SupporterService } from '../../../core/supporter.service';
+import { LanguageService } from '../../../core/language.service';
 import { FollowedAthlete, PostResponse } from '../../../core/api.models';
 
 @Component({
@@ -35,12 +36,24 @@ import { FollowedAthlete, PostResponse } from '../../../core/api.models';
         <!-- Acciones Derecha -->
         <div class="flex items-center gap-3">
           
+          <!-- Botón Idioma Toggle -->
+          <button
+            type="button"
+            (click)="languageService.toggleLanguage()"
+            [title]="lang() === 'es' ? 'Switch to English' : 'Cambiar a Español'"
+            [attr.aria-label]="t().nav.switchLanguage"
+            class="h-9 px-2.5 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 text-gray-700 dark:text-gray-200 flex items-center gap-1.5 hover:bg-gray-100 dark:hover:bg-white/10 transition cursor-pointer select-none"
+          >
+            <span class="text-emerald-600 dark:text-[#c9ff3d] text-sm leading-none">🌐</span>
+            <span class="text-[11px] font-black tracking-wider uppercase">{{ lang() === 'es' ? 'ES' : 'EN' }}</span>
+          </button>
+
           <!-- Botón Theme Toggle -->
           <button
             type="button"
             (click)="themeService.toggleTheme()"
             class="h-9 w-9 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 text-gray-700 dark:text-gray-200 grid place-items-center hover:bg-gray-100 dark:hover:bg-white/10 transition cursor-pointer"
-            aria-label="Cambiar tema"
+            [attr.aria-label]="t().common.toggleTheme"
           >
             @if (themeService.currentTheme() === 'dark') {
               <svg class="w-4 h-4 text-[#c9ff3d]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -59,16 +72,16 @@ import { FollowedAthlete, PostResponse } from '../../../core/api.models';
               routerLink="/dashboard/home"
               class="rounded-xl bg-[#c9ff3d] hover:bg-[#bbf033] px-3.5 sm:px-4 py-2 text-xs font-black text-gray-950 transition shadow-xs flex items-center gap-1.5"
             >
-              <span class="hidden sm:inline">Mi Dashboard de Atleta</span>
-              <span class="sm:hidden">Dashboard</span>
+              <span class="hidden sm:inline">{{ t().dashboard.title }}</span>
+              <span class="sm:hidden">{{ t().dashboard.home }}</span>
             </a>
           } @else {
             <a
               routerLink="/onboarding"
               class="rounded-xl bg-[#c9ff3d] hover:bg-[#bbf033] px-3.5 sm:px-4 py-2 text-xs font-black text-gray-950 transition shadow-xs flex items-center gap-1.5"
             >
-              <span class="hidden sm:inline">Crear mi página de Atleta</span>
-              <span class="sm:hidden">Ser Creador</span>
+              <span class="hidden sm:inline">{{ t().supporterArea.createAthletePage }}</span>
+              <span class="sm:hidden">{{ t().supporterArea.beCreator }}</span>
             </a>
           }
 
@@ -78,7 +91,7 @@ import { FollowedAthlete, PostResponse } from '../../../core/api.models';
               type="button"
               (click)="userMenuOpen.set(!userMenuOpen())"
               class="h-9 w-9 rounded-full bg-gray-900 dark:bg-white/10 border border-gray-200 dark:border-white/15 text-[#c9ff3d] grid place-items-center text-xs font-black hover:ring-2 hover:ring-[#c9ff3d]/50 transition cursor-pointer"
-              aria-label="Menú de cuenta"
+              [attr.aria-label]="t().supporterArea.accountMenu"
             >
               
             </button>
@@ -87,7 +100,7 @@ import { FollowedAthlete, PostResponse } from '../../../core/api.models';
             @if (userMenuOpen()) {
               <div class="absolute right-0 mt-2 w-56 bg-white dark:bg-[#121614] rounded-2xl shadow-xl border border-gray-200/80 dark:border-white/10 py-2 z-50 animate-in fade-in zoom-in-95 duration-100">
                 <div class="px-4 py-2 border-b border-gray-100 dark:border-white/5">
-                  <p class="text-xs font-bold text-gray-500 dark:text-gray-400">Cuenta de Seguidor</p>
+                  <p class="text-xs font-bold text-gray-500 dark:text-gray-400">{{ t().supporterArea.supporterAccount }}</p>
                   <p class="text-xs font-black text-gray-950 dark:text-white truncate">
                     {{ currentUserEmail() }}
                   </p>
@@ -98,14 +111,14 @@ import { FollowedAthlete, PostResponse } from '../../../core/api.models';
                   (click)="userMenuOpen.set(false)"
                   class="block px-4 py-2.5 text-xs font-bold text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-white/5"
                 >
-                  Feed de Siguiendo
+                  {{ t().supporterArea.followingFeed }}
                 </a>
                 <a
                   routerLink="/fan/account"
                   (click)="userMenuOpen.set(false)"
                   class="block px-4 py-2.5 text-xs font-bold text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-white/5"
                 >
-                  👤 Mi Cuenta (Ajustes)
+                  👤 {{ t().supporterArea.myAccount }}
                 </a>
                 @if (isAthlete()) {
                   <a
@@ -113,7 +126,7 @@ import { FollowedAthlete, PostResponse } from '../../../core/api.models';
                     (click)="userMenuOpen.set(false)"
                     class="block px-4 py-2.5 text-xs font-black text-emerald-600 dark:text-[#c9ff3d] hover:bg-gray-50 dark:hover:bg-white/5 bg-[#c9ff3d]/5"
                   >
-                    ⚡ Mi Dashboard de Atleta
+                    ⚡ {{ t().dashboard.title }}
                   </a>
                 } @else {
                   <a
@@ -121,7 +134,7 @@ import { FollowedAthlete, PostResponse } from '../../../core/api.models';
                     (click)="userMenuOpen.set(false)"
                     class="block px-4 py-2.5 text-xs font-black text-emerald-600 dark:text-[#c9ff3d] hover:bg-gray-50 dark:hover:bg-white/5 bg-[#c9ff3d]/5"
                   >
-                    ⚡ Become a creator (Atleta)
+                    ⚡ {{ t().supporterArea.becomeCreatorAthlete }}
                   </a>
                 }
                 <a
@@ -129,7 +142,7 @@ import { FollowedAthlete, PostResponse } from '../../../core/api.models';
                   (click)="userMenuOpen.set(false)"
                   class="block px-4 py-2.5 text-xs font-bold text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-white/5"
                 >
-                  Explorar Atletas
+                  {{ t().supporterArea.exploreAthletes }}
                 </a>
                 <div class="border-t border-gray-100 dark:border-white/5 mt-1 pt-1">
                   <button
@@ -137,7 +150,7 @@ import { FollowedAthlete, PostResponse } from '../../../core/api.models';
                     (click)="logout()"
                     class="w-full text-left px-4 py-2 text-xs font-bold text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20 transition cursor-pointer"
                   >
-                    Cerrar sesión
+                    {{ t().supporterArea.logout }}
                   </button>
                 </div>
               </div>
@@ -160,7 +173,7 @@ import { FollowedAthlete, PostResponse } from '../../../core/api.models';
               <svg class="w-4 h-4 text-[#f5b300]" fill="currentColor" viewBox="0 0 20 20">
                 <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"/>
               </svg>
-              <span>Home (Feed)</span>
+              <span>{{ t().supporterArea.feed }}</span>
             </a>
 
             <a
@@ -170,7 +183,7 @@ import { FollowedAthlete, PostResponse } from '../../../core/api.models';
               <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
               </svg>
-              <span>Explorar Atletas</span>
+              <span>{{ t().supporterArea.exploreAthletes }}</span>
             </a>
           </nav>
         </aside>
@@ -180,10 +193,10 @@ import { FollowedAthlete, PostResponse } from '../../../core/api.models';
           
           <div class="flex items-center justify-between pb-2 border-b border-gray-200/80 dark:border-white/10">
             <h1 class="font-display text-xl font-black text-gray-950 dark:text-white">
-              Following (Feed)
+              {{ t().supporterArea.followingTitle }}
             </h1>
             <span class="text-xs font-bold text-gray-400">
-              {{ followedAthletes().length }} atletas seguidos
+              {{ followedAthletes().length }} {{ t().supporterArea.followedAthletesCount }}
             </span>
           </div>
 
@@ -191,7 +204,7 @@ import { FollowedAthlete, PostResponse } from '../../../core/api.models';
           @if (loading()) {
             <div class="py-12 text-center text-gray-400 text-sm font-semibold flex items-center justify-center gap-2">
               <span class="inline-block h-5 w-5 border-2 border-[#c9ff3d] border-t-transparent rounded-full animate-spin"></span>
-              <span>Cargando publicaciones de tus atletas...</span>
+              <span>{{ t().supporterArea.loadingFeed }}</span>
             </div>
           } @else if (feedPosts().length > 0) {
             <!-- Feed de Publicaciones Reales -->
@@ -214,9 +227,9 @@ import { FollowedAthlete, PostResponse } from '../../../core/api.models';
               </div>
 
               <div>
-                <h3 class="font-display text-base font-black text-gray-900 dark:text-white">Tu feed está vacío</h3>
+                <h3 class="font-display text-base font-black text-gray-900 dark:text-white">{{ t().supporterArea.feedEmptyTitle }}</h3>
                 <p class="text-xs text-gray-500 dark:text-gray-400 mt-1 max-w-xs mx-auto">
-                  Sigue a más atletas para ver sus rutinas de entrenamiento y publicaciones exclusivas.
+                  {{ t().supporterArea.feedEmptyDesc }}
                 </p>
               </div>
 
@@ -224,7 +237,7 @@ import { FollowedAthlete, PostResponse } from '../../../core/api.models';
                 routerLink="/explore"
                 class="inline-block rounded-2xl bg-[#c9ff3d] hover:bg-[#bbf033] px-6 py-2.5 text-xs font-black text-gray-950 transition shadow-xs"
               >
-                Descubrir Atletas
+                {{ t().supporterArea.discoverAthletes }}
               </a>
             </div>
           }
@@ -234,7 +247,7 @@ import { FollowedAthlete, PostResponse } from '../../../core/api.models';
         <aside class="lg:col-span-3 space-y-4">
           <div class="bg-white dark:bg-[#121614] rounded-3xl p-5 border border-gray-200/80 dark:border-white/10 shadow-xs space-y-4">
             <h2 class="font-display text-xs font-black uppercase tracking-wider text-gray-500 dark:text-gray-400">
-              Following
+              {{ t().supporterArea.followingSidebar }}
             </h2>
 
             <div class="space-y-3">
@@ -251,7 +264,7 @@ import { FollowedAthlete, PostResponse } from '../../../core/api.models';
                       {{ athlete.name }}
                     </p>
                     <p class="text-[11px] text-gray-500 dark:text-gray-400 truncate">
-                      {{ athlete.primary_sport || athlete.bio || 'Atleta' }}
+                      {{ athlete.primary_sport || athlete.bio || t().supporterArea.athleteRole }}
                     </p>
                   </div>
                 </a>
@@ -263,7 +276,7 @@ import { FollowedAthlete, PostResponse } from '../../../core/api.models';
                 routerLink="/explore"
                 class="text-xs font-black text-emerald-600 dark:text-[#c9ff3d] hover:underline flex items-center justify-between"
               >
-                <span>Encontrar más atletas</span>
+                <span>{{ t().supporterArea.findMoreAthletes }}</span>
                 <span>→</span>
               </a>
             </div>
@@ -278,6 +291,9 @@ export class DashboardSupporterHome implements OnInit {
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
   readonly themeService = inject(ThemeService);
+  readonly languageService = inject(LanguageService);
+  readonly t = this.languageService.currentTranslations;
+  readonly lang = this.languageService.currentLang;
   private readonly authService = inject(AuthService);
   private readonly supporterService = inject(SupporterService);
 

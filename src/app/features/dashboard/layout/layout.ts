@@ -47,6 +47,7 @@ export class DashboardLayout implements OnInit {
   }
 
   toggleNotifMenu(): void {
+    this.userMenuOpen.set(false);
     this.notifMenuOpen.update((v) => !v);
   }
 
@@ -71,10 +72,13 @@ export class DashboardLayout implements OnInit {
   }
 
   toggleUserMenu(): void {
+    this.notifMenuOpen.set(false);
     this.userMenuOpen.update((v) => !v);
   }
 
   toggleSidebar(): void {
+    this.notifMenuOpen.set(false);
+    this.userMenuOpen.set(false);
     this.sidebarOpen.update((v) => !v);
   }
 

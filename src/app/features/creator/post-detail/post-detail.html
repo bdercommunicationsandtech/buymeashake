@@ -7,11 +7,11 @@
       <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7" />
       </svg>
-      Volver al perfil de &#64;{{ handle() }}
+      {{ t().post.backToProfile }} &#64;{{ handle() }}
     </a>
 
     @if (loading()) {
-      <p class="mt-10 text-sm text-gray-500 dark:text-gray-400">Cargando publicación…</p>
+      <p class="mt-10 text-sm text-gray-500 dark:text-gray-400">{{ t().post.loadingPost }}</p>
     } @else if (errorMessage()) {
       <div class="mt-10 rounded-3xl border border-red-200 bg-red-50 px-5 py-4 text-sm font-semibold text-red-700 dark:border-red-900/40 dark:bg-red-950/30 dark:text-red-300">
         {{ errorMessage() }}
@@ -32,7 +32,7 @@
         <div class="space-y-6 px-5 py-7 sm:px-10 sm:py-10">
           <div class="flex flex-wrap items-center gap-3 text-xs">
             <span class="rounded-full bg-gray-100 px-3 py-1 font-black uppercase tracking-wider text-gray-700 dark:bg-white/10 dark:text-gray-200">
-              {{ p.is_members_only ? 'Solo miembros' : 'Público' }}
+              {{ p.is_members_only ? t().post.membersOnly : t().post.public }}
             </span>
             <span class="font-medium text-gray-400">{{ publishedLabel() }}</span>
           </div>
@@ -65,9 +65,9 @@
               <svg class="h-4 w-4 text-red-500" fill="currentColor" viewBox="0 0 20 20">
                 <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd" />
               </svg>
-              {{ p.likes_count }} likes
+              {{ p.likes_count }} {{ t().post.likes }}
             </span>
-            <span>{{ p.comments?.length || 0 }} comentarios</span>
+            <span>{{ p.comments?.length || 0 }} {{ (p.comments?.length || 0) === 1 ? t().post.comment : t().post.comments }}</span>
           </div>
         </div>
       </article>

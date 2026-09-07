@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 from typing import Any
 from sqlalchemy import func, or_, select
@@ -799,14 +799,30 @@ class OtpRepository:
     def __init__(self, session: AsyncSession):
         self.session = session
 
+    async def get_latest_otp(self, email: str, purpose: str = "supporter_follow") -> EmailVerification | None:
+        """Obtiene el último OTP generado (activo o no) para validar rate limit."""
+        query = (
+            select(EmailVerification)
+            .where(
+                EmailVerification.email == email,
+                EmailVerification.purpose == purpose,
+            )
+            .order_by(EmailVerification.created_at.desc())
+            .limit(1)
+        )
+        result = await self.session.execute(query)
+        return result.scalar_one_or_none()
+
     async def get_latest_active_otp(self, email: str, purpose: str = "supporter_follow") -> EmailVerification | None:
-        """Obtiene el último OTP generado aún no utilizado."""
+        """Obtiene el último OTP generado aún no utilizado y no expirado."""
+        now_utc = datetime.now(timezone.utc).replace(tzinfo=None)
         query = (
             select(EmailVerification)
             .where(
                 EmailVerification.email == email,
                 EmailVerification.purpose == purpose,
                 EmailVerification.is_used == False,
+                EmailVerification.expires_at >= now_utc,
             )
             .order_by(EmailVerification.created_at.desc())
             .limit(1)
@@ -832,7 +848,7 @@ class OtpRepository:
     async def clean_expired_otps(self) -> int:
         """Elimina OTPs expirados con más de 24 horas de antigüedad para mantener la tabla liviana."""
         from sqlalchemy import delete
-        cutoff = datetime.now() - timedelta(hours=24)
+        cutoff = datetime.now(timezone.utc).replace(tzinfo=None) - timedelta(hours=24)
         stmt = (
             delete(EmailVerification)
             .where(
@@ -850,6 +866,7 @@ class OtpRepository:
             purpose=purpose,
             metadata_=metadata,
             expires_at=expires_at,
+            created_at=datetime.now(timezone.utc).replace(tzinfo=None),
             is_used=False,
         )
         self.session.add(record)
@@ -857,13 +874,14 @@ class OtpRepository:
         return record
 
     async def get_valid_otp(self, email: str, code: str) -> EmailVerification | None:
+        now_utc = datetime.now(timezone.utc).replace(tzinfo=None)
         query = (
             select(EmailVerification)
             .where(
                 EmailVerification.email == email,
                 EmailVerification.code == code,
                 EmailVerification.is_used == False,
-                EmailVerification.expires_at >= datetime.now(),
+                EmailVerification.expires_at >= now_utc,
             )
             .order_by(EmailVerification.created_at.desc())
         )
@@ -873,6 +891,22 @@ class OtpRepository:
     async def mark_used(self, otp_record: EmailVerification) -> None:
         otp_record.is_used = True
         await self.session.flush()
+
+    async def record_failed_attempt(self, email: str, purpose: str = "supporter_follow", max_attempts: int = 5) -> int:
+        """Incrementa el contador de intentos fallidos en el último OTP activo. Si supera max_attempts, lo invalida."""
+        from sqlalchemy.orm.attributes import flag_modified
+        record = await self.get_latest_active_otp(email, purpose=purpose)
+        if not record:
+            return 0
+        meta = dict(record.metadata_ or {})
+        attempts = int(meta.get("failed_attempts", 0)) + 1
+        meta["failed_attempts"] = attempts
+        record.metadata_ = meta
+        flag_modified(record, "metadata_")
+        if attempts >= max_attempts:
+            record.is_used = True
+        await self.session.commit()
+        return attempts
 
 
 class FollowRepository:

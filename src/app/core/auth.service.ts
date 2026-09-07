@@ -91,6 +91,12 @@ export class AuthService {
     return this.http.post<{ message: string; expires_in_seconds: number; demo_code?: string }>(`${this.apiUrl}/request-otp`, payload);
   }
 
+  checkOtpStatus(email: string): Observable<{ has_active_otp: boolean; user_exists?: boolean; wait_seconds: number; message?: string }> {
+    return this.http.get<{ has_active_otp: boolean; user_exists?: boolean; wait_seconds: number; message?: string }>(
+      `${this.apiUrl}/check-otp-status?email=${encodeURIComponent(email.trim().toLowerCase())}`
+    );
+  }
+
   verifyOtp(payload: { email: string; code: string }): Observable<TokenResponse> {
     return this.http.post<TokenResponse>(`${this.apiUrl}/verify-otp`, payload).pipe(
       tap((res) => {

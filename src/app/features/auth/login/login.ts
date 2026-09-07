@@ -5,6 +5,7 @@ import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/auth.service';
 import { FirebaseAuthService, SocialProvider } from '../../../core/firebase-auth.service';
 import { LanguageService } from '../../../core/language.service';
+import { ThemeService } from '../../../core/theme.service';
 import { FirebaseNeedsRoleDetails } from '../../../core/api.models';
 
 type ErrorDescriptor =
@@ -27,12 +28,14 @@ type InfoKey = 'activeOtpNotice' | 'codeResentSuccess' | 'activeSessionRedirect'
   standalone: true,
   imports: [CommonModule, FormsModule, RouterLink],
   templateUrl: './login.html',
+  styleUrl: './login.css',
 })
 export class Login implements OnInit, OnDestroy {
   private readonly auth = inject(AuthService);
   private readonly firebaseAuth = inject(FirebaseAuthService);
   private readonly router = inject(Router);
   readonly i18n = inject(LanguageService);
+  readonly theme = inject(ThemeService);
   readonly t = this.i18n.t;
 
   email = '';
@@ -43,6 +46,7 @@ export class Login implements OnInit, OnDestroy {
   readonly otpStep = signal<'email' | 'verify'>('email');
   readonly loading = signal(false);
   readonly socialLoading = signal<SocialProvider | null>(null);
+  readonly showPassword = signal(false);
   readonly errorState = signal<ErrorDescriptor | null>(null);
   readonly infoState = signal<InfoKey | null>(null);
   readonly resendCooldown = signal<number>(0);

@@ -223,10 +223,21 @@ class DashboardRepository:
     def __init__(self, session: AsyncSession):
         self.session = session
 
-    async def get_metrics_30d(self, athlete_id: int) -> dict:
-        since_date = datetime.now() - timedelta(days=30)
+    async def get_metrics(self, athlete_id: int, period: str = "30d") -> dict:
+        from datetime import datetime, timedelta
+        now = datetime.now()
+        if period == "7d":
+            since_date = now - timedelta(days=7)
+        elif period == "30d":
+            since_date = now - timedelta(days=30)
+        elif period == "90d":
+            since_date = now - timedelta(days=90)
+        elif period == "all_time":
+            since_date = datetime(2000, 1, 1)
+        else:
+            since_date = now - timedelta(days=30)
         
-        # Transacciones de los últimos 30 días
+        # Transacciones en el periodo
         query = (
             select(
                 Transaction.transaction_type_code,

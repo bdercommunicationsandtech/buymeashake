@@ -27,7 +27,23 @@ export class DashboardHome implements OnInit {
   readonly metrics = signal<DashboardMetrics | null>(null);
   readonly loading = signal(true);
 
-  readonly timeRange = computed(() => this.t().dashboard.last30Days);
+  readonly selectedPeriod = signal('30d');
+  
+  readonly timeRange = computed(() => {
+    const p = this.selectedPeriod();
+    if (p === '7d') return 'Last 7 days';
+    if (p === '30d') return 'Last 30 days';
+    if (p === '90d') return 'Last 90 days';
+    if (p === 'all_time') return 'All Time';
+    return this.t().dashboard.last30Days;
+  });
+
+  onPeriodChange(event: Event): void {
+    const value = (event.target as HTMLSelectElement).value;
+    this.selectedPeriod.set(value);
+    this.loadData();
+  }
+
   readonly shareModalOpen = signal(false);
 
   ngOnInit(): void {
@@ -46,7 +62,7 @@ export class DashboardHome implements OnInit {
     });
 
     // Cargar métricas financieras de 30 días
-    this.dashboardService.getMetrics().subscribe({
+    this.dashboardService.getMetrics(this.selectedPeriod()).subscribe({
       next: (m) => {
         this.metrics.set(m);
         this.loading.set(false);

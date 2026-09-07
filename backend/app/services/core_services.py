@@ -808,8 +808,8 @@ class DashboardService:
         self.post_repo = PostRepository(session)
         self.supporter_repo = SupporterRepository(session)
 
-    async def get_metrics(self, athlete: AthleteProfile) -> DashboardMetricsResponse:
-        metrics_dict = await self.dash_repo.get_metrics_30d(athlete.id)
+    async def get_metrics(self, athlete: AthleteProfile, period: str = "30d") -> DashboardMetricsResponse:
+        metrics_dict = await self.dash_repo.get_metrics(athlete.id, period)
         return DashboardMetricsResponse(**metrics_dict)
 
     # Perfil & Ajustes

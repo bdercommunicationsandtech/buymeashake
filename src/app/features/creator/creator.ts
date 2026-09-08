@@ -624,7 +624,7 @@ export class Creator {
     return {
       handle: profile.handle,
       name: profile.name,
-      role: profile.primary_sport,
+      role: profile.disciplines?.join(', '),
       city: profile.city || 'México',
       bio: profile.bio || 'Atleta oficial en buymeashake.fit',
       pageTitle: profile.page_title ?? null,
@@ -645,7 +645,7 @@ export class Creator {
       hasActiveGoal: Boolean(profile.active_goal_title?.trim()),
       supporters: followersCount,
       shakesReceived,
-      disciplines: [profile.primary_sport],
+      disciplines: profile.disciplines || [],
       shakePrice: Number(profile.shake_price) || SHAKE_PRICE,
       currency: 'USD',
       coverImageUrl: profile.cover_image_url,

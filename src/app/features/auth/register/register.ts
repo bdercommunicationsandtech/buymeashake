@@ -1,4 +1,4 @@
-import { Component, effect, inject, OnInit, signal } from '@angular/core';
+import { Component, effect, inject, OnInit, signal , computed} from "@angular/core";
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
@@ -34,7 +34,17 @@ export class Register implements OnInit {
   readonly name = signal('');
   readonly email = signal('');
   readonly password = signal('');
-  readonly selectedSportCode = signal<number>(101);
+  readonly disciplineCodes = signal<number[]>([]);
+  readonly dropdownOpen = signal<boolean>(false);
+  readonly searchSport = signal('');
+  readonly filteredSports = computed(() => {
+    const q = this.searchSport().toLowerCase().trim();
+    const all = this.sports();
+    if (!q) return all;
+    // use this.i18n or this.languageService
+    const svc = (this as any).i18n || (this as any).languageService;
+    return all.filter((s) => svc.translateDiscipline(s.label).toLowerCase().includes(q));
+  });
 
   readonly loading = signal(false);
   readonly errorMessage = signal<string | null>(null);
@@ -46,7 +56,7 @@ export class Register implements OnInit {
       next: (items) => {
         this.sports.set(items);
         if (items.length > 0) {
-          this.selectedSportCode.set(items[0].code);
+          this.disciplineCodes.set([items[0].code]);
         }
       },
       error: () => {},
@@ -55,6 +65,21 @@ export class Register implements OnInit {
 
   onHandleInput(val: string): void {
     this.handle.set(val.toLowerCase().replace(/[^a-z0-9_]/g, ''));
+  }
+
+
+  toggleSport(code: number): void {
+    const current = this.disciplineCodes();
+    if (current.includes(code)) {
+      this.disciplineCodes.set(current.filter((c) => c !== code));
+    } else {
+      this.disciplineCodes.set([...current, code]);
+    }
+  }
+
+  getDisciplineLabel(code: number): string {
+    const sport = this.sports().find((s) => s.code === code);
+    return sport ? this.i18n.translateDiscipline(sport.label) : '';
   }
 
   submit(): void {
@@ -78,7 +103,7 @@ export class Register implements OnInit {
         full_name: this.name(),
         role: 'athlete',
         handle: this.handle(),
-        primary_sport_code: this.selectedSportCode(),
+        discipline_codes: this.disciplineCodes(),
       })
       .subscribe({
         next: () => {

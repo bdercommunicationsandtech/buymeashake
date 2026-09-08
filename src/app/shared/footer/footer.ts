@@ -33,7 +33,6 @@ export class Footer {
         links: [
           { path: '/auth/register', label: t.footer.createPage },
           { path: '/dashboard/home', label: t.footer.dashboard },
-          { path: '/dashboard/referrals', label: t.footer.referrals },
         ],
       },
       {

@@ -172,17 +172,25 @@ CREATE TABLE athlete_profiles (
     bio TEXT NULL,
     city VARCHAR(255) NULL,
     city_id MEDIUMINT UNSIGNED NULL,
-    primary_sport_item_id BIGINT UNSIGNED NULL,
     is_verified BOOLEAN DEFAULT FALSE,
     is_nsfw BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-    FOREIGN KEY (primary_sport_item_id) REFERENCES lookup_items(id) ON DELETE SET NULL,
     FOREIGN KEY (city_id) REFERENCES cities(id) ON DELETE SET NULL,
     INDEX idx_handle (handle),
-    INDEX idx_primary_sport_item (primary_sport_item_id),
     INDEX idx_athlete_city_id (city_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+DROP TABLE IF EXISTS athlete_disciplines;
+CREATE TABLE athlete_disciplines (
+    athlete_id BIGINT UNSIGNED NOT NULL,
+    discipline_item_id BIGINT UNSIGNED NOT NULL,
+    is_primary BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (athlete_id, discipline_item_id),
+    FOREIGN KEY (athlete_id) REFERENCES athlete_profiles(id) ON DELETE CASCADE,
+    FOREIGN KEY (discipline_item_id) REFERENCES lookup_items(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 DROP TABLE IF EXISTS athlete_page_settings;

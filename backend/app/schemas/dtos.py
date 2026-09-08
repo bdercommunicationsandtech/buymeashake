@@ -53,7 +53,7 @@ class UserRegisterRequest(BaseModel):
     full_name: str = Field(min_length=2, max_length=150)
     role: str = Field(default="supporter", pattern="^(supporter|athlete)$")
     handle: str | None = Field(default=None, pattern="^[a-z0-9_]{3,30}$")
-    primary_sport_code: int | None = Field(default=None)
+    discipline_codes: list[int] = Field(default_factory=list)
     referral_code: str | None = None
 
 
@@ -92,7 +92,7 @@ class FollowedAthleteResponse(BaseModel):
     handle: str
     avatar_url: str | None = None
     bio: str | None = None
-    primary_sport: str | None = None
+    disciplines: list[str] = Field(default_factory=list)
 
 
 class TokenResponse(BaseModel):
@@ -129,7 +129,7 @@ class UserMeResponse(BaseModel):
 class UpgradeToAthleteRequest(BaseModel):
     handle: str = Field(min_length=3, max_length=30, pattern="^[a-z0-9_]{3,30}$")
     full_name: str | None = Field(default=None, min_length=2, max_length=150)
-    primary_sport_code: int | None = Field(default=None)
+    discipline_codes: list[int] = Field(default_factory=list)
     bio: str | None = None
     city: str | None = None
     shake_price: Decimal | None = Field(default=None, ge=1)
@@ -176,7 +176,7 @@ class AthleteLeaderboardItemResponse(BaseModel):
     handle: str
     athlete_name: str
     avatar_url: str | None
-    primary_sport: str
+    disciplines: list[str] = Field(default_factory=list)
     bio: str | None = None
     total_shakes_this_month: int
     total_raised_this_month: Decimal
@@ -219,7 +219,7 @@ class CreatorPublicProfileResponse(BaseModel):
     agenda_title: str | None = None
     agenda_description: str | None = None
     agenda_image_url: str | None = None
-    primary_sport: str
+    disciplines: list[str] = Field(default_factory=list)
     city: str | None
     avatar_url: str | None
     cover_image_url: str | None
@@ -441,7 +441,7 @@ class AthleteProfileUpdateRequest(BaseModel):
     agenda_image_url: str | None = None
     city: str | None = Field(default=None, max_length=255)
     city_id: int | None = None
-    primary_sport_code: int | None = None
+    discipline_codes: list[int] | None = None
     shake_price: Decimal | None = Field(default=None, gt=0)
     currency: str | None = Field(default=None, pattern="^USD$")
     avatar_url: str | None = None
@@ -477,7 +477,7 @@ class AthleteProfileFullResponse(BaseModel):
     agenda_image_url: str | None = None
     city: str | None
     city_id: int | None = None
-    primary_sport_code: int | None
+    discipline_codes: list[int] = Field(default_factory=list)
     shake_price: Decimal
     currency: str
     avatar_url: str | None

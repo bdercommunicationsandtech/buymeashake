@@ -204,6 +204,17 @@ class UserRole(Base):
     role_item: Mapped[LookupItem] = relationship("LookupItem", foreign_keys=[role_id])
     status_item: Mapped[LookupItem] = relationship("LookupItem", foreign_keys=[status_id])
 
+class AthleteDiscipline(Base):
+    __tablename__ = "athlete_disciplines"
+
+    athlete_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("athlete_profiles.id", ondelete="CASCADE"), primary_key=True)
+    discipline_item_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("lookup_items.id", ondelete="CASCADE"), primary_key=True)
+    is_primary: Mapped[bool] = mapped_column(Boolean, default=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+
+    athlete: Mapped["AthleteProfile"] = relationship("AthleteProfile", back_populates="disciplines_association")
+    discipline_item: Mapped["LookupItem"] = relationship("LookupItem")
+
 
 class AthleteProfile(Base):
     __tablename__ = "athlete_profiles"
@@ -216,9 +227,6 @@ class AthleteProfile(Base):
     city_id: Mapped[int | None] = mapped_column(
         MEDIUMINT(unsigned=True), ForeignKey("cities.id", ondelete="SET NULL"), nullable=True, index=True
     )
-    primary_sport_item_id: Mapped[int | None] = mapped_column(
-        BigInteger, ForeignKey("lookup_items.id", ondelete="SET NULL"), nullable=True, index=True
-    )
     is_verified: Mapped[bool] = mapped_column(Boolean, default=False)
     is_nsfw: Mapped[bool] = mapped_column(Boolean, default=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
@@ -226,7 +234,9 @@ class AthleteProfile(Base):
 
     user: Mapped[User] = relationship("User", back_populates="athlete_profile")
     city_ref: Mapped["City | None"] = relationship("City", foreign_keys=[city_id])
-    primary_sport: Mapped["LookupItem | None"] = relationship("LookupItem", foreign_keys=[primary_sport_item_id])
+    disciplines_association: Mapped[list["AthleteDiscipline"]] = relationship(
+        "AthleteDiscipline", back_populates="athlete", cascade="all, delete-orphan"
+    )
     page_settings: Mapped["AthletePageSettings | None"] = relationship(
         "AthletePageSettings", back_populates="athlete", uselist=False, cascade="all, delete-orphan"
     )

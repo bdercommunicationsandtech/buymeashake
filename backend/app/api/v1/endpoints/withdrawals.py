@@ -1,10 +1,9 @@
 from decimal import Decimal
 from typing import Annotated
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Query, status
 
-from app.api.dependencies import CurrentAthlete, CurrentUser, DatabaseSession, OptionalUser
+from app.api.dependencies import CurrentAdmin, CurrentAthlete, CurrentUser, DatabaseSession
 from app.core.exceptions import BusinessLogicError, EntityNotFoundError
-from app.models.entities import User
 from app.repositories.base_repos import WithdrawalRepository
 from app.schemas.dtos import (
     AdminWithdrawalActionRequest,
@@ -117,7 +116,7 @@ async def get_my_withdrawal_history(
 
 @router.get("/admin/withdrawals", response_model=list[WithdrawalRequestResponse])
 async def admin_list_withdrawals(
-    user: CurrentUser,
+    user: CurrentAdmin,
     session: DatabaseSession,
     status_filter: Annotated[str | None, Query(alias="status")] = None,
 ) -> list[WithdrawalRequestResponse]:
@@ -149,7 +148,7 @@ async def admin_process_withdrawal(
     withdrawal_id: int,
     dto: AdminWithdrawalActionRequest,
     session: DatabaseSession,
-    user: OptionalUser = None,
+    user: CurrentAdmin,
 ) -> WithdrawalRequestResponse:
     """Aprueba (stripe.Transfer.create con idempotencia) o rechaza un retiro."""
     from datetime import datetime, timezone
@@ -166,7 +165,7 @@ async def admin_process_withdrawal(
         req.failure_reason = dto.failure_reason or "Solicitud rechazada por el administrador."
         req.admin_notes = dto.admin_notes
         req.processed_at = datetime.now(timezone.utc)
-        req.processed_by_admin_id = user.id if user else None
+        req.processed_by_admin_id = user.id
         await session.commit()
         await session.refresh(req)
     elif dto.action == "approve":
@@ -185,7 +184,7 @@ async def admin_process_withdrawal(
             req.failure_reason = None
             req.admin_notes = dto.admin_notes
             req.processed_at = datetime.now(timezone.utc)
-            req.processed_by_admin_id = user.id if user else None
+            req.processed_by_admin_id = user.id
             await session.commit()
             await session.refresh(req)
         except Exception as exc:
@@ -194,7 +193,7 @@ async def admin_process_withdrawal(
             req.failure_reason = error_msg[:250]
             req.admin_notes = dto.admin_notes
             req.processed_at = datetime.now(timezone.utc)
-            req.processed_by_admin_id = user.id if user else None
+            req.processed_by_admin_id = user.id
             await session.commit()
             await session.refresh(req)
             raise BusinessLogicError(f"No se pudo completar la transferencia: {str(exc)}")

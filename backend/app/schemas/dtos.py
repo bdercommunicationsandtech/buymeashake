@@ -119,6 +119,8 @@ class UserMeResponse(BaseModel):
     full_name: str
     avatar_url: str | None
     role: str
+    roles: list[str] = []
+    is_admin: bool = False
     is_email_verified: bool
     athlete_handle: str | None = None
     referral_code: str | None = None

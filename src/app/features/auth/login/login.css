@@ -56,6 +56,12 @@
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--login-lime) 18%, transparent);
 }
 
+/* Focus ring lives on the wrap; kill the inner input outline */
+.login-input-wrap input:focus,
+.login-input-wrap input:focus-visible {
+  outline: none;
+}
+
 .login-cta {
   transition: transform 160ms ease, background-color 160ms ease, box-shadow 160ms ease;
 }

@@ -20,6 +20,7 @@ from app.core.security import (
     verify_password,
 )
 from app.models.entities import (
+    AthleteMonetization,
     AthleteProfile,
     BookingAppointment,
     BookingService,
@@ -69,6 +70,7 @@ from app.repositories.base_repos import (
     UserRepository,
 )
 from app.services.email_service import send_otp_email, send_thank_you_email
+from app.services import user_roles_service as user_roles
 from app.schemas.dtos import (
     AppVersionCheckResponse,
     AthleteLeaderboardItemResponse,
@@ -144,9 +146,11 @@ class AuthService:
             email=dto.email,
             password_hash=get_password_hash(dto.password),
             full_name=dto.full_name,
-            role=dto.role,
         )
         await self.user_repo.create(user)
+        await user_roles.set_product_role(
+            self.session, user_id=user.id, role_name=dto.role, actor_id=user.id
+        )
 
         if dto.role == "athlete" and dto.handle:
             referral_code = f"{dto.handle}_{secrets.token_hex(3)}"
@@ -239,10 +243,12 @@ class AuthService:
             password_hash=None,
             full_name=full_name[:150],
             avatar_url=avatar_url,
-            role=dto.role,
             is_email_verified=True,
         )
         await self.user_repo.create(user)
+        await user_roles.set_product_role(
+            self.session, user_id=user.id, role_name=dto.role, actor_id=user.id
+        )
         return self._issue_tokens(user)
 
     def _issue_tokens(self, user: User) -> TokenResponse:
@@ -396,10 +402,15 @@ class AuthService:
                 email=dto.email,
                 password_hash=get_password_hash(secrets.token_urlsafe(16)),
                 full_name=name,
-                role="supporter",
                 is_email_verified=True,
             )
             await self.user_repo.create(user)
+            await user_roles.set_product_role(
+                self.session,
+                user_id=user.id,
+                role_name=user_roles.ROLE_SUPPORTER,
+                actor_id=user.id,
+            )
         else:
             user.is_email_verified = True
 
@@ -427,13 +438,17 @@ class AuthService:
 
         athlete_handle = athlete.handle if athlete else None
         referral_code = get_referral_code(athlete) if athlete else None
+        roles = await user_roles.get_active_role_names(self.session, user.id)
+        product_role = await user_roles.primary_product_role(self.session, user.id)
 
         return UserMeResponse(
             id=user.id,
             email=user.email,
             full_name=user.full_name,
             avatar_url=user.avatar_url,
-            role=user.role,
+            role=product_role,
+            roles=roles,
+            is_admin=user_roles.ROLE_ADMIN in roles,
             is_email_verified=user.is_email_verified,
             athlete_handle=athlete_handle,
             referral_code=referral_code,
@@ -453,8 +468,12 @@ class AuthService:
     async def upgrade_to_athlete(self, user: User, dto: UpgradeToAthleteRequest) -> UserMeResponse:
         existing_profile = await self.athlete_repo.get_by_user_id(user.id)
         if existing_profile:
-            # Si ya tenía perfil pero el rol no estaba sincronizado
-            user.role = "athlete"
+            await user_roles.set_product_role(
+                self.session,
+                user_id=user.id,
+                role_name=user_roles.ROLE_ATHLETE,
+                actor_id=user.id,
+            )
             await self.session.flush()
             return await self.get_me(user)
 
@@ -464,7 +483,12 @@ class AuthService:
 
         if dto.full_name:
             user.full_name = dto.full_name
-        user.role = "athlete"
+        await user_roles.set_product_role(
+            self.session,
+            user_id=user.id,
+            role_name=user_roles.ROLE_ATHLETE,
+            actor_id=user.id,
+        )
 
         referral_code = f"{dto.handle}_{secrets.token_hex(3)}"
         sport_item_ids = await resolve_sport_item_ids(self.session, dto.discipline_codes)

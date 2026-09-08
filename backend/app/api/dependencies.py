@@ -1,13 +1,14 @@
 from typing import Annotated
-from fastapi import Depends, status
+from fastapi import Depends
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db_session
-from app.core.exceptions import UnauthorizedError
+from app.core.exceptions import ForbiddenError, UnauthorizedError
 from app.core.security import decode_token
 from app.models.entities import AthleteProfile, User
 from app.repositories.base_repos import AthleteRepository, UserRepository
+from app.services import user_roles_service as user_roles
 
 security_scheme = HTTPBearer(auto_error=False)
 
@@ -45,11 +46,18 @@ async def get_current_athlete(
     profile = await athlete_repo.get_by_user_id(current_user.id)
 
     if not profile:
-        from app.core.exceptions import ForbiddenError
-
         raise ForbiddenError("Necesitas una cuenta de atleta para acceder al dashboard.")
 
     return profile
+
+
+async def get_current_admin(
+    session: DatabaseSession,
+    current_user: Annotated[User, Depends(get_current_user)],
+) -> User:
+    if not await user_roles.is_admin(session, current_user.id):
+        raise ForbiddenError("Se requiere rol de administrador.")
+    return current_user
 
 
 async def get_optional_user(
@@ -72,4 +80,4 @@ async def get_optional_user(
 CurrentUser = Annotated[User, Depends(get_current_user)]
 OptionalUser = Annotated[User | None, Depends(get_optional_user)]
 CurrentAthlete = Annotated[AthleteProfile, Depends(get_current_athlete)]
-
+CurrentAdmin = Annotated[User, Depends(get_current_admin)]

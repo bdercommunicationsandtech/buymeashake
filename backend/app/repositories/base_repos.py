@@ -1,11 +1,12 @@
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 from typing import Any
-from sqlalchemy import func, or_, select
+from sqlalchemy import func, or_, select, distinct
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.models.entities import (
+    AthleteDiscipline,
     AppVersion,
     AthleteFollow,
     AthletePayouts,
@@ -117,12 +118,13 @@ class AthleteRepository:
                 AthleteProfile.handle,
                 User.full_name.label("athlete_name"),
                 User.avatar_url,
-                func.coalesce(LookupItem.label, "Deporte General").label("primary_sport"),
+                func.group_concat(distinct(LookupItem.label)).label("disciplines_concat"),
                 func.coalesce(func.sum(ShakeDetails.shakes_count), 0).label("total_shakes_this_month"),
                 func.coalesce(func.sum(Transaction.gross_amount), 0).label("total_raised_this_month"),
             )
             .join(User, AthleteProfile.user_id == User.id)
-            .outerjoin(LookupItem, AthleteProfile.primary_sport_item_id == LookupItem.id)
+            .outerjoin(AthleteDiscipline, AthleteProfile.id == AthleteDiscipline.athlete_id)
+            .outerjoin(LookupItem, AthleteDiscipline.discipline_item_id == LookupItem.id)
             .outerjoin(
                 Transaction,
                 (AthleteProfile.id == Transaction.athlete_id)
@@ -130,7 +132,7 @@ class AthleteRepository:
                 & (Transaction.transaction_type_code == 201),
             )
             .outerjoin(ShakeDetails, ShakeDetails.transaction_id == Transaction.id)
-            .group_by(AthleteProfile.id, User.id, LookupItem.label)
+            .group_by(AthleteProfile.id, User.id)
             .order_by(func.sum(ShakeDetails.shakes_count).desc(), AthleteProfile.id.desc())
             .limit(limit)
         )
@@ -144,7 +146,7 @@ class AthleteRepository:
                 "handle": row.handle,
                 "athlete_name": row.athlete_name,
                 "avatar_url": row.avatar_url,
-                "primary_sport": row.primary_sport or "Deporte General",
+                "disciplines": row.disciplines_concat.split(",") if row.disciplines_concat else [],
                 "total_shakes_this_month": int(row.total_shakes_this_month or 0),
                 "total_raised_this_month": row.total_raised_this_month or 0,
                 "ranking_position": rank,
@@ -163,13 +165,14 @@ class AthleteRepository:
                 AthleteProfile.handle,
                 User.full_name.label("athlete_name"),
                 User.avatar_url,
-                func.coalesce(LookupItem.label, "Deporte General").label("primary_sport"),
+                func.group_concat(distinct(LookupItem.label)).label("disciplines_concat"),
                 AthleteProfile.bio,
                 func.coalesce(func.sum(ShakeDetails.shakes_count), 0).label("total_shakes_this_month"),
                 func.coalesce(func.sum(Transaction.gross_amount), 0).label("total_raised_this_month"),
             )
             .join(User, AthleteProfile.user_id == User.id)
-            .outerjoin(LookupItem, AthleteProfile.primary_sport_item_id == LookupItem.id)
+            .outerjoin(AthleteDiscipline, AthleteProfile.id == AthleteDiscipline.athlete_id)
+            .outerjoin(LookupItem, AthleteDiscipline.discipline_item_id == LookupItem.id)
             .outerjoin(
                 Transaction,
                 (AthleteProfile.id == Transaction.athlete_id)
@@ -195,7 +198,7 @@ class AthleteRepository:
             )
 
         query = (
-            query.group_by(AthleteProfile.id, User.id, LookupItem.label)
+            query.group_by(AthleteProfile.id, User.id)
             .order_by(func.sum(ShakeDetails.shakes_count).desc(), AthleteProfile.id.desc())
             .limit(limit)
         )
@@ -210,7 +213,7 @@ class AthleteRepository:
                 "handle": row.handle,
                 "athlete_name": row.athlete_name,
                 "avatar_url": row.avatar_url,
-                "primary_sport": row.primary_sport or "Deporte General",
+                "disciplines": row.disciplines_concat.split(",") if row.disciplines_concat else [],
                 "bio": row.bio,
                 "total_shakes_this_month": int(row.total_shakes_this_month or 0),
                 "total_raised_this_month": row.total_raised_this_month or 0,

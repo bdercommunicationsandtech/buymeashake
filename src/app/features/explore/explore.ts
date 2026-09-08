@@ -115,7 +115,7 @@ export class Explore implements OnInit {
       handle: it.handle,
       initials,
       avatarUrl: it.avatar_url,
-      sport: it.primary_sport || 'Deporte General',
+      sport: it.disciplines?.join(', ') || 'Deporte General',
       bio: it.bio || 'Atleta oficial en buymeashake.fit',
       shakesThisMonth: it.total_shakes_this_month,
       totalRaised: Number(it.total_raised_this_month),
@@ -128,6 +128,11 @@ export class Explore implements OnInit {
             : 'bg-amber-700',
     };
   }
+
+  readonly row1 = computed(() => this.leaderboardAthletes().slice(0, 1));
+  readonly row2 = computed(() => this.leaderboardAthletes().slice(1, 3));
+  readonly row3 = computed(() => this.leaderboardAthletes().slice(3, 6));
+  readonly row4 = computed(() => this.leaderboardAthletes().slice(6, 10));
 
   readonly topPodium = computed(() => this.leaderboardAthletes().slice(0, 3));
 

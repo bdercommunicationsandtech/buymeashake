@@ -1,0 +1,98 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --color-mi-marca: #1d4ed8;
+  --spacing-128: 32rem;
+
+  /* Colores adicionales para un look profesional de Admin */
+  --color-admin-bg: #f8fafc;
+  --color-sidebar-dark: #0f172a;
+
+  --animate-fade-in: fade-in 0.2s ease-out;
+  --animate-slide-in: slide-in 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+
+  @keyframes fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  @keyframes slide-in {
+    from { transform: translateX(100%); }
+    to { transform: translateX(0); }
+  }
+}
+
+/* --- Estilos Globales de Base --- */
+
+@layer base {
+  html {
+    @apply antialiased scroll-smooth;
+  }
+
+  body {
+    @apply font-sans bg-admin-bg text-slate-800 leading-tight;
+    /* Evita el salto horizontal del scrollbar */
+    overflow-y: scroll;
+  }
+
+  /* Estilizar el Scrollbar para que se vea moderno (Chrome/Safari) */
+  ::-webkit-scrollbar {
+    @apply w-2 h-2;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-slate-300 rounded-full hover:bg-slate-400 transition-colors;
+  }
+
+/* Reset de inputs para que se vean bien con Tailwind */
+  input, button, textarea, select {
+    font-family: inherit;
+  }
+}
+
+/* --- Componentes Globales (Opcional) --- */
+
+@layer components {
+  /* Clase para las tarjetas blancas típicas de un Dashboard */
+  .admin-card {
+    @apply bg-white border border-slate-200 rounded-xl shadow-sm p-6;
+  }
+
+  /* Títulos de sección */
+  .admin-title {
+    @apply text-2xl font-bold text-slate-900 tracking-tight;
+  }
+
+  .grid-pagination {
+    @apply flex flex-wrap items-center justify-between gap-4 py-3 text-sm;
+  }
+
+  .pagination-left {
+    @apply flex items-center gap-2;
+  }
+
+  .pagination-label {
+    @apply font-medium text-slate-500;
+  }
+
+  .pagination-select {
+    @apply cursor-pointer rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm;
+  }
+
+  .pagination-center .pagination-info,
+  .pagination-page {
+    @apply text-slate-500;
+  }
+
+  .pagination-right {
+    @apply flex items-center gap-3;
+  }
+
+  .btn-page {
+    @apply cursor-pointer rounded-md border border-slate-300 bg-white px-3 py-2 text-sm hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50;
+  }
+}

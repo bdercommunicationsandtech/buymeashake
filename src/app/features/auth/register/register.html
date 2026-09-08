@@ -85,20 +85,63 @@
           />
         </div>
 
-        <!-- Disciplina principal -->
+        <!-- Disciplinas -->
         <div>
           <label class="block text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 mb-1.5">
             {{ t().auth.primarySportLabel }}
           </label>
-          <select
-            class="block w-full px-4 py-3 border border-gray-300 dark:border-white/15 rounded-xl shadow-xs bg-white dark:bg-[#191c1d] text-sm font-semibold text-gray-900 dark:text-white focus:outline-none focus:border-gray-900 dark:focus:border-[#c9ff3d]"
-            [value]="selectedSportCode()"
-            (change)="selectedSportCode.set(+$any($event.target).value)"
-          >
-            @for (sport of sports(); track sport.code) {
-              <option [value]="sport.code" class="bg-white dark:bg-[#191c1d] text-gray-900 dark:text-white">{{ i18n.translateDiscipline(sport.label) }}</option>
+          <div class="relative">
+            <button
+              type="button"
+              (click)="dropdownOpen.set(!dropdownOpen()); searchSport.set('')"
+              class="relative w-full px-4 py-3 text-left border border-gray-300 dark:border-white/15 rounded-xl shadow-xs bg-white dark:bg-[#191c1d] text-sm font-semibold text-gray-900 dark:text-white focus:outline-none focus:border-gray-900 dark:focus:border-[#c9ff3d] cursor-pointer"
+            >
+              @if (disciplineCodes().length === 0) {
+                <span class="text-gray-400">Selecciona disciplinas...</span>
+              } @else {
+                <div class="flex flex-wrap gap-1.5">
+                  @for (code of disciplineCodes(); track code) {
+                    <span class="inline-flex items-center gap-1 bg-[#c9ff3d]/20 text-[#a3d61b] px-2 py-0.5 rounded-md text-xs font-bold border border-[#c9ff3d]/30">
+                      {{ getDisciplineLabel(code) }}
+                      <span class="text-[#c9ff3d] hover:text-[#bbf033] ml-1" (click)="$event.stopPropagation(); toggleSport(code)">&times;</span>
+                    </span>
+                  }
+                </div>
+              }
+            </button>
+
+            @if (dropdownOpen()) {
+              <div class="absolute z-10 w-full mt-2 bg-white dark:bg-[#191c1d] border border-gray-200 dark:border-white/10 rounded-xl shadow-xl max-h-72 overflow-hidden flex flex-col">
+                
+                <div class="p-2 border-b border-gray-100 dark:border-white/5">
+                  <input
+                    type="text"
+                    placeholder="Buscar disciplina..."
+                    class="w-full bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-white font-medium focus:outline-none focus:border-[#c9ff3d] dark:focus:border-[#c9ff3d]"
+                    [value]="searchSport()"
+                    (input)="searchSport.set($any($event.target).value)"
+                    (click)="$event.stopPropagation()"
+                  />
+                </div>
+                <ul class="py-1 overflow-y-auto text-sm font-semibold text-gray-900 dark:text-white flex-1">
+                  @for (sport of filteredSports(); track sport.code) {
+                    <li
+                      (click)="toggleSport(sport.code)"
+                      class="px-4 py-2.5 hover:bg-gray-100 dark:hover:bg-white/5 cursor-pointer flex justify-between items-center transition-colors"
+                    >
+                      <span>{{ i18n.translateDiscipline(sport.label) }}</span>
+                      @if (disciplineCodes().includes(sport.code)) {
+                        <span class="text-[#c9ff3d] text-lg leading-none">✓</span>
+                      }
+                    </li>
+                  }
+                  @if (filteredSports().length === 0) {
+                    <li class="px-4 py-3 text-gray-500 text-center text-xs">No hay resultados</li>
+                  }
+                </ul>
+              </div>
             }
-          </select>
+          </div>
         </div>
 
         <!-- Correo -->

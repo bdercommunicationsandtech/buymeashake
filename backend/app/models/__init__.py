@@ -27,6 +27,7 @@ from app.models.entities import (
     TierBenefit,
     Transaction,
     User,
+    UserRole,
 )
 
 __all__ = [
@@ -58,4 +59,5 @@ __all__ = [
     "TierBenefit",
     "Transaction",
     "User",
+    "UserRole",
 ]

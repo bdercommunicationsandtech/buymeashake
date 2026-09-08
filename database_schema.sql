@@ -132,6 +132,7 @@ CREATE TABLE cities (
 -- MÓDULO 1: USUARIOS Y PERFILES DE ATLETAS (NORMALIZADO)
 -- ==============================================================================
 
+DROP TABLE IF EXISTS user_roles;
 DROP TABLE IF EXISTS users;
 CREATE TABLE users (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -140,11 +141,27 @@ CREATE TABLE users (
     password_hash VARCHAR(255) NULL,
     full_name VARCHAR(150) NOT NULL,
     avatar_url VARCHAR(255) NULL,
-    role ENUM('supporter', 'athlete', 'admin') DEFAULT 'supporter',
     is_email_verified BOOLEAN DEFAULT FALSE,
     stripe_customer_id VARCHAR(100) NULL UNIQUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE user_roles (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    user_id BIGINT UNSIGNED NOT NULL,
+    role_id BIGINT UNSIGNED NOT NULL,
+    created_by BIGINT UNSIGNED NOT NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    status_id BIGINT UNSIGNED NOT NULL,
+    UNIQUE KEY uq_user_role (user_id, role_id),
+    KEY idx_user_roles_user_id (user_id),
+    KEY idx_user_roles_role_id (role_id),
+    KEY idx_user_roles_status_id (status_id),
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (role_id) REFERENCES lookup_items(id) ON DELETE RESTRICT,
+    FOREIGN KEY (status_id) REFERENCES lookup_items(id) ON DELETE RESTRICT
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 DROP TABLE IF EXISTS athlete_profiles;
@@ -155,17 +172,25 @@ CREATE TABLE athlete_profiles (
     bio VARCHAR(600) NULL,
     city VARCHAR(255) NULL,
     city_id MEDIUMINT UNSIGNED NULL,
-    primary_sport_item_id BIGINT UNSIGNED NULL,
     is_verified BOOLEAN DEFAULT FALSE,
     is_nsfw BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-    FOREIGN KEY (primary_sport_item_id) REFERENCES lookup_items(id) ON DELETE SET NULL,
     FOREIGN KEY (city_id) REFERENCES cities(id) ON DELETE SET NULL,
     INDEX idx_handle (handle),
-    INDEX idx_primary_sport_item (primary_sport_item_id),
     INDEX idx_athlete_city_id (city_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+DROP TABLE IF EXISTS athlete_disciplines;
+CREATE TABLE athlete_disciplines (
+    athlete_id BIGINT UNSIGNED NOT NULL,
+    discipline_item_id BIGINT UNSIGNED NOT NULL,
+    is_primary BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (athlete_id, discipline_item_id),
+    FOREIGN KEY (athlete_id) REFERENCES athlete_profiles(id) ON DELETE CASCADE,
+    FOREIGN KEY (discipline_item_id) REFERENCES lookup_items(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 DROP TABLE IF EXISTS athlete_page_settings;
@@ -580,13 +605,17 @@ INSERT INTO lookup_groups (code, name, description) VALUES
 (200, 'Tipos de Transacción', 'Clasificación de los ingresos'),
 (300, 'Estados de Transacción', 'Estado del procesamiento de pago'),
 (400, 'Tipos de Notificación', 'Alertas y eventos de la plataforma'),
-(500, 'Estados de Cita / Booking', 'Estados de citas 1-a-1');
+(500, 'Estados de Cita / Booking', 'Estados de citas 1-a-1'),
+(600, 'Account Roles', 'Roles de cuenta de la plataforma'),
+(700, 'Account Role Statuses', 'Estado de una asignación en user_roles');
 
 SET @sports_group_id = (SELECT id FROM lookup_groups WHERE code = 100);
 SET @trans_group_id = (SELECT id FROM lookup_groups WHERE code = 200);
 SET @status_group_id = (SELECT id FROM lookup_groups WHERE code = 300);
 SET @notif_group_id = (SELECT id FROM lookup_groups WHERE code = 400);
 SET @booking_group_id = (SELECT id FROM lookup_groups WHERE code = 500);
+SET @roles_group_id = (SELECT id FROM lookup_groups WHERE code = 600);
+SET @role_status_group_id = (SELECT id FROM lookup_groups WHERE code = 700);
 
 INSERT INTO lookup_items (lookup_group_id, code, label, icon, sort_order) VALUES
 (@sports_group_id, 101, 'Fuerza & Levantamiento', 'dumbbell', 1),
@@ -623,6 +652,15 @@ INSERT INTO lookup_items (lookup_group_id, code, label, icon, sort_order) VALUES
 (@booking_group_id, 502, 'Completada', 'check', 2),
 (@booking_group_id, 503, 'Cancelada', 'x', 3),
 (@booking_group_id, 504, 'No-show', 'clock', 4);
+
+INSERT INTO lookup_items (lookup_group_id, code, label, icon, sort_order) VALUES
+(@roles_group_id, 601, 'supporter', 'user', 1),
+(@roles_group_id, 602, 'athlete', 'athlete', 2),
+(@roles_group_id, 603, 'admin', 'shield', 3);
+
+INSERT INTO lookup_items (lookup_group_id, code, label, icon, sort_order) VALUES
+(@role_status_group_id, 701, 'ACTIVE', 'check', 1),
+(@role_status_group_id, 702, 'INACTIVE', 'x', 2);
 
 INSERT INTO app_versions (platform, version_name, version_code, min_supported_version_code, force_update, update_url, release_notes) VALUES
 ('ios', '1.0.0', 100, 100, FALSE, 'https://apps.apple.com/app/buymeashake/id0000000', 'Versión inicial oficial'),

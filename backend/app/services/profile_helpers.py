@@ -11,6 +11,7 @@ from app.models.entities import (
     AthleteMonetization,
     AthletePageSettings,
     AthletePayouts,
+    AthleteDiscipline,
     AthleteProfile,
     AthleteReferrals,
     AthleteSocialLink,
@@ -25,7 +26,7 @@ SOCIAL_PLATFORMS = ("instagram", "tiktok", "facebook", "twitter")
 def athlete_load_options():
     return (
         selectinload(AthleteProfile.user),
-        selectinload(AthleteProfile.primary_sport),
+        selectinload(AthleteProfile.disciplines_association).selectinload(AthleteDiscipline.discipline_item),
         selectinload(AthleteProfile.page_settings),
         selectinload(AthleteProfile.social_links),
         selectinload(AthleteProfile.monetization),
@@ -115,32 +116,37 @@ def resolve_city_display(profile: AthleteProfile) -> str | None:
     return profile.city
 
 
-def primary_sport_code(profile: AthleteProfile) -> int | None:
-    if profile.primary_sport:
-        return profile.primary_sport.code
-    return None
+def discipline_codes(profile: AthleteProfile) -> list[int]:
+    if not profile.disciplines_association:
+        return []
+    return [assoc.discipline_item.code for assoc in profile.disciplines_association if assoc.discipline_item]
 
 
-def primary_sport_label(profile: AthleteProfile) -> str | None:
-    if profile.primary_sport:
-        return profile.primary_sport.label
-    return None
+def discipline_labels(profile: AthleteProfile) -> list[str]:
+    if not profile.disciplines_association:
+        return []
+    return [assoc.discipline_item.label for assoc in profile.disciplines_association if assoc.discipline_item]
 
 
-async def resolve_sport_item_id(session: AsyncSession, sport_code: int | None) -> int | None:
-    if sport_code is None:
-        return None
+async def resolve_sport_item_ids(session: AsyncSession, sport_codes: list[int] | None) -> list[int]:
+    if not sport_codes:
+        return []
     query = (
         select(LookupItem.id)
         .join(LookupGroup, LookupItem.lookup_group_id == LookupGroup.id)
-        .where(LookupGroup.code == 100, LookupItem.code == sport_code)
-        .limit(1)
+        .where(LookupGroup.code == 100, LookupItem.code.in_(sport_codes))
     )
     result = await session.execute(query)
-    return result.scalar_one_or_none()
+    return list(result.scalars().all())
 
 
-async def ensure_child_rows(session: AsyncSession, athlete: AthleteProfile, *, referral_code: str, referred_by_id: int | None = None) -> None:
+async def ensure_child_rows(
+    session: AsyncSession,
+    athlete: AthleteProfile,
+    *,
+    referral_code: str,
+    referred_by_id: int | None = None,
+) -> None:
     """Create default child rows for a new athlete profile.
 
     Uses session.get (not relationship attribute access) so AsyncSession never
@@ -163,7 +169,11 @@ async def ensure_child_rows(session: AsyncSession, athlete: AthleteProfile, *, r
     await session.flush()
 
 
-async def upsert_social_links(session: AsyncSession, athlete: AthleteProfile, urls: dict[str, str | None]) -> None:
+async def upsert_social_links(
+    session: AsyncSession,
+    athlete: AthleteProfile,
+    urls: dict[str, str | None],
+) -> None:
     existing = {link.platform: link for link in (athlete.social_links or [])}
     for platform in SOCIAL_PLATFORMS:
         if platform not in urls:

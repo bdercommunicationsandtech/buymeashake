@@ -852,4 +852,319 @@ async def send_report_verdict_email(
     )
 
 
+# ==============================================================================
+# SUPPORT TICKETS (CENTRO DE AYUDA Y SOPORTE)
+# ==============================================================================
 
+def generate_support_ticket_admin_html(
+    folio: str,
+    name: str,
+    user_email: str,
+    user_role: str,
+    category: str,
+    category_title: str,
+    subject: str,
+    description: str,
+    related_folio_or_handle: str | None = None,
+    attached_file: str | None = None,
+    created_at: str | None = None,
+) -> str:
+    role_label_map = {
+        "athlete": "Atleta / Coach",
+        "supporter": "Supporter / Donante",
+        "visitor": "Visitante general",
+    }
+    role_display = role_label_map.get(user_role, user_role)
+    time_str = created_at if created_at else "Fecha y hora de registro automático"
+    related_html = ""
+    if related_folio_or_handle:
+        related_html = f"""
+        <tr>
+          <td style="padding: 6px 8px; font-size: 12px; color: #a1a1aa;">Referencia / Handle:</td>
+          <td style="padding: 6px 8px; font-size: 13px; font-weight: 700; color: #c9ff3d;">
+            {related_folio_or_handle}
+          </td>
+        </tr>
+        """
+
+    attachment_html = ""
+    if attached_file:
+        is_image = any(attached_file.lower().endswith(ext) for ext in [".png", ".jpg", ".jpeg", ".webp", ".gif"])
+        preview_markup = ""
+        if is_image:
+            preview_markup = f"""
+            <div style="margin-top: 10px; border-radius: 10px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); text-align: center; background-color: #0b0e0c; padding: 10px;">
+              <img src="cid:{attached_file}" style="max-width: 100%; max-height: 420px; height: auto; border-radius: 8px; display: inline-block;" alt="{attached_file}" />
+            </div>
+            """
+        attachment_html = f"""
+        <div style="margin-top: 14px; text-align: left;">
+          <p style="margin: 0 0 6px 0; font-size: 11px; font-weight: 800; text-transform: uppercase; color: #a1a1aa; letter-spacing: 0.5px;">Archivo adjunto de evidencia:</p>
+          <div style="background-color: #191c1d; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 12px 16px; display: block;">
+            <div style="font-size: 13px; font-weight: 700; color: #ffffff;">
+              [Adjunto descargable] <span style="color: #c9ff3d;">{attached_file}</span>
+            </div>
+            {preview_markup}
+          </div>
+        </div>
+        """
+
+    return f"""
+    <!DOCTYPE html>
+    <html lang="es">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Ticket de Soporte {folio} - Buymeashake.fit</title>
+    </head>
+    <body style="margin: 0; padding: 0; background-color: #090c0a; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #ffffff;">
+      <table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 600px; margin: 30px auto; background-color: #121614; border-radius: 24px; border: 1px solid rgba(255,255,255,0.12); overflow: hidden; box-shadow: 0 25px 50px rgba(0,0,0,0.6);">
+        
+        <!-- Header -->
+        <tr>
+          <td style="padding: 28px 32px 20px 32px; background: linear-gradient(180deg, #16241b 0%, #121614 100%); border-bottom: 1px solid rgba(255,255,255,0.08);">
+            <table width="100%">
+              <tr>
+                <td>
+                  <span style="display: inline-block; background-color: rgba(201,255,61,0.15); border: 1px solid rgba(201,255,61,0.35); color: #c9ff3d; font-size: 10px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; padding: 4px 10px; border-radius: 9999px;">
+                    Mesa de Asistencia Técnica & Soporte
+                  </span>
+                  <h1 style="margin: 10px 0 0 0; font-size: 20px; font-weight: 900; color: #ffffff; letter-spacing: -0.5px;">
+                    Nuevo Ticket de Soporte
+                  </h1>
+                </td>
+                <td align="right" valign="top">
+                  <div style="font-family: monospace; font-size: 13px; font-weight: 800; background-color: #c9ff3d; color: #070a08; padding: 6px 12px; border-radius: 8px;">
+                    {folio}
+                  </div>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+
+        <!-- Datos del Solicitante -->
+        <tr>
+          <td style="padding: 24px 32px 10px 32px;">
+            <table width="100%" style="background-color: #161b18; border-radius: 16px; border: 1px solid rgba(255,255,255,0.06); padding: 16px;">
+              <tr>
+                <td style="padding: 6px 8px; font-size: 12px; color: #a1a1aa; width: 38%;">Nombre del usuario:</td>
+                <td style="padding: 6px 8px; font-size: 13px; font-weight: 800; color: #ffffff;">{name}</td>
+              </tr>
+              <tr>
+                <td style="padding: 6px 8px; font-size: 12px; color: #a1a1aa;">Correo electrónico:</td>
+                <td style="padding: 6px 8px; font-size: 13px; color: #c9ff3d;">
+                  <a href="mailto:{user_email}" style="color: #c9ff3d; text-decoration: none;">{user_email}</a>
+                </td>
+              </tr>
+              <tr>
+                <td style="padding: 6px 8px; font-size: 12px; color: #a1a1aa;">Rol en la plataforma:</td>
+                <td style="padding: 6px 8px; font-size: 13px; font-weight: 700; color: #ffffff;">{role_display}</td>
+              </tr>
+              <tr>
+                <td style="padding: 6px 8px; font-size: 12px; color: #a1a1aa;">Categoría:</td>
+                <td style="padding: 6px 8px; font-size: 13px; font-weight: 700; color: #ffffff;">
+                  <span style="display: inline-block; background-color: rgba(255,255,255,0.08); color: #ffffff; font-family: monospace; font-size: 11px; padding: 2px 6px; border-radius: 4px; margin-right: 4px;">[{category}]</span>
+                  {category_title}
+                </td>
+              </tr>
+              {related_html}
+              <tr>
+                <td style="padding: 6px 8px; font-size: 12px; color: #a1a1aa;">Fecha de emisión:</td>
+                <td style="padding: 6px 8px; font-size: 12px; color: #a1a1aa;">{time_str}</td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+
+        <!-- Asunto y Descripción -->
+        <tr>
+          <td style="padding: 16px 32px;">
+            <p style="margin: 0 0 6px 0; font-size: 11px; font-weight: 800; text-transform: uppercase; color: #a1a1aa; letter-spacing: 0.5px;">
+              Asunto:
+            </p>
+            <div style="font-size: 15px; font-weight: 800; color: #ffffff; margin-bottom: 16px;">
+              {subject}
+            </div>
+
+            <p style="margin: 0 0 6px 0; font-size: 11px; font-weight: 800; text-transform: uppercase; color: #a1a1aa; letter-spacing: 0.5px;">
+              Mensaje y Detalles del Ticket:
+            </p>
+            <div style="background-color: #191e1b; border-left: 4px solid #c9ff3d; border-radius: 12px; padding: 16px 18px; font-size: 13px; line-height: 1.6; color: #f4f4f5; white-space: pre-wrap;">
+{description}
+            </div>
+
+            {attachment_html}
+          </td>
+        </tr>
+
+        <!-- SLA y Botón de Respuesta -->
+        <tr>
+          <td style="padding: 10px 32px 28px 32px; text-align: center;">
+            <div style="background-color: rgba(255,255,255,0.03); border: 1px dashed rgba(255,255,255,0.15); border-radius: 12px; padding: 12px 18px; margin-bottom: 20px; text-align: left;">
+              <p style="margin: 0; font-size: 11px; color: #a1a1aa; line-height: 1.5;">
+                Compromiso de Servicio: Responder al usuario en un plazo máximo de 12 a 24 horas hábiles.
+              </p>
+            </div>
+
+            <a href="mailto:{user_email}?subject=RE: [{folio}] {subject}" style="display: inline-block; background-color: #c9ff3d; color: #070a08; font-weight: 800; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; text-decoration: none; padding: 12px 28px; border-radius: 9999px;">
+              Responder al Usuario Directamente →
+            </a>
+          </td>
+        </tr>
+
+        <!-- Footer -->
+        <tr>
+          <td align="center" style="padding: 20px 24px; background-color: #0a0d0b; border-top: 1px solid rgba(255,255,255,0.06);">
+            <p style="margin: 0; font-size: 11px; color: #52525b; font-weight: 500;">
+              © 2026 Buymeashake.fit · Mesa de Asistencia y Soporte Técnico BDER Communications
+            </p>
+          </td>
+        </tr>
+
+      </table>
+    </body>
+    </html>
+    """
+
+
+def generate_support_ticket_user_ack_html(
+    folio: str,
+    name: str,
+    category_title: str,
+    subject: str,
+    description: str,
+) -> str:
+    return f"""
+    <!DOCTYPE html>
+    <html lang="es">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Solicitud de Soporte Recibida {folio} - Buymeashake.fit</title>
+    </head>
+    <body style="margin: 0; padding: 0; background-color: #090c0a; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #ffffff;">
+      <table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 580px; margin: 30px auto; background-color: #121614; border-radius: 24px; border: 1px solid rgba(255,255,255,0.12); overflow: hidden; box-shadow: 0 25px 50px rgba(0,0,0,0.6);">
+        
+        <!-- Header -->
+        <tr>
+          <td style="padding: 28px 32px 20px 32px; background: linear-gradient(180deg, #16241b 0%, #121614 100%); border-bottom: 1px solid rgba(255,255,255,0.08);">
+            <table width="100%">
+              <tr>
+                <td>
+                  <span style="display: inline-block; background-color: rgba(201,255,61,0.15); border: 1px solid rgba(201,255,61,0.35); color: #c9ff3d; font-size: 10px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; padding: 4px 10px; border-radius: 9999px;">
+                    Confirmación de Ticket
+                  </span>
+                  <h1 style="margin: 10px 0 0 0; font-size: 20px; font-weight: 900; color: #ffffff; letter-spacing: -0.5px;">
+                    Hemos recibido tu solicitud
+                  </h1>
+                </td>
+                <td align="right" valign="top">
+                  <div style="font-family: monospace; font-size: 13px; font-weight: 800; background-color: #c9ff3d; color: #070a08; padding: 6px 12px; border-radius: 8px;">
+                    {folio}
+                  </div>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+
+        <!-- Mensaje de Tranquilidad -->
+        <tr>
+          <td style="padding: 24px 32px 16px 32px;">
+            <p style="margin: 0 0 16px 0; font-size: 14px; line-height: 1.6; color: #e4e4e7;">
+              Hola <strong>{name}</strong>, gracias por contactar al Centro de Asistencia de Buymeashake.fit. Tu consulta ha sido asignada a un especialista de nuestro equipo.
+            </p>
+
+            <div style="background-color: rgba(201,255,61,0.08); border-left: 3px solid #c9ff3d; border-radius: 10px; padding: 14px 16px; margin-bottom: 20px;">
+              <p style="margin: 0; font-size: 12px; line-height: 1.5; color: #d4d4d8;">
+                <strong>Tiempo estimado de respuesta:</strong> Entre <strong>12 y 24 horas hábiles</strong>. Te responderemos directamente a este correo electrónico con la solución o siguientes pasos.
+              </p>
+            </div>
+
+            <!-- Resumen de la Solicitud -->
+            <div style="background-color: #161b18; border-radius: 14px; border: 1px solid rgba(255,255,255,0.06); padding: 16px;">
+              <p style="margin: 0 0 4px 0; font-size: 11px; font-weight: 800; text-transform: uppercase; color: #a1a1aa; letter-spacing: 0.5px;">
+                Resumen de tu Ticket:
+              </p>
+              <p style="margin: 0 0 8px 0; font-size: 13px; font-weight: 700; color: #ffffff;">
+                {subject}
+              </p>
+              <p style="margin: 0 0 6px 0; font-size: 11px; color: #a1a1aa;">
+                Categoría: <span style="color: #ffffff; font-weight: 600;">{category_title}</span>
+              </p>
+              <div style="background-color: #111413; border-radius: 8px; padding: 12px; font-size: 12px; line-height: 1.5; color: #a1a1aa; white-space: pre-wrap; margin-top: 8px;">
+{description[:350] + ('...' if len(description) > 350 else '')}
+              </div>
+            </div>
+          </td>
+        </tr>
+
+        <!-- Footer -->
+        <tr>
+          <td align="center" style="padding: 20px 24px; background-color: #0a0d0b; border-top: 1px solid rgba(255,255,255,0.06);">
+            <p style="margin: 0; font-size: 11px; color: #52525b; font-weight: 500;">
+              © 2026 Buymeashake.fit · La plataforma de monetización deportiva
+            </p>
+          </td>
+        </tr>
+
+      </table>
+    </body>
+    </html>
+    """
+
+
+def send_support_ticket_sync(
+    folio: str,
+    name: str,
+    user_email: str,
+    user_role: str,
+    category: str,
+    category_title: str,
+    subject: str,
+    description: str,
+    related_folio_or_handle: str | None = None,
+    attached_file: str | None = None,
+    attached_file_bytes: bytes | None = None,
+    attached_file_type: str | None = None,
+) -> bool:
+    """Envía la notificación del ticket de soporte al equipo interno de Buymeashake."""
+    email_subject = f"[Ticket {folio}] {subject} - [{category}]"
+    html = generate_support_ticket_admin_html(
+        folio=folio,
+        name=name,
+        user_email=user_email,
+        user_role=user_role,
+        category=category,
+        category_title=category_title,
+        subject=subject,
+        description=description,
+        related_folio_or_handle=related_folio_or_handle,
+        attached_file=attached_file,
+    )
+    attachments = []
+    if attached_file and attached_file_bytes:
+        attachments.append((attached_file, attached_file_bytes, attached_file_type))
+
+    return send_email_sync(settings.EMAILS_FROM_EMAIL, email_subject, html, attachments=attachments if attachments else None)
+
+
+def send_support_ticket_user_ack_sync(
+    folio: str,
+    name: str,
+    user_email: str,
+    category_title: str,
+    subject: str,
+    description: str,
+) -> bool:
+    """Envía el acuse de recibo del ticket al usuario solicitante."""
+    email_subject = f"Hemos recibido tu solicitud de asistencia [{folio}]"
+    html = generate_support_ticket_user_ack_html(
+        folio=folio,
+        name=name,
+        category_title=category_title,
+        subject=subject,
+        description=description,
+    )
+    return send_email_sync(user_email, email_subject, html)

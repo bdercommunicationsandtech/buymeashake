@@ -1,0 +1,88 @@
+<div class="min-h-screen w-full flex items-center justify-center bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 p-4 sm:p-6 lg:p-8 relative overflow-hidden">
+
+  <div class="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
+    <div class="absolute -top-[10%] -left-[10%] w-[40%] h-[40%] rounded-full bg-blue-600/20 blur-[100px]"></div>
+    <div class="absolute bottom-[10%] -right-[5%] w-[30%] h-[40%] rounded-full bg-cyan-500/20 blur-[120px]"></div>
+  </div>
+
+  <div class="w-full max-w-md bg-white/10 backdrop-blur-2xl border border-white/20 rounded-3xl shadow-2xl p-8 sm:p-10 relative z-10 transition-all duration-300">
+
+    <div class="flex flex-col items-center mb-8">
+      <div class="bg-white p-3 rounded-2xl shadow-lg mb-6 transform transition hover:scale-105">
+        <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-blue-600 to-cyan-500 text-lg font-extrabold text-white">
+          BMS
+        </div>
+      </div>
+      <h1 class="text-3xl font-extrabold text-white tracking-tight">BuyMeAShake Admin</h1>
+      <p class="text-sm text-blue-200 mt-2 text-center">Inicia sesión con tu cuenta de administrador</p>
+    </div>
+
+    <div class="mb-6">
+      <app-alert [message]="errorMessage()" type="error" />
+    </div>
+
+    <form [formGroup]="form" (ngSubmit)="onSubmit()" class="flex flex-col gap-5">
+
+      <div class="flex flex-col gap-1.5">
+        <label for="email" class="text-sm font-medium text-slate-200 ml-1">Correo electrónico</label>
+        <div class="relative">
+          <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <svg class="h-5 w-5 text-blue-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
+            </svg>
+          </div>
+          <input
+            id="email"
+            type="email"
+            formControlName="email"
+            placeholder="admin@buymeashake.fit"
+            autocomplete="email"
+            [maxlength]="emailMaxLength"
+            class="w-full pl-10 pr-4 py-3 bg-slate-900/40 border border-slate-600/50 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+          />
+        </div>
+        @if (form.get('email')?.invalid && form.get('email')?.touched) {
+          <span class="text-xs text-red-400 ml-1 font-medium animate-pulse">Correo electrónico válido requerido</span>
+        }
+      </div>
+
+      <div class="flex flex-col gap-1.5">
+        <label for="password" class="text-sm font-medium text-slate-200 ml-1">Contraseña</label>
+        <div class="relative">
+          <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <svg class="h-5 w-5 text-blue-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+            </svg>
+          </div>
+          <input
+            id="password"
+            type="password"
+            formControlName="password"
+            placeholder="••••••••"
+            autocomplete="current-password"
+            [maxlength]="passwordMaxLength"
+            class="w-full pl-10 pr-4 py-3 bg-slate-900/40 border border-slate-600/50 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+          />
+        </div>
+        @if (form.get('password')?.invalid && form.get('password')?.touched) {
+          <span class="text-xs text-red-400 ml-1 font-medium animate-pulse">Mínimo 6 caracteres</span>
+        }
+      </div>
+
+      <div id="turnstile-container" class="my-2 flex justify-center"></div>
+
+      <button
+        type="submit"
+        [disabled]="loading()"
+        class="mt-2 w-full flex items-center justify-center py-3.5 px-4 rounded-xl text-sm font-bold text-white bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-slate-900 transition-all duration-200 shadow-lg shadow-blue-500/30 disabled:opacity-70 disabled:cursor-not-allowed transform active:scale-[0.98]"
+      >
+        @if (loading()) {
+          <app-loading [visible]="true" [overlay]="false" message="Entrando..." />
+        } @else {
+          Entrar al Panel
+        }
+      </button>
+
+    </form>
+  </div>
+</div>

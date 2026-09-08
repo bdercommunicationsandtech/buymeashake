@@ -69,7 +69,7 @@ class UserRegisterRequest(BaseModel):
     full_name: str = Field(min_length=2, max_length=150)
     role: str = Field(default="supporter", pattern="^(supporter|athlete)$")
     handle: str | None = Field(default=None, pattern="^[a-z0-9_]{3,30}$")
-    primary_sport_code: int | None = Field(default=None)
+    discipline_codes: list[int] = Field(default_factory=list)
     referral_code: str | None = Field(default=None, max_length=50)
 
     @field_validator("full_name", mode="before")
@@ -81,6 +81,62 @@ class UserRegisterRequest(BaseModel):
 class UserLoginRequest(BaseModel):
     email: EmailStr = Field(max_length=191)
     password: str = Field(max_length=128)
+
+
+class AdminLoginRequest(BaseModel):
+    email: EmailStr
+    password: str = Field(min_length=1, max_length=256)
+
+
+class AdminLoginResponse(BaseModel):
+    access_token: str
+    refresh_token: str | None = None
+    token_type: str = "bearer"
+    expires_in: int | None = None
+
+
+class AdminMeResponse(BaseModel):
+    id: int
+    email: str
+    full_name: str
+    username: str
+    first_name: str
+    last_name: str
+    roles: list[str]
+    is_admin: bool = True
+    avatar_url: str | None = None
+
+
+class AdminUserCounts(BaseModel):
+    supporters: int
+    athletes: int
+    total: int
+
+
+class AdminGmvStats(BaseModel):
+    total: Decimal
+    currency: str = "USD"
+    shakes: Decimal
+    memberships: Decimal
+    shop: Decimal
+    bookings: Decimal
+    successful_count: int
+
+
+class AdminRecentUserItem(BaseModel):
+    id: int
+    email: str
+    full_name: str
+    role: str
+    created_at: datetime | None = None
+    athlete_handle: str | None = None
+
+
+class AdminPlatformStatsResponse(BaseModel):
+    users: AdminUserCounts
+    gmv: AdminGmvStats
+    recent_supporters: list[AdminRecentUserItem] = []
+    recent_athletes: list[AdminRecentUserItem] = []
 
 
 class RequestOtpRequest(BaseModel):
@@ -142,7 +198,7 @@ class FollowedAthleteResponse(BaseModel):
     handle: str
     avatar_url: str | None = None
     bio: str | None = None
-    primary_sport: str | None = None
+    disciplines: list[str] = Field(default_factory=list)
 
 
 class TokenResponse(BaseModel):
@@ -169,6 +225,8 @@ class UserMeResponse(BaseModel):
     full_name: str
     avatar_url: str | None
     role: str
+    roles: list[str] = []
+    is_admin: bool = False
     is_email_verified: bool
     athlete_handle: str | None = None
     referral_code: str | None = None
@@ -177,7 +235,7 @@ class UserMeResponse(BaseModel):
 class UpgradeToAthleteRequest(BaseModel):
     handle: str = Field(min_length=3, max_length=30, pattern="^[a-z0-9_]{3,30}$")
     full_name: str | None = Field(default=None, min_length=2, max_length=150)
-    primary_sport_code: int | None = Field(default=None)
+    discipline_codes: list[int] = Field(default_factory=list)
     bio: str | None = Field(default=None, max_length=600)
     city: str | None = Field(default=None, max_length=255)
     shake_price: Decimal | None = Field(default=None, ge=1)
@@ -229,7 +287,7 @@ class AthleteLeaderboardItemResponse(BaseModel):
     handle: str
     athlete_name: str
     avatar_url: str | None
-    primary_sport: str
+    disciplines: list[str] = Field(default_factory=list)
     bio: str | None = None
     total_shakes_this_month: int
     total_raised_this_month: Decimal
@@ -272,7 +330,7 @@ class CreatorPublicProfileResponse(BaseModel):
     agenda_title: str | None = None
     agenda_description: str | None = None
     agenda_image_url: str | None = None
-    primary_sport: str
+    disciplines: list[str] = Field(default_factory=list)
     city: str | None
     avatar_url: str | None
     cover_image_url: str | None
@@ -557,7 +615,7 @@ class AthleteProfileUpdateRequest(BaseModel):
     agenda_image_url: str | None = Field(default=None, max_length=255)
     city: str | None = Field(default=None, max_length=255)
     city_id: int | None = None
-    primary_sport_code: int | None = None
+    discipline_codes: list[int] | None = None
     shake_price: Decimal | None = Field(default=None, gt=0)
     currency: str | None = Field(default=None, pattern="^USD$")
     avatar_url: str | None = Field(default=None, max_length=255)
@@ -607,7 +665,7 @@ class AthleteProfileFullResponse(BaseModel):
     agenda_image_url: str | None = None
     city: str | None
     city_id: int | None = None
-    primary_sport_code: int | None
+    discipline_codes: list[int] = Field(default_factory=list)
     shake_price: Decimal
     currency: str
     avatar_url: str | None
@@ -843,6 +901,28 @@ class AdminReportVerdictResponse(BaseModel):
     status: str = "resolved"
     email_sent: bool = True
     message: str
+
+
+# ==============================================================================
+# 10. SUPPORT & HELP DESK TICKETS
+# ==============================================================================
+
+class SupportTicketRequest(BaseModel):
+    name: str = Field(min_length=2, max_length=150)
+    email: EmailStr
+    user_role: str = Field(default="athlete", pattern="^(athlete|supporter|visitor)$")
+    category: str = Field(default="general", max_length=50)
+    category_title: str = Field(min_length=2, max_length=150)
+    subject: str = Field(min_length=3, max_length=200)
+    description: str = Field(min_length=10, max_length=4000)
+    related_folio_or_handle: str | None = Field(default=None, max_length=100)
+    attached_file: str | None = None
+
+
+class SupportTicketResponse(BaseModel):
+    folio: str
+    message: str
+    status: str = "received"
 
 
 

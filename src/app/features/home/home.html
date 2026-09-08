@@ -30,9 +30,9 @@
       </div>
 
       <!-- Headline & Claim -->
-      <h1 class="font-display text-4xl sm:text-6xl lg:text-7xl font-black tracking-tight text-gray-950 dark:text-white leading-[1.05] max-w-3xl">
-        {{ t().home.heroTitlePart1 }} <br />
-        <span class="text-emerald-600 dark:text-[#c9ff3d]">{{ t().home.heroTitlePart2 }}</span>
+      <h1 class="font-display text-3xl sm:text-4xl md:text-5xl lg:text-[44px] xl:text-[50px] font-black tracking-tight text-gray-950 dark:text-white leading-[1.1] max-w-5xl">
+        <span class="block">{{ t().home.heroTitlePart1 }}</span>
+        <span class="block text-emerald-600 dark:text-[#c9ff3d] lg:whitespace-nowrap">{{ t().home.heroTitlePart2 }}</span>
       </h1>
 
       <p class="mt-6 text-base sm:text-xl text-gray-600 dark:text-gray-300 max-w-2xl font-medium leading-relaxed">
@@ -59,99 +59,13 @@
         </a>
       </div>
 
-      <!-- Animated Sports Icons Interactive Strip (Disciplinas atléticas activas) -->
-      <div class="mt-12 pt-8 border-t border-gray-200/50 dark:border-white/10 flex flex-wrap items-center gap-3 sm:gap-4">
-        <span class="text-xs font-black uppercase tracking-wider text-gray-500 dark:text-gray-400 flex items-center gap-1.5 mr-1">
-          <span class="h-2 w-2 rounded-full bg-[#c9ff3d]"></span>
-          <span>{{ t().home.activeDisciplines }}</span>
-        </span>
-        
-        <!-- Contenedor del Carrusel Animado (Marquee) -->
-        <style>
-          @keyframes marquee {
-            0% { transform: translateX(0); }
-            100% { transform: translateX(-100%); }
-          }
-          .animate-marquee-infinite {
-            display: flex;
-            flex-shrink: 0;
-            min-width: 100%;
-            animation: marquee 30s linear infinite;
-          }
-          .marquee-container:hover .animate-marquee-infinite {
-            animation-play-state: paused;
-          }
-        </style>
-
-        <div class="marquee-container flex items-center overflow-hidden relative w-full flex-1" style="mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent);">
-          
-          <ng-template #disciplinePill let-discipline>
-            <a routerLink="/explore" [queryParams]="{category: discipline.label}" class="shrink-0 flex items-center gap-2.5 bg-white dark:bg-[#121614] border border-gray-200/80 dark:border-white/10 rounded-2xl px-3.5 py-2 shadow-xs text-gray-900 dark:text-white hover:text-emerald-600 dark:hover:text-[#c9ff3d] hover:border-[#c9ff3d]/60 transition group cursor-pointer">
-              @switch (discipline.icon) {
-                @case ('dumbbell') {
-                  <app-animated-dumbbell [size]="20" customClass="text-emerald-600 dark:text-[#c9ff3d]" />
-                }
-                @case ('fire') {
-                  <app-animated-kettlebell [size]="20" customClass="text-emerald-600 dark:text-[#c9ff3d]" />
-                }
-                @case ('running') {
-                  <app-animated-runner [size]="20" customClass="text-emerald-600 dark:text-[#c9ff3d]" />
-                }
-                @case ('boxing-glove') {
-                  <app-animated-boxing-icon [size]="20" customClass="text-red-500" />
-                }
-                @case ('football') {
-                  <app-animated-football [size]="20" customClass="text-gray-900 dark:text-white" />
-                }
-                @case ('soccer-ball') {
-                  <app-animated-soccer [size]="20" customClass="text-gray-900 dark:text-white" />
-                }
-                @case ('water') {
-                  <app-animated-shaker [size]="20" customClass="text-emerald-600 dark:text-[#c9ff3d]" />
-                }
-                @case ('bicycle') {
-                  <app-animated-bicycle [size]="20" customClass="text-emerald-600 dark:text-[#c9ff3d]" />
-                }
-                @case ('swimmer') {
-                  <app-animated-swimmer [size]="20" customClass="text-emerald-600 dark:text-[#c9ff3d]" />
-                }
-                @case ('spa') {
-                  <app-animated-spa [size]="20" customClass="text-emerald-600 dark:text-[#c9ff3d]" />
-                }
-                @case ('body') {
-                  <app-animated-body [size]="20" customClass="text-emerald-600 dark:text-[#c9ff3d]" />
-                }
-                @default {
-                  <app-icon-dumbbell size="20" customClass="text-gray-400" />
-                }
-              }
-              <span class="text-xs font-black">{{ languageService.translateDiscipline(discipline.label) }}</span>
-            </a>
-          </ng-template>
-
-          <!-- Primer grupo -->
-          <div class="animate-marquee-infinite gap-2.5 items-center pr-2.5">
-            @for (discipline of disciplines(); track discipline.code) {
-              <ng-container *ngTemplateOutlet="disciplinePill; context: { $implicit: discipline }"></ng-container>
-            }
-          </div>
-
-          <!-- Segundo grupo (clonado para loop infinito) -->
-          <div class="animate-marquee-infinite gap-2.5 items-center pr-2.5" aria-hidden="true">
-            @for (discipline of disciplines(); track discipline.code + '_dup') {
-              <ng-container *ngTemplateOutlet="disciplinePill; context: { $implicit: discipline }"></ng-container>
-            }
-          </div>
-
-        </div>
-      </div>
-
     </div>
   </section>
 
   
   <!-- ------------------------------------------------------------- 2. TOP ATHLETES SHOWCASE -->
-  <section class="max-w-5xl mx-auto px-5 mb-24 mt-20">
+  <section class="relative w-full overflow-hidden mb-24 mt-20 py-10">
+    <div class="max-w-5xl mx-auto px-5 relative z-10">
     <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-10">
       <div>
         <span class="text-[11px] font-black uppercase tracking-widest text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 border border-transparent dark:border-amber-500/20 px-3 py-1.5 rounded-lg mb-3 inline-block">
@@ -318,9 +232,20 @@
             </div>
           }
         </div>
+      </div>
   </section>
+
+  <!-- Motivation band: path + monetization share one continuous background -->
+  <div class="relative overflow-hidden mb-24 bg-white dark:bg-[#0c0f10] border-t border-gray-200/60 dark:border-white/5 transition-colors duration-300">
+    <div class="absolute inset-0 pointer-events-none select-none z-0 overflow-hidden" aria-hidden="true">
+      <div
+        class="hidden lg:block absolute inset-0 bg-cover bg-center opacity-[0.12] dark:opacity-[0.28]"
+        style="background-image: url('/images/1.png')"
+      ></div>
+    </div>
+
   <!-- ------------------------------------------------------------- 3. EL CAMINO AL PATROCINIO (BENTO GRID) -->
-  <section class="py-24 px-5 sm:px-10 bg-white dark:bg-[#0c0f10] border-t border-gray-200/60 dark:border-white/5 transition-colors duration-300">
+  <section class="relative z-10 py-24 px-5 sm:px-10">
     <div class="max-w-5xl mx-auto">
       
       <div class="text-center max-w-2xl mx-auto mb-16">
@@ -482,7 +407,9 @@
   </section>
 
   <!-- ------------------------------------------------------------- 4. CÓMO FUNCIONA / 3 FORMAS DE GANAR -->
-  <section class="max-w-5xl mx-auto px-5 mb-24">
+  <section class="relative z-10 w-full pb-24">
+  <div class="max-w-5xl mx-auto px-5">
+
     <div class="text-center max-w-xl mx-auto mb-12">
       <span class="text-[11px] font-black uppercase tracking-widest text-gray-400 dark:text-gray-500">{{ t().home.monetizationBadge }}</span>
       <h2 class="text-2xl sm:text-4xl font-black text-gray-950 dark:text-white mt-2 tracking-tight">
@@ -532,7 +459,9 @@
       </div>
 
     </div>
+  </div>
   </section>
+  </div>
 
   <!-- ------------------------------------------------------------- 5. CTA FINAL -->
   <section class="max-w-5xl mx-auto px-5 pb-24">

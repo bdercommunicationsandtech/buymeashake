@@ -20,16 +20,19 @@ from app.core.security import (
     verify_password,
 )
 from app.models.entities import (
+    AthleteMonetization,
     AthleteProfile,
     BookingAppointment,
     BookingService,
     DigitalProduct,
     Goal,
     MembershipTier,
+    Notification,
     Post,
     ShakeDetails,
     Transaction,
     User,
+    AthleteDiscipline,
 )
 from app.services.profile_helpers import (
     ensure_child_rows,
@@ -43,10 +46,10 @@ from app.services.profile_helpers import (
     get_referral_code,
     get_shake_price,
     get_thank_you,
-    primary_sport_code,
-    primary_sport_label,
+    discipline_codes,
+    discipline_labels,
     resolve_city_display,
-    resolve_sport_item_id,
+    resolve_sport_item_ids,
     upsert_social_links,
 )
 from app.repositories.base_repos import (
@@ -67,6 +70,7 @@ from app.repositories.base_repos import (
     UserRepository,
 )
 from app.services.email_service import send_otp_email, send_thank_you_email
+from app.services import user_roles_service as user_roles
 from app.schemas.dtos import (
     AppVersionCheckResponse,
     AthleteLeaderboardItemResponse,
@@ -146,18 +150,23 @@ class AuthService:
             email=dto.email,
             password_hash=get_password_hash(dto.password),
             full_name=dto.full_name,
-            role=dto.role,
         )
         await self.user_repo.create(user)
+        await user_roles.set_product_role(
+            self.session, user_id=user.id, role_name=dto.role, actor_id=user.id
+        )
 
         if dto.role == "athlete" and dto.handle:
             referral_code = f"{dto.handle}_{secrets.token_hex(3)}"
-            sport_item_id = await resolve_sport_item_id(self.session, dto.primary_sport_code)
+            sport_item_ids = await resolve_sport_item_ids(self.session, dto.discipline_codes)
             athlete = AthleteProfile(
                 user_id=user.id,
                 handle=dto.handle,
-                primary_sport_item_id=sport_item_id,
             )
+            if sport_item_ids:
+                athlete.disciplines_association = [
+                    AthleteDiscipline(discipline_item_id=item_id) for item_id in sport_item_ids
+                ]
             await self.athlete_repo.create(athlete)
             await ensure_child_rows(
                 self.session,
@@ -238,10 +247,12 @@ class AuthService:
             password_hash=None,
             full_name=full_name[:150],
             avatar_url=avatar_url,
-            role=dto.role,
             is_email_verified=True,
         )
         await self.user_repo.create(user)
+        await user_roles.set_product_role(
+            self.session, user_id=user.id, role_name=dto.role, actor_id=user.id
+        )
         return self._issue_tokens(user)
 
     def _issue_tokens(self, user: User) -> TokenResponse:
@@ -490,10 +501,15 @@ class AuthService:
                 email=dto.email,
                 password_hash=get_password_hash(secrets.token_urlsafe(16)),
                 full_name=name,
-                role="supporter",
                 is_email_verified=True,
             )
             await self.user_repo.create(user)
+            await user_roles.set_product_role(
+                self.session,
+                user_id=user.id,
+                role_name=user_roles.ROLE_SUPPORTER,
+                actor_id=user.id,
+            )
         else:
             user.is_email_verified = True
 
@@ -521,13 +537,17 @@ class AuthService:
 
         athlete_handle = athlete.handle if athlete else None
         referral_code = get_referral_code(athlete) if athlete else None
+        roles = await user_roles.get_active_role_names(self.session, user.id)
+        product_role = await user_roles.primary_product_role(self.session, user.id)
 
         return UserMeResponse(
             id=user.id,
             email=user.email,
             full_name=user.full_name,
             avatar_url=user.avatar_url,
-            role=user.role,
+            role=product_role,
+            roles=roles,
+            is_admin=user_roles.ROLE_ADMIN in roles,
             is_email_verified=user.is_email_verified,
             athlete_handle=athlete_handle,
             referral_code=referral_code,
@@ -547,8 +567,12 @@ class AuthService:
     async def upgrade_to_athlete(self, user: User, dto: UpgradeToAthleteRequest) -> UserMeResponse:
         existing_profile = await self.athlete_repo.get_by_user_id(user.id)
         if existing_profile:
-            # Si ya tenía perfil pero el rol no estaba sincronizado
-            user.role = "athlete"
+            await user_roles.set_product_role(
+                self.session,
+                user_id=user.id,
+                role_name=user_roles.ROLE_ATHLETE,
+                actor_id=user.id,
+            )
             await self.session.flush()
             return await self.get_me(user)
 
@@ -558,18 +582,26 @@ class AuthService:
 
         if dto.full_name:
             user.full_name = dto.full_name
-        user.role = "athlete"
+        await user_roles.set_product_role(
+            self.session,
+            user_id=user.id,
+            role_name=user_roles.ROLE_ATHLETE,
+            actor_id=user.id,
+        )
 
         referral_code = f"{dto.handle}_{secrets.token_hex(3)}"
-        sport_item_id = await resolve_sport_item_id(self.session, dto.primary_sport_code)
+        sport_item_ids = await resolve_sport_item_ids(self.session, dto.discipline_codes)
 
         athlete = AthleteProfile(
             user_id=user.id,
             handle=dto.handle,
             bio=dto.bio,
             city=dto.city,
-            primary_sport_item_id=sport_item_id,
         )
+        if sport_item_ids:
+            athlete.disciplines_association = [
+                AthleteDiscipline(discipline_item_id=item_id) for item_id in sport_item_ids
+            ]
         await self.athlete_repo.create(athlete)
         await ensure_child_rows(
             self.session,
@@ -777,7 +809,7 @@ class AthleteService:
         ]
 
         social = flatten_social(profile)
-        sport_label = primary_sport_label(profile) or "Deporte General"
+        sport_labels = discipline_labels(profile) or ["Deporte General"]
 
         return CreatorPublicProfileResponse(
             id=profile.id,
@@ -789,7 +821,7 @@ class AthleteService:
             agenda_title=get_page_field(profile, "agenda_title"),
             agenda_description=get_page_field(profile, "agenda_description"),
             agenda_image_url=get_page_field(profile, "agenda_image_url"),
-            primary_sport=sport_label,
+            disciplines=sport_labels,
             city=resolve_city_display(profile),
             avatar_url=user.avatar_url if user else None,
             cover_image_url=get_cover_url(profile),
@@ -928,7 +960,7 @@ class DashboardService:
             agenda_image_url=get_page_field(athlete, "agenda_image_url"),
             city=resolve_city_display(athlete),
             city_id=athlete.city_id,
-            primary_sport_code=primary_sport_code(athlete),
+            discipline_codes=discipline_codes(athlete),
             shake_price=get_shake_price(athlete),
             currency=get_currency(athlete),
             avatar_url=user.avatar_url if user else None,
@@ -999,8 +1031,11 @@ class DashboardService:
             if dto.currency is not None:
                 mon.currency = dto.currency
 
-        if dto.primary_sport_code is not None:
-            athlete.primary_sport_item_id = await resolve_sport_item_id(self.session, dto.primary_sport_code)
+        if dto.discipline_codes is not None:
+            sport_item_ids = await resolve_sport_item_ids(self.session, dto.discipline_codes)
+            athlete.disciplines_association = [
+                AthleteDiscipline(discipline_item_id=item_id) for item_id in sport_item_ids
+            ]
 
         social_updates = {
             platform: updates[field]

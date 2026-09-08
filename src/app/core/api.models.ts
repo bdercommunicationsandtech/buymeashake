@@ -21,7 +21,7 @@ export interface FollowedAthlete {
   handle: string;
   avatar_url: string | null;
   bio: string | null;
-  primary_sport: string | null;
+  disciplines: string[];
 }
 
 export interface UserRegisterPayload {
@@ -30,14 +30,14 @@ export interface UserRegisterPayload {
   full_name: string;
   role: 'supporter' | 'athlete';
   handle?: string;
-  primary_sport_code?: number;
+  discipline_codes?: number[];
   referral_code?: string;
 }
 
 export interface UpgradeToAthletePayload {
   handle: string;
   full_name?: string;
-  primary_sport_code?: number;
+  discipline_codes?: number[];
   bio?: string;
   city?: string;
   shake_price?: number;
@@ -91,7 +91,9 @@ export interface UserMe {
   email: string;
   full_name: string;
   avatar_url: string | null;
-  role: string;
+  role: 'supporter' | 'athlete';
+  roles?: string[];
+  is_admin?: boolean;
   is_email_verified: boolean;
   athlete_handle: string | null;
   referral_code: string | null;
@@ -102,7 +104,7 @@ export interface AthleteLeaderboardItem {
   handle: string;
   athlete_name: string;
   avatar_url: string | null;
-  primary_sport: string;
+  disciplines: string[];
   bio?: string | null;
   total_shakes_this_month: number;
   total_raised_this_month: number;
@@ -129,7 +131,7 @@ export interface CreatorProfile {
   agenda_title: string | null;
   agenda_description: string | null;
   agenda_image_url?: string | null;
-  primary_sport: string;
+  disciplines: string[];
   city: string | null;
   avatar_url: string | null;
   cover_image_url: string | null;
@@ -237,7 +239,7 @@ export interface AthleteProfileFull {
   agenda_image_url?: string | null;
   city: string | null;
   city_id?: number | null;
-  primary_sport_code: number | null;
+  discipline_codes: number[];
   shake_price: number;
   currency: string;
   avatar_url: string | null;
@@ -261,7 +263,7 @@ export interface AthleteProfileUpdatePayload {
   agenda_image_url?: string | null;
   city?: string;
   city_id?: number | null;
-  primary_sport_code?: number;
+  discipline_codes?: number[];
   shake_price?: number;
   currency?: string;
   avatar_url?: string;

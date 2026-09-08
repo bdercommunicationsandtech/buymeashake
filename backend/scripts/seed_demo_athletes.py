@@ -15,6 +15,7 @@ from sqlalchemy import delete, select
 from app.core.database import async_session_factory
 from app.core.security import get_password_hash
 from app.models.entities import AthleteProfile, Goal, User
+from app.services import user_roles_service as user_roles
 from app.services.profile_helpers import ensure_child_rows, ensure_monetization, resolve_sport_item_id
 
 DEMO_PASSWORD = "DemoShake2026!"
@@ -183,11 +184,17 @@ async def seed_athletes() -> None:
                 email=athlete_data["email"],
                 password_hash=password_hash,
                 full_name=athlete_data["full_name"],
-                role="athlete",
                 is_email_verified=True,
             )
             session.add(user)
             await session.flush()
+
+            await user_roles.set_product_role(
+                session,
+                user_id=user.id,
+                role_name=user_roles.ROLE_ATHLETE,
+                actor_id=user.id,
+            )
 
             sport_item_id = await resolve_sport_item_id(session, athlete_data["primary_sport_code"])
             profile = AthleteProfile(

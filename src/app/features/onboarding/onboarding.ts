@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, inject, OnInit, signal , computed} from "@angular/core";
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
@@ -32,9 +32,33 @@ export class Onboarding implements OnInit {
   readonly bio = signal('');
   readonly city = signal('');
   readonly handle = signal('');
-  readonly primarySportCode = signal(101);
+  readonly disciplineCodes = signal<number[]>([]);
+  readonly dropdownOpen = signal(false);
+  readonly searchSport = signal('');
+  readonly filteredSports = computed(() => {
+    const q = this.searchSport().toLowerCase().trim();
+    const all = this.sports();
+    if (!q) return all;
+    return all.filter((s) =>
+      this.languageService.translateDiscipline(s.label).toLowerCase().includes(q)
+    );
+  });
   readonly shakePrice = signal(3);
   readonly sports = signal<LookupItemDto[]>([]);
+
+  toggleSport(code: number): void {
+    const current = this.disciplineCodes();
+    if (current.includes(code)) {
+      this.disciplineCodes.set(current.filter((c: number) => c !== code));
+    } else {
+      this.disciplineCodes.set([...current, code]);
+    }
+  }
+
+  getDisciplineLabel(code: number): string {
+    const sport = this.sports().find((s) => s.code === code);
+    return sport ? this.languageService.translateDiscipline(sport.label) : '';
+  }
 
   ngOnInit(): void {
     this.lookupService.getSportDisciplines().subscribe({
@@ -64,7 +88,7 @@ export class Onboarding implements OnInit {
         this.bio.set(p.bio || '');
         this.city.set(p.city || '');
         this.handle.set(p.handle);
-        this.primarySportCode.set(p.primary_sport_code || 101);
+        this.disciplineCodes.set(p.discipline_codes || []);
         this.shakePrice.set(Number(p.shake_price) || 3);
         this.loading.set(false);
       },
@@ -89,7 +113,7 @@ export class Onboarding implements OnInit {
           full_name: this.fullName().trim(),
           bio: this.bio().trim() || undefined,
           city: this.city().trim() || undefined,
-          primary_sport_code: this.primarySportCode(),
+          discipline_codes: this.disciplineCodes(),
           shake_price: this.shakePrice(),
         })
         .subscribe({
@@ -111,7 +135,7 @@ export class Onboarding implements OnInit {
         full_name: this.fullName(),
         bio: this.bio(),
         city: this.city(),
-        primary_sport_code: this.primarySportCode(),
+        discipline_codes: this.disciplineCodes(),
         shake_price: this.shakePrice(),
       })
       .subscribe({

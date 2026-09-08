@@ -58,6 +58,13 @@ export const routes: Routes = [
     loadComponent: () => import('./features/auth/register/register').then((m) => m.Register),
   },
   {
+    path: 'auth/forgot-password',
+    title: 'Recuperar contraseña — buymeashake',
+    canActivate: [guestGuard],
+    loadComponent: () =>
+      import('./features/auth/forgot-password/forgot-password').then((m) => m.ForgotPassword),
+  },
+  {
     path: 'onboarding',
     title: 'Configura tu perfil — buymeashake',
     canActivate: [authGuard, onboardingGuard],

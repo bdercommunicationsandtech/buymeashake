@@ -220,7 +220,12 @@
                   </button>
                 </div>
                 <div class="mt-2 text-right">
-                  <span class="text-xs font-bold text-[#c9ff3d]/80">{{ t().auth.forgotPassword }}</span>
+                  <a
+                    routerLink="/auth/forgot-password"
+                    class="text-xs font-bold text-[#c9ff3d]/80 transition hover:text-[#c9ff3d] hover:underline"
+                  >
+                    {{ t().auth.forgotPassword }}
+                  </a>
                 </div>
               </div>
 

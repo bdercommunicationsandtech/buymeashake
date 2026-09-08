@@ -894,16 +894,21 @@ class OtpRepository:
         await self.session.flush()
         return record
 
-    async def get_valid_otp(self, email: str, code: str) -> EmailVerification | None:
+    async def get_valid_otp(
+        self, email: str, code: str, purpose: str | None = None
+    ) -> EmailVerification | None:
         now_utc = datetime.now(timezone.utc).replace(tzinfo=None)
+        conditions = [
+            EmailVerification.email == email,
+            EmailVerification.code == code,
+            EmailVerification.is_used == False,
+            EmailVerification.expires_at >= now_utc,
+        ]
+        if purpose is not None:
+            conditions.append(EmailVerification.purpose == purpose)
         query = (
             select(EmailVerification)
-            .where(
-                EmailVerification.email == email,
-                EmailVerification.code == code,
-                EmailVerification.is_used == False,
-                EmailVerification.expires_at >= now_utc,
-            )
+            .where(*conditions)
             .order_by(EmailVerification.created_at.desc())
         )
         result = await self.session.execute(query)

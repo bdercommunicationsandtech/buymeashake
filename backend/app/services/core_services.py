@@ -82,6 +82,8 @@ from app.schemas.dtos import (
     DigitalProductCreateRequest,
     DigitalProductResponse,
     FollowedAthleteResponse,
+    ForgotPasswordRequest,
+    ForgotPasswordResponse,
     GoalCreateRequest,
     GoalResponse,
     GoalUpdateRequest,
@@ -98,6 +100,8 @@ from app.schemas.dtos import (
     RefreshTokenRequest,
     RequestOtpRequest,
     RequestOtpResponse,
+    ResetPasswordRequest,
+    ResetPasswordResponse,
     FirebaseAuthRequest,
     ShakeCheckoutCreateRequest,
     SupporterItemResponse,
@@ -358,11 +362,106 @@ class AuthService:
             "wait_seconds": wait_seconds,
         }
 
+    async def forgot_password(self, dto: ForgotPasswordRequest) -> ForgotPasswordResponse:
+        """Envía OTP de recuperación. Siempre responde genérico (anti-enumeración)."""
+        clean_email = dto.email.strip().lower()
+        generic_message = (
+            "Si existe una cuenta con ese correo, enviamos un código para restablecer la contraseña."
+        )
+        user = await self.user_repo.get_by_email(clean_email)
+        if not user:
+            return ForgotPasswordResponse(message=generic_message, expires_in_seconds=900)
+
+        otp_repo = OtpRepository(self.session)
+        await otp_repo.clean_expired_otps()
+
+        purpose = "password_reset"
+        latest = await otp_repo.get_latest_otp(clean_email, purpose=purpose)
+        if latest and latest.created_at:
+            now_utc = datetime.now(timezone.utc).replace(tzinfo=None)
+            created_at = latest.created_at.replace(tzinfo=None) if latest.created_at.tzinfo else latest.created_at
+            time_since_last = (now_utc - created_at).total_seconds()
+            if time_since_last < 0:
+                time_since_last = (datetime.now() - created_at).total_seconds()
+
+            if 0 <= time_since_last < 60:
+                wait_time = max(1, min(60, int(60 - time_since_last)))
+                raise RateLimitExceededError(
+                    wait_seconds=wait_time,
+                    message=f"Por favor espera {wait_time} segundos antes de solicitar otro código.",
+                )
+
+        await otp_repo.invalidate_previous_otps(clean_email, purpose=purpose)
+
+        code = f"{secrets.randbelow(900000) + 100000}"
+        expires_at = datetime.now(timezone.utc).replace(tzinfo=None) + timedelta(minutes=15)
+        await otp_repo.create(
+            email=clean_email,
+            code=code,
+            purpose=purpose,
+            metadata={},
+            expires_at=expires_at,
+        )
+
+        from app.services.email_service import send_password_reset_email
+        await send_password_reset_email(to_email=clean_email, code=code)
+
+        return ForgotPasswordResponse(
+            message=generic_message,
+            expires_in_seconds=900,
+            demo_code=code,
+        )
+
+    async def reset_password(self, dto: ResetPasswordRequest) -> ResetPasswordResponse:
+        """Valida OTP de password_reset y actualiza password_hash."""
+        clean_email = dto.email.strip().lower()
+        clean_code = dto.code.strip()
+        purpose = "password_reset"
+        otp_repo = OtpRepository(self.session)
+
+        otp_record = await otp_repo.get_valid_otp(clean_email, clean_code, purpose=purpose)
+        if not otp_record:
+            attempts = await otp_repo.record_failed_attempt(
+                clean_email, purpose=purpose, max_attempts=5
+            )
+            if attempts >= 5:
+                raise UnauthorizedError(
+                    "Has superado el número máximo de intentos permitidos. El código ha sido invalidado por seguridad; solicita uno nuevo.",
+                    details={"max_attempts_exceeded": True},
+                )
+            if attempts > 0:
+                remaining = max(0, 5 - attempts)
+                raise UnauthorizedError(
+                    f"Código incorrecto o expirado. Te quedan {remaining} intento{'s' if remaining != 1 else ''}.",
+                    details={"remaining_attempts": remaining},
+                )
+            raise UnauthorizedError(
+                "El código de verificación es inválido o ha expirado.",
+                details={"invalid_otp": True},
+            )
+
+        user = await self.user_repo.get_by_email(clean_email)
+        if not user:
+            await otp_repo.mark_used(otp_record)
+            raise EntityNotFoundError(
+                "Usuario",
+                clean_email,
+                message="No existe ninguna cuenta registrada con este correo electrónico.",
+            )
+
+        await otp_repo.mark_used(otp_record)
+        user.password_hash = get_password_hash(dto.new_password)
+        await self.session.flush()
+
+        return ResetPasswordResponse(
+            message="Contraseña actualizada correctamente. Ya puedes iniciar sesión.",
+        )
+
     async def verify_otp(self, dto: VerifyOtpRequest) -> TokenResponse:
         clean_email = dto.email.strip().lower()
         clean_code = dto.code.strip()
         otp_repo = OtpRepository(self.session)
-        otp_record = await otp_repo.get_valid_otp(clean_email, clean_code)
+        otp_record = await otp_repo.get_valid_otp(clean_email, clean_code, purpose="supporter_follow")
         if not otp_record:
             attempts = await otp_repo.record_failed_attempt(clean_email, purpose="supporter_follow", max_attempts=5)
             if attempts >= 5:

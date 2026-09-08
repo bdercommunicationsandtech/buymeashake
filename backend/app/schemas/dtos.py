@@ -100,6 +100,26 @@ class VerifyOtpRequest(BaseModel):
     code: str = Field(min_length=4, max_length=10)
 
 
+class ForgotPasswordRequest(BaseModel):
+    email: EmailStr = Field(max_length=191)
+
+
+class ResetPasswordRequest(BaseModel):
+    email: EmailStr = Field(max_length=191)
+    code: str = Field(min_length=4, max_length=10)
+    new_password: str = Field(min_length=8, max_length=128, description="Mínimo 8 caracteres")
+
+
+class ForgotPasswordResponse(BaseModel):
+    message: str
+    expires_in_seconds: int = 900
+    demo_code: str | None = None
+
+
+class ResetPasswordResponse(BaseModel):
+    message: str
+
+
 class UpdateProfileRequest(BaseModel):
     full_name: str | None = Field(default=None, min_length=2, max_length=150)
     password: str | None = Field(default=None, min_length=8, max_length=128)

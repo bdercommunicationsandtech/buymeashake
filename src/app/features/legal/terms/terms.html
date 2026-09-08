@@ -224,10 +224,14 @@
             <div class="space-y-6 text-sm sm:text-base text-gray-700 dark:text-white/75 leading-relaxed">
               
               <div class="border-l-2 border-emerald-500 dark:border-lime pl-4">
-                <h4 class="font-bold text-gray-900 dark:text-white text-base">🥤 1. Micro-donaciones (Shakes de Proteína)</h4>
+                <h4 class="font-bold text-gray-900 dark:text-white text-base">🥤 1. Micro-mecenazgo y Apoyos Deportivos ("Shakes")</h4>
                 <p class="mt-1 text-sm">
-                  Aportes puntuales y voluntarios de $3, $5, $10 USD o montos personalizados destinados a respaldar el esfuerzo o una meta activa del atleta. Se consideran donaciones de mecenazgo y son irrevocables tras su procesamiento bancario exitoso.
+                  Aportes puntuales y voluntarios de $3, $5, $10 USD o montos personalizados destinados a respaldar el esfuerzo o una meta activa del atleta. Representan gratificaciones voluntarias de micro-mecenazgo deportivo entre particulares y son irrevocables tras su procesamiento bancario exitoso.
                 </p>
+                <div class="mt-2.5 p-3 rounded-lg bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-xs text-gray-700 dark:text-white/75">
+                  <strong class="text-emerald-700 dark:text-lime">Aviso Legal y Fiscal sobre "Donaciones":</strong>
+                  El empleo de expresiones coloquiales como <em>"invitar un Shake"</em>, <em>"donar"</em> o <em>"apoyar"</em> es una convención de diseño de micro-mecenazgo y no transforma estos pagos en donativos benéficos deducibles de impuestos. Los atletas en Buymeashake.fit son personas físicas o entidades comerciales independientes, no instituciones de caridad (no son Donatarias Autorizadas ante el SAT en México ni entidades 501(c)(3) ante el IRS en EE.UU.). Los seguidores aceptan que sus aportes no dan derecho a deducción impositiva.
+                </div>
               </div>
 
               <div class="border-l-2 border-emerald-500 dark:border-lime pl-4">
@@ -258,7 +262,7 @@
           <section id="payments" class="scroll-mt-28 bg-white dark:bg-[#121614] border border-gray-200 dark:border-white/10 rounded-2xl p-6 sm:p-8 shadow-sm">
             <div class="flex items-center gap-3 mb-4">
               <span class="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-lime/10 text-emerald-700 dark:text-lime font-bold text-sm flex items-center justify-center font-mono">06</span>
-              <h2 class="text-xl sm:text-2xl font-extrabold text-gray-900 dark:text-white font-display">Tarifas, Procesamiento de Pagos y Retiros (Stripe Connect)</h2>
+              <h2 class="text-xl sm:text-2xl font-extrabold text-gray-900 dark:text-white font-display">Tarifas, Procesamiento de Pagos y Cumplimiento Fiscal (SAT & IRS)</h2>
             </div>
             <div class="space-y-4 text-sm sm:text-base text-gray-700 dark:text-white/75 leading-relaxed">
               <p>
@@ -268,11 +272,31 @@
                 <strong>Estructura de Comisión:</strong> Buymeashake deduce automáticamente una pequeña comisión de servicio sobre cada transacción completada exitosamente, sumada a las tarifas estándar de la pasarela de procesamiento de pagos (Stripe).
               </p>
               <p>
-                <strong>Stripe Connect Express:</strong> La dispersión de fondos (*payouts*) a la cuenta bancaria del atleta se ejecuta a través de Stripe Connect Express. El atleta es responsable de vincular su cuenta bancaria válida y completar los procedimientos de verificación de identidad (*KYC*) exigidos por las regulaciones bancarias internacionales.
+                <strong>Arquitectura de Procesamiento Directo (No Merchant of Record):</strong> Buymeashake opera como proveedor de software y plataforma tecnológica de conexión directa. Buymeashake NO actúa como Comerciante de Registro (<em>Merchant of Record</em>), institución bancaria ni fideicomiso. La dispersión de fondos (<em>payouts</em>) se efectúa directamente a la cuenta conectada del atleta a través de <strong>Stripe Connect Express</strong>, previa verificación de identidad (<em>KYC</em>) exigida por las normativas financieras internacionales.
               </p>
-              <p>
-                <strong>Responsabilidad Tributaria:</strong> Los ingresos percibidos por los atletas pueden estar sujetos a tributación en sus respectivos países. Cada atleta es responsable exclusivo de la declaración de impuestos y la emisión de facturación ante sus autoridades tributarias competentes.
-              </p>
+
+              <div class="p-4 rounded-xl bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 space-y-3">
+                <h4 class="font-bold text-sm text-gray-900 dark:text-white uppercase tracking-wider text-emerald-700 dark:text-lime">
+                  Marco y Responsabilidad Tributaria (SAT, IRS y Fiscalidad Internacional)
+                </h4>
+                <p class="text-xs sm:text-sm text-gray-700 dark:text-white/80">
+                  Todos los fondos generados a través de Buymeashake (Shakes, membresías, infoproductos y asesorías) constituyen <strong>ingresos comerciales y profesionales gravables</strong> derivados de la actividad independiente del atleta. Es responsabilidad total y exclusiva de cada usuario:
+                </p>
+                <ul class="list-disc pl-5 space-y-2 text-xs sm:text-sm text-gray-600 dark:text-white/70">
+                  <li>
+                    <strong class="text-gray-900 dark:text-white">Cumplimiento en Estados Unidos (IRS):</strong> Los creadores residentes en EE.UU. deben declarar estos ingresos como rentas de autoempleo (<em>Self-Employment / Schedule C / Form 1040</em>). Cuando se alcancen los umbrales legales vigentes, la pasarela de pagos (Stripe) expedirá el correspondiente <strong>Formulario 1099-K</strong> y lo remitirá al Servicio de Rentas Internas (IRS).
+                  </li>
+                  <li>
+                    <strong class="text-gray-900 dark:text-white">Cumplimiento en México (SAT):</strong> Los ingresos depositados en cuentas bancarias mexicanas mediante Stripe Connect están sujetos al régimen fiscal del atleta ante el SAT (ej. <em>Régimen de Actividades Empresariales y Profesionales, Régimen de Plataformas Tecnológicas o RESICO</em>). El atleta es responsable de emitir sus Comprobantes Fiscales Digitales por Internet (CFDI a Público en General o facturas individuales a suscriptores) y liquidar el Impuesto sobre la Renta (ISR) y el Impuesto al Valor Agregado (IVA) correspondiente.
+                  </li>
+                  <li>
+                    <strong class="text-gray-900 dark:text-white">Impuestos al Consumo (IVA / Sales Tax):</strong> Buymeashake no retiene de manera general ni recauda impuestos sobre las ventas ni IVA, a menos que una ley específica obligue a la plataforma a actuar como agente retenedor. El atleta debe determinar y trasladar el IVA o Sales Tax aplicable según su país de residencia.
+                  </li>
+                  <li>
+                    <strong class="text-gray-900 dark:text-white">Deducibilidad de Gastos de Plataforma:</strong> La comisión de servicio de Buymeashake y las tarifas de Stripe constituyen gastos estrictamente indispensables para la actividad económica del atleta y pueden ser deducibles conforme a las leyes fiscales de cada país, sustentándose con los estados de cuenta emitidos por la pasarela de pagos.
+                  </li>
+                </ul>
+              </div>
             </div>
           </section>
 
@@ -482,10 +506,14 @@
             <div class="space-y-6 text-sm sm:text-base text-gray-700 dark:text-white/75 leading-relaxed">
               
               <div class="border-l-2 border-emerald-500 dark:border-lime pl-4">
-                <h4 class="font-bold text-gray-900 dark:text-white text-base">🥤 1. Micro-donations (Protein Shakes)</h4>
+                <h4 class="font-bold text-gray-900 dark:text-white text-base">🥤 1. Micro-patronage & Athletic Support ("Shakes")</h4>
                 <p class="mt-1 text-sm">
-                  One-time voluntary support amounts ($3, $5, $10 USD or custom) advancing the athlete's active goal. These are voluntary patron tips and are non-refundable once settled.
+                  One-time voluntary support amounts ($3, $5, $10 USD or custom) advancing the athlete's active sports goals. These represent voluntary peer-to-creator micro-patronage contributions and are irrevocable and non-refundable once settled.
                 </p>
+                <div class="mt-2.5 p-3 rounded-lg bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-xs text-gray-700 dark:text-white/75">
+                  <strong class="text-emerald-700 dark:text-lime">Legal & Tax Disclaimer on "Donations":</strong>
+                  The use of friendly terminology such as <em>"buy a shake"</em>, <em>"donate"</em>, or <em>"support"</em> is an athletic micro-patronage design convention and does not render these payments tax-deductible charitable gifts. Athletes are independent individuals or commercial entities, not charitable organizations (they are not 501(c)(3) non-profits under the US IRS, nor Donatarias Autorizadas under the Mexican SAT). Supporters acknowledge that payments are not eligible for charitable tax deductions.
+                </div>
               </div>
 
               <div class="border-l-2 border-emerald-500 dark:border-lime pl-4">
@@ -516,21 +544,41 @@
           <section id="payments" class="scroll-mt-28 bg-white dark:bg-[#121614] border border-gray-200 dark:border-white/10 rounded-2xl p-6 sm:p-8 shadow-sm">
             <div class="flex items-center gap-3 mb-4">
               <span class="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-lime/10 text-emerald-700 dark:text-lime font-bold text-sm flex items-center justify-center font-mono">06</span>
-              <h2 class="text-xl sm:text-2xl font-extrabold text-gray-900 dark:text-white font-display">Fees, Payment Processing & Stripe Connect</h2>
+              <h2 class="text-xl sm:text-2xl font-extrabold text-gray-900 dark:text-white font-display">Fees, Payment Processing & Tax Compliance (IRS & SAT)</h2>
             </div>
             <div class="space-y-4 text-sm sm:text-base text-gray-700 dark:text-white/75 leading-relaxed">
               <p>
-                <strong>No Fixed Monthly Subscription:</strong> Creating an athlete page on Buymeashake.fit is completely free.
+                <strong>No Fixed Monthly Subscription:</strong> Creating and managing an athlete page on Buymeashake.fit is completely free.
               </p>
               <p>
-                <strong>Platform Commission:</strong> Buymeashake retains a percentage platform service fee per successful transaction, in addition to standard Stripe payment gateway fees.
+                <strong>Platform Commission:</strong> Buymeashake retains a percentage platform service fee per successful transaction, in addition to standard payment gateway fees charged by Stripe.
               </p>
               <p>
-                <strong>Stripe Connect Express:</strong> Payouts to athlete bank accounts are handled through Stripe Connect. Athletes are responsible for linking their verified bank account and completing mandatory KYC verification.
+                <strong>Direct Processing Architecture (No Merchant of Record):</strong> Buymeashake operates as a software technology platform facilitating direct electronic payments between supporters and athletes. Buymeashake is NOT a Merchant of Record, bank, or escrow agent. Payouts are routed directly to the athlete's connected bank account via <strong>Stripe Connect Express</strong>, subject to mandatory identity verification (KYC) required by global banking regulations.
               </p>
-              <p>
-                <strong>Tax Compliance:</strong> Athletes bear sole responsibility for declaring earned income and complying with tax obligations in their country of fiscal residence.
-              </p>
+
+              <div class="p-4 rounded-xl bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 space-y-3">
+                <h4 class="font-bold text-sm text-gray-900 dark:text-white uppercase tracking-wider text-emerald-700 dark:text-lime">
+                  Tax Compliance Framework (IRS, SAT & International Reporting)
+                </h4>
+                <p class="text-xs sm:text-sm text-gray-700 dark:text-white/80">
+                  All funds received through Buymeashake (Shakes, memberships, digital infoproducts, and consultations) constitute <strong>taxable earned business/self-employment income</strong>. Athletes bear sole and absolute responsibility for:
+                </p>
+                <ul class="list-disc pl-5 space-y-2 text-xs sm:text-sm text-gray-600 dark:text-white/70">
+                  <li>
+                    <strong class="text-gray-900 dark:text-white">United States (IRS Compliance):</strong> US-based creators must report all platform earnings on their tax returns as self-employment income (<em>Schedule C / Form 1040</em>). Where applicable under federal and state statutory thresholds, payment processor Stripe will generate and file <strong>Form 1099-K</strong> with the Internal Revenue Service (IRS).
+                  </li>
+                  <li>
+                    <strong class="text-gray-900 dark:text-white">Mexico (SAT Compliance):</strong> Payouts to Mexican bank accounts via Stripe Connect are subject to the creator's respective tax regime under the SAT (such as <em>Actividades Empresariales y Profesionales, RESICO, or Plataformas Tecnológicas</em>). The creator is obligated to issue official electronic invoices (CFDI a Público en General or individual invoices) and remit applicable ISR and Value Added Tax (16% IVA).
+                  </li>
+                  <li>
+                    <strong class="text-gray-900 dark:text-white">Consumption Taxes (VAT / Sales Tax):</strong> Buymeashake does not automatically withhold local consumption taxes or state sales taxes unless explicitly mandated by statutory laws in a specific jurisdiction. Assessing and paying applicable consumption tax is the athlete's sole responsibility.
+                  </li>
+                  <li>
+                    <strong class="text-gray-900 dark:text-white">Expense Deductions:</strong> The Buymeashake platform fee and Stripe processing charges are ordinary and necessary business expenses and may be deducted against gross revenue in accordance with local tax codes, evidenced by Stripe billing statements.
+                  </li>
+                </ul>
+              </div>
             </div>
           </section>
 

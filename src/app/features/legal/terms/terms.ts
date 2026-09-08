@@ -29,7 +29,7 @@ export class TermsOfService implements AfterViewInit, OnDestroy {
     { id: 'health-disclaimer', titleEs: '3. Deslinde Médico y Deportivo', titleEn: '3. Health & Fitness Disclaimer' },
     { id: 'prohibited', titleEs: '4. Conductas y Política Antidopaje', titleEn: '4. Prohibited Conduct & Anti-Doping' },
     { id: 'monetization', titleEs: '5. Los 4 Pilares de Monetización', titleEn: '5. Four Monetization Pillars' },
-    { id: 'payments', titleEs: '6. Tarifas, Stripe y Retiros', titleEn: '6. Fees, Stripe & Payouts' },
+    { id: 'payments', titleEs: '6. Tarifas, Stripe y Cumplimiento Fiscal', titleEn: '6. Fees, Stripe & Tax Compliance' },
     { id: 'intellectual-property', titleEs: '7. Propiedad Intelectual y Rutinas', titleEn: '7. Intellectual Property & Plans' },
     { id: 'refunds-cancellations', titleEs: '8. Cancelaciones y No-Show', titleEn: '8. Cancellations & No-Show Policy' },
     { id: 'dormancy-deletion', titleEs: '9. Inactividad y Borrado de Cuenta', titleEn: '9. Inactivity & Account Deletion' },

@@ -12,7 +12,7 @@ import {
   IconButtonShareComponent,
   IconButtonSupportComponent,
   IconDumbbellComponent,
-  IconRunningComponent,
+  IconCalendarComponent,
   IconShakerComponent,
   IconStarComponent,
 } from '../../shared/icons';
@@ -37,7 +37,7 @@ export interface FloatingAthlete {
     RouterLink,
     IconShakerComponent,
     IconDumbbellComponent,
-    IconRunningComponent,
+    IconCalendarComponent,
     IconButtonShareComponent,
     IconButtonSupportComponent,
     IconStarComponent,

@@ -62,6 +62,24 @@
   outline: none;
 }
 
+/*
+ * Chrome/Edge/Safari paint a light autofill background that breaks dark inputs.
+ * box-shadow fills the field; text-fill keeps typed/autofilled text white.
+ */
+.login-input-wrap input:-webkit-autofill,
+.login-input-wrap input:-webkit-autofill:hover,
+.login-input-wrap input:-webkit-autofill:focus,
+.login-input-wrap input:-webkit-autofill:active,
+input.login-input-wrap:-webkit-autofill,
+input.login-input-wrap:-webkit-autofill:hover,
+input.login-input-wrap:-webkit-autofill:focus,
+input.login-input-wrap:-webkit-autofill:active {
+  -webkit-text-fill-color: #ffffff !important;
+  caret-color: #ffffff;
+  transition: background-color 99999s ease-out;
+  box-shadow: 0 0 0 1000px #121614 inset !important;
+}
+
 .login-cta {
   transition: transform 160ms ease, background-color 160ms ease, box-shadow 160ms ease;
 }

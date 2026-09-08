@@ -1,0 +1,663 @@
+<div class="min-h-screen bg-[#fafafb] dark:bg-void text-gray-900 dark:text-white selection:bg-lime selection:text-void py-10 px-4 sm:px-6 lg:px-8 transition-colors duration-300">
+  <div class="max-w-6xl mx-auto">
+    
+    <!-- Top Bar: Breadcrumb & Language Switcher -->
+    <div class="flex flex-wrap items-center justify-between gap-4 mb-8 pb-5 border-b border-gray-200 dark:border-white/10">
+      <div class="flex items-center gap-2 text-xs text-gray-500 dark:text-white/50">
+        <a routerLink="/" class="hover:text-emerald-600 dark:hover:text-lime transition font-medium">buymeashake.fit</a>
+        <span>/</span>
+        <span class="text-emerald-600 dark:text-lime font-bold">
+          {{ lang() === 'es' ? 'Centro de Ayuda y Contacto' : 'Help & Contact Center' }}
+        </span>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <button
+          type="button"
+          (click)="toggleLanguage()"
+          class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-gray-300 dark:border-white/15 bg-white dark:bg-white/5 text-xs font-semibold text-gray-700 dark:text-white/80 hover:border-emerald-600 dark:hover:border-lime hover:text-emerald-600 dark:hover:text-lime transition cursor-pointer shadow-xs"
+        >
+          <svg class="w-3.5 h-3.5 text-emerald-600 dark:text-lime" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <span>{{ lang() === 'es' ? 'Switch to English' : 'Cambiar a Español' }}</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Sports Integrity & Fair Play Cross-link Banner -->
+    <div class="mb-8 p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-xl bg-amber-500/15 text-amber-500 flex items-center justify-center shrink-0">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+          </svg>
+        </div>
+        <div>
+          <p class="text-xs font-bold text-gray-900 dark:text-white uppercase tracking-wider">
+            {{ lang() === 'es' ? '¿Necesitas reportar a un atleta o una infracción a las reglas?' : 'Need to report an athlete or a violation of platform rules?' }}
+          </p>
+          <p class="text-xs text-gray-600 dark:text-white/60">
+            {{ lang() === 'es'
+              ? 'Si detectas incumplimiento de servicios o asesorías, conducta inapropiada, fraude o cualquier violación a nuestros Términos de Servicio y normas de la comunidad, repórtalo de manera confidencial en nuestra Mesa de Integridad.'
+              : 'If you encounter unfulfilled coaching services, inappropriate conduct, deceptive claims, or any breach of our Terms of Service and community guidelines, report it confidentially via the Integrity Desk.' }}
+          </p>
+        </div>
+      </div>
+      <a
+        routerLink="/report"
+        class="inline-flex items-center justify-center gap-1 px-4 py-2 rounded-xl bg-amber-500 text-void text-xs font-black uppercase tracking-wider hover:opacity-90 transition shrink-0"
+      >
+        <span>{{ lang() === 'es' ? 'Ir a Reportar' : 'Go to Report' }}</span>
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+        </svg>
+      </a>
+    </div>
+
+    <!-- Hero & Operational Status Banner -->
+    <div class="mb-12">
+      <div class="flex flex-wrap items-center justify-between gap-4 mb-4">
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-emerald-500/10 dark:bg-lime/10 border border-emerald-500/20 dark:border-lime/20 text-emerald-700 dark:text-lime text-xs font-bold uppercase tracking-wider">
+          <span class="w-2 h-2 rounded-full bg-emerald-500 dark:bg-lime animate-pulse"></span>
+          {{ lang() === 'es' ? 'Buymeashake Help & Knowledge Desk' : 'Buymeashake Help & Knowledge Desk' }}
+        </div>
+
+        <!-- Live Status Pill -->
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 dark:bg-lime/10 border border-emerald-500/20 dark:border-lime/25 text-emerald-600 dark:text-lime text-xs font-medium">
+          <span class="relative flex h-2 w-2">
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 dark:bg-lime opacity-75"></span>
+            <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500 dark:bg-lime"></span>
+          </span>
+          <span>{{ lang() === 'es' ? 'Todos los sistemas operativos' : 'All systems operational' }}</span>
+        </div>
+      </div>
+
+      <h1 class="text-3xl sm:text-5xl font-black tracking-tight text-gray-900 dark:text-white font-display">
+        {{ lang() === 'es' ? '¿En qué podemos ayudarte hoy?' : 'How can we help you today?' }}
+      </h1>
+      <p class="mt-3 text-base sm:text-lg text-gray-600 dark:text-white/65 max-w-3xl leading-relaxed">
+        {{ lang() === 'es'
+          ? 'Explora respuestas rápidas sobre pagos con Stripe, reembolsos, metas deportivas, botones web o impuestos SAT/IRS. También puedes consultar el estado de tu folio o abrir un ticket directo.'
+          : 'Browse immediate answers regarding Stripe payouts, refund policies, sports crowdfunding, embed widgets, or SAT/IRS taxes. Track your ticket status or open a new support request.' }}
+      </p>
+
+      <!-- Predictive Real-Time Search Bar with Autocomplete Menu -->
+      <div class="mt-8 max-w-2xl relative">
+        <div class="relative flex items-center">
+          <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400 dark:text-white/40">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          </div>
+          <input
+            type="text"
+            [ngModel]="searchQuery()"
+            (ngModelChange)="onSearchInput($event)"
+            (focus)="onSearchFocus()"
+            (blur)="onSearchBlur()"
+            (keydown.enter)="onSearchEnter()"
+            [placeholder]="lang() === 'es' ? 'Buscar temas (ej. reembolsos, Stripe, metas, QR, SAT, comisiones)...' : 'Search topics (e.g., refunds, Stripe, goals, QR, taxes, fees)...'"
+            class="w-full pl-12 pr-10 py-3.5 rounded-xl border border-gray-300 dark:border-white/15 bg-white dark:bg-[#121614] text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-white/35 focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:focus:ring-lime focus:border-transparent transition shadow-xs"
+          />
+          @if (searchQuery()) {
+            <button
+              type="button"
+              (click)="searchQuery.set(''); isSearchDropdownOpen.set(false)"
+              class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-gray-400 dark:text-white/40 hover:text-gray-600 dark:hover:text-white cursor-pointer"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          }
+        </div>
+
+        <!-- Predictive Autocomplete Dropdown Menu -->
+        @if (isSearchDropdownOpen() && searchSuggestions().length > 0) {
+          <div class="absolute z-30 left-0 right-0 mt-2 bg-white dark:bg-[#161b18] border border-gray-200 dark:border-white/15 rounded-xl shadow-2xl overflow-hidden divide-y divide-gray-100 dark:divide-white/5">
+            <div class="px-4 py-2 bg-gray-50 dark:bg-white/5 flex items-center justify-between text-[11px] font-bold text-gray-500 dark:text-white/40 uppercase tracking-wider">
+              <span>{{ lang() === 'es' ? 'Preguntas y respuestas clave' : 'Key questions & answers' }}</span>
+              <span>{{ searchSuggestions().length }} {{ lang() === 'es' ? 'coincidencias' : 'matches' }}</span>
+            </div>
+            @for (item of searchSuggestions(); track item.id) {
+              <button
+                type="button"
+                (mousedown)="selectSuggestedFaq(item)"
+                class="w-full px-4 py-3 text-left hover:bg-emerald-50 dark:hover:bg-lime/10 transition cursor-pointer flex items-center justify-between gap-3 group"
+              >
+                <div class="flex items-center gap-2.5 overflow-hidden">
+                  <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 dark:bg-lime shrink-0"></span>
+                  <span class="text-xs font-bold text-gray-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-lime transition truncate">
+                    {{ lang() === 'es' ? item.questionEs : item.questionEn }}
+                  </span>
+                </div>
+                <div class="flex items-center gap-1.5 shrink-0 text-[10px] font-mono text-gray-400 dark:text-white/40">
+                  <span class="hidden sm:inline uppercase font-bold">{{ item.category }}</span>
+                  <svg class="w-3.5 h-3.5 text-gray-400 group-hover:text-emerald-600 dark:group-hover:text-lime group-hover:translate-x-0.5 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                  </svg>
+                </div>
+              </button>
+            }
+            <button
+              type="button"
+              (mousedown)="onSearchEnter()"
+              class="w-full px-4 py-2.5 bg-gray-50/70 dark:bg-white/5 text-center text-xs font-bold text-emerald-600 dark:text-lime hover:underline cursor-pointer"
+            >
+              {{ lang() === 'es' ? ('Filtrar artículos con "' + searchQuery() + '" →') : ('Filter articles by "' + searchQuery() + '" →') }}
+            </button>
+          </div>
+        }
+      </div>
+    </div>
+
+
+    <!-- Audience Segmented Filter Tabs -->
+    <div class="flex flex-wrap items-center gap-2 mb-8">
+      <button
+        type="button"
+        (click)="setAudience('all')"
+        [class]="selectedAudience() === 'all'
+          ? 'bg-emerald-600 dark:bg-lime text-white dark:text-void font-bold shadow-xs'
+          : 'bg-white dark:bg-white/5 border border-gray-300 dark:border-white/10 text-gray-700 dark:text-white/70 hover:border-gray-400 dark:hover:border-white/25'"
+        class="px-4 py-2 rounded-lg text-xs tracking-wide transition cursor-pointer"
+      >
+        {{ lang() === 'es' ? 'Todas las consultas' : 'All topics' }}
+      </button>
+
+      <button
+        type="button"
+        (click)="setAudience('athlete')"
+        [class]="selectedAudience() === 'athlete'
+          ? 'bg-emerald-600 dark:bg-lime text-white dark:text-void font-bold shadow-xs'
+          : 'bg-white dark:bg-white/5 border border-gray-300 dark:border-white/10 text-gray-700 dark:text-white/70 hover:border-gray-400 dark:hover:border-white/25'"
+        class="px-4 py-2 rounded-lg text-xs tracking-wide transition cursor-pointer inline-flex items-center gap-1.5"
+      >
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+        </svg>
+        <span>{{ lang() === 'es' ? 'Para Atletas y Entrenadores' : 'For Athletes & Coaches' }}</span>
+      </button>
+
+      <button
+        type="button"
+        (click)="setAudience('supporter')"
+        [class]="selectedAudience() === 'supporter'
+          ? 'bg-emerald-600 dark:bg-lime text-white dark:text-void font-bold shadow-xs'
+          : 'bg-white dark:bg-white/5 border border-gray-300 dark:border-white/10 text-gray-700 dark:text-white/70 hover:border-gray-400 dark:hover:border-white/25'"
+        class="px-4 py-2 rounded-lg text-xs tracking-wide transition cursor-pointer inline-flex items-center gap-1.5"
+      >
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+        </svg>
+        <span>{{ lang() === 'es' ? 'Para Supporters y Fans' : 'For Supporters & Fans' }}</span>
+      </button>
+
+      <button
+        type="button"
+        (click)="scrollToTicketForm()"
+        class="ml-auto inline-flex items-center gap-1.5 text-xs font-bold text-emerald-600 dark:text-lime hover:underline cursor-pointer py-2 px-1"
+      >
+        <span>{{ lang() === 'es' ? 'Abrir un ticket directo' : 'Open direct ticket' }}</span>
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+        </svg>
+      </button>
+    </div>
+
+    <!-- Category Grid Cards (11 Athletic & Operational Categories) -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-14">
+      @for (cat of categories; track cat.code) {
+        <button
+          type="button"
+          (click)="setFaqCategory(cat.code)"
+          [class]="selectedFaqCategory() === cat.code
+            ? 'border-emerald-600 dark:border-lime bg-emerald-50 dark:bg-lime/5 ring-1 ring-emerald-600 dark:ring-lime'
+            : 'border-gray-200 dark:border-white/10 bg-white dark:bg-[#121614] hover:border-gray-300 dark:hover:border-white/20'"
+          class="p-5 rounded-xl border text-left transition cursor-pointer flex flex-col justify-between shadow-xs group"
+        >
+          <div>
+            <div class="w-9 h-9 rounded-lg flex items-center justify-center bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-800 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-lime transition mb-3">
+              @if (cat.icon === 'credit-card') {
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+              } @else if (cat.icon === 'shield-check') {
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+              } @else if (cat.icon === 'sparkles') {
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/></svg>
+              } @else if (cat.icon === 'flag') {
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"/></svg>
+              } @else if (cat.icon === 'code-bracket') {
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
+              } @else if (cat.icon === 'user-group') {
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+              } @else if (cat.icon === 'user-circle') {
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+              } @else if (cat.icon === 'calendar') {
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+              } @else if (cat.icon === 'document-text') {
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+              } @else if (cat.icon === 'cpu-chip') {
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"/></svg>
+              } @else {
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+              }
+            </div>
+            <h3 class="text-sm font-bold text-gray-900 dark:text-white">
+              {{ lang() === 'es' ? cat.titleEs : cat.titleEn }}
+            </h3>
+            <p class="mt-1 text-xs text-gray-500 dark:text-white/50 leading-relaxed">
+              {{ lang() === 'es' ? cat.descEs : cat.descEn }}
+            </p>
+          </div>
+
+          <div class="mt-4 pt-3 border-t border-gray-100 dark:border-white/5 flex items-center justify-between text-[11px] font-semibold text-emerald-600 dark:text-lime">
+            <span>{{ selectedFaqCategory() === cat.code ? (lang() === 'es' ? 'Mostrando preguntas' : 'Showing questions') : (lang() === 'es' ? 'Ver preguntas' : 'View questions') }}</span>
+            @if (selectedFaqCategory() === cat.code) {
+              <svg class="w-3.5 h-3.5 transition transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+              </svg>
+            } @else {
+              <svg class="w-3.5 h-3.5 transition transform group-hover:translate-x-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              </svg>
+            }
+          </div>
+        </button>
+      }
+    </div>
+
+    <!-- Knowledge Base: Interactive FAQ Accordion -->
+    <div id="knowledge-base-section" class="mb-16 scroll-mt-12">
+      <div class="flex items-center justify-between mb-6">
+        <div>
+          <h2 class="text-xl sm:text-2xl font-black text-gray-900 dark:text-white font-display">
+            {{ lang() === 'es' ? 'Base de Conocimiento y Respuestas Rápidas' : 'Knowledge Base & Quick Answers' }}
+          </h2>
+          <p class="text-xs sm:text-sm text-gray-500 dark:text-white/50 mt-1">
+            {{ lang() === 'es'
+              ? ('Mostrando ' + filteredFaqs().length + ' artículos relevantes')
+              : ('Showing ' + filteredFaqs().length + ' relevant articles') }}
+          </p>
+        </div>
+
+        @if (selectedFaqCategory() !== 'all' || selectedAudience() !== 'all' || searchQuery()) {
+          <button
+            type="button"
+            (click)="selectedFaqCategory.set('all'); selectedAudience.set('all'); searchQuery.set('')"
+            class="text-xs font-semibold text-emerald-600 dark:text-lime hover:underline cursor-pointer"
+          >
+            {{ lang() === 'es' ? 'Restablecer filtros' : 'Reset filters' }}
+          </button>
+        }
+      </div>
+
+      @if (filteredFaqs().length > 0) {
+        <div class="space-y-3">
+          @for (faq of filteredFaqs(); track faq.id) {
+            <div
+              [id]="'faq-' + faq.id"
+              [class]="highlightedFaqId() === faq.id
+                ? 'border-emerald-500 dark:border-lime ring-2 ring-emerald-500/80 dark:ring-lime shadow-[0_0_30px_rgba(16,185,129,0.3)] dark:shadow-[0_0_35px_rgba(201,255,61,0.4)] bg-emerald-50/60 dark:bg-[#18211b]'
+                : 'border-gray-200 dark:border-white/10 bg-white dark:bg-[#121614]'"
+              class="rounded-xl overflow-hidden transition-all duration-500 scroll-mt-24"
+            >
+              <button
+                type="button"
+                (click)="toggleFaq(faq.id)"
+                class="w-full px-5 py-4 text-left flex items-center justify-between gap-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-white/5 transition"
+              >
+                <div class="flex items-center gap-3">
+                  <span
+                    [class]="highlightedFaqId() === faq.id
+                      ? 'w-2 h-2 rounded-full bg-emerald-500 dark:bg-lime animate-pulse'
+                      : 'w-1.5 h-1.5 rounded-full bg-emerald-500 dark:bg-lime'"
+                  ></span>
+                  <span class="text-sm font-bold text-gray-900 dark:text-white">
+                    {{ lang() === 'es' ? faq.questionEs : faq.questionEn }}
+                  </span>
+                </div>
+
+                <div class="flex items-center gap-2 shrink-0">
+                  <span class="hidden sm:inline-block px-2 py-0.5 rounded text-[10px] uppercase font-bold tracking-wider bg-gray-100 dark:bg-white/10 text-gray-600 dark:text-white/60">
+                    {{ faq.audience === 'all' ? (lang() === 'es' ? 'General' : 'General') : (faq.audience === 'athlete' ? (lang() === 'es' ? 'Atletas' : 'Athletes') : (lang() === 'es' ? 'Fans' : 'Fans')) }}
+                  </span>
+
+                  <svg
+                    [class.rotate-180]="isFaqOpen(faq.id)"
+                    class="w-4 h-4 text-gray-400 dark:text-white/40 transition-transform duration-200"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                  </svg>
+                </div>
+              </button>
+
+              @if (isFaqOpen(faq.id)) {
+                <div class="px-5 pb-5 pt-1 text-sm text-gray-600 dark:text-white/70 leading-relaxed border-t border-gray-100 dark:border-white/5">
+                  <p class="mt-2">{{ lang() === 'es' ? faq.answerEs : faq.answerEn }}</p>
+                </div>
+              }
+            </div>
+          }
+        </div>
+      } @else {
+        <!-- Zero Results Fallback -->
+        <div class="text-center py-12 px-4 border border-dashed border-gray-300 dark:border-white/15 rounded-2xl bg-white dark:bg-[#121614]">
+          <div class="w-12 h-12 mx-auto rounded-full bg-gray-100 dark:bg-white/5 flex items-center justify-center text-gray-400 dark:text-white/40 mb-3">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <h3 class="text-base font-bold text-gray-900 dark:text-white">
+            {{ lang() === 'es' ? 'No encontramos artículos para tu búsqueda' : 'No articles found matching your criteria' }}
+          </h3>
+          <p class="text-xs text-gray-500 dark:text-white/50 mt-1 max-w-md mx-auto">
+            {{ lang() === 'es'
+              ? 'Prueba buscando palabras más generales o completa el formulario para abrir un ticket directo.'
+              : 'Try broader keywords or submit a dedicated support ticket below.' }}
+          </p>
+          <button
+            type="button"
+            (click)="scrollToTicketForm()"
+            class="mt-4 inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-emerald-600 dark:bg-lime text-white dark:text-void text-xs font-bold transition cursor-pointer"
+          >
+            <span>{{ lang() === 'es' ? 'Abrir ticket de ayuda' : 'Submit help ticket' }}</span>
+          </button>
+        </div>
+      }
+    </div>
+
+    <!-- Direct Support Ticket Desk Section -->
+    <div id="ticket-form-section" class="scroll-mt-8 border border-gray-200 dark:border-white/10 rounded-2xl bg-white dark:bg-[#121614] p-6 sm:p-10 shadow-sm">
+      @if (!submitted()) {
+        <div class="mb-8 pb-6 border-b border-gray-200 dark:border-white/10 flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <div class="inline-flex items-center gap-2 px-2.5 py-0.5 rounded text-[11px] font-bold uppercase tracking-wider bg-emerald-500/10 dark:bg-lime/10 text-emerald-700 dark:text-lime mb-2">
+              {{ lang() === 'es' ? 'Mesa de Ayuda Personalizada' : 'Dedicated Help Desk' }}
+            </div>
+            <h2 class="text-2xl sm:text-3xl font-black text-gray-900 dark:text-white font-display">
+              {{ lang() === 'es' ? 'Abrir un ticket de soporte' : 'Open a support ticket' }}
+            </h2>
+            <p class="mt-1 text-xs sm:text-sm text-gray-600 dark:text-white/60">
+              {{ lang() === 'es'
+                ? 'Detalla tu consulta y te responderemos a la brevedad con seguimiento formal.'
+                : 'Detail your issue or inquiry and we will get back to you with formal tracking.' }}
+            </p>
+          </div>
+
+          <div class="flex items-center gap-2 px-3 py-2 rounded-xl bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-xs text-gray-600 dark:text-white/70">
+            <svg class="w-4 h-4 text-emerald-600 dark:text-lime shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <div>
+              <span class="block font-bold text-gray-900 dark:text-white">{{ lang() === 'es' ? 'Compromiso de Respuesta' : 'SLA Commitment' }}</span>
+              <span class="text-[11px] text-gray-500 dark:text-white/50">{{ lang() === 'es' ? '12 - 24 horas hábiles' : '12 - 24 business hours' }}</span>
+            </div>
+          </div>
+        </div>
+
+        <form (ngSubmit)="submitTicket()" class="space-y-6">
+          
+          <!-- Row 1: Nombre & Email -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <div>
+              <label class="block text-xs font-bold text-gray-900 dark:text-white uppercase tracking-wider mb-2">
+                {{ lang() === 'es' ? 'Nombre Completo' : 'Full Name' }} <span class="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                [ngModel]="applicantName()"
+                (ngModelChange)="applicantName.set($event)"
+                name="applicantName"
+                required
+                [placeholder]="lang() === 'es' ? 'Ej. Sofía Hernández' : 'e.g., Sofia Hernandez'"
+                class="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-white/15 bg-white dark:bg-white/5 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:focus:ring-lime focus:border-transparent transition"
+              />
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold text-gray-900 dark:text-white uppercase tracking-wider mb-2">
+                {{ lang() === 'es' ? 'Correo Electrónico de Contacto' : 'Contact Email Address' }} <span class="text-red-500">*</span>
+              </label>
+              <input
+                type="email"
+                [ngModel]="applicantEmail()"
+                (ngModelChange)="applicantEmail.set($event)"
+                name="applicantEmail"
+                required
+                [placeholder]="lang() === 'es' ? 'nombre@ejemplo.com' : 'name@example.com'"
+                class="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-white/15 bg-white dark:bg-white/5 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:focus:ring-lime focus:border-transparent transition"
+              />
+            </div>
+          </div>
+
+          <!-- Row 2: Rol & Categoría -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <div>
+              <label class="block text-xs font-bold text-gray-900 dark:text-white uppercase tracking-wider mb-2">
+                {{ lang() === 'es' ? 'Tu Rol en Buymeashake' : 'Your Role on Buymeashake' }} <span class="text-red-500">*</span>
+              </label>
+              <select
+                [ngModel]="userRole()"
+                (ngModelChange)="userRole.set($event)"
+                name="userRole"
+                class="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-white/15 bg-white dark:bg-[#181d1a] text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:focus:ring-lime focus:border-transparent transition"
+              >
+                <option value="athlete">{{ lang() === 'es' ? 'Atleta / Creador / Entrenador' : 'Athlete / Creator / Coach' }}</option>
+                <option value="supporter">{{ lang() === 'es' ? 'Supporter / Fan / Donante' : 'Supporter / Fan / Donor' }}</option>
+                <option value="other">{{ lang() === 'es' ? 'Visitante u Otro' : 'Visitor or Other' }}</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold text-gray-900 dark:text-white uppercase tracking-wider mb-2">
+                {{ lang() === 'es' ? 'Categoría de la Consulta' : 'Inquiry Category' }} <span class="text-red-500">*</span>
+              </label>
+              <select
+                [ngModel]="selectedTicketCategory()"
+                (ngModelChange)="selectedTicketCategory.set($event)"
+                name="selectedTicketCategory"
+                class="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-white/15 bg-white dark:bg-[#181d1a] text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:focus:ring-lime focus:border-transparent transition"
+              >
+                @for (cat of categories; track cat.code) {
+                  <option [value]="cat.code">{{ lang() === 'es' ? cat.titleEs : cat.titleEn }}</option>
+                }
+              </select>
+            </div>
+          </div>
+
+          <!-- Row 3: Asunto & Handle/Folio de Referencia -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <div>
+              <label class="block text-xs font-bold text-gray-900 dark:text-white uppercase tracking-wider mb-2">
+                {{ lang() === 'es' ? 'Asunto del Ticket' : 'Ticket Subject' }} <span class="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                [ngModel]="ticketSubject()"
+                (ngModelChange)="ticketSubject.set($event)"
+                name="ticketSubject"
+                required
+                [placeholder]="lang() === 'es' ? 'Ej. Duda sobre retiros a cuenta CLABE o reembolso' : 'e.g., Question about bank withdrawals or refund'"
+                class="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-white/15 bg-white dark:bg-white/5 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:focus:ring-lime focus:border-transparent transition"
+              />
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold text-gray-900 dark:text-white uppercase tracking-wider mb-2">
+                {{ lang() === 'es' ? 'Usuario o Folio de Referencia (Opcional)' : 'Related Handle or Folio (Optional)' }}
+              </label>
+              <input
+                type="text"
+                [ngModel]="relatedHandleOrFolio()"
+                (ngModelChange)="relatedHandleOrFolio.set($event)"
+                name="relatedHandleOrFolio"
+                [placeholder]="lang() === 'es' ? 'Ej. @sofifit o #SHK-12345' : 'e.g., @sofifit or #SHK-12345'"
+                class="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-white/15 bg-white dark:bg-white/5 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:focus:ring-lime focus:border-transparent transition"
+              />
+            </div>
+          </div>
+
+          <!-- Row 4: Descripción detallada -->
+          <div>
+            <label class="block text-xs font-bold text-gray-900 dark:text-white uppercase tracking-wider mb-2">
+              {{ lang() === 'es' ? 'Descripción Detallada' : 'Detailed Description' }} <span class="text-red-500">*</span>
+            </label>
+            <textarea
+              rows="5"
+              [ngModel]="ticketDescription()"
+              (ngModelChange)="ticketDescription.set($event)"
+              name="ticketDescription"
+              required
+              [placeholder]="lang() === 'es' ? 'Explica con el mayor detalle posible lo que necesitas o el comportamiento que observas...' : 'Provide as much context and detail as possible regarding your inquiry or the behavior you observed...'"
+              class="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-white/15 bg-white dark:bg-white/5 text-sm text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:focus:ring-lime focus:border-transparent transition leading-relaxed resize-y"
+            ></textarea>
+            <p class="mt-1 text-[11px] text-gray-500 dark:text-white/40">
+              {{ lang() === 'es' ? 'Mínimo 20 caracteres para que nuestro equipo técnico pueda procesarlo eficazmente.' : 'Minimum 20 characters for our team to properly triage and resolve.' }}
+            </p>
+          </div>
+
+          <!-- Row 5: Adjunto opcional de archivo -->
+          <div>
+            <label class="block text-xs font-bold text-gray-900 dark:text-white uppercase tracking-wider mb-2">
+              {{ lang() === 'es' ? 'Archivo Adjunto o Captura de Pantalla (Opcional)' : 'File Attachment or Screenshot (Optional)' }}
+            </label>
+            <div class="border border-dashed border-gray-300 dark:border-white/20 rounded-xl p-4 bg-gray-50/50 dark:bg-white/5">
+              @if (!attachedFileName()) {
+                <div class="flex flex-col sm:flex-row items-center justify-between gap-3">
+                  <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-lg bg-gray-100 dark:bg-white/10 flex items-center justify-center text-gray-500 dark:text-white/60">
+                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+                      </svg>
+                    </div>
+                    <div>
+                      <p class="text-xs font-semibold text-gray-800 dark:text-white">
+                        {{ lang() === 'es' ? 'Adjuntar comprobante, imagen o PDF' : 'Attach receipt, image or PDF document' }}
+                      </p>
+                      <p class="text-[11px] text-gray-500 dark:text-white/40">
+                        {{ lang() === 'es' ? 'Formatos PNG, JPG, WebP, PDF hasta 10 MB.' : 'PNG, JPG, WebP, PDF up to 10 MB.' }}
+                      </p>
+                    </div>
+                  </div>
+
+                  <label class="px-3.5 py-1.5 rounded-lg border border-gray-300 dark:border-white/20 bg-white dark:bg-white/10 text-xs font-bold text-gray-700 dark:text-white hover:border-emerald-600 dark:hover:border-lime cursor-pointer transition">
+                    <span>{{ lang() === 'es' ? 'Seleccionar archivo' : 'Choose file' }}</span>
+                    <input type="file" (change)="onFileSelected($event)" accept="image/*,.pdf" class="hidden" />
+                  </label>
+                </div>
+              } @else {
+                <div class="flex items-center justify-between gap-3 bg-emerald-500/10 dark:bg-lime/10 border border-emerald-500/25 dark:border-lime/25 rounded-lg p-3">
+                  <div class="flex items-center gap-2.5 overflow-hidden">
+                    <svg class="w-5 h-5 text-emerald-600 dark:text-lime shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span class="text-xs font-bold text-gray-900 dark:text-white truncate">{{ attachedFileName() }}</span>
+                  </div>
+                  <button
+                    type="button"
+                    (click)="removeAttachedFile()"
+                    class="text-xs font-bold text-red-500 hover:text-red-700 hover:underline cursor-pointer"
+                  >
+                    {{ lang() === 'es' ? 'Eliminar' : 'Remove' }}
+                  </button>
+                </div>
+              }
+            </div>
+          </div>
+
+          <!-- Error Alert Banner -->
+          @if (errorMessage()) {
+            <div class="p-4 rounded-xl bg-red-500/10 border border-red-500/30 text-xs text-red-600 dark:text-red-400 flex items-start gap-3">
+              <svg class="w-4 h-4 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span>{{ errorMessage() }}</span>
+            </div>
+          }
+
+          <!-- Submit Button -->
+          <div class="pt-2 flex justify-end">
+            <button
+              type="submit"
+              [disabled]="isSubmitting()"
+              class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-xl bg-emerald-600 dark:bg-lime text-white dark:text-void text-sm font-black uppercase tracking-wider hover:opacity-90 disabled:opacity-50 transition cursor-pointer shadow-sm"
+            >
+              @if (isSubmitting()) {
+                <svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <span>{{ lang() === 'es' ? 'Registrando Ticket...' : 'Submitting Ticket...' }}</span>
+              } @else {
+                <span>{{ lang() === 'es' ? 'Enviar Ticket de Soporte' : 'Submit Support Ticket' }}</span>
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                </svg>
+              }
+            </button>
+          </div>
+        </form>
+      } @else {
+        <!-- Ticket Submitted Success Banner -->
+        <div class="text-center py-10 px-4">
+          <div class="w-16 h-16 mx-auto rounded-full bg-emerald-500/15 dark:bg-lime/15 border-2 border-emerald-500 dark:border-lime flex items-center justify-center text-emerald-600 dark:text-lime mb-5">
+            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+
+          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 dark:bg-lime/10 border border-emerald-500/20 dark:border-lime/20 text-emerald-700 dark:text-lime text-xs font-bold uppercase tracking-wider mb-2">
+            {{ lang() === 'es' ? 'Ticket de Asistencia Confirmado' : 'Support Ticket Confirmed' }}
+          </div>
+
+          <h2 class="text-3xl sm:text-4xl font-black text-gray-900 dark:text-white font-display">
+            {{ lang() === 'es' ? '¡Hemos recibido tu solicitud!' : 'We received your inquiry!' }}
+          </h2>
+
+          <div class="mt-4 inline-block px-4 py-2 rounded-xl bg-gray-100 dark:bg-white/10 border border-gray-200 dark:border-white/15">
+            <span class="text-xs text-gray-500 dark:text-white/50 mr-2">{{ lang() === 'es' ? 'Folio único de seguimiento:' : 'Tracking Folio:' }}</span>
+            <span class="text-base font-mono font-black text-emerald-600 dark:text-lime">{{ generatedFolio() }}</span>
+          </div>
+
+          <div class="mt-6 max-w-xl mx-auto space-y-3 text-sm text-gray-600 dark:text-white/70 leading-relaxed">
+            <p>
+              {{ lang() === 'es'
+                ? ('Enviamos un acuse de recibo con los detalles de tu consulta a ' + applicantEmail() + '.')
+                : ('A confirmation email with your ticket details has been sent to ' + applicantEmail() + '.') }}
+            </p>
+            <p>
+              {{ lang() === 'es'
+                ? 'Nuestro equipo técnico y de atención revisará tu caso y se pondrá en contacto contigo en un lapso de 12 a 24 horas hábiles.'
+                : 'Our support and technical team will review your case and reach back out within 12 to 24 business hours.' }}
+            </p>
+          </div>
+
+          <div class="mt-8 flex flex-wrap items-center justify-center gap-4">
+            <button
+              type="button"
+              (click)="resetTicketForm()"
+              class="px-6 py-2.5 rounded-xl border border-gray-300 dark:border-white/20 bg-white dark:bg-white/5 text-xs font-bold text-gray-800 dark:text-white hover:border-emerald-600 dark:hover:border-lime transition cursor-pointer"
+            >
+              {{ lang() === 'es' ? 'Abrir otro ticket' : 'Open another ticket' }}
+            </button>
+
+            <a
+              routerLink="/"
+              class="px-6 py-2.5 rounded-xl bg-emerald-600 dark:bg-lime text-white dark:text-void text-xs font-black uppercase tracking-wider hover:opacity-90 transition inline-flex items-center gap-1.5"
+            >
+              <span>{{ lang() === 'es' ? 'Volver al Inicio' : 'Back to Home' }}</span>
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+              </svg>
+            </a>
+          </div>
+        </div>
+      }
+    </div>
+
+  </div>
+</div>

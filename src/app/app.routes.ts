@@ -43,6 +43,26 @@ export const routes: Routes = [
     redirectTo: 'report',
     pathMatch: 'full',
   },
+  {
+    path: 'contact',
+    title: 'Centro de Ayuda y Contacto — buymeashake',
+    loadComponent: () => import('./features/support/support').then((m) => m.Support),
+  },
+  {
+    path: 'contacto',
+    redirectTo: 'contact',
+    pathMatch: 'full',
+  },
+  {
+    path: 'support',
+    redirectTo: 'contact',
+    pathMatch: 'full',
+  },
+  {
+    path: 'soporte',
+    redirectTo: 'contact',
+    pathMatch: 'full',
+  },
 
   // 2. Flujo de Autenticación y Onboarding
   {

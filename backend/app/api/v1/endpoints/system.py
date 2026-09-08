@@ -14,12 +14,16 @@ from app.schemas.dtos import (
     ComplianceReportRequest,
     ComplianceReportResponse,
     LookupGroupResponse,
+    SupportTicketRequest,
+    SupportTicketResponse,
 )
 from app.services.core_services import SystemService
 from app.services.email_service import (
     send_compliance_report_sync,
     send_report_verdict_sync,
     send_reporter_confirmation_sync,
+    send_support_ticket_sync,
+    send_support_ticket_user_ack_sync,
 )
 
 router = APIRouter()
@@ -184,6 +188,93 @@ async def submit_report_verdict(
         status="resolved",
         email_sent=True,
         message=f"Dictamen del reporte {clean_folio} procesado y enviado con éxito.",
+    )
+
+
+@router.post("/system/support/ticket", response_model=SupportTicketResponse)
+async def submit_support_ticket(
+    request: Request,
+    background_tasks: BackgroundTasks,
+) -> SupportTicketResponse:
+    """Registra un ticket de soporte/asistencia con generación de folio único y notificación dual."""
+    content_type = request.headers.get("content-type", "")
+    attached_file = None
+    attached_file_bytes = None
+    attached_file_type = None
+
+    if "multipart/form-data" in content_type:
+        form = await request.form()
+        name = str(form.get("name", "")).strip()
+        email = str(form.get("email", "")).strip()
+        user_role = str(form.get("user_role", "athlete")).strip()
+        category = str(form.get("category", "general")).strip()
+        category_title = str(form.get("category_title", "Consulta General")).strip()
+        subject = str(form.get("subject", "")).strip()
+        description = str(form.get("description", "")).strip()
+        raw_ref = form.get("related_folio_or_handle")
+        related_ref = str(raw_ref).strip() if raw_ref else None
+
+        file_item = form.get("file")
+        if file_item and hasattr(file_item, "read"):
+            attached_file = getattr(file_item, "filename", None) or "evidencia_soporte.png"
+            attached_file_bytes = await file_item.read()
+            attached_file_type = getattr(file_item, "content_type", None) or "application/octet-stream"
+        elif form.get("attached_file"):
+            attached_file = str(form.get("attached_file"))
+    else:
+        body = await request.json()
+        payload = SupportTicketRequest(**body)
+        name = payload.name.strip()
+        email = payload.email.strip()
+        user_role = payload.user_role
+        category = payload.category
+        category_title = payload.category_title
+        subject = payload.subject.strip()
+        description = payload.description.strip()
+        related_ref = payload.related_folio_or_handle
+        attached_file = payload.attached_file
+
+    if not name or not email or not subject or not description:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Por favor completa los campos requeridos del ticket de soporte.",
+        )
+
+    folio_num = random.randint(10000, 99999)
+    folio = f"#SHK-HELP-{folio_num}"
+
+    # 1. Notificar al equipo de soporte interno de Buymeashake
+    background_tasks.add_task(
+        send_support_ticket_sync,
+        folio=folio,
+        name=name,
+        user_email=email,
+        user_role=user_role,
+        category=category,
+        category_title=category_title,
+        subject=subject,
+        description=description,
+        related_folio_or_handle=related_ref,
+        attached_file=attached_file,
+        attached_file_bytes=attached_file_bytes,
+        attached_file_type=attached_file_type,
+    )
+
+    # 2. Enviar acuse de recibo formal al usuario
+    background_tasks.add_task(
+        send_support_ticket_user_ack_sync,
+        folio=folio,
+        name=name,
+        user_email=email,
+        category_title=category_title,
+        subject=subject,
+        description=description,
+    )
+
+    return SupportTicketResponse(
+        folio=folio,
+        message="Tu solicitud de asistencia ha sido registrada con éxito. Te responderemos en un plazo de 12 a 24 horas hábiles.",
+        status="received",
     )
 
 

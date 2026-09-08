@@ -206,7 +206,7 @@ async def seed_athletes() -> None:
                 profile,
                 referral_code=f"{athlete_data['handle']}_demo",
             )
-            mon = ensure_monetization(session, profile)
+            mon = await ensure_monetization(session, profile)
             mon.shake_price = athlete_data["shake_price"]
             mon.currency = "USD"
 

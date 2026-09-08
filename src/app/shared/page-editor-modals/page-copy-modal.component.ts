@@ -2,11 +2,18 @@ import { Component, effect, inject, input, output, signal } from '@angular/core'
 import { CommonModule } from '@angular/common';
 import { DashboardService } from '../../core/dashboard.service';
 import { EditorSavePatch } from './editor-save-patch';
+import { AllowedUserTextDirective } from '../../core/directives/allowed-user-text.directive';
+import { extractApiErrorMessage } from '../../core/utils/api-error.util';
+import {
+  filterAllowedUserText,
+  hasOnlyAllowedUserTextChars,
+  invalidAllowedCharsMessage,
+} from '../../core/utils/allowed-user-text.util';
 
 @Component({
   selector: 'app-page-copy-modal',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, AllowedUserTextDirective],
   template: `
     @if (open()) {
       <div
@@ -42,10 +49,11 @@ import { EditorSavePatch } from './editor-save-patch';
           <textarea
             rows="3"
             maxlength="200"
+            appAllowedUserText
             placeholder="Fuerza&#10;Disciplina&#10;Propósito"
             class="w-full rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#191c1d] px-4 py-3 text-sm font-semibold text-gray-900 dark:text-white focus:border-[#c9ff3d] focus:outline-none"
             [value]="title()"
-            (input)="title.set($any($event.target).value)"
+            (input)="onTitleInput($any($event.target).value)"
           ></textarea>
           <p class="mt-1 text-[11px] text-gray-400">Usa un salto de línea por cada renglón del título.</p>
 
@@ -55,10 +63,11 @@ import { EditorSavePatch } from './editor-save-patch';
           <textarea
             rows="4"
             maxlength="2000"
+            appAllowedUserText
             placeholder="Cuéntale a tus fans de qué trata tu página..."
             class="w-full rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#191c1d] px-4 py-3 text-sm font-medium text-gray-900 dark:text-white focus:border-[#c9ff3d] focus:outline-none"
             [value]="description()"
-            (input)="description.set($any($event.target).value)"
+            (input)="onDescriptionInput($any($event.target).value)"
           ></textarea>
 
           <button
@@ -100,30 +109,48 @@ export class PageCopyModalComponent {
     });
   }
 
+  onTitleInput(value: string): void {
+    this.title.set(filterAllowedUserText(value));
+  }
+
+  onDescriptionInput(value: string): void {
+    this.description.set(filterAllowedUserText(value));
+  }
+
   onBackdrop(event: MouseEvent): void {
     if (event.target === event.currentTarget) this.close.emit();
   }
 
   save(): void {
+    const title = filterAllowedUserText(this.title()).trim();
+    const description = filterAllowedUserText(this.description()).trim();
+    this.title.set(title);
+    this.description.set(description);
+
+    if (!hasOnlyAllowedUserTextChars(title) || !hasOnlyAllowedUserTextChars(description)) {
+      this.error.set(invalidAllowedCharsMessage('es'));
+      return;
+    }
+
     this.saving.set(true);
     this.error.set(null);
     this.dashboard
       .updateProfile({
-        page_title: this.title().trim() || null,
-        page_description: this.description().trim() || null,
+        page_title: title || null,
+        page_description: description || null,
       })
       .subscribe({
         next: () => {
           this.saving.set(false);
           this.saved.emit({
-            pageTitle: this.title().trim() || null,
-            pageDescription: this.description().trim() || null,
+            pageTitle: title || null,
+            pageDescription: description || null,
           });
           this.close.emit();
         },
         error: (err) => {
           this.saving.set(false);
-          this.error.set(err.error?.error?.message || 'Error al guardar.');
+          this.error.set(extractApiErrorMessage(err, 'Error al guardar.'));
         },
       });
   }

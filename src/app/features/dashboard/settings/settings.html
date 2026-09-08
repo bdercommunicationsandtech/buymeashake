@@ -105,6 +105,8 @@
         <label class="block text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 mb-1">Nombre Público</label>
         <input
           type="text"
+          appAllowedUserText
+          maxlength="150"
           class="w-full rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#191c1d] px-4 py-3 text-sm font-semibold text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:border-black dark:focus:border-[#c9ff3d] focus:outline-none"
           [value]="fullName()"
           (input)="fullName.set($any($event.target).value)"
@@ -113,9 +115,14 @@
 
       <!-- Biografía -->
       <div>
-        <label class="block text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 mb-1">Biografía Deportiva</label>
+        <div class="flex items-center justify-between mb-1">
+          <label class="block text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300">Biografía Deportiva</label>
+          <span class="text-[10px] font-semibold text-gray-400">{{ bio().length }}/2000</span>
+        </div>
         <textarea
           rows="3"
+          appAllowedUserText
+          maxlength="2000"
           placeholder="Cuéntale a tu comunidad sobre tus entrenamientos, metas y trayectoria..."
           class="w-full rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#191c1d] px-4 py-3 text-sm font-medium text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:border-black dark:focus:border-[#c9ff3d] focus:outline-none"
           [value]="bio()"
@@ -129,6 +136,8 @@
           <label class="block text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 mb-1">Ciudad / País</label>
           <input
             type="text"
+            appAllowedUserText
+            maxlength="100"
             placeholder="Ej. CDMX, México"
             class="w-full rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#191c1d] px-4 py-3 text-sm font-semibold text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:border-black dark:focus:border-[#c9ff3d] focus:outline-none"
             [value]="city()"
@@ -154,7 +163,7 @@
       <div class="pt-2 border-t border-gray-100 dark:border-white/10 space-y-4">
         <div>
           <h3 class="text-sm font-black text-gray-900 dark:text-white">Redes sociales</h3>
-          <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Se muestran como iconos en tu página pública. Déjalas vacías si no quieres mostrarlas.</p>
+          <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Solo se aceptan enlaces reales de cada plataforma (https://...). Déjalas vacías si no quieres mostrarlas.</p>
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -162,6 +171,7 @@
             <label class="block text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 mb-1">Instagram</label>
             <input
               type="url"
+              maxlength="255"
               placeholder="https://instagram.com/tu_usuario"
               class="w-full rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#191c1d] px-4 py-3 text-sm font-semibold text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:border-black dark:focus:border-[#c9ff3d] focus:outline-none"
               [value]="instagramUrl()"
@@ -172,6 +182,7 @@
             <label class="block text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 mb-1">TikTok</label>
             <input
               type="url"
+              maxlength="255"
               placeholder="https://tiktok.com/@tu_usuario"
               class="w-full rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#191c1d] px-4 py-3 text-sm font-semibold text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:border-black dark:focus:border-[#c9ff3d] focus:outline-none"
               [value]="tiktokUrl()"
@@ -182,6 +193,7 @@
             <label class="block text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 mb-1">Facebook</label>
             <input
               type="url"
+              maxlength="255"
               placeholder="https://facebook.com/tu_pagina"
               class="w-full rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#191c1d] px-4 py-3 text-sm font-semibold text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:border-black dark:focus:border-[#c9ff3d] focus:outline-none"
               [value]="facebookUrl()"
@@ -192,6 +204,7 @@
             <label class="block text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 mb-1">Twitter / X</label>
             <input
               type="url"
+              maxlength="255"
               placeholder="https://x.com/tu_usuario"
               class="w-full rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#191c1d] px-4 py-3 text-sm font-semibold text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:border-black dark:focus:border-[#c9ff3d] focus:outline-none"
               [value]="twitterUrl()"
@@ -249,6 +262,8 @@
         <label class="block text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 mb-1">Título de la Meta</label>
         <input
           type="text"
+          appAllowedUserText
+          maxlength="200"
           placeholder="Ej. Campeonato Panamericano 2026 en Brasil"
           class="w-full rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#191c1d] px-4 py-3 text-sm font-semibold text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:border-black dark:focus:border-[#c9ff3d] focus:outline-none"
           [value]="goalTitle()"

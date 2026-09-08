@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { IconLockComponent, IconStarComponent, IconShakerComponent } from '../icons';
+import { AllowedUserTextDirective } from '../../core/directives/allowed-user-text.directive';
 
 export interface PostCommentItem {
   id: number;
@@ -35,7 +36,7 @@ export interface PostItem {
   selector: 'app-post-card',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, FormsModule, RouterLink, IconLockComponent, IconStarComponent, IconShakerComponent],
+  imports: [CommonModule, FormsModule, RouterLink, IconLockComponent, IconStarComponent, IconShakerComponent, AllowedUserTextDirective],
   template: `
     <article class="bg-white dark:bg-[#121614] rounded-3xl border border-gray-200/80 dark:border-white/10 overflow-hidden shadow-xs hover:border-gray-300 dark:hover:border-white/20 transition-all duration-200">
       
@@ -169,6 +170,8 @@ export interface PostItem {
             <div class="flex gap-2">
               <input
                 type="text"
+                appAllowedUserText
+                maxlength="1000"
                 placeholder="Escribe un comentario..."
                 class="flex-1 text-xs p-2.5 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50/50 dark:bg-white/5 text-gray-900 dark:text-white outline-none focus:border-[#c9ff3d]"
                 [ngModel]="newCommentText()"

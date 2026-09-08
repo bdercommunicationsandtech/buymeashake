@@ -4,12 +4,13 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/auth.service';
 import { ThemeService } from '../../../core/theme.service';
+import { AllowedUserTextDirective } from '../../../core/directives/allowed-user-text.directive';
 
 @Component({
   selector: 'app-supporter-account',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink, AllowedUserTextDirective],
   template: `
     <div class="min-h-screen bg-[#fafafb] dark:bg-[#090c0a] text-gray-900 dark:text-gray-100 font-sans transition-colors duration-200">
       
@@ -130,6 +131,8 @@ import { ThemeService } from '../../../core/theme.service';
                 </label>
                 <input
                   type="text"
+                  appAllowedUserText
+                  maxlength="150"
                   [(ngModel)]="fullName"
                   placeholder="Tu nombre o usuario"
                   class="block w-full px-4 py-3 border border-gray-300 dark:border-white/15 rounded-xl bg-gray-50 dark:bg-[#191c1d] text-gray-900 dark:text-white text-sm font-semibold focus:bg-white focus:border-[#c9ff3d] outline-none transition"
@@ -158,6 +161,7 @@ import { ThemeService } from '../../../core/theme.service';
                 </label>
                 <input
                   type="password"
+                  maxlength="128"
                   [(ngModel)]="newPassword"
                   placeholder="•••••••••••• (mínimo 8 caracteres)"
                   class="block w-full px-4 py-3 border border-gray-300 dark:border-white/15 rounded-xl bg-gray-50 dark:bg-[#191c1d] text-gray-900 dark:text-white text-sm font-semibold focus:bg-white focus:border-[#c9ff3d] outline-none transition"

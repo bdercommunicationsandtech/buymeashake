@@ -679,7 +679,7 @@ class DashboardService:
             "thank_you_message",
         )
         if any(f in updates for f in page_fields):
-            ps = ensure_page_settings(self.session, athlete)
+            ps = await ensure_page_settings(self.session, athlete)
             for field in page_fields:
                 if field not in updates:
                     continue
@@ -689,7 +689,7 @@ class DashboardService:
                 setattr(ps, field, value)
 
         if dto.shake_price is not None or dto.currency is not None:
-            mon = ensure_monetization(self.session, athlete)
+            mon = await ensure_monetization(self.session, athlete)
             if dto.shake_price is not None:
                 mon.shake_price = dto.shake_price
             if dto.currency is not None:

@@ -8,7 +8,7 @@
     <form class="mt-8 space-y-4" (ngSubmit)="saveAndContinue()">
       <div>
         <label class="text-xs font-bold text-gray-500">Nombre</label>
-        <input class="mt-1 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm" [ngModel]="fullName()" (ngModelChange)="fullName.set($event)" name="fullName" />
+        <input appAllowedUserText maxlength="150" class="mt-1 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm" [ngModel]="fullName()" (ngModelChange)="fullName.set($event)" name="fullName" />
       </div>
       <div>
         <label class="text-xs font-bold text-gray-500">@handle</label>
@@ -16,7 +16,7 @@
       </div>
       <div>
         <label class="text-xs font-bold text-gray-500">Ciudad</label>
-        <input class="mt-1 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm" [ngModel]="city()" (ngModelChange)="city.set($event)" name="city" />
+        <input appAllowedUserText maxlength="100" class="mt-1 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm" [ngModel]="city()" (ngModelChange)="city.set($event)" name="city" />
       </div>
       <div>
         <label class="text-xs font-bold text-gray-500">Disciplina principal</label>
@@ -28,7 +28,8 @@
       </div>
       <div>
         <label class="text-xs font-bold text-gray-500">Bio</label>
-        <textarea class="mt-1 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm" rows="4" [ngModel]="bio()" (ngModelChange)="bio.set($event)" name="bio"></textarea>
+        <textarea appAllowedUserText maxlength="2000" class="mt-1 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm" rows="4" [ngModel]="bio()" (ngModelChange)="bio.set($event)" name="bio"></textarea>
+        <span class="mt-1 block text-right text-[10px] text-gray-400">{{ bio().length }}/2000</span>
       </div>
       <div>
         <label class="text-xs font-bold text-gray-500">Precio por shake (USD)</label>

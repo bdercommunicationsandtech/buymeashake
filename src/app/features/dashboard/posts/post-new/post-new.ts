@@ -4,12 +4,13 @@ import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { IconLockComponent, IconStarComponent } from '../../../../shared/icons';
 import { DashboardService } from '../../../../core/dashboard.service';
+import { AllowedUserTextDirective } from '../../../../core/directives/allowed-user-text.directive';
 
 @Component({
   selector: 'app-dashboard-post-new',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, FormsModule, RouterLink, IconLockComponent, IconStarComponent],
+  imports: [CommonModule, FormsModule, RouterLink, IconLockComponent, IconStarComponent, AllowedUserTextDirective],
   template: `
     <div class="space-y-6 max-w-4xl mx-auto pb-16">
       
@@ -74,6 +75,8 @@ import { DashboardService } from '../../../../core/dashboard.service';
           <div class="bg-white dark:bg-[#121614] rounded-3xl p-6 sm:p-8 border border-gray-200/80 dark:border-white/10 shadow-xs space-y-4">
             <input
               type="text"
+              appAllowedUserText
+              maxlength="255"
               placeholder="Título de la publicación (ej. Mi rutina pesada de sentadilla)..."
               class="w-full font-display text-2xl sm:text-3xl font-black text-gray-950 dark:text-white placeholder:text-gray-300 dark:placeholder:text-gray-600 bg-transparent border-none outline-none focus:ring-0 p-0"
               [value]="title()"
@@ -112,6 +115,7 @@ import { DashboardService } from '../../../../core/dashboard.service';
             <textarea
               id="post-content-area"
               rows="14"
+              maxlength="50000"
               placeholder="Escribe tu contenido aquí... Puedes estructurar tus bloques de entrenamiento, series, repeticiones, consejos nutricionales o notas del día..."
               class="w-full resize-none text-base text-gray-800 dark:text-gray-200 placeholder:text-gray-400 dark:placeholder:text-gray-600 bg-transparent border-none outline-none focus:ring-0 p-0 leading-relaxed font-sans"
               [value]="content()"

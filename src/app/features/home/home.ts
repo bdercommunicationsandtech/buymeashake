@@ -20,6 +20,7 @@ import {
   IconSoccerComponent,
   IconStarComponent,
 } from '../../shared/icons';
+import { AllowedUserTextDirective } from '../../core/directives/allowed-user-text.directive';
 
 export interface FloatingAthlete {
   name: string;
@@ -51,6 +52,7 @@ export interface FloatingAthlete {
     AnimatedDumbbellComponent,
     AnimatedSoccerComponent,
     AnimatedBoxingIconComponent,
+    AllowedUserTextDirective,
   ],
   templateUrl: './home.html',
 })

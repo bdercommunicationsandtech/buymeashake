@@ -5,11 +5,12 @@ import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/auth.service';
 import { LookupService } from '../../../core/lookup.service';
 import { LookupItemDto } from '../../../core/api.models';
+import { AllowedUserTextDirective } from '../../../core/directives/allowed-user-text.directive';
 
 @Component({
   selector: 'app-register',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink, AllowedUserTextDirective],
   templateUrl: './register.html',
 })
 export class Register {
@@ -50,7 +51,7 @@ export class Register {
   }
 
   onHandleInput(val: string): void {
-    this.handle.set(val.toLowerCase().replace(/[^a-z0-9_]/g, ''));
+    this.handle.set(val.toLowerCase().replace(/[^a-z0-9_]/g, '').slice(0, 30));
   }
 
   submit(): void {

@@ -2,11 +2,14 @@ import { Component, effect, inject, input, output, signal } from '@angular/core'
 import { CommonModule } from '@angular/common';
 import { DashboardService } from '../../core/dashboard.service';
 import { EditorSavePatch } from './editor-save-patch';
+import { AllowedUserTextDirective } from '../../core/directives/allowed-user-text.directive';
+import { extractApiErrorMessage } from '../../core/utils/api-error.util';
+import { filterAllowedUserText } from '../../core/utils/allowed-user-text.util';
 
 @Component({
   selector: 'app-agenda-copy-modal',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, AllowedUserTextDirective],
   template: `
     @if (open()) {
       <div
@@ -69,10 +72,11 @@ import { EditorSavePatch } from './editor-save-patch';
           <input
             type="text"
             maxlength="200"
+            appAllowedUserText
             placeholder="Entrena, mejora y alcanza tus metas"
             class="w-full rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#191c1d] px-4 py-3 text-sm font-semibold text-gray-900 dark:text-white focus:border-[#c9ff3d] focus:outline-none"
             [value]="title()"
-            (input)="title.set($any($event.target).value)"
+            (input)="title.set(filterText($any($event.target).value))"
           />
 
           <label class="mt-4 block text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 mb-1">
@@ -81,10 +85,11 @@ import { EditorSavePatch } from './editor-save-patch';
           <textarea
             rows="4"
             maxlength="2000"
+            appAllowedUserText
             placeholder="Sesiones 1 a 1 para técnica, consultoría y seguimiento personalizado."
             class="w-full rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#191c1d] px-4 py-3 text-sm font-medium text-gray-900 dark:text-white focus:border-[#c9ff3d] focus:outline-none"
             [value]="description()"
-            (input)="description.set($any($event.target).value)"
+            (input)="description.set(filterText($any($event.target).value))"
           ></textarea>
 
           <button
@@ -129,6 +134,10 @@ export class AgendaCopyModalComponent {
     });
   }
 
+  filterText(value: string): string {
+    return filterAllowedUserText(value);
+  }
+
   onBackdrop(event: MouseEvent): void {
     if (event.target === event.currentTarget) this.close.emit();
   }
@@ -170,7 +179,7 @@ export class AgendaCopyModalComponent {
         },
         error: (err) => {
           this.saving.set(false);
-          this.error.set(err.error?.error?.message || 'Error al guardar.');
+          this.error.set(extractApiErrorMessage(err, 'Error al guardar.'));
         },
       });
   }

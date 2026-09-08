@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DashboardService } from '../../../core/dashboard.service';
 import { MembershipTierItem } from '../../../core/api.models';
+import { AllowedUserTextDirective } from '../../../core/directives/allowed-user-text.directive';
 
 @Component({
   selector: 'app-dashboard-memberships',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, AllowedUserTextDirective],
   templateUrl: './memberships.html',
 })
 export class DashboardMemberships implements OnInit {
@@ -65,7 +66,7 @@ export class DashboardMemberships implements OnInit {
   saveTier(): void {
     const benefits = this.newBenefitsText()
       .split('\n')
-      .map((b) => b.trim())
+      .map((b) => b.trim().slice(0, 255))
       .filter(Boolean);
 
     if (!this.newName() || this.newPrice() <= 0) return;
@@ -73,8 +74,8 @@ export class DashboardMemberships implements OnInit {
     this.saving.set(true);
     this.dashboardService
       .createMembershipTier({
-        name: this.newName(),
-        description: this.newDescription() || undefined,
+        name: this.newName().slice(0, 100),
+        description: this.newDescription().slice(0, 2000) || undefined,
         monthly_price: this.newPrice(),
         currency: this.newCurrency(),
         benefits,

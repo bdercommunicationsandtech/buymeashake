@@ -11,6 +11,7 @@ import {
   IconShakerComponent,
   IconTrophyComponent,
 } from '../../../shared/icons';
+import { AllowedUserTextDirective } from '../../../core/directives/allowed-user-text.directive';
 
 export type GoalCategory = 'equipment' | 'travel' | 'nutrition' | 'camp';
 
@@ -25,6 +26,7 @@ export type GoalCategory = 'equipment' | 'travel' | 'nutrition' | 'camp';
     IconDumbbellComponent,
     IconTrophyComponent,
     IconBoltComponent,
+    AllowedUserTextDirective,
   ],
   templateUrl: './goals.html',
 })

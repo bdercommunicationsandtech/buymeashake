@@ -19,6 +19,8 @@
         <div class="relative">
           <input
             type="text"
+            appAllowedUserText
+            maxlength="100"
             placeholder="Buscar por atleta, disciplina o @handle..."
             class="w-full rounded-2xl border border-gray-200 dark:border-white/15 bg-gray-50/70 dark:bg-white/5 pl-11 pr-4 py-3.5 text-sm text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:bg-white dark:focus:bg-[#121614] focus:border-gray-900 dark:focus:border-[#c9ff3d] focus:outline-none shadow-xs transition"
             [value]="searchQuery()"

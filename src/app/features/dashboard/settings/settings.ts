@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, inject, OnInit, signal , computed} from "@angular/core";
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DashboardService } from '../../../core/dashboard.service';
@@ -37,7 +37,15 @@ export class DashboardSettings implements OnInit {
   readonly bio = signal('');
   readonly city = signal('');
   readonly cityId = signal<number | null>(null);
-  readonly primarySportCode = signal<number>(101);
+  readonly disciplineCodes = signal<number[]>([]);
+  readonly dropdownOpen = signal<boolean>(false);
+  readonly searchSport = signal('');
+  readonly filteredSports = computed(() => {
+    const q = this.searchSport().toLowerCase().trim();
+    const all = this.sports();
+    if (!q) return all;
+    return all.filter((s) => this.languageService.translateDiscipline(s.label).toLowerCase().includes(q));
+  });
   readonly shakePrice = signal<number>(3);
   readonly currency = signal<'USD'>('USD');
   readonly pageHandle = signal('');
@@ -72,7 +80,7 @@ export class DashboardSettings implements OnInit {
         this.bio.set(p.bio || '');
         this.city.set(p.city || '');
         this.cityId.set(p.city_id ?? null);
-        this.primarySportCode.set(p.primary_sport_code || 101);
+        this.disciplineCodes.set(p.discipline_codes || []);
         this.shakePrice.set(Number(p.shake_price) || 3);
         this.currency.set('USD');
         this.pageHandle.set(p.handle);
@@ -150,6 +158,21 @@ export class DashboardSettings implements OnInit {
     });
   }
 
+
+  toggleSport(code: number): void {
+    const current = this.disciplineCodes();
+    if (current.includes(code)) {
+      this.disciplineCodes.set(current.filter((c: number) => c !== code));
+    } else {
+      this.disciplineCodes.set([...current, code]);
+    }
+  }
+
+  getDisciplineLabel(code: number): string {
+    const sport = this.sports().find((s) => s.code === code);
+    return sport ? this.languageService.translateDiscipline(sport.label) : '';
+  }
+
   saveProfile(): void {
     this.loading.set(true);
     this.errorMessage.set(null);
@@ -158,7 +181,7 @@ export class DashboardSettings implements OnInit {
       full_name: this.fullName(),
       bio: this.bio(),
       city_id: this.cityId(),
-      primary_sport_code: this.primarySportCode(),
+      discipline_codes: this.disciplineCodes(),
       shake_price: this.shakePrice(),
       currency: this.currency(),
       avatar_url: this.avatarUrl() || undefined,

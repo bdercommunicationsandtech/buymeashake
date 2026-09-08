@@ -706,5 +706,27 @@ class AdminReportVerdictResponse(BaseModel):
     message: str
 
 
+# ==============================================================================
+# 10. SUPPORT & HELP DESK TICKETS
+# ==============================================================================
+
+class SupportTicketRequest(BaseModel):
+    name: str = Field(min_length=2, max_length=150)
+    email: EmailStr
+    user_role: str = Field(default="athlete", pattern="^(athlete|supporter|visitor)$")
+    category: str = Field(default="general", max_length=50)
+    category_title: str = Field(min_length=2, max_length=150)
+    subject: str = Field(min_length=3, max_length=200)
+    description: str = Field(min_length=10, max_length=4000)
+    related_folio_or_handle: str | None = Field(default=None, max_length=100)
+    attached_file: str | None = None
+
+
+class SupportTicketResponse(BaseModel):
+    folio: str
+    message: str
+    status: str = "received"
+
+
 
 

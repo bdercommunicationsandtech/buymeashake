@@ -69,7 +69,8 @@ h4 {
   color: var(--color-void);
 }
 
-:focus-visible {
+/* :where() keeps specificity at 0 so Tailwind outline-none / custom rings win */
+:where(:focus-visible) {
   outline: 2px solid var(--color-lime);
   outline-offset: 3px;
 }

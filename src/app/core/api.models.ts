@@ -71,7 +71,9 @@ export interface UserMe {
   email: string;
   full_name: string;
   avatar_url: string | null;
-  role: string;
+  role: 'supporter' | 'athlete';
+  roles?: string[];
+  is_admin?: boolean;
   is_email_verified: boolean;
   athlete_handle: string | null;
   referral_code: string | null;

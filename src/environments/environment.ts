@@ -1,6 +1,7 @@
 export const environment = {
   production: false,
-  apiUrl: '/api/v1',
+  apiUrl: 'http://localhost:8000/api/v1',
+  // apiUrl: 'http://207.38.88.6/api/v1',
   /**
    * Firebase web config (Console → Project settings → Your apps).
    * Leave apiKey empty to disable social login until configured.

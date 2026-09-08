@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../core/auth.service';
 import { AllowedUserTextDirective } from '../../core/directives/allowed-user-text.directive';
+import { LanguageService } from '../../core/language.service';
 
 @Component({
   selector: 'app-follow-modal',
@@ -19,7 +20,7 @@ import { AllowedUserTextDirective } from '../../core/directives/allowed-user-tex
             type="button"
             (click)="closeModal()"
             class="absolute top-5 right-5 h-8 w-8 rounded-full bg-gray-100 dark:bg-white/10 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white grid place-items-center text-xs font-bold transition cursor-pointer"
-            aria-label="Cerrar modal"
+            [attr.aria-label]="t().followModal.closeAria"
           >
             ✕
           </button>
@@ -36,23 +37,23 @@ import { AllowedUserTextDirective } from '../../core/directives/allowed-user-tex
             <div class="space-y-5">
               <div>
                 <h3 class="font-display text-xl font-black text-gray-950 dark:text-white">
-                  Seguir a <span class="text-emerald-600 dark:text-[#c9ff3d]">{{ athleteName() }}</span>
+                  {{ t().followModal.followTitle }} <span class="text-emerald-600 dark:text-[#c9ff3d]">{{ athleteName() }}</span>
                 </h3>
                 <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                  Recibe sus rutinas, actualizaciones de entrenamientos y novedades en tu feed.
+                  {{ t().followModal.followSubtitle }}
                 </p>
               </div>
 
               <div class="space-y-3.5">
                 <div>
                   <label class="block text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 mb-1">
-                    Tu Nombre o &#64;usuario (opcional)
+                    {{ t().followModal.nameLabel }}
                   </label>
                   <input
                     type="text"
                     appAllowedUserText
                     maxlength="150"
-                    placeholder="Ej. Carlos Fit"
+                    [placeholder]="t().followModal.namePlaceholder"
                     [(ngModel)]="name"
                     class="block w-full px-4 py-3 border border-gray-300 dark:border-white/15 rounded-xl shadow-xs bg-white dark:bg-[#191c1d] text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:border-gray-900 dark:focus:border-[#c9ff3d] text-sm font-semibold"
                   />
@@ -60,13 +61,13 @@ import { AllowedUserTextDirective } from '../../core/directives/allowed-user-tex
 
                 <div>
                   <label class="block text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 mb-1">
-                    Correo electrónico
+                    {{ t().followModal.emailLabel }}
                   </label>
                   <input
                     type="email"
                     required
                     maxlength="191"
-                    placeholder="tu@correo.com"
+                    [placeholder]="t().followModal.emailPlaceholder"
                     [(ngModel)]="email"
                     class="block w-full px-4 py-3 border border-gray-300 dark:border-white/15 rounded-xl shadow-xs bg-white dark:bg-[#191c1d] text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:border-gray-900 dark:focus:border-[#c9ff3d] text-sm font-semibold"
                   />
@@ -81,14 +82,14 @@ import { AllowedUserTextDirective } from '../../core/directives/allowed-user-tex
               >
                 @if (isSendingOtp()) {
                   <span class="inline-block h-4 w-4 border-2 border-gray-950 border-t-transparent rounded-full animate-spin"></span>
-                  <span>Enviando código...</span>
+                  <span>{{ t().followModal.sendingCode }}</span>
                 } @else {
-                  <span>Seguir</span>
+                  <span>{{ t().followModal.followBtn }}</span>
                 }
               </button>
 
               <p class="text-[11px] text-gray-400 text-center font-medium">
-                Te enviaremos un código de acceso rápido a tu bandeja de correo.
+                {{ t().followModal.sendCodeNote }}
               </p>
             </div>
           }
@@ -105,9 +106,9 @@ import { AllowedUserTextDirective } from '../../core/directives/allowed-user-tex
               </div>
 
               <div>
-                <h3 class="font-display text-xl font-black text-gray-950 dark:text-white">Revisa tu correo</h3>
+                <h3 class="font-display text-xl font-black text-gray-950 dark:text-white">{{ t().followModal.checkInboxTitle }}</h3>
                 <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                  Ingresa el código de 6 dígitos que enviamos a <strong class="text-gray-900 dark:text-white">{{ email }}</strong>
+                  {{ t().followModal.enterDigitsPrefix }} <strong class="text-gray-900 dark:text-white">{{ email }}</strong>
                 </p>
               </div>
 
@@ -161,16 +162,16 @@ import { AllowedUserTextDirective } from '../../core/directives/allowed-user-tex
               >
                 @if (isVerifying()) {
                   <span class="inline-block h-4 w-4 border-2 border-gray-950 border-t-transparent rounded-full animate-spin"></span>
-                  <span>Verificando código...</span>
+                  <span>{{ t().followModal.verifyingCode }}</span>
                 } @else {
-                  <span>Confirmar y Seguir</span>
+                  <span>{{ t().followModal.confirmAndFollow }}</span>
                 }
               </button>
 
               <div class="text-xs text-gray-400">
-                <span>¿No recibiste el código? </span>
+                <span>{{ t().followModal.didntReceiveCode }} </span>
                 <button type="button" (click)="sendOtp()" class="font-bold text-gray-900 dark:text-white hover:underline cursor-pointer">
-                  Reenviar código
+                  {{ t().followModal.resendCode }}
                 </button>
               </div>
             </div>
@@ -183,6 +184,8 @@ import { AllowedUserTextDirective } from '../../core/directives/allowed-user-tex
 })
 export class FollowModalComponent {
   private readonly authService = inject(AuthService);
+  readonly i18n = inject(LanguageService);
+  readonly t = this.i18n.t;
 
   readonly open = input<boolean>(false);
   readonly athleteName = input<string>('el Atleta');
@@ -231,7 +234,7 @@ export class FollowModalComponent {
         },
         error: (err) => {
           this.isSendingOtp.set(false);
-          const msg = err.error?.error?.message || err.error?.message || 'Error al enviar código de verificación.';
+          const msg = err.error?.error?.message || err.error?.message || this.t().followModal.errorSendingCode;
           this.errorMessage.set(msg);
         },
       });
@@ -278,7 +281,7 @@ export class FollowModalComponent {
         },
         error: (err) => {
           this.isVerifying.set(false);
-          this.errorMessage.set(err.error?.message || 'El código es incorrecto o ha expirado.');
+          this.errorMessage.set(err.error?.message || this.t().followModal.errorCodeInvalid);
         },
       });
   }

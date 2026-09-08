@@ -1,14 +1,15 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { IconCalendarComponent, IconPackageComponent } from '../../../shared/icons';
 import { DashboardService } from '../../../core/dashboard.service';
 import { AllowedUserTextDirective } from '../../../core/directives/allowed-user-text.directive';
+import { LanguageService } from '../../../core/language.service';
 
 export interface DigitalProduct {
   id: string;
   title: string;
-  type: 'PDF' | 'Video' | 'Plantilla';
+  type: 'PDF' | 'Video' | 'Plantilla' | 'Template';
   price: number;
   currency: 'USD';
   sales: number;
@@ -34,7 +35,7 @@ export interface ScheduledSession {
   time: string;
   serviceTitle: string;
   meetingLink: string;
-  status: 'Confirmada' | 'En espera' | 'Completada';
+  status: 'Confirmada' | 'En espera' | 'Completada' | 'Confirmed';
 }
 
 @Component({
@@ -45,6 +46,8 @@ export interface ScheduledSession {
 })
 export class DashboardShop implements OnInit {
   private readonly dashboardService = inject(DashboardService);
+  readonly languageService = inject(LanguageService);
+  readonly t = this.languageService.currentTranslations;
 
   readonly activeTab = signal<'products' | 'bookings' | 'calendar'>('products');
   readonly showProductModal = signal(false);
@@ -73,7 +76,8 @@ export class DashboardShop implements OnInit {
       price: 19.99,
       currency: 'USD',
       sales: 24,
-      description: 'Plan estructurado de 4 días por semana con progresiones de sobrecarga y videos explicativos.',
+      description:
+        'Plan estructurado de 4 días por semana con progresiones de sobrecarga y videos explicativos.',
       gradient: 'from-emerald-600 to-teal-500',
     },
     {
@@ -83,7 +87,8 @@ export class DashboardShop implements OnInit {
       price: 9.99,
       currency: 'USD',
       sales: 42,
-      description: 'Calculadora automática de 1RM, volumen de entrenamiento y RPE semanal.',
+      description:
+        'Calculadora automática de 1RM, volumen de entrenamiento y RPE semanal.',
       gradient: 'from-blue-600 to-indigo-600',
     },
   ]);
@@ -96,7 +101,8 @@ export class DashboardShop implements OnInit {
       price: 35.0,
       currency: 'USD',
       platform: 'Google Meet',
-      description: 'Videollamada privada donde analizamos tus levantamientos, biomecánica y corregimos puntos de estancamiento.',
+      description:
+        'Videollamada privada donde analizamos tus levantamientos, biomecánica y corregimos puntos de estancamiento.',
       activeDays: ['Lun', 'Mié', 'Vie'],
       slotsCount: 8,
     },
@@ -107,30 +113,84 @@ export class DashboardShop implements OnInit {
       price: 50.0,
       currency: 'USD',
       platform: 'Google Meet',
-      description: 'Diseño conjunto de tu siguiente bloque de entrenamiento de cara a competencia o marcas personales.',
+      description:
+        'Diseño conjunto de tu siguiente bloque de entrenamiento de cara a competencia o marcas personales.',
       activeDays: ['Mar', 'Jue', 'Sáb'],
       slotsCount: 5,
     },
   ]);
 
-  readonly scheduledSessions = signal<ScheduledSession[]>([
-    {
-      athleteName: 'Carlos Mendoza',
-      date: 'Mañana, 01 Septiembre',
-      time: '18:00 - 18:45',
-      serviceTitle: 'Revisión de Técnica 1-a-1 en Vivo',
-      meetingLink: 'https://meet.google.com/abc-defg-hij',
-      status: 'Confirmada',
-    },
-    {
-      athleteName: 'Mariana Cruz',
-      date: 'Jueves, 03 Septiembre',
-      time: '10:00 - 11:00',
-      serviceTitle: 'Asesoría de Programación y Periodización',
-      meetingLink: 'https://meet.google.com/xyz-uvwx-rst',
-      status: 'Confirmada',
-    },
-  ]);
+  getProductTitle(prod: DigitalProduct): string {
+    if (this.languageService.currentLang() !== 'en') return prod.title;
+    if (prod.id === '1') return 'Hypertrophy & Strength Guide (12 Weeks)';
+    if (prod.id === '2') return 'Lifting Log & Tracker Template (Notion)';
+    return prod.title;
+  }
+
+  getProductDesc(prod: DigitalProduct): string {
+    if (this.languageService.currentLang() !== 'en') return prod.description;
+    if (prod.id === '1') return 'Structured 4-day workout split with progressive overload tracking and detailed videos.';
+    if (prod.id === '2') return 'Automated 1RM calculator, training volume tracker, and weekly RPE logs.';
+    return prod.description;
+  }
+
+  getProductType(prod: DigitalProduct): string {
+    if (this.languageService.currentLang() !== 'en') return prod.type;
+    if (prod.type === 'Plantilla') return 'Template';
+    return prod.type;
+  }
+
+  getBookingTitle(service: BookingService): string {
+    if (this.languageService.currentLang() !== 'en') return service.title;
+    if (service.id === 'b1') return '1-on-1 Live Technique Review';
+    if (service.id === 'b2') return 'Programming & Periodization Consulting';
+    return service.title;
+  }
+
+  getBookingDesc(service: BookingService): string {
+    if (this.languageService.currentLang() !== 'en') return service.description;
+    if (service.id === 'b1') return 'Private video call to analyze your lifts, biomechanics, and break through plateaus.';
+    if (service.id === 'b2') return 'Collaborative design of your next training block tailored for competition or PRs.';
+    return service.description;
+  }
+
+  getActiveDays(service: BookingService): string[] {
+    if (this.languageService.currentLang() !== 'en') return service.activeDays;
+    const mapDays: Record<string, string> = {
+      Lun: 'Mon',
+      Mar: 'Tue',
+      Mié: 'Wed',
+      Mie: 'Wed',
+      Jue: 'Thu',
+      Vie: 'Fri',
+      Sáb: 'Sat',
+      Sab: 'Sat',
+      Dom: 'Sun',
+    };
+    return service.activeDays.map((d) => mapDays[d] || d);
+  }
+
+  readonly scheduledSessions = computed<ScheduledSession[]>(() => {
+    const isEn = this.languageService.currentLang() === 'en';
+    return [
+      {
+        athleteName: 'Carlos Mendoza',
+        date: isEn ? 'Tomorrow, Sep 01' : 'Mañana, 01 Septiembre',
+        time: '18:00 - 18:45',
+        serviceTitle: isEn ? '1-on-1 Live Technique Review' : 'Revisión de Técnica 1-a-1 en Vivo',
+        meetingLink: 'https://meet.google.com/abc-defg-hij',
+        status: isEn ? 'Confirmed' : 'Confirmada',
+      },
+      {
+        athleteName: 'Mariana Cruz',
+        date: isEn ? 'Thursday, Sep 03' : 'Jueves, 03 Septiembre',
+        time: '10:00 - 11:00',
+        serviceTitle: isEn ? 'Programming & Periodization Consulting' : 'Asesoría de Programación y Periodización',
+        meetingLink: 'https://meet.google.com/xyz-uvwx-rst',
+        status: isEn ? 'Confirmed' : 'Confirmada',
+      },
+    ];
+  });
 
   ngOnInit(): void {
     this.loadData();

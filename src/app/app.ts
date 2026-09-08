@@ -28,8 +28,13 @@ export class App {
   );
 
   readonly showPublicChrome = computed(() => {
-    const url = this.currentUrl();
-    return !url.startsWith('/dashboard') && !url.startsWith('/supporter');
+    const url = this.currentUrl().split('?')[0];
+    return (
+      !url.startsWith('/dashboard')
+      && !url.startsWith('/supporter')
+      && !url.startsWith('/auth/')
+      && !url.startsWith('/onboarding')
+    );
   });
 
   constructor() {

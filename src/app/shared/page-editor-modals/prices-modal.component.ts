@@ -1,6 +1,7 @@
 import { Component, effect, inject, input, output, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DashboardService } from '../../core/dashboard.service';
+import { LanguageService } from '../../core/language.service';
 import { EditorSavePatch } from './editor-save-patch';
 
 @Component({
@@ -23,20 +24,20 @@ import { EditorSavePatch } from './editor-save-patch';
             type="button"
             (click)="close.emit()"
             class="absolute top-4 right-4 h-8 w-8 rounded-full bg-gray-100 dark:bg-white/10 text-gray-500 grid place-items-center text-xs font-bold cursor-pointer"
-            aria-label="Cerrar"
+            [attr.aria-label]="t().common.close"
           >
             ✕
           </button>
-          <h3 class="font-display text-xl font-black text-gray-950 dark:text-white pr-8">Moneda &amp; Precios</h3>
+          <h3 class="font-display text-xl font-black text-gray-950 dark:text-white pr-8">{{ t().pageEditorModals.editPricesTitle }}</h3>
           <p class="text-xs text-gray-500 dark:text-gray-400 mt-1 font-medium">
-            Precio base de cada shake en tu página pública.
+            {{ t().pageEditorModals.pricesSubtitle }}
           </p>
 
           @if (error()) {
             <p class="mt-3 text-xs font-bold text-red-500">{{ error() }}</p>
           }
 
-          <label class="mt-5 block text-sm font-black text-gray-900 dark:text-white">Precio de 1 Shake</label>
+          <label class="mt-5 block text-sm font-black text-gray-900 dark:text-white">{{ t().pageEditorModals.shakePriceTitle }}</label>
           <div class="mt-3 flex items-center gap-3">
             <span class="text-lg font-black text-gray-900 dark:text-white">$</span>
             <input
@@ -50,13 +51,13 @@ import { EditorSavePatch } from './editor-save-patch';
             <span class="text-sm font-bold text-gray-500">{{ currency() }}</span>
           </div>
 
-          <label class="mt-5 block text-sm font-black text-gray-900 dark:text-white">Moneda de Cobro</label>
+          <label class="mt-5 block text-sm font-black text-gray-900 dark:text-white">{{ t().pageEditorModals.currencyTitle }}</label>
           <select
             class="mt-3 w-full rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#191c1d] px-4 py-3 text-sm font-semibold text-gray-900 dark:text-white focus:border-[#c9ff3d] focus:outline-none"
             [value]="currency()"
             (change)="currency.set($any($event.target).value)"
           >
-            <option value="USD">Dólares Americanos (USD - $)</option>
+            <option value="USD">{{ t().pageEditorModals.usdOption }}</option>
           </select>
 
           <button
@@ -65,7 +66,7 @@ import { EditorSavePatch } from './editor-save-patch';
             [disabled]="saving() || shakePrice() < 1"
             class="mt-6 w-full rounded-2xl bg-[#c9ff3d] py-3.5 text-sm font-black text-gray-950 disabled:opacity-50 cursor-pointer"
           >
-            {{ saving() ? 'Guardando…' : 'Guardar ajustes' }}
+            {{ saving() ? t().pageEditorModals.saving : t().pageEditorModals.saveChanges }}
           </button>
         </div>
       </div>
@@ -78,6 +79,8 @@ export class PricesModalComponent {
   readonly saved = output<EditorSavePatch>();
 
   private readonly dashboard = inject(DashboardService);
+  readonly languageService = inject(LanguageService);
+  readonly t = this.languageService.currentTranslations;
 
   readonly shakePrice = signal(3);
   readonly currency = signal<'USD'>('USD');
@@ -93,7 +96,7 @@ export class PricesModalComponent {
           this.shakePrice.set(Number(p.shake_price) || 3);
           this.currency.set('USD');
         },
-        error: () => this.error.set('No se pudo cargar el perfil.'),
+        error: () => this.error.set(this.t().pageEditorModals.profileLoadError),
       });
     });
   }
@@ -118,7 +121,7 @@ export class PricesModalComponent {
         },
         error: (err) => {
           this.saving.set(false);
-          this.error.set(err.error?.error?.message || 'Error al guardar.');
+          this.error.set(err.error?.error?.message || (this.languageService.currentLang() === 'en' ? 'Error saving changes.' : 'Error al guardar.'));
         },
       });
   }

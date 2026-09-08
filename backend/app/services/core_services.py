@@ -1,14 +1,17 @@
 import secrets
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from decimal import Decimal
+from typing import Any
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import (
     EntityAlreadyExistsError,
     EntityNotFoundError,
+    NeedsRoleError,
     RateLimitExceededError,
     UnauthorizedError,
 )
+from app.core.firebase_auth import verify_firebase_id_token
 from app.core.security import (
     create_access_token,
     create_refresh_token,
@@ -33,6 +36,7 @@ from app.services.profile_helpers import (
     ensure_monetization,
     ensure_page_settings,
     flatten_social,
+    format_city_label,
     get_cover_url,
     get_currency,
     get_page_field,
@@ -41,6 +45,7 @@ from app.services.profile_helpers import (
     get_thank_you,
     primary_sport_code,
     primary_sport_label,
+    resolve_city_display,
     resolve_sport_item_id,
     upsert_social_links,
 )
@@ -93,11 +98,13 @@ from app.schemas.dtos import (
     RefreshTokenRequest,
     RequestOtpRequest,
     RequestOtpResponse,
+    FirebaseAuthRequest,
     ShakeCheckoutCreateRequest,
     SupporterItemResponse,
     SupportersDashboardResponse,
     TokenResponse,
     UpdateProfileRequest,
+    UpgradeToAthleteRequest,
     UploadFileResponse,
     UserLoginRequest,
     UserMeResponse,
@@ -166,12 +173,76 @@ class AuthService:
 
     async def login(self, dto: UserLoginRequest) -> TokenResponse:
         user = await self.user_repo.get_by_email(dto.email)
-        if not user or not verify_password(dto.password, user.password_hash):
+        if not user:
+            raise UnauthorizedError("Correo electrónico o contraseña incorrectos.")
+        if not user.password_hash:
+            raise UnauthorizedError(
+                "Esta cuenta usa Google o Apple. Inicia sesión con ese proveedor."
+            )
+        if not verify_password(dto.password, user.password_hash):
             raise UnauthorizedError("Correo electrónico o contraseña incorrectos.")
 
+        return self._issue_tokens(user)
+
+    async def login_with_firebase(self, dto: FirebaseAuthRequest) -> TokenResponse:
+        claims = verify_firebase_id_token(dto.id_token)
+        firebase_uid = str(claims.get("uid") or claims.get("user_id") or "").strip()
+        if not firebase_uid:
+            raise UnauthorizedError("Token de Firebase sin identificador de usuario.")
+
+        email = (claims.get("email") or "").strip().lower()
+        if not email:
+            raise UnauthorizedError(
+                "No pudimos obtener el correo de tu cuenta. Revisa los permisos de Google/Apple."
+            )
+
+        full_name = (
+            (claims.get("name") or "").strip()
+            or email.split("@")[0]
+            or "Usuario"
+        )
+        avatar_url = claims.get("picture")
+        if isinstance(avatar_url, str):
+            avatar_url = avatar_url[:255] or None
+        else:
+            avatar_url = None
+
+        user = await self.user_repo.get_by_firebase_uid(firebase_uid)
+        if not user:
+            user = await self.user_repo.get_by_email(email)
+
+        if user:
+            if not user.firebase_uid:
+                user.firebase_uid = firebase_uid
+            elif user.firebase_uid != firebase_uid:
+                raise UnauthorizedError(
+                    "Este correo ya está vinculado a otra cuenta de Google/Apple."
+                )
+            if not user.is_email_verified and claims.get("email_verified", True):
+                user.is_email_verified = True
+            if avatar_url and not user.avatar_url:
+                user.avatar_url = avatar_url
+            await self.session.flush()
+            return self._issue_tokens(user)
+
+        if not dto.role:
+            raise NeedsRoleError(email=email, full_name=full_name)
+
+        user = User(
+            email=email,
+            firebase_uid=firebase_uid,
+            password_hash=None,
+            full_name=full_name[:150],
+            avatar_url=avatar_url,
+            role=dto.role,
+            is_email_verified=True,
+        )
+        await self.user_repo.create(user)
+        return self._issue_tokens(user)
+
+    def _issue_tokens(self, user: User) -> TokenResponse:
         access_token = create_access_token(user.id)
         refresh_token = create_refresh_token(user.id)
-
         return TokenResponse(
             access_token=access_token,
             refresh_token=refresh_token,
@@ -198,31 +269,48 @@ class AuthService:
         )
 
     async def request_otp(self, dto: RequestOtpRequest) -> RequestOtpResponse:
+        clean_email = dto.email.strip().lower()
+        # 0. Si el propósito es iniciar sesión, validar que el usuario exista en la base de datos
+        if dto.purpose == "login" and not dto.athlete_handle:
+            user = await self.user_repo.get_by_email(clean_email)
+            if not user:
+                raise EntityNotFoundError(
+                    "Usuario",
+                    clean_email,
+                    message="No existe ninguna cuenta registrada con este correo electrónico. Por favor regístrate primero."
+                )
+
         otp_repo = OtpRepository(self.session)
 
         # 1. Limpieza preventiva de registros expirados (>24h)
         await otp_repo.clean_expired_otps()
 
         # 2. Rate Limiting: verificar si solicitó un código hace menos de 60 segundos
-        latest = await otp_repo.get_latest_active_otp(dto.email, purpose="supporter_follow")
+        latest = await otp_repo.get_latest_otp(clean_email, purpose="supporter_follow")
         if latest and latest.created_at:
-            time_since_last = (datetime.now() - latest.created_at).total_seconds()
-            if time_since_last < 60:
-                wait_time = int(60 - time_since_last)
+            now_utc = datetime.now(timezone.utc).replace(tzinfo=None)
+            created_at = latest.created_at.replace(tzinfo=None) if latest.created_at.tzinfo else latest.created_at
+            time_since_last = (now_utc - created_at).total_seconds()
+            if time_since_last < 0:
+                # Discrepancia por registros preexistentes guardados con hora local
+                time_since_last = (datetime.now() - created_at).total_seconds()
+
+            if 0 <= time_since_last < 60:
+                wait_time = max(1, min(60, int(60 - time_since_last)))
                 raise RateLimitExceededError(wait_seconds=wait_time, message=f"Por favor espera {wait_time} segundos antes de solicitar otro código.")
 
         # 3. Invalidar cualquier código anterior pendiente de este correo
-        await otp_repo.invalidate_previous_otps(dto.email, purpose="supporter_follow")
+        await otp_repo.invalidate_previous_otps(clean_email, purpose="supporter_follow")
 
         # 4. Generar nuevo código numérico de 6 dígitos con vigencia de 15 min
         code = f"{secrets.randbelow(900000) + 100000}"
-        expires_at = datetime.now() + timedelta(minutes=15)
+        expires_at = datetime.now(timezone.utc).replace(tzinfo=None) + timedelta(minutes=15)
         metadata = {
             "name": dto.name,
             "athlete_handle": dto.athlete_handle,
         }
         await otp_repo.create(
-            email=dto.email,
+            email=clean_email,
             code=code,
             purpose="supporter_follow",
             metadata=metadata,
@@ -231,7 +319,7 @@ class AuthService:
 
         # 5. Enviar correo HTML estilizado con el servicio SMTP del proyecto
         from app.services.email_service import send_otp_email
-        await send_otp_email(to_email=dto.email, code=code, athlete_name=dto.name or dto.athlete_handle)
+        await send_otp_email(to_email=clean_email, code=code, athlete_name=dto.name or dto.athlete_handle)
 
         return RequestOtpResponse(
             message=f"Código de 6 dígitos enviado a {dto.email}",
@@ -239,16 +327,61 @@ class AuthService:
             demo_code=code,
         )
 
-    async def verify_otp(self, dto: VerifyOtpRequest) -> TokenResponse:
+    async def check_otp_status(self, email: str) -> dict[str, Any]:
+        """Comprueba si un correo cuenta con un código activo y si el usuario está registrado."""
+        clean_email = email.strip().lower()
+        user = await self.user_repo.get_by_email(clean_email)
+        if not user:
+            return {
+                "has_active_otp": False,
+                "user_exists": False,
+                "wait_seconds": 0,
+                "message": "No existe ninguna cuenta registrada con este correo electrónico. Por favor regístrate primero.",
+            }
+
         otp_repo = OtpRepository(self.session)
-        otp_record = await otp_repo.get_valid_otp(dto.email, dto.code)
+        active = await otp_repo.get_latest_active_otp(clean_email, purpose="supporter_follow")
+        if not active:
+            return {"has_active_otp": False, "user_exists": True, "wait_seconds": 0}
+
+        now_utc = datetime.now(timezone.utc).replace(tzinfo=None)
+        created_at = active.created_at.replace(tzinfo=None) if active.created_at.tzinfo else active.created_at
+        time_since_last = (now_utc - created_at).total_seconds()
+        if time_since_last < 0:
+            time_since_last = (datetime.now() - created_at).total_seconds()
+
+        wait_seconds = max(0, min(60, int(60 - time_since_last))) if 0 <= time_since_last < 60 else 0
+
+        return {
+            "has_active_otp": True,
+            "user_exists": True,
+            "wait_seconds": wait_seconds,
+        }
+
+    async def verify_otp(self, dto: VerifyOtpRequest) -> TokenResponse:
+        clean_email = dto.email.strip().lower()
+        clean_code = dto.code.strip()
+        otp_repo = OtpRepository(self.session)
+        otp_record = await otp_repo.get_valid_otp(clean_email, clean_code)
         if not otp_record:
-            raise UnauthorizedError("El código de verificación es inválido o ha expirado.")
+            attempts = await otp_repo.record_failed_attempt(clean_email, purpose="supporter_follow", max_attempts=5)
+            if attempts >= 5:
+                raise UnauthorizedError(
+                    "Has superado el número máximo de intentos permitidos. El código ha sido invalidado por seguridad; solicita uno nuevo.",
+                    details={"max_attempts_exceeded": True}
+                )
+            if attempts > 0:
+                remaining = max(0, 5 - attempts)
+                raise UnauthorizedError(
+                    f"Código incorrecto o expirado. Te quedan {remaining} intento{'s' if remaining != 1 else ''}.",
+                    details={"remaining_attempts": remaining}
+                )
+            raise UnauthorizedError("El código de verificación es inválido o ha expirado.", details={"invalid_otp": True})
 
         await otp_repo.mark_used(otp_record)
 
         # Buscar usuario o crearlo como supporter
-        user = await self.user_repo.get_by_email(dto.email)
+        user = await self.user_repo.get_by_email(clean_email)
         metadata = otp_record.metadata_ or {}
         name = metadata.get("name") or "Supporter"
 
@@ -308,6 +441,53 @@ class AuthService:
             user.avatar_url = dto.avatar_url
         if dto.password:
             user.password_hash = get_password_hash(dto.password)
+
+        await self.session.flush()
+        return await self.get_me(user)
+
+    async def upgrade_to_athlete(self, user: User, dto: UpgradeToAthleteRequest) -> UserMeResponse:
+        existing_profile = await self.athlete_repo.get_by_user_id(user.id)
+        if existing_profile:
+            # Si ya tenía perfil pero el rol no estaba sincronizado
+            user.role = "athlete"
+            await self.session.flush()
+            return await self.get_me(user)
+
+        existing_handle = await self.athlete_repo.get_by_handle(dto.handle)
+        if existing_handle:
+            raise EntityAlreadyExistsError("Atleta", "handle", dto.handle)
+
+        if dto.full_name:
+            user.full_name = dto.full_name
+        user.role = "athlete"
+
+        referral_code = f"{dto.handle}_{secrets.token_hex(3)}"
+        sport_item_id = await resolve_sport_item_id(self.session, dto.primary_sport_code)
+
+        athlete = AthleteProfile(
+            user_id=user.id,
+            handle=dto.handle,
+            bio=dto.bio,
+            city=dto.city,
+            primary_sport_item_id=sport_item_id,
+        )
+        await self.athlete_repo.create(athlete)
+        await ensure_child_rows(
+            self.session,
+            athlete,
+            referral_code=referral_code,
+        )
+
+        if dto.shake_price is not None:
+            if athlete.monetization:
+                athlete.monetization.shake_price = Decimal(str(dto.shake_price))
+            else:
+                athlete.monetization = AthleteMonetization(
+                    athlete_id=athlete.id,
+                    shake_price=Decimal(str(dto.shake_price)),
+                    currency="USD",
+                )
+                self.session.add(athlete.monetization)
 
         await self.session.flush()
         return await self.get_me(user)
@@ -444,7 +624,9 @@ class AthleteService:
             print(f"[WARN] reconcile_pending_shake_transactions: {e}")
 
         user = profile.user
-        active_goal = next((g for g in profile.goals if g.is_active), None)
+        active_goal = await GoalRepository(self.session).get_active_goal(profile.id)
+        if not active_goal:
+            active_goal = next((g for g in (profile.goals or []) if bool(g.is_active)), None)
 
         booking_services = [
             CreatorBookingServiceResponse(
@@ -509,7 +691,7 @@ class AthleteService:
             agenda_description=get_page_field(profile, "agenda_description"),
             agenda_image_url=get_page_field(profile, "agenda_image_url"),
             primary_sport=sport_label,
-            city=profile.city,
+            city=resolve_city_display(profile),
             avatar_url=user.avatar_url if user else None,
             cover_image_url=get_cover_url(profile),
             instagram_url=social.get("instagram_url"),
@@ -626,8 +808,8 @@ class DashboardService:
         self.post_repo = PostRepository(session)
         self.supporter_repo = SupporterRepository(session)
 
-    async def get_metrics(self, athlete: AthleteProfile) -> DashboardMetricsResponse:
-        metrics_dict = await self.dash_repo.get_metrics_30d(athlete.id)
+    async def get_metrics(self, athlete: AthleteProfile, period: str = "30d") -> DashboardMetricsResponse:
+        metrics_dict = await self.dash_repo.get_metrics(athlete.id, period)
         return DashboardMetricsResponse(**metrics_dict)
 
     # Perfil & Ajustes
@@ -645,7 +827,8 @@ class DashboardService:
             agenda_title=get_page_field(athlete, "agenda_title"),
             agenda_description=get_page_field(athlete, "agenda_description"),
             agenda_image_url=get_page_field(athlete, "agenda_image_url"),
-            city=athlete.city,
+            city=resolve_city_display(athlete),
+            city_id=athlete.city_id,
             primary_sport_code=primary_sport_code(athlete),
             shake_price=get_shake_price(athlete),
             currency=get_currency(athlete),
@@ -663,10 +846,32 @@ class DashboardService:
     async def update_profile(self, athlete: AthleteProfile, dto: AthleteProfileUpdateRequest) -> AthleteProfileFullResponse:
         if dto.bio is not None:
             athlete.bio = dto.bio
-        if dto.city is not None:
-            athlete.city = dto.city
 
         updates = dto.model_dump(exclude_unset=True)
+
+        if "city_id" in updates:
+            city_id = updates["city_id"]
+            if city_id is None:
+                athlete.city_id = None
+                if "city" in updates and updates["city"] is not None:
+                    athlete.city = updates["city"].strip() or None if isinstance(updates["city"], str) else updates["city"]
+            else:
+                from app.models.entities import City
+                from sqlalchemy.orm import selectinload
+                from sqlalchemy import select
+
+                city_res = await self.session.execute(
+                    select(City)
+                    .options(selectinload(City.state), selectinload(City.country))
+                    .where(City.id == city_id)
+                )
+                city_row = city_res.scalar_one_or_none()
+                if not city_row:
+                    raise EntityNotFoundError("Ciudad", str(city_id))
+                athlete.city_id = city_row.id
+                athlete.city = format_city_label(city_row)
+        elif dto.city is not None:
+            athlete.city = dto.city.strip() or None
 
         page_fields = (
             "page_title",
@@ -1038,12 +1243,13 @@ class CheckoutService:
         else:
             supporter_display_name = "A Supporter"
 
+        shake_word = "Shake" if details.shakes_count == 1 else "Shakes"
         notif_repo = NotificationRepository(self.session)
         if profile.user_id:
             await notif_repo.create(
                 user_id=profile.user_id,
-                title=f"{details.shakes_count} Shakes received!",
-                message=f"{supporter_display_name} bought you {details.shakes_count} Shakes (${gross_amount} {dto.currency}).",
+                title=f"{details.shakes_count} {shake_word} received!",
+                message=f"{supporter_display_name} bought you {details.shakes_count} {shake_word} (${gross_amount} {dto.currency}).",
                 type_code=401,
                 action_url=f"/dashboard/supporters",
             )
@@ -1068,7 +1274,7 @@ class CheckoutService:
 
         return {
             "success": True,
-            "message": f"Successfully sent {details.shakes_count} Shakes to @{dto.athlete_handle}!",
+            "message": f"Successfully sent {details.shakes_count} {shake_word} to @{dto.athlete_handle}!",
             "transaction_uuid": tx.transaction_uuid,
             "gross_amount": float(gross_amount),
             "new_goal_raised": float(active_goal.raised_amount) if active_goal else None,

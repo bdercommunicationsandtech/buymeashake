@@ -14,6 +14,7 @@ from app.models.entities import (
     AthleteProfile,
     AthleteReferrals,
     AthleteSocialLink,
+    City,
     LookupGroup,
     LookupItem,
 )
@@ -34,6 +35,8 @@ def athlete_load_options():
         selectinload(AthleteProfile.booking_services),
         selectinload(AthleteProfile.tiers),
         selectinload(AthleteProfile.products),
+        selectinload(AthleteProfile.city_ref).selectinload(City.state),
+        selectinload(AthleteProfile.city_ref).selectinload(City.country),
     )
 
 
@@ -95,6 +98,23 @@ def get_page_field(profile: AthleteProfile, field: str) -> str | None:
     return getattr(ps, field, None)
 
 
+def format_city_label(city: City | None) -> str | None:
+    if not city:
+        return None
+    parts = [city.name]
+    if city.state and city.state.name:
+        parts.append(city.state.name)
+    if city.country_code:
+        parts.append(city.country_code)
+    return ", ".join(parts)
+
+
+def resolve_city_display(profile: AthleteProfile) -> str | None:
+    if profile.city_ref:
+        return format_city_label(profile.city_ref) or profile.city
+    return profile.city
+
+
 def primary_sport_code(profile: AthleteProfile) -> int | None:
     if profile.primary_sport:
         return profile.primary_sport.code
@@ -129,7 +149,8 @@ async def ensure_child_rows(session: AsyncSession, athlete: AthleteProfile, *, r
     await ensure_page_settings(session, athlete)
     await ensure_monetization(session, athlete, shake_price=Decimal("3.00"), currency="USD")
     await ensure_payouts(session, athlete)
-    if await session.get(AthleteReferrals, athlete.id) is None:
+    existing_ref = await session.get(AthleteReferrals, athlete.id)
+    if existing_ref is None:
         referrals = AthleteReferrals(
             athlete_id=athlete.id,
             referral_code=referral_code,
@@ -137,6 +158,8 @@ async def ensure_child_rows(session: AsyncSession, athlete: AthleteProfile, *, r
         )
         session.add(referrals)
         athlete.referrals = referrals
+    else:
+        athlete.referrals = existing_ref
     await session.flush()
 
 

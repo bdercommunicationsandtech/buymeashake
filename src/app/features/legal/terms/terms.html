@@ -1,0 +1,625 @@
+<div class="min-h-screen bg-[#fafafb] dark:bg-void text-gray-900 dark:text-white selection:bg-lime selection:text-void py-10 px-4 sm:px-6 lg:px-8 transition-colors duration-300">
+  <div class="max-w-7xl mx-auto">
+    
+    <!-- Top Breadcrumb & Language Switch -->
+    <div class="flex flex-wrap items-center justify-between gap-4 mb-8 pb-6 border-b border-gray-200 dark:border-white/10">
+      <div class="flex items-center gap-2 text-xs text-gray-500 dark:text-white/50">
+        <a routerLink="/" class="hover:text-emerald-600 dark:hover:text-lime transition">buymeashake.fit</a>
+        <span>/</span>
+        <span class="text-gray-700 dark:text-white/80 font-semibold">{{ lang() === 'es' ? 'Legal' : 'Legal' }}</span>
+        <span>/</span>
+        <span class="text-emerald-600 dark:text-lime font-bold">{{ lang() === 'es' ? 'Términos de Servicio' : 'Terms of Use' }}</span>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <span class="text-xs text-gray-400 dark:text-white/40 font-mono">
+          {{ lang() === 'es' ? 'Versión 1.0 · Actualizado: Sep 2026' : 'Version 1.0 · Updated: Sep 2026' }}
+        </span>
+        <button
+          type="button"
+          (click)="toggleLanguage()"
+          class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-gray-300 dark:border-white/15 bg-white dark:bg-white/5 text-xs font-semibold text-gray-700 dark:text-white/80 hover:border-emerald-600 dark:hover:border-lime hover:text-emerald-600 dark:hover:text-lime transition cursor-pointer shadow-xs"
+        >
+          <svg class="w-3.5 h-3.5 text-emerald-600 dark:text-lime" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <span>{{ lang() === 'es' ? 'Switch to English' : 'Cambiar a Español' }}</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Hero Header -->
+    <div class="mb-12">
+      <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 dark:bg-lime/10 border border-emerald-200 dark:border-lime/25 text-emerald-700 dark:text-lime text-xs font-bold uppercase tracking-wider mb-4">
+        <span class="w-2 h-2 rounded-full bg-emerald-500 dark:bg-lime animate-pulse"></span>
+        {{ lang() === 'es' ? 'Ecosistema Deportivo & Micro-mecenazgo' : 'Athletic Ecosystem & Micro-patronage' }}
+      </div>
+      <h1 class="text-3xl sm:text-5xl font-black tracking-tight text-gray-900 dark:text-white font-display uppercase">
+        {{ lang() === 'es' ? 'Términos y Condiciones de Uso' : 'Terms of Use & Service Agreement' }}
+      </h1>
+      <p class="mt-4 text-base sm:text-lg text-gray-600 dark:text-white/60 max-w-3xl leading-relaxed">
+        @if (lang() === 'es') {
+          Bienvenido a <strong>Buymeashake.fit</strong>. Este documento define las reglas de juego claras para atletas, entrenadores y seguidores. No creemos en letra chica incomprensible: aquí explicamos con total transparencia tus derechos, responsabilidades y el marco de protección mutua.
+        } @else {
+          Welcome to <strong>Buymeashake.fit</strong>. This document establishes clear rules for athletes, coaches, and sports supporters. We believe in transparency over dense legalese: here we outline your rights, duties, and mutual safety commitments.
+        }
+      </p>
+    </div>
+
+    <!-- Layout Grid: Table of Contents + Content Body -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
+      
+      <!-- Sidebar Navigation (Sticky on desktop) -->
+      <aside class="lg:col-span-4 lg:sticky lg:top-28">
+        <div class="bg-white dark:bg-[#121614] border border-gray-200 dark:border-white/10 rounded-2xl p-6 shadow-xl dark:shadow-2xl">
+          <h3 class="text-xs font-bold uppercase tracking-widest text-gray-400 dark:text-white/40 mb-4 flex items-center gap-2">
+            <svg class="w-4 h-4 text-emerald-600 dark:text-lime" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7" />
+            </svg>
+            {{ lang() === 'es' ? 'Índice de Secciones' : 'Table of Contents' }}
+          </h3>
+
+          <nav class="space-y-1">
+            @for (sec of sections; track sec.id) {
+              <button
+                type="button"
+                (click)="scrollTo(sec.id)"
+                class="w-full text-left px-3 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-200 flex items-center justify-between group cursor-pointer"
+                [ngClass]="activeSection() === sec.id 
+                  ? 'bg-emerald-600 text-white dark:bg-lime dark:text-void font-bold shadow-md shadow-emerald-600/20 dark:shadow-lime/20 scale-[1.01]' 
+                  : 'text-gray-600 dark:text-white/60 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/5'"
+              >
+                <span class="truncate">{{ lang() === 'es' ? sec.titleEs : sec.titleEn }}</span>
+                <span 
+                  class="ml-2 text-xs transition-transform group-hover:translate-x-0.5"
+                  [ngClass]="activeSection() === sec.id ? 'text-white dark:text-void' : 'text-emerald-600 dark:text-lime'"
+                >→</span>
+              </button>
+            }
+          </nav>
+
+          <!-- Quick Need Help Card -->
+          <div class="mt-8 pt-6 border-t border-gray-200 dark:border-white/10 text-xs text-gray-500 dark:text-white/50">
+            <p class="font-bold text-gray-800 dark:text-white mb-1">
+              {{ lang() === 'es' ? '¿Tienes dudas sobre estos términos?' : 'Questions about these terms?' }}
+            </p>
+            <p class="leading-relaxed mb-3">
+              {{ lang() === 'es' ? 'Nuestro equipo de soporte y compliance está a tu disposición.' : 'Our legal and support team is here to assist you.' }}
+            </p>
+            <a 
+              href="mailto:bdercommunications@gmail.com" 
+              class="inline-flex items-center gap-1.5 font-bold text-emerald-600 dark:text-lime hover:underline"
+            >
+              bdercommunications&#64;gmail.com
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+              </svg>
+            </a>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Main Content Column -->
+      <div class="lg:col-span-8 space-y-12">
+        
+        @if (lang() === 'es') {
+          <!-- CONTENIDO EN ESPAÑOL -->
+
+          <!-- 1. Introducción y Partes -->
+          <section id="intro" class="scroll-mt-28 bg-white dark:bg-[#121614] border border-gray-200 dark:border-white/10 rounded-2xl p-6 sm:p-8 shadow-sm">
+            <div class="flex items-center gap-3 mb-4">
+              <span class="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-lime/10 text-emerald-700 dark:text-lime font-bold text-sm flex items-center justify-center font-mono">01</span>
+              <h2 class="text-xl sm:text-2xl font-extrabold text-gray-900 dark:text-white font-display">Introducción y Partes Contratantes</h2>
+            </div>
+            <div class="space-y-4 text-sm sm:text-base text-gray-700 dark:text-white/75 leading-relaxed">
+              <p>
+                Las presentes Condiciones de Uso y Términos del Servicio regulan el acceso, registro y uso de la plataforma tecnológica <strong>Buymeashake.fit</strong> (en adelante, la "Plataforma" o "Buymeashake"), operada por <strong>BDER COMMUNICATIONS AND TECHNOLOGIES</strong>.
+              </p>
+              <p>
+                Al acceder al sitio web, registrar una cuenta, donar un Shake, suscribirte a una membresía deportiva, adquirir un plan en PDF o agendar una asesoría privada, declaras que eres mayor de edad (18 años o más) y aceptas cumplir íntegramente estas estipulaciones.
+              </p>
+              <div class="p-4 rounded-xl bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-xs sm:text-sm text-gray-800 dark:text-white/90">
+                <strong class="text-emerald-700 dark:text-lime">Resumen en lenguaje claro:</strong> Esta página establece las reglas de la comunidad. Si utilizas Buymeashake, aceptas estas normas. Ambas partes nos comprometemos a mantener un espacio honesto, ético y de apoyo mutuo para el crecimiento deportivo.
+              </div>
+            </div>
+          </section>
+
+          <!-- 2. Creación de Cuentas y Roles -->
+          <section id="accounts" class="scroll-mt-28 bg-white dark:bg-[#121614] border border-gray-200 dark:border-white/10 rounded-2xl p-6 sm:p-8 shadow-sm">
+            <div class="flex items-center gap-3 mb-4">
+              <span class="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-lime/10 text-emerald-700 dark:text-lime font-bold text-sm flex items-center justify-center font-mono">02</span>
+              <h2 class="text-xl sm:text-2xl font-extrabold text-gray-900 dark:text-white font-display">Creación de Cuentas y Roles en la Plataforma</h2>
+            </div>
+            <div class="space-y-4 text-sm sm:text-base text-gray-700 dark:text-white/75 leading-relaxed">
+              <p>
+                Buymeashake distingue dos modalidades de participación:
+              </p>
+              <ul class="list-disc pl-5 space-y-2">
+                <li>
+                  <strong class="text-gray-900 dark:text-white">Cuenta de Atleta / Coach:</strong> Permite publicar un enlace personalizado (<code class="text-emerald-700 dark:text-lime bg-gray-100 dark:bg-white/5 px-1.5 py-0.5 rounded font-mono text-xs">buymeashake.fit/&#64;tu_handle</code>), definir metas deportivas, recibir Shakes, comercializar productos digitales fitness, habilitar membresías por niveles y agendar asesorías por videollamada.
+                </li>
+                <li>
+                  <strong class="text-gray-900 dark:text-white">Cuenta de Supporter / Aficionado:</strong> Permite seguir atletas, invitar Shakers de proteína, acceder a posts exclusivos para miembros y gestionar reservas de asesorías.
+                </li>
+              </ul>
+              <p>
+                <strong>Veracidad de Credenciales:</strong> Todo atleta o coach que afirme poseer certificaciones, títulos universitarios en nutrición, licenciaturas en ciencias del ejercicio o distinciones competitivas federadas, garantiza bajo su exclusiva responsabilidad la veracidad de dichas credenciales.
+              </p>
+              <p>
+                <strong>Custodia de Claves:</strong> Eres el único responsable de la confidencialidad de tu contraseña. Si sospechas de un acceso indebido, debes reportarlo de inmediato a <a href="mailto:bdercommunications@gmail.com" class="text-emerald-600 dark:text-lime font-bold underline">bdercommunications&#64;gmail.com</a>.
+              </p>
+            </div>
+          </section>
+
+          <!-- 3. Deslinde Médico y Deportivo -->
+          <section id="health-disclaimer" class="scroll-mt-28 bg-amber-50/50 dark:bg-[#151a17] border-2 border-amber-300 dark:border-lime/40 rounded-2xl p-6 sm:p-8 relative overflow-hidden shadow-sm">
+            <div class="absolute top-0 right-0 px-4 py-1.5 bg-amber-500 text-white dark:bg-lime dark:text-void text-[10px] font-black uppercase tracking-widest rounded-bl-xl">
+              Cláusula Crítica de Salud
+            </div>
+
+            <div class="flex items-center gap-3 mb-4">
+              <span class="w-8 h-8 rounded-lg bg-amber-500 text-white dark:bg-lime dark:text-void font-black text-sm flex items-center justify-center font-mono">03</span>
+              <h2 class="text-xl sm:text-2xl font-black text-gray-900 dark:text-white font-display uppercase tracking-tight">
+                Deslinde de Responsabilidad Médica y Rendimiento Físico
+              </h2>
+            </div>
+
+            <div class="space-y-4 text-sm sm:text-base text-gray-800 dark:text-white/80 leading-relaxed">
+              <div class="p-4 rounded-xl bg-red-100 dark:bg-flame/15 border border-red-200 dark:border-flame/30 text-xs sm:text-sm text-red-900 dark:text-white">
+                <strong class="text-red-700 dark:text-flame font-black uppercase block mb-1">AVISO MÉDICO OBLIGATORIO:</strong>
+                Buymeashake.fit NO es una institución médica, clínica, ni proveedora de servicios de salud. Ningún contenido, rutina de pesas, plan de comidas o sugerencia de suplementación sustituye el diagnóstico, tratamiento o supervisión de un médico especialista o profesional sanitario colegiado.
+              </div>
+
+              <p>
+                <strong>1. Asunción Voluntaria de Riesgo:</strong> El usuario reconoce expresamente que el levantamiento de pesas, el cross-training, las artes marciales, el running y cualquier práctica deportiva de exigencia implican riesgos físicos intrínsecos de lesiones musculares, desgarros, fatiga cardiovascular severa o accidentes. Al ejecutar cualquier rutina adquirida a través de la plataforma, el usuario lo hace bajo su propio y exclusivo riesgo.
+              </p>
+              <p>
+                <strong>2. Evaluación Médica Previa:</strong> Recomendamos rigurosamente someterse a un chequeo médico completo antes de modificar patrones de ejercicio o pautas de alimentación, en particular si se padecen patologías previas, problemas cardíacos o lesiones articulares.
+              </p>
+              <p>
+                <strong>3. Exclusión Total de Responsabilidad:</strong> Buymeashake.fit, sus fundadores, directores y empleados quedan exentos de toda responsabilidad civil, penal o extracontractual por daños personales, lesiones físicas, agravamiento de dolencias preexistentes o insatisfacción con los resultados estéticos o de rendimiento derivados de la aplicación de los métodos de entrenamiento comercializados por los atletas en la plataforma.
+              </p>
+            </div>
+          </section>
+
+          <!-- 4. Conductas y Política Antidopaje -->
+          <section id="prohibited" class="scroll-mt-28 bg-white dark:bg-[#121614] border border-gray-200 dark:border-white/10 rounded-2xl p-6 sm:p-8 shadow-sm">
+            <div class="flex items-center gap-3 mb-4">
+              <span class="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-lime/10 text-emerald-700 dark:text-lime font-bold text-sm flex items-center justify-center font-mono">04</span>
+              <h2 class="text-xl sm:text-2xl font-extrabold text-gray-900 dark:text-white font-display">Conductas Prohibidas y Política Antidopaje ("Big No-No's")</h2>
+            </div>
+            <div class="space-y-4 text-sm sm:text-base text-gray-700 dark:text-white/75 leading-relaxed">
+              <p>
+                Para preservar la integridad ética y deportiva de la comunidad, queda terminantemente prohibido:
+              </p>
+              <ul class="list-disc pl-5 space-y-2">
+                <li>
+                  <strong class="text-gray-900 dark:text-white">Venta o Promoción de Sustancias Prohibidas:</strong> Queda estrictamente vetada la venta, recomendación, dosificación o promoción de esteroides anabólicos androgénicos (EAA), moduladores selectivos de receptores androgénicos (SARMs), hormonas de crecimiento no prescritas, péptidos no regulados, sustancias dopantes incluidas en la lista vigente de la <strong>Agencia Mundial Antidopaje (WADA/AMA)</strong> o cualquier fármaco de venta bajo receta médica.
+                </li>
+                <li>
+                  <strong class="text-gray-900 dark:text-white">Intrusismo Profesional Peligroso:</strong> Prescribir fármacos o dietas de inanición incompatibles con la salud humana sin contar con la titulación legal obligatoria en la jurisdicción correspondiente.
+                </li>
+                <li>
+                  <strong class="text-gray-900 dark:text-white">Contenido Sexual Explícito y Pornografía:</strong> Queda prohibido el contenido pornográfico o erótico explícito. *(El contenido de entrenamiento en indumentaria deportiva, fotos de progreso físico, poses de culturismo o trajes de baño de competencia está plenamente permitido y respaldado).*
+                </li>
+                <li>
+                  <strong class="text-gray-900 dark:text-white">Estafas, Spam y Falsedad:</strong> Prometer ganancias milagrosas de masa muscular o pérdida de peso sin evidencia, realizar cobranzas indebidas o utilizar bots y listas de correo no solicitadas.
+                </li>
+                <li>
+                  <strong class="text-gray-900 dark:text-white">Acoso y Discriminación:</strong> Intimidar, agredir verbalmente, denigrar por motivos de género, raza o condición física a atletas o miembros de la comunidad.
+                </li>
+              </ul>
+              <div class="p-3.5 rounded-xl bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-xs text-gray-600 dark:text-white/70">
+                El incumplimiento de estas normas faculta a Buymeashake a suspender o rescindir la cuenta de forma fulminante, sin derecho a liquidación de fondos obtenidos por vías fraudulentas.
+              </div>
+            </div>
+          </section>
+
+          <!-- 5. Los 4 Pilares de Monetización -->
+          <section id="monetization" class="scroll-mt-28 bg-white dark:bg-[#121614] border border-gray-200 dark:border-white/10 rounded-2xl p-6 sm:p-8 shadow-sm">
+            <div class="flex items-center gap-3 mb-4">
+              <span class="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-lime/10 text-emerald-700 dark:text-lime font-bold text-sm flex items-center justify-center font-mono">05</span>
+              <h2 class="text-xl sm:text-2xl font-extrabold text-gray-900 dark:text-white font-display">Los 4 Pilares de Monetización Deportiva</h2>
+            </div>
+            <div class="space-y-6 text-sm sm:text-base text-gray-700 dark:text-white/75 leading-relaxed">
+              
+              <div class="border-l-2 border-emerald-500 dark:border-lime pl-4">
+                <h4 class="font-bold text-gray-900 dark:text-white text-base">🥤 1. Micro-donaciones (Shakes de Proteína)</h4>
+                <p class="mt-1 text-sm">
+                  Aportes puntuales y voluntarios de $3, $5, $10 USD o montos personalizados destinados a respaldar el esfuerzo o una meta activa del atleta. Se consideran donaciones de mecenazgo y son irrevocables tras su procesamiento bancario exitoso.
+                </p>
+              </div>
+
+              <div class="border-l-2 border-emerald-500 dark:border-lime pl-4">
+                <h4 class="font-bold text-gray-900 dark:text-white text-base">⭐ 2. Membresías Mensuales por Niveles (Tiers)</h4>
+                <p class="mt-1 text-sm">
+                  Suscripciones recurrentes mes a mes que desbloquean publicaciones exclusivas, rutinas periódicas o acceso a comunidades privadas. El fan puede pausar o cancelar su renovación en cualquier momento antes del siguiente ciclo de facturación.
+                </p>
+              </div>
+
+              <div class="border-l-2 border-emerald-500 dark:border-lime pl-4">
+                <h4 class="font-bold text-gray-900 dark:text-white text-base">📦 3. Tienda Digital Fitness (Infoproductos)</h4>
+                <p class="mt-1 text-sm">
+                  Venta directa de bienes digitales de ejecución inmediata: guías en formato PDF (hipertrofia, movilidad, guías nutricionales, plantillas de cálculo). Al abonar, el comprador obtiene un botón y correo con enlace seguro de descarga instantánea.
+                </p>
+              </div>
+
+              <div class="border-l-2 border-emerald-500 dark:border-lime pl-4">
+                <h4 class="font-bold text-gray-900 dark:text-white text-base">🗓️ 4. Asesorías y Videollamadas 1-a-1</h4>
+                <p class="mt-1 text-sm">
+                  Sesiones de revisión técnica de levantamientos o consultoría privada agendadas por calendario y celebradas a través de Google Meet u otra plataforma de videoconferencia. Se rigen por la política de puntualidad descrita en la Sección 8.
+                </p>
+              </div>
+
+            </div>
+          </section>
+
+          <!-- 6. Tarifas, Stripe y Retiros -->
+          <section id="payments" class="scroll-mt-28 bg-white dark:bg-[#121614] border border-gray-200 dark:border-white/10 rounded-2xl p-6 sm:p-8 shadow-sm">
+            <div class="flex items-center gap-3 mb-4">
+              <span class="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-lime/10 text-emerald-700 dark:text-lime font-bold text-sm flex items-center justify-center font-mono">06</span>
+              <h2 class="text-xl sm:text-2xl font-extrabold text-gray-900 dark:text-white font-display">Tarifas, Procesamiento de Pagos y Retiros (Stripe Connect)</h2>
+            </div>
+            <div class="space-y-4 text-sm sm:text-base text-gray-700 dark:text-white/75 leading-relaxed">
+              <p>
+                <strong>Cero Cuota Fija de Mantenimiento:</strong> Crear y administrar una página de atleta en Buymeashake.fit no tiene costo mensual de suscripción.
+              </p>
+              <p>
+                <strong>Estructura de Comisión:</strong> Buymeashake deduce automáticamente una pequeña comisión de servicio sobre cada transacción completada exitosamente, sumada a las tarifas estándar de la pasarela de procesamiento de pagos (Stripe).
+              </p>
+              <p>
+                <strong>Stripe Connect Express:</strong> La dispersión de fondos (*payouts*) a la cuenta bancaria del atleta se ejecuta a través de Stripe Connect Express. El atleta es responsable de vincular su cuenta bancaria válida y completar los procedimientos de verificación de identidad (*KYC*) exigidos por las regulaciones bancarias internacionales.
+              </p>
+              <p>
+                <strong>Responsabilidad Tributaria:</strong> Los ingresos percibidos por los atletas pueden estar sujetos a tributación en sus respectivos países. Cada atleta es responsable exclusivo de la declaración de impuestos y la emisión de facturación ante sus autoridades tributarias competentes.
+              </p>
+            </div>
+          </section>
+
+          <!-- 7. Propiedad Intelectual y Rutinas -->
+          <section id="intellectual-property" class="scroll-mt-28 bg-white dark:bg-[#121614] border border-gray-200 dark:border-white/10 rounded-2xl p-6 sm:p-8 shadow-sm">
+            <div class="flex items-center gap-3 mb-4">
+              <span class="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-lime/10 text-emerald-700 dark:text-lime font-bold text-sm flex items-center justify-center font-mono">07</span>
+              <h2 class="text-xl sm:text-2xl font-extrabold text-gray-900 dark:text-white font-display">Propiedad Intelectual y Licencia de Uso de Rutinas</h2>
+            </div>
+            <div class="space-y-4 text-sm sm:text-base text-gray-700 dark:text-white/75 leading-relaxed">
+              <p>
+                <strong>Propiedad de Buymeashake:</strong> Todos los elementos visuales, isotipos, logotipos de shakers, interfaces, arquitectura de software y código fuente son propiedad exclusiva de Buymeashake.fit y BDER COMMUNICATIONS AND TECHNOLOGIES.
+              </p>
+              <p>
+                <strong>Propiedad del Atleta / Coach:</strong> El atleta conserva la titularidad y derechos de autor sobre sus rutinas, programas de entrenamiento, videos, fotografías y contenidos textuales publicados. Al compartirlos en la plataforma, otorga a Buymeashake una licencia no exclusiva para alojarlos, mostrarlos y promocionarlos dentro del servicio.
+              </p>
+              <div class="p-4 rounded-xl bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10">
+                <strong class="text-emerald-700 dark:text-lime block mb-1">Licencia de Uso Personal al Comprador:</strong>
+                La adquisición de una guía, rutina o PDF otorga al comprador una <em>licencia personal, individual, no transferible e intransferible</em> para su aplicación exclusiva. Queda expresamente prohibida la reventa, reproducción comercial, piratería o distribución gratuita de los archivos en foros, redes sociales o grupos masivos de mensajería.
+              </div>
+            </div>
+          </section>
+
+          <!-- 8. Cancelaciones y No-Show -->
+          <section id="refunds-cancellations" class="scroll-mt-28 bg-white dark:bg-[#121614] border border-gray-200 dark:border-white/10 rounded-2xl p-6 sm:p-8 shadow-sm">
+            <div class="flex items-center gap-3 mb-4">
+              <span class="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-lime/10 text-emerald-700 dark:text-lime font-bold text-sm flex items-center justify-center font-mono">08</span>
+              <h2 class="text-xl sm:text-2xl font-extrabold text-gray-900 dark:text-white font-display">Cancelaciones, Reembolsos y Política de Ausencias (No-Show)</h2>
+            </div>
+            <div class="space-y-4 text-sm sm:text-base text-gray-700 dark:text-white/75 leading-relaxed">
+              <ul class="list-disc pl-5 space-y-2.5">
+                <li>
+                  <strong>Micro-donaciones (Shakes):</strong> No admiten devolución ni reembolso, al constituir aportes voluntarios directos destinados a la meta deportiva del atleta.
+                </li>
+                <li>
+                  <strong>Productos Digitales Descargables (PDFs):</strong> En virtud de la naturaleza digital de acceso instantáneo e irreversible, no se admiten devoluciones una vez efectuada la descarga, salvo incidencia técnica fehaciente que impida acceder al archivo.
+                </li>
+                <li>
+                  <strong>Membresías:</strong> Se pueden cancelar en cualquier momento para evitar el cobro del ciclo subsiguiente. No se realizan reembolsos retroactivos por periodos parciales no utilizados.
+                </li>
+                <li>
+                  <strong>Asesorías 1-a-1 & Política de No-Show:</strong>
+                  <ul class="list-circle pl-5 mt-1.5 space-y-1 text-xs sm:text-sm text-gray-600 dark:text-white/70">
+                    <li><strong>Reprogramaciones:</strong> El cliente puede reagendar su cita con al menos 24 horas de antelación sin recargo.</li>
+                    <li><strong>Inasistencia del Cliente (No-Show):</strong> Si el cliente no asiste a la sala de Google Meet dentro de los primeros 15 minutos de la hora pactada, la sesión se declarará completada y no dará derecho a reembolso.</li>
+                    <li><strong>Inasistencia del Atleta:</strong> Si el coach no se presenta, el cliente tendrá derecho a reprogramación prioritaria inmediata o al reembolso íntegro del importe abonado.</li>
+                  </ul>
+                </li>
+              </ul>
+            </div>
+          </section>
+
+          <!-- 9. Inactividad y Borrado de Cuenta -->
+          <section id="dormancy-deletion" class="scroll-mt-28 bg-white dark:bg-[#121614] border border-gray-200 dark:border-white/10 rounded-2xl p-6 sm:p-8 shadow-sm">
+            <div class="flex items-center gap-3 mb-4">
+              <span class="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-lime/10 text-emerald-700 dark:text-lime font-bold text-sm flex items-center justify-center font-mono">09</span>
+              <h2 class="text-xl sm:text-2xl font-extrabold text-gray-900 dark:text-white font-display">Inactividad, Fondos No Reclamados y Borrado de Cuenta</h2>
+            </div>
+            <div class="space-y-4 text-sm sm:text-base text-gray-700 dark:text-white/75 leading-relaxed">
+              <p>
+                <strong>Cuentas Inactivas:</strong> Una cuenta sin inicio de sesión, aportes, retiros ni actividad durante doce (12) meses consecutivos podrá ser catalogada como inactiva. Nos reservamos el derecho de suspender la visibilidad de perfiles abandonados.
+              </p>
+              <p>
+                <strong>Fondos No Reclamados:</strong> Los saldos generados por un atleta que no haya completado su registro de retiro bancario en Stripe Connect serán resguardados conforme a las regulaciones de custodia financiera aplicables. La inactividad prolongada no extingue la titularidad legítima de los fondos, pero podrá generar cargos de custodia si así lo exigen las normativas bancarias.
+              </p>
+              <p>
+                <strong>Eliminación de Cuenta:</strong> Puedes solicitar el borrado de tu cuenta en cualquier momento escribiendo a <a href="mailto:bdercommunications@gmail.com" class="text-emerald-600 dark:text-lime underline">bdercommunications&#64;gmail.com</a>. Por requerimientos legales y auditoría de la pasarela de pagos, se mantendrá un registro histórico anonimizado de las transacciones financieras efectuadas.
+              </p>
+            </div>
+          </section>
+
+          <!-- 10. Responsabilidad y Controversias -->
+          <section id="liability-disputes" class="scroll-mt-28 bg-white dark:bg-[#121614] border border-gray-200 dark:border-white/10 rounded-2xl p-6 sm:p-8 shadow-sm">
+            <div class="flex items-center gap-3 mb-4">
+              <span class="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-lime/10 text-emerald-700 dark:text-lime font-bold text-sm flex items-center justify-center font-mono">10</span>
+              <h2 class="text-xl sm:text-2xl font-extrabold text-gray-900 dark:text-white font-display">Indemnización, Limitación de Responsabilidad y Resolución de Disputas</h2>
+            </div>
+            <div class="space-y-4 text-sm sm:text-base text-gray-700 dark:text-white/75 leading-relaxed">
+              <p>
+                <strong>Indemnización:</strong> Aceptas defender, indemnizar y mantener indemne a Buymeashake, sus subsidiarias, directores, empleados y socios tecnológicos frente a cualquier reclamo, demanda, daño o costo legal derivado de tu infracción a estos Términos, lesiones físicas acaecidas a terceros bajo tus planes o cualquier actividad ilícita cometida desde tu cuenta.
+              </p>
+              <p>
+                <strong>Resolución Amistosa de Conflictos:</strong> Antes de promover cualquier acción legal o judicial, las partes acuerdan contactar de buena fe al equipo de resolución de disputas de Buymeashake en <a href="mailto:bdercommunications@gmail.com" class="text-emerald-600 dark:text-lime underline">bdercommunications&#64;gmail.com</a> con el propósito de alcanzar un acuerdo amistoso en un plazo máximo de treinta (30) días hábiles.
+              </p>
+              <p>
+                <strong>Modificaciones de los Términos:</strong> Buymeashake se reserva la facultad de actualizar estos términos para reflejar novedades legislativas o mejoras en la plataforma. Notificaremos cambios sustanciales mediante aviso destacado en la web o por correo electrónico.
+              </p>
+            </div>
+          </section>
+
+        } @else {
+          <!-- ENGLISH CONTENT -->
+
+          <!-- 1. Introduction -->
+          <section id="intro" class="scroll-mt-28 bg-white dark:bg-[#121614] border border-gray-200 dark:border-white/10 rounded-2xl p-6 sm:p-8 shadow-sm">
+            <div class="flex items-center gap-3 mb-4">
+              <span class="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-lime/10 text-emerald-700 dark:text-lime font-bold text-sm flex items-center justify-center font-mono">01</span>
+              <h2 class="text-xl sm:text-2xl font-extrabold text-gray-900 dark:text-white font-display">Introduction & Agreement to Terms</h2>
+            </div>
+            <div class="space-y-4 text-sm sm:text-base text-gray-700 dark:text-white/75 leading-relaxed">
+              <p>
+                These Terms of Use govern access, registration, and participation on <strong>Buymeashake.fit</strong> (the "Platform"), operated by <strong>BDER COMMUNICATIONS AND TECHNOLOGIES</strong>.
+              </p>
+              <p>
+                By creating an account, sending a Shake donation, subscribing to an athletic tier, purchasing digital fitness plans, or booking a technical consultation, you declare that you are at least 18 years of age and agree to comply fully with these terms.
+              </p>
+              <div class="p-4 rounded-xl bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 text-xs sm:text-sm text-gray-800 dark:text-white/90">
+                <strong class="text-emerald-700 dark:text-lime">Plain English Summary:</strong> This page outlines our community rules. By using Buymeashake, you commit to these guidelines. We are committed to fostering a transparent, ethical, and high-performance space for athletic growth.
+              </div>
+            </div>
+          </section>
+
+          <!-- 2. Account Creation & Roles -->
+          <section id="accounts" class="scroll-mt-28 bg-white dark:bg-[#121614] border border-gray-200 dark:border-white/10 rounded-2xl p-6 sm:p-8 shadow-sm">
+            <div class="flex items-center gap-3 mb-4">
+              <span class="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-lime/10 text-emerald-700 dark:text-lime font-bold text-sm flex items-center justify-center font-mono">02</span>
+              <h2 class="text-xl sm:text-2xl font-extrabold text-gray-900 dark:text-white font-display">Account Creation & Community Roles</h2>
+            </div>
+            <div class="space-y-4 text-sm sm:text-base text-gray-700 dark:text-white/75 leading-relaxed">
+              <p>
+                Buymeashake provides two primary account roles:
+              </p>
+              <ul class="list-disc pl-5 space-y-2">
+                <li>
+                  <strong class="text-gray-900 dark:text-white">Athlete / Coach Account:</strong> Enables personal handle creation (<code class="text-emerald-700 dark:text-lime bg-gray-100 dark:bg-white/5 px-1.5 py-0.5 rounded font-mono text-xs">buymeashake.fit/&#64;your_handle</code>), setting athletic goals, collecting Shake micro-donations, publishing digital routines, configuring membership tiers, and hosting 1-on-1 coaching calls.
+                </li>
+                <li>
+                  <strong class="text-gray-900 dark:text-white">Supporter Account:</strong> Enables sports fans to follow athletes, send protein shakes, unlock members-only workouts, and schedule private advisory sessions.
+                </li>
+              </ul>
+              <p>
+                <strong>Accuracy of Credentials:</strong> Any athlete or coach who claims certifications, degrees in sports science, nutritional credentials, or federation titles guarantees under their sole responsibility the legitimacy of those qualifications.
+              </p>
+              <p>
+                <strong>Credential Security:</strong> You are solely responsible for safeguarding your password. Any unauthorized breach must be immediately reported to <a href="mailto:bdercommunications@gmail.com" class="text-emerald-600 dark:text-lime font-bold underline">bdercommunications&#64;gmail.com</a>.
+              </p>
+            </div>
+          </section>
+
+          <!-- 3. Health & Fitness Disclaimer -->
+          <section id="health-disclaimer" class="scroll-mt-28 bg-amber-50/50 dark:bg-[#151a17] border-2 border-amber-300 dark:border-lime/40 rounded-2xl p-6 sm:p-8 relative overflow-hidden shadow-sm">
+            <div class="absolute top-0 right-0 px-4 py-1.5 bg-amber-500 text-white dark:bg-lime dark:text-void text-[10px] font-black uppercase tracking-widest rounded-bl-xl">
+              Critical Health Clause
+            </div>
+
+            <div class="flex items-center gap-3 mb-4">
+              <span class="w-8 h-8 rounded-lg bg-amber-500 text-white dark:bg-lime dark:text-void font-black text-sm flex items-center justify-center font-mono">03</span>
+              <h2 class="text-xl sm:text-2xl font-black text-gray-900 dark:text-white font-display uppercase tracking-tight">
+                Health, Fitness & Medical Disclaimer
+              </h2>
+            </div>
+
+            <div class="space-y-4 text-sm sm:text-base text-gray-800 dark:text-white/80 leading-relaxed">
+              <div class="p-4 rounded-xl bg-red-100 dark:bg-flame/15 border border-red-200 dark:border-flame/30 text-xs sm:text-sm text-red-900 dark:text-white">
+                <strong class="text-red-700 dark:text-flame font-black uppercase block mb-1">MANDATORY MEDICAL NOTICE:</strong>
+                Buymeashake.fit is NOT a medical clinic or healthcare provider. No content, workout routine, meal guide, or supplement suggestion on this platform constitutes medical diagnosis, treatment, or prescription.
+              </div>
+
+              <p>
+                <strong>1. Assumption of Risk:</strong> You explicitly recognize that intense physical exercise, weightlifting, martial arts, cross-training, and endurance athletics involve inherent physical risks, including muscular tears, cardiovascular strain, and bodily injury. You perform workouts at your sole discretion and risk.
+              </p>
+              <p>
+                <strong>2. Prior Physician Clearance:</strong> We strongly urge you to consult with a licensed healthcare physician before beginning any high-intensity athletic program or modifying nutritional habits.
+              </p>
+              <p>
+                <strong>3. Complete Liability Exclusion:</strong> Buymeashake.fit, its founders, and affiliates disclaim all liability for personal injuries, health complications, or dissatisfaction with aesthetic or competitive results resulting from workout programs shared on the platform.
+              </p>
+            </div>
+          </section>
+
+          <!-- 4. Prohibited Conduct & Anti-Doping -->
+          <section id="prohibited" class="scroll-mt-28 bg-white dark:bg-[#121614] border border-gray-200 dark:border-white/10 rounded-2xl p-6 sm:p-8 shadow-sm">
+            <div class="flex items-center gap-3 mb-4">
+              <span class="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-lime/10 text-emerald-700 dark:text-lime font-bold text-sm flex items-center justify-center font-mono">04</span>
+              <h2 class="text-xl sm:text-2xl font-extrabold text-gray-900 dark:text-white font-display">Prohibited Conduct & Anti-Doping Policy ("Big No-No's")</h2>
+            </div>
+            <div class="space-y-4 text-sm sm:text-base text-gray-700 dark:text-white/75 leading-relaxed">
+              <p>
+                To protect our sports community, the following behaviors are strictly forbidden:
+              </p>
+              <ul class="list-disc pl-5 space-y-2">
+                <li>
+                  <strong class="text-gray-900 dark:text-white">Sale or Promotion of Prohibited Substances:</strong> Distributing, recommending, or promoting anabolic androgenic steroids (AAS), SARMs, unapproved peptides, growth hormones, or any banned substance on the <strong>World Anti-Doping Agency (WADA/AMA)</strong> prohibited list is strictly prohibited.
+                </li>
+                <li>
+                  <strong class="text-gray-900 dark:text-white">Unlawful Medical Practice:</strong> Prescribing prescription-only pharmaceuticals or dangerous starvation diets without medical licensing.
+                </li>
+                <li>
+                  <strong class="text-gray-900 dark:text-white">Explicit Pornography:</strong> Explicit sexual content is prohibited. *(Authentic athletic training apparel, physique posing, and sports competition attire are fully permitted).*
+                </li>
+                <li>
+                  <strong class="text-gray-900 dark:text-white">Fraud & Spam:</strong> Deceptive claims of miraculous results, unauthorized credit card transactions, or unsolicited mailing lists.
+                </li>
+                <li>
+                  <strong class="text-gray-900 dark:text-white">Harassment:</strong> Bullying, discriminatory abuse, or body-shaming directed at any athlete or supporter.
+                </li>
+              </ul>
+            </div>
+          </section>
+
+          <!-- 5. Four Monetization Pillars -->
+          <section id="monetization" class="scroll-mt-28 bg-white dark:bg-[#121614] border border-gray-200 dark:border-white/10 rounded-2xl p-6 sm:p-8 shadow-sm">
+            <div class="flex items-center gap-3 mb-4">
+              <span class="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-lime/10 text-emerald-700 dark:text-lime font-bold text-sm flex items-center justify-center font-mono">05</span>
+              <h2 class="text-xl sm:text-2xl font-extrabold text-gray-900 dark:text-white font-display">The Four Athletic Monetization Pillars</h2>
+            </div>
+            <div class="space-y-6 text-sm sm:text-base text-gray-700 dark:text-white/75 leading-relaxed">
+              
+              <div class="border-l-2 border-emerald-500 dark:border-lime pl-4">
+                <h4 class="font-bold text-gray-900 dark:text-white text-base">🥤 1. Micro-donations (Protein Shakes)</h4>
+                <p class="mt-1 text-sm">
+                  One-time voluntary support amounts ($3, $5, $10 USD or custom) advancing the athlete's active goal. These are voluntary patron tips and are non-refundable once settled.
+                </p>
+              </div>
+
+              <div class="border-l-2 border-emerald-500 dark:border-lime pl-4">
+                <h4 class="font-bold text-gray-900 dark:text-white text-base">⭐ 2. Monthly Membership Tiers</h4>
+                <p class="mt-1 text-sm">
+                  Recurring monthly subscriptions providing access to locked posts and exclusive athletic content. Members can cancel renewal at any time before their next billing cycle.
+                </p>
+              </div>
+
+              <div class="border-l-2 border-emerald-500 dark:border-lime pl-4">
+                <h4 class="font-bold text-gray-900 dark:text-white text-base">📦 3. Digital Fitness Store</h4>
+                <p class="mt-1 text-sm">
+                  Direct sale of instant digital deliverables (training routines, nutritional guidebooks, spreadsheets). Due to immediate file delivery, these sales are non-refundable.
+                </p>
+              </div>
+
+              <div class="border-l-2 border-emerald-500 dark:border-lime pl-4">
+                <h4 class="font-bold text-gray-900 dark:text-white text-base">🗓️ 4. 1-on-1 Coaching & Video Consultations</h4>
+                <p class="mt-1 text-sm">
+                  Scheduled private sessions hosted over Google Meet. Governed by the cancellation and attendance policies outlined in Section 8.
+                </p>
+              </div>
+
+            </div>
+          </section>
+
+          <!-- 6. Fees & Stripe Connect -->
+          <section id="payments" class="scroll-mt-28 bg-white dark:bg-[#121614] border border-gray-200 dark:border-white/10 rounded-2xl p-6 sm:p-8 shadow-sm">
+            <div class="flex items-center gap-3 mb-4">
+              <span class="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-lime/10 text-emerald-700 dark:text-lime font-bold text-sm flex items-center justify-center font-mono">06</span>
+              <h2 class="text-xl sm:text-2xl font-extrabold text-gray-900 dark:text-white font-display">Fees, Payment Processing & Stripe Connect</h2>
+            </div>
+            <div class="space-y-4 text-sm sm:text-base text-gray-700 dark:text-white/75 leading-relaxed">
+              <p>
+                <strong>No Fixed Monthly Subscription:</strong> Creating an athlete page on Buymeashake.fit is completely free.
+              </p>
+              <p>
+                <strong>Platform Commission:</strong> Buymeashake retains a percentage platform service fee per successful transaction, in addition to standard Stripe payment gateway fees.
+              </p>
+              <p>
+                <strong>Stripe Connect Express:</strong> Payouts to athlete bank accounts are handled through Stripe Connect. Athletes are responsible for linking their verified bank account and completing mandatory KYC verification.
+              </p>
+              <p>
+                <strong>Tax Compliance:</strong> Athletes bear sole responsibility for declaring earned income and complying with tax obligations in their country of fiscal residence.
+              </p>
+            </div>
+          </section>
+
+          <!-- 7. Intellectual Property -->
+          <section id="intellectual-property" class="scroll-mt-28 bg-white dark:bg-[#121614] border border-gray-200 dark:border-white/10 rounded-2xl p-6 sm:p-8 shadow-sm">
+            <div class="flex items-center gap-3 mb-4">
+              <span class="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-lime/10 text-emerald-700 dark:text-lime font-bold text-sm flex items-center justify-center font-mono">07</span>
+              <h2 class="text-xl sm:text-2xl font-extrabold text-gray-900 dark:text-white font-display">Intellectual Property & Personal License for Workouts</h2>
+            </div>
+            <div class="space-y-4 text-sm sm:text-base text-gray-700 dark:text-white/75 leading-relaxed">
+              <p>
+                <strong>Platform Assets:</strong> The Buymeashake brand, logos, UI design, and underlying code are the exclusive property of Buymeashake.fit.
+              </p>
+              <p>
+                <strong>Creator Ownership:</strong> Athletes retain full ownership and copyright of their uploaded workout guides, video demonstrations, and articles.
+              </p>
+              <div class="p-4 rounded-xl bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10">
+                <strong class="text-emerald-700 dark:text-lime block mb-1">Personal Use License:</strong>
+                Purchasing a fitness plan grants the buyer an exclusive, <em>personal, non-commercial, non-transferable license</em>. Unauthorized resale, piracy, or public sharing of purchased PDFs is strictly prohibited.
+              </div>
+            </div>
+          </section>
+
+          <!-- 8. Refunds & No-Show Policy -->
+          <section id="refunds-cancellations" class="scroll-mt-28 bg-white dark:bg-[#121614] border border-gray-200 dark:border-white/10 rounded-2xl p-6 sm:p-8 shadow-sm">
+            <div class="flex items-center gap-3 mb-4">
+              <span class="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-lime/10 text-emerald-700 dark:text-lime font-bold text-sm flex items-center justify-center font-mono">08</span>
+              <h2 class="text-xl sm:text-2xl font-extrabold text-gray-900 dark:text-white font-display">Cancellations, Refunds & No-Show Policy</h2>
+            </div>
+            <div class="space-y-4 text-sm sm:text-base text-gray-700 dark:text-white/75 leading-relaxed">
+              <ul class="list-disc pl-5 space-y-2.5">
+                <li>
+                  <strong>Micro-donations:</strong> Protein shake contributions are voluntary and non-refundable once processed.
+                </li>
+                <li>
+                  <strong>Digital Downloads:</strong> Instant digital files (PDFs) are non-refundable once delivered, unless an irresolvable technical error prevented download.
+                </li>
+                <li>
+                  <strong>Memberships:</strong> Cancellable at any time from your supporter dashboard before the next billing date.
+                </li>
+                <li>
+                  <strong>1-on-1 Sessions & No-Show Terms:</strong>
+                  <ul class="list-circle pl-5 mt-1.5 space-y-1 text-xs sm:text-sm text-gray-600 dark:text-white/70">
+                    <li><strong>Rescheduling:</strong> Must be requested at least 24 hours prior to the scheduled session.</li>
+                    <li><strong>Client No-Show:</strong> If a client fails to join the Google Meet room within 15 minutes of the start time, the session is deemed completed without refund entitlement.</li>
+                    <li><strong>Athlete Absence:</strong> If the coach fails to attend, the client is entitled to immediate rescheduling or a full refund.</li>
+                  </ul>
+                </li>
+              </ul>
+            </div>
+          </section>
+
+          <!-- 9. Inactivity & Deletion -->
+          <section id="dormancy-deletion" class="scroll-mt-28 bg-white dark:bg-[#121614] border border-gray-200 dark:border-white/10 rounded-2xl p-6 sm:p-8 shadow-sm">
+            <div class="flex items-center gap-3 mb-4">
+              <span class="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-lime/10 text-emerald-700 dark:text-lime font-bold text-sm flex items-center justify-center font-mono">09</span>
+              <h2 class="text-xl sm:text-2xl font-extrabold text-gray-900 dark:text-white font-display">Inactivity, Unclaimed Funds & Account Deletion</h2>
+            </div>
+            <div class="space-y-4 text-sm sm:text-base text-gray-700 dark:text-white/75 leading-relaxed">
+              <p>
+                <strong>Dormant Accounts:</strong> Accounts without login activity for twelve (12) consecutive months may be archived after prior email notification.
+              </p>
+              <p>
+                <strong>Account Deletion:</strong> You may request account deletion at any time by contacting <a href="mailto:bdercommunications@gmail.com" class="text-emerald-600 dark:text-lime underline">bdercommunications&#64;gmail.com</a>. An anonymized financial transaction ledger will be retained for legal compliance and tax audit purposes.
+              </p>
+            </div>
+          </section>
+
+          <!-- 10. Liability & Disputes -->
+          <section id="liability-disputes" class="scroll-mt-28 bg-white dark:bg-[#121614] border border-gray-200 dark:border-white/10 rounded-2xl p-6 sm:p-8 shadow-sm">
+            <div class="flex items-center gap-3 mb-4">
+              <span class="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-lime/10 text-emerald-700 dark:text-lime font-bold text-sm flex items-center justify-center font-mono">10</span>
+              <h2 class="text-xl sm:text-2xl font-extrabold text-gray-900 dark:text-white font-display">Indemnity, Limitation of Liability & Dispute Resolution</h2>
+            </div>
+            <div class="space-y-4 text-sm sm:text-base text-gray-700 dark:text-white/75 leading-relaxed">
+              <p>
+                <strong>Indemnity:</strong> You agree to indemnify and hold harmless Buymeashake, its affiliates, and employees from any claims, damages, or legal expenses arising from your violation of these terms or injuries sustained during workouts.
+              </p>
+              <p>
+                <strong>Informal Dispute Resolution:</strong> Prior to initiating formal litigation, parties agree to make a good-faith effort to resolve any conflict through our dispute desk at <a href="mailto:bdercommunications@gmail.com" class="text-emerald-600 dark:text-lime underline">bdercommunications&#64;gmail.com</a> within 30 business days.
+              </p>
+            </div>
+          </section>
+
+        }
+
+      </div>
+
+    </div>
+
+  </div>
+</div>

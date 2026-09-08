@@ -16,7 +16,7 @@ from sqlalchemy import (
     UniqueConstraint,
     func,
 )
-from sqlalchemy.dialects.mysql import BIGINT, JSON, LONGTEXT
+from sqlalchemy.dialects.mysql import BIGINT, JSON, LONGTEXT, MEDIUMINT
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.database import Base
@@ -75,6 +75,81 @@ class AppVersion(Base):
 
 
 # ==============================================================================
+# MÓDULO 0b: CATÁLOGO GEO
+# ==============================================================================
+
+class Country(Base):
+    __tablename__ = "countries"
+
+    id: Mapped[int] = mapped_column(MEDIUMINT(unsigned=True), primary_key=True, autoincrement=True)
+    name: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
+    iso3: Mapped[str | None] = mapped_column(String(3), nullable=True)
+    numeric_code: Mapped[str | None] = mapped_column(String(3), nullable=True)
+    iso2: Mapped[str | None] = mapped_column(String(2), nullable=True, index=True)
+    phonecode: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    capital: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    tld: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    native: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    nationality: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    latitude: Mapped[Decimal | None] = mapped_column(Numeric(10, 8), nullable=True)
+    longitude: Mapped[Decimal | None] = mapped_column(Numeric(11, 8), nullable=True)
+    emoji: Mapped[str | None] = mapped_column(String(191), nullable=True)
+    flag: Mapped[bool] = mapped_column(Boolean, default=True)
+    wikiDataId: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    created_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now(), onupdate=func.now())
+
+    states: Mapped[list["State"]] = relationship("State", back_populates="country")
+    cities: Mapped[list["City"]] = relationship("City", back_populates="country")
+
+
+class State(Base):
+    __tablename__ = "states"
+
+    id: Mapped[int] = mapped_column(MEDIUMINT(unsigned=True), primary_key=True, autoincrement=True)
+    name: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    country_id: Mapped[int] = mapped_column(
+        MEDIUMINT(unsigned=True), ForeignKey("countries.id"), nullable=False, index=True
+    )
+    country_code: Mapped[str] = mapped_column(String(2), nullable=False, index=True)
+    iso2: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    type: Mapped[str | None] = mapped_column(String(191), nullable=True)
+    latitude: Mapped[Decimal | None] = mapped_column(Numeric(10, 8), nullable=True)
+    longitude: Mapped[Decimal | None] = mapped_column(Numeric(11, 8), nullable=True)
+    flag: Mapped[bool] = mapped_column(Boolean, default=True)
+    wikiDataId: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    created_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now(), onupdate=func.now())
+
+    country: Mapped[Country] = relationship("Country", back_populates="states")
+    cities: Mapped[list["City"]] = relationship("City", back_populates="state")
+
+
+class City(Base):
+    __tablename__ = "cities"
+
+    id: Mapped[int] = mapped_column(MEDIUMINT(unsigned=True), primary_key=True, autoincrement=True)
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    state_id: Mapped[int] = mapped_column(
+        MEDIUMINT(unsigned=True), ForeignKey("states.id"), nullable=False, index=True
+    )
+    state_code: Mapped[str] = mapped_column(String(255), nullable=False)
+    country_id: Mapped[int] = mapped_column(
+        MEDIUMINT(unsigned=True), ForeignKey("countries.id"), nullable=False, index=True
+    )
+    country_code: Mapped[str] = mapped_column(String(2), nullable=False, index=True)
+    latitude: Mapped[Decimal] = mapped_column(Numeric(10, 8), nullable=False)
+    longitude: Mapped[Decimal] = mapped_column(Numeric(11, 8), nullable=False)
+    flag: Mapped[bool] = mapped_column(Boolean, default=True)
+    wikiDataId: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now(), onupdate=func.now())
+
+    state: Mapped[State] = relationship("State", back_populates="cities")
+    country: Mapped[Country] = relationship("Country", back_populates="cities")
+
+
+# ==============================================================================
 # MÓDULO 1: USUARIOS Y ATLETAS (NORMALIZADO)
 # ==============================================================================
 
@@ -83,7 +158,8 @@ class User(Base):
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
     email: Mapped[str] = mapped_column(String(191), unique=True, nullable=False, index=True)
-    password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
+    firebase_uid: Mapped[str | None] = mapped_column(String(128), unique=True, nullable=True, index=True)
+    password_hash: Mapped[str | None] = mapped_column(String(255), nullable=True)
     full_name: Mapped[str] = mapped_column(String(150), nullable=False)
     avatar_url: Mapped[str | None] = mapped_column(String(255), nullable=True)
     role: Mapped[str] = mapped_column(Enum("supporter", "athlete", "admin", name="user_role_enum"), default="supporter")
@@ -104,7 +180,10 @@ class AthleteProfile(Base):
     user_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("users.id", ondelete="CASCADE"), unique=True, nullable=False)
     handle: Mapped[str] = mapped_column(String(50), unique=True, nullable=False, index=True)
     bio: Mapped[str | None] = mapped_column(Text, nullable=True)
-    city: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    city: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    city_id: Mapped[int | None] = mapped_column(
+        MEDIUMINT(unsigned=True), ForeignKey("cities.id", ondelete="SET NULL"), nullable=True, index=True
+    )
     primary_sport_item_id: Mapped[int | None] = mapped_column(
         BigInteger, ForeignKey("lookup_items.id", ondelete="SET NULL"), nullable=True, index=True
     )
@@ -114,6 +193,7 @@ class AthleteProfile(Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now(), onupdate=func.now())
 
     user: Mapped[User] = relationship("User", back_populates="athlete_profile")
+    city_ref: Mapped["City | None"] = relationship("City", foreign_keys=[city_id])
     primary_sport: Mapped["LookupItem | None"] = relationship("LookupItem", foreign_keys=[primary_sport_item_id])
     page_settings: Mapped["AthletePageSettings | None"] = relationship(
         "AthletePageSettings", back_populates="athlete", uselist=False, cascade="all, delete-orphan"
@@ -142,6 +222,9 @@ class AthleteProfile(Base):
     products: Mapped[list["DigitalProduct"]] = relationship("DigitalProduct", back_populates="athlete", cascade="all, delete-orphan")
     booking_services: Mapped[list["BookingService"]] = relationship("BookingService", back_populates="athlete", cascade="all, delete-orphan")
     posts: Mapped[list["Post"]] = relationship("Post", back_populates="athlete", cascade="all, delete-orphan")
+    withdrawal_requests: Mapped[list["WithdrawalRequest"]] = relationship(
+        "WithdrawalRequest", back_populates="athlete", cascade="all, delete-orphan"
+    )
 
 
 class AthletePageSettings(Base):
@@ -197,7 +280,9 @@ class AthletePayouts(Base):
     athlete_id: Mapped[int] = mapped_column(
         BigInteger, ForeignKey("athlete_profiles.id", ondelete="CASCADE"), primary_key=True
     )
+    country_code: Mapped[str] = mapped_column(String(2), default="MX")  # 'MX' o 'US'
     stripe_connect_account_id: Mapped[str | None] = mapped_column(String(100), unique=True, nullable=True)
+    stripe_details_submitted: Mapped[bool] = mapped_column(Boolean, default=False)
     payouts_enabled: Mapped[bool] = mapped_column(Boolean, default=False)
     updated_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now(), onupdate=func.now())
 
@@ -529,3 +614,38 @@ class EmailVerification(Base):
     expires_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
     is_used: Mapped[bool] = mapped_column(Boolean, default=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+
+
+# ==============================================================================
+# MÓDULO 7: RETIROS DE ATLETAS (BDER ARCHITECTURE STYLE)
+# ==============================================================================
+
+class WithdrawalRequest(Base):
+    __tablename__ = "withdrawal_requests"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    athlete_id: Mapped[int] = mapped_column(
+        BigInteger, ForeignKey("athlete_profiles.id", ondelete="RESTRICT"), nullable=False, index=True
+    )
+    amount_usd: Mapped[Decimal] = mapped_column(Numeric(10, 2), nullable=False)
+    amount_cents: Mapped[int] = mapped_column(BigInteger, nullable=False)
+    currency: Mapped[str] = mapped_column(String(10), default="USD")
+    destination_country: Mapped[str] = mapped_column(String(2), default="MX")  # 'MX' o 'US'
+    status: Mapped[str] = mapped_column(
+        Enum("pending", "processing", "completed", "failed", name="withdrawal_status_enum"),
+        default="pending",
+        nullable=False,
+        index=True,
+    )
+    stripe_transfer_id: Mapped[str | None] = mapped_column(String(150), unique=True, nullable=True)
+    failure_reason: Mapped[str | None] = mapped_column(Text, nullable=True)
+    admin_notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+    requested_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+    processed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    processed_by_admin_id: Mapped[int | None] = mapped_column(
+        BigInteger, ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+    )
+
+    athlete: Mapped[AthleteProfile] = relationship("AthleteProfile", back_populates="withdrawal_requests")
+    processed_by: Mapped["User | None"] = relationship("User", foreign_keys=[processed_by_admin_id])
+

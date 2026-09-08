@@ -1,6 +1,7 @@
 import { Component, effect, inject, input, output, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DashboardService } from '../../core/dashboard.service';
+import { LanguageService } from '../../core/language.service';
 import { EditorSavePatch } from './editor-save-patch';
 import { AllowedUserTextDirective } from '../../core/directives/allowed-user-text.directive';
 import { extractApiErrorMessage } from '../../core/utils/api-error.util';
@@ -30,13 +31,13 @@ import {
             type="button"
             (click)="close.emit()"
             class="absolute top-4 right-4 h-8 w-8 rounded-full bg-gray-100 dark:bg-white/10 text-gray-500 grid place-items-center text-xs font-bold cursor-pointer"
-            aria-label="Cerrar"
+            [attr.aria-label]="t().common.close"
           >
             ✕
           </button>
-          <h3 class="font-display text-xl font-black text-gray-950 dark:text-white pr-8">Título y descripción</h3>
+          <h3 class="font-display text-xl font-black text-gray-950 dark:text-white pr-8">{{ t().pageEditorModals.editPageTitle }}</h3>
           <p class="text-xs text-gray-500 dark:text-gray-400 mt-1 font-medium">
-            Este copy aparece a la izquierda del hero en tu página pública.
+            {{ t().pageEditorModals.pageCopySubtitle }}
           </p>
 
           @if (error()) {
@@ -44,27 +45,27 @@ import {
           }
 
           <label class="mt-5 block text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 mb-1">
-            Título de tu página
+            {{ t().pageEditorModals.titleLabel }}
           </label>
           <textarea
             rows="3"
             maxlength="200"
             appAllowedUserText
-            placeholder="Fuerza&#10;Disciplina&#10;Propósito"
+            [placeholder]="t().pageEditorModals.pageTitlePlaceholder"
             class="w-full rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#191c1d] px-4 py-3 text-sm font-semibold text-gray-900 dark:text-white focus:border-[#c9ff3d] focus:outline-none"
             [value]="title()"
             (input)="onTitleInput($any($event.target).value)"
           ></textarea>
-          <p class="mt-1 text-[11px] text-gray-400">Usa un salto de línea por cada renglón del título.</p>
+          <p class="mt-1 text-[11px] text-gray-400">{{ t().pageEditorModals.lineBreakHint }}</p>
 
           <label class="mt-4 block text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 mb-1">
-            Descripción de tu página
+            {{ t().pageEditorModals.descriptionLabel }}
           </label>
           <textarea
             rows="4"
             maxlength="2000"
             appAllowedUserText
-            placeholder="Cuéntale a tus fans de qué trata tu página..."
+            [placeholder]="t().pageEditorModals.pageDescPlaceholder"
             class="w-full rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#191c1d] px-4 py-3 text-sm font-medium text-gray-900 dark:text-white focus:border-[#c9ff3d] focus:outline-none"
             [value]="description()"
             (input)="onDescriptionInput($any($event.target).value)"
@@ -76,7 +77,7 @@ import {
             [disabled]="saving()"
             class="mt-5 w-full rounded-2xl bg-[#c9ff3d] py-3.5 text-sm font-black text-gray-950 disabled:opacity-50 cursor-pointer"
           >
-            {{ saving() ? 'Guardando…' : 'Guardar' }}
+            {{ saving() ? t().pageEditorModals.saving : t().pageEditorModals.saveChanges }}
           </button>
         </div>
       </div>
@@ -89,6 +90,8 @@ export class PageCopyModalComponent {
   readonly saved = output<EditorSavePatch>();
 
   private readonly dashboard = inject(DashboardService);
+  readonly languageService = inject(LanguageService);
+  readonly t = this.languageService.currentTranslations;
 
   readonly title = signal('');
   readonly description = signal('');
@@ -104,7 +107,7 @@ export class PageCopyModalComponent {
           this.title.set(p.page_title || '');
           this.description.set(p.page_description || '');
         },
-        error: () => this.error.set('No se pudo cargar el perfil.'),
+        error: () => this.error.set(this.t().pageEditorModals.profileLoadError),
       });
     });
   }
@@ -150,7 +153,7 @@ export class PageCopyModalComponent {
         },
         error: (err) => {
           this.saving.set(false);
-          this.error.set(extractApiErrorMessage(err, 'Error al guardar.'));
+          this.error.set(extractApiErrorMessage(err, this.languageService.currentLang() === 'en' ? 'Error saving changes.' : 'Error al guardar.'));
         },
       });
   }

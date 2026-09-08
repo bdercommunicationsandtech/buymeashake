@@ -70,11 +70,7 @@ export const supporterGuard: CanActivateFn = () => {
     return router.createUrlTree(['/auth/login']);
   }
 
-  const user = auth.currentUser();
-  if (user?.role === 'athlete') {
-    return router.createUrlTree([user.athlete_handle ? '/dashboard/home' : '/onboarding']);
-  }
-
+  // Tanto supporters como atletas pueden ver las rutas de supporter (Feed de seguidos, cuenta)
   return true;
 };
 
@@ -87,13 +83,11 @@ export const onboardingGuard: CanActivateFn = () => {
   }
 
   const user = auth.currentUser();
-  if (user?.role !== 'athlete') {
-    return router.createUrlTree(['/supporter/home']);
-  }
-
-  if (user.athlete_handle) {
+  // Si ya es atleta y ya configuró su handle, su onboarding ya terminó
+  if (user?.role === 'athlete' && user.athlete_handle) {
     return router.createUrlTree(['/dashboard/home']);
   }
 
+  // Si es supporter (desea convertirse) o atleta sin handle, puede acceder
   return true;
 };

@@ -26,9 +26,9 @@ export class PaymentService {
     );
   }
 
-  getStripeConnectLink(): Observable<{ account_link_url: string; stripe_connect_account_id: string }> {
+  getStripeConnectLink(countryCode: string = 'MX'): Observable<{ account_link_url: string; stripe_connect_account_id: string }> {
     return this.http.post<{ account_link_url: string; stripe_connect_account_id: string }>(
-      `${environment.apiUrl}/dashboard/payouts/connect-link`,
+      `${environment.apiUrl}/dashboard/payouts/connect-link?country_code=${encodeURIComponent(countryCode)}`,
       {}
     );
   }
@@ -92,5 +92,50 @@ export class PaymentService {
       supporter_item?: SupporterItemDto | null;
       [key: string]: unknown;
     }>(`${this.apiUrl}/verify-session`, {}, { params });
+  }
+
+  // ============================================================================
+  // RETIROS (WITHDRAWALS - BDER STYLE)
+  // ============================================================================
+
+  getAthleteBalance(): Observable<{
+    total_earned: number;
+    total_withdrawn: number;
+    available_balance: number;
+    pending_withdrawal_amount: number;
+    currency: string;
+    destination_country: string;
+    payouts_enabled: boolean;
+    details_submitted: boolean;
+  }> {
+    return this.http.get<any>(`${environment.apiUrl}/athlete/withdrawals/balance`);
+  }
+
+  requestWithdrawal(amountUsd: number, destinationCountry: string = 'MX'): Observable<{
+    id: number;
+    amount_usd: number;
+    currency: string;
+    destination_country: string;
+    status: string;
+    requested_at: string;
+  }> {
+    return this.http.post<any>(`${environment.apiUrl}/athlete/withdrawals/request`, {
+      amount_usd: amountUsd,
+      destination_country: destinationCountry,
+    });
+  }
+
+  getWithdrawalHistory(): Observable<Array<{
+    id: number;
+    amount_usd: number;
+    currency: string;
+    destination_country: string;
+    status: string;
+    stripe_transfer_id?: string;
+    failure_reason?: string;
+    requested_at: string;
+    processed_at?: string;
+  }>> {
+    return this.http.get<any[]>(`${environment.apiUrl}/athlete/withdrawals/history`);
   }
 }

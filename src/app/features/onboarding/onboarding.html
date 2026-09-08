@@ -1,50 +1,69 @@
 <div class="mx-auto max-w-lg px-5 py-12">
-  <h1 class="text-2xl font-black text-gray-900">Configura tu perfil</h1>
-  <p class="mt-2 text-sm text-gray-500">Completa tu bio y precio de shake para que tus fans te encuentren.</p>
+  <h1 class="text-2xl font-black text-gray-900 dark:text-white">{{ t().onboarding.title }}</h1>
+  <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">{{ t().onboarding.subtitle }}</p>
 
   @if (loading()) {
-    <p class="mt-8 text-sm text-gray-500">Cargando…</p>
+    <p class="mt-8 text-sm text-gray-500 dark:text-gray-400">{{ t().onboarding.loading }}</p>
   } @else {
-    <form class="mt-8 space-y-4" (ngSubmit)="saveAndContinue()">
+    <form class="mt-8 space-y-5" (ngSubmit)="saveAndContinue()">
       <div>
-        <label class="text-xs font-bold text-gray-500">Nombre</label>
-        <input appAllowedUserText maxlength="150" class="mt-1 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm" [ngModel]="fullName()" (ngModelChange)="fullName.set($event)" name="fullName" />
+        <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1.5">{{ t().onboarding.nameLabel }}</label>
+        <input appAllowedUserText maxlength="150" class="block w-full rounded-xl border border-gray-300 dark:border-white/15 bg-white dark:bg-[#191c1d] px-4 py-3 text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:border-gray-900 dark:focus:border-[#c9ff3d] transition" [ngModel]="fullName()" (ngModelChange)="fullName.set($event)" name="fullName" placeholder="Tu nombre" />
       </div>
       <div>
-        <label class="text-xs font-bold text-gray-500">@handle</label>
-        <input class="mt-1 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm bg-gray-50" [value]="handle()" readonly />
+        <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1.5">
+          {{ t().onboarding.handleLabel }} (tu enlace público: buymeashake.fit/{{ handle() || 'tu_handle' }})
+        </label>
+        @if (isSupporter()) {
+          <div class="relative">
+            <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-sm text-gray-400 font-bold">&#64;</span>
+            <input
+              class="block w-full rounded-xl border border-gray-300 dark:border-white/15 bg-white dark:bg-[#191c1d] pl-9 pr-4 py-3 text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:border-gray-900 dark:focus:border-[#c9ff3d] transition"
+              [ngModel]="handle()"
+              (ngModelChange)="handle.set($event)"
+              name="handle"
+              placeholder="tu_handle"
+              required
+            />
+          </div>
+          <p class="text-[11px] text-gray-500 dark:text-gray-500 mt-2">Solo letras minúsculas, números y guiones bajos (3-30 caracteres).</p>
+        } @else {
+          <input class="block w-full rounded-xl border border-gray-300 dark:border-white/15 bg-gray-50 dark:bg-white/5 px-4 py-3 text-sm text-gray-900 dark:text-white focus:outline-none" [value]="handle()" readonly />
+        }
       </div>
       <div>
-        <label class="text-xs font-bold text-gray-500">Ciudad</label>
-        <input appAllowedUserText maxlength="100" class="mt-1 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm" [ngModel]="city()" (ngModelChange)="city.set($event)" name="city" />
+        <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1.5">{{ t().onboarding.cityLabel }}</label>
+        <input appAllowedUserText maxlength="100" class="block w-full rounded-xl border border-gray-300 dark:border-white/15 bg-white dark:bg-[#191c1d] px-4 py-3 text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:border-gray-900 dark:focus:border-[#c9ff3d] transition" [ngModel]="city()" (ngModelChange)="city.set($event)" name="city" />
       </div>
       <div>
-        <label class="text-xs font-bold text-gray-500">Disciplina principal</label>
-        <select class="mt-1 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm" [ngModel]="primarySportCode()" (ngModelChange)="primarySportCode.set(+$event)" name="sport">
+        <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1.5">{{ t().onboarding.sportLabel }}</label>
+        <select class="block w-full rounded-xl border border-gray-300 dark:border-white/15 bg-white dark:bg-[#191c1d] px-4 py-3 text-sm text-gray-900 dark:text-white focus:outline-none focus:border-gray-900 dark:focus:border-[#c9ff3d] transition" [ngModel]="primarySportCode()" (ngModelChange)="primarySportCode.set(+$event)" name="sport">
           @for (sport of sports(); track sport.code) {
-            <option [value]="sport.code">{{ sport.label }}</option>
+            <option [value]="sport.code" class="bg-white dark:bg-[#191c1d] text-gray-900 dark:text-white">{{ languageService.translateDiscipline(sport.label) }}</option>
           }
         </select>
       </div>
       <div>
-        <label class="text-xs font-bold text-gray-500">Bio</label>
-        <textarea appAllowedUserText maxlength="2000" class="mt-1 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm" rows="4" [ngModel]="bio()" (ngModelChange)="bio.set($event)" name="bio"></textarea>
+        <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1.5">{{ t().onboarding.bioLabel }}</label>
+        <textarea appAllowedUserText maxlength="2000" class="block w-full rounded-xl border border-gray-300 dark:border-white/15 bg-white dark:bg-[#191c1d] px-4 py-3 text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:border-gray-900 dark:focus:border-[#c9ff3d] transition" rows="4" [ngModel]="bio()" (ngModelChange)="bio.set($event)" name="bio"></textarea>
         <span class="mt-1 block text-right text-[10px] text-gray-400">{{ bio().length }}/2000</span>
       </div>
       <div>
-        <label class="text-xs font-bold text-gray-500">Precio por shake (USD)</label>
-        <input type="number" min="1" class="mt-1 w-full rounded-xl border border-gray-200 px-3 py-2 text-sm" [ngModel]="shakePrice()" (ngModelChange)="shakePrice.set(+$event)" name="shakePrice" />
+        <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1.5">{{ t().onboarding.priceLabel }}</label>
+        <input type="number" min="1" class="block w-full rounded-xl border border-gray-300 dark:border-white/15 bg-white dark:bg-[#191c1d] px-4 py-3 text-sm text-gray-900 dark:text-white focus:outline-none focus:border-gray-900 dark:focus:border-[#c9ff3d] transition" [ngModel]="shakePrice()" (ngModelChange)="shakePrice.set(+$event)" name="shakePrice" />
       </div>
 
       @if (errorMessage()) {
-        <p class="text-sm font-semibold text-red-600">{{ errorMessage() }}</p>
+        <div class="rounded-xl bg-red-50 dark:bg-red-950/40 p-3.5 border border-red-200 dark:border-red-900 text-xs font-bold text-red-600 dark:text-red-400">
+          {{ errorMessage() }}
+        </div>
       }
 
-      <button type="submit" [disabled]="saving()" class="w-full rounded-xl bg-black text-white py-3 text-sm font-bold disabled:opacity-50">
-        {{ saving() ? 'Guardando…' : 'Ir al dashboard' }}
+      <button type="submit" [disabled]="saving()" class="w-full flex justify-center rounded-xl bg-black dark:bg-white dark:text-black text-white py-3.5 px-4 text-sm font-bold shadow-sm border border-transparent hover:bg-gray-900 dark:hover:bg-gray-200 focus:outline-none transition active:scale-[0.99] disabled:opacity-50 cursor-pointer">
+        {{ saving() ? t().onboarding.saving : t().onboarding.goToDashboard }}
       </button>
     </form>
   }
 
-  <a routerLink="/dashboard/home" class="mt-6 block text-center text-sm text-gray-500 hover:underline">Omitir por ahora</a>
+  <a routerLink="/dashboard/home" class="mt-6 block text-center text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:underline transition">{{ t().onboarding.skipForNow }}</a>
 </div>

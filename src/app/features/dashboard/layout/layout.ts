@@ -5,6 +5,7 @@ import { AuthService } from '../../../core/auth.service';
 import { DashboardService } from '../../../core/dashboard.service';
 import { ThemeService } from '../../../core/theme.service';
 import { AthleteProfileFull } from '../../../core/api.models';
+import { LanguageService } from '../../../core/language.service';
 
 @Component({
   selector: 'app-dashboard-layout',
@@ -16,7 +17,11 @@ export class DashboardLayout implements OnInit {
   private readonly authService = inject(AuthService);
   private readonly dashboardService = inject(DashboardService);
   readonly themeService = inject(ThemeService);
+  readonly languageService = inject(LanguageService);
   private readonly router = inject(Router);
+
+  readonly lang = this.languageService.lang;
+  readonly t = this.languageService.t;
 
   readonly profile = signal<AthleteProfileFull | null>(null);
   readonly publishOpen = signal(true);
@@ -42,6 +47,7 @@ export class DashboardLayout implements OnInit {
   }
 
   toggleNotifMenu(): void {
+    this.userMenuOpen.set(false);
     this.notifMenuOpen.update((v) => !v);
   }
 
@@ -66,15 +72,22 @@ export class DashboardLayout implements OnInit {
   }
 
   toggleUserMenu(): void {
+    this.notifMenuOpen.set(false);
     this.userMenuOpen.update((v) => !v);
   }
 
   toggleSidebar(): void {
+    this.notifMenuOpen.set(false);
+    this.userMenuOpen.set(false);
     this.sidebarOpen.update((v) => !v);
   }
 
   closeSidebar(): void {
     this.sidebarOpen.set(false);
+  }
+
+  toggleLanguage(): void {
+    this.languageService.toggleLanguage();
   }
 
   logout(): void {

@@ -7,16 +7,25 @@ import { AthleteProfileFull, LookupItemDto } from '../../../core/api.models';
 import { AllowedUserTextDirective } from '../../../core/directives/allowed-user-text.directive';
 import { extractApiErrorMessage } from '../../../core/utils/api-error.util';
 import { firstInvalidSocialUrlMessage } from '../../../core/utils/social-url.util';
+import { LanguageService } from '../../../core/language.service';
+import { LocationPickerComponent } from '../../../shared/location-picker/location-picker.component';
 
 @Component({
   selector: 'app-dashboard-settings',
   standalone: true,
-  imports: [CommonModule, FormsModule, AllowedUserTextDirective],
+  imports: [CommonModule, FormsModule, AllowedUserTextDirective, LocationPickerComponent],
   templateUrl: './settings.html',
 })
 export class DashboardSettings implements OnInit {
   private readonly dashboardService = inject(DashboardService);
   private readonly lookupService = inject(LookupService);
+  readonly languageService = inject(LanguageService);
+  readonly lang = this.languageService.lang;
+  readonly t = this.languageService.currentTranslations;
+
+  setLanguage(l: 'es' | 'en'): void {
+    this.languageService.setLanguage(l);
+  }
 
   readonly Math = Math;
 
@@ -27,10 +36,10 @@ export class DashboardSettings implements OnInit {
   readonly saved = signal(false);
   readonly errorMessage = signal<string | null>(null);
 
-  // Perfil & Ajustes
   readonly fullName = signal('');
   readonly bio = signal('');
   readonly city = signal('');
+  readonly cityId = signal<number | null>(null);
   readonly primarySportCode = signal<number>(101);
   readonly shakePrice = signal<number>(3);
   readonly currency = signal<'USD'>('USD');
@@ -43,7 +52,6 @@ export class DashboardSettings implements OnInit {
   readonly facebookUrl = signal('');
   readonly twitterUrl = signal('');
 
-  // Metas
   readonly goalTitle = signal('');
   readonly goalTarget = signal<number>(1000);
   readonly activeGoal = signal<{ title: string; target: number; raised: number } | null>(null);
@@ -66,6 +74,7 @@ export class DashboardSettings implements OnInit {
         this.fullName.set(p.full_name);
         this.bio.set(p.bio || '');
         this.city.set(p.city || '');
+        this.cityId.set(p.city_id ?? null);
         this.primarySportCode.set(p.primary_sport_code || 101);
         this.shakePrice.set(Number(p.shake_price) || 3);
         this.currency.set('USD');
@@ -119,7 +128,7 @@ export class DashboardSettings implements OnInit {
       },
       error: () => {
         this.uploadingAvatar.set(false);
-        this.errorMessage.set('Error al subir imagen de avatar.');
+        this.errorMessage.set(this.t().dashboard.settingsView.avatarUploadError);
       },
     });
   }
@@ -139,7 +148,7 @@ export class DashboardSettings implements OnInit {
       },
       error: () => {
         this.uploadingCover.set(false);
-        this.errorMessage.set('Error al subir imagen de portada.');
+        this.errorMessage.set(this.t().dashboard.settingsView.coverUploadError);
       },
     });
   }
@@ -162,7 +171,7 @@ export class DashboardSettings implements OnInit {
     this.dashboardService.updateProfile({
       full_name: this.fullName(),
       bio: this.bio(),
-      city: this.city(),
+      city_id: this.cityId(),
       primary_sport_code: this.primarySportCode(),
       shake_price: this.shakePrice(),
       currency: this.currency(),
@@ -181,7 +190,7 @@ export class DashboardSettings implements OnInit {
       },
       error: (err) => {
         this.loading.set(false);
-        this.errorMessage.set(extractApiErrorMessage(err, 'Error al guardar cambios.'));
+        this.errorMessage.set(extractApiErrorMessage(err, this.t().dashboard.settingsView.saveProfileError));
       },
     });
   }

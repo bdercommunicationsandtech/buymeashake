@@ -1,4 +1,4 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
@@ -26,8 +26,10 @@ export class DashboardService {
   private readonly http = inject(HttpClient);
   private readonly apiUrl = `${environment.apiUrl}/dashboard`;
 
-  getMetrics(): Observable<DashboardMetrics> {
-    return this.http.get<DashboardMetrics>(`${this.apiUrl}/metrics`);
+  getMetrics(period?: string): Observable<DashboardMetrics> {
+    let params = new HttpParams();
+    if (period) { params = params.set("period", period); }
+    return this.http.get<DashboardMetrics>(`${this.apiUrl}/metrics`, { params });
   }
 
   getMembershipTiers(): Observable<MembershipTierItem[]> {

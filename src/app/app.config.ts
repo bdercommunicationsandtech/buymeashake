@@ -5,6 +5,7 @@ import { catchError, firstValueFrom, of } from 'rxjs';
 
 import { routes } from './app.routes';
 import { authInterceptor } from './core/auth.interceptor';
+import { acceptLanguageInterceptor } from './core/accept-language.interceptor';
 import { AuthService } from './core/auth.service';
 // import { provideNgtRenderer } from 'angular-three/dom'; // prototipo 3D inactivo
 
@@ -31,7 +32,7 @@ export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
     // provideNgtRenderer(), // prototipo 3D inactivo — reactivar junto con <app-shaker-3d>
-    provideHttpClient(withFetch(), withInterceptors([authInterceptor])),
+    provideHttpClient(withFetch(), withInterceptors([authInterceptor, acceptLanguageInterceptor])),
     provideRouter(
       routes,
       withComponentInputBinding(),

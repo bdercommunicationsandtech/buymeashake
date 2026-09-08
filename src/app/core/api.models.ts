@@ -34,9 +34,29 @@ export interface UserRegisterPayload {
   referral_code?: string;
 }
 
+export interface UpgradeToAthletePayload {
+  handle: string;
+  full_name?: string;
+  primary_sport_code?: number;
+  bio?: string;
+  city?: string;
+  shake_price?: number;
+}
+
 export interface UserLoginPayload {
   email: string;
   password: string;
+}
+
+export interface FirebaseAuthPayload {
+  id_token: string;
+  role?: 'supporter' | 'athlete';
+}
+
+export interface FirebaseNeedsRoleDetails {
+  needs_role: boolean;
+  email: string;
+  full_name: string;
 }
 
 export interface TokenResponse {
@@ -196,6 +216,7 @@ export interface AthleteProfileFull {
   agenda_description?: string | null;
   agenda_image_url?: string | null;
   city: string | null;
+  city_id?: number | null;
   primary_sport_code: number | null;
   shake_price: number;
   currency: string;
@@ -219,6 +240,7 @@ export interface AthleteProfileUpdatePayload {
   agenda_description?: string | null;
   agenda_image_url?: string | null;
   city?: string;
+  city_id?: number | null;
   primary_sport_code?: number;
   shake_price?: number;
   currency?: string;
@@ -270,6 +292,7 @@ export interface ShakeCheckoutPayload {
   supporter_name?: string;
   supporter_email?: string;
   shake_details: ShakeDetailsPayload;
+  recurring?: boolean;
 }
 
 export interface PaymentIntentResult {

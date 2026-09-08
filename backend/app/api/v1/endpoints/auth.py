@@ -1,12 +1,15 @@
+from typing import Any
 from fastapi import APIRouter, status
 
 from app.api.dependencies import CurrentUser, DatabaseSession
 from app.schemas.dtos import (
+    FirebaseAuthRequest,
     RefreshTokenRequest,
     RequestOtpRequest,
     RequestOtpResponse,
     TokenResponse,
     UpdateProfileRequest,
+    UpgradeToAthleteRequest,
     UserLoginRequest,
     UserMeResponse,
     UserRegisterRequest,
@@ -31,6 +34,13 @@ async def request_otp(dto: RequestOtpRequest, session: DatabaseSession) -> Reque
     return await service.request_otp(dto)
 
 
+@router.get("/auth/check-otp-status")
+async def check_otp_status(email: str, session: DatabaseSession) -> dict[str, Any]:
+    """Comprueba si un correo cuenta con un código OTP activo no expirado."""
+    service = AuthService(session)
+    return await service.check_otp_status(email)
+
+
 @router.post("/auth/verify-otp", response_model=TokenResponse)
 async def verify_otp(dto: VerifyOtpRequest, session: DatabaseSession) -> TokenResponse:
     """Valida el código OTP, registra al supporter y retorna tokens de sesión."""
@@ -43,6 +53,13 @@ async def login(dto: UserLoginRequest, session: DatabaseSession) -> TokenRespons
     """Inicia sesión con credenciales y retorna tokens JWT."""
     service = AuthService(session)
     return await service.login(dto)
+
+
+@router.post("/auth/firebase", response_model=TokenResponse)
+async def login_with_firebase(dto: FirebaseAuthRequest, session: DatabaseSession) -> TokenResponse:
+    """Login/registro con Google o Apple vía Firebase ID token."""
+    service = AuthService(session)
+    return await service.login_with_firebase(dto)
 
 
 @router.post("/auth/refresh", response_model=TokenResponse)
@@ -68,3 +85,15 @@ async def update_profile(
     """Actualiza los datos del perfil y contraseña del usuario autenticado."""
     service = AuthService(session)
     return await service.update_profile(user, dto)
+
+
+@router.post("/auth/upgrade-to-athlete", response_model=UserMeResponse)
+async def upgrade_to_athlete(
+    dto: UpgradeToAthleteRequest,
+    user: CurrentUser,
+    session: DatabaseSession,
+) -> UserMeResponse:
+    """Transforma una cuenta de supporter a atleta creando su perfil y asignando handle."""
+    service = AuthService(session)
+    return await service.upgrade_to_athlete(user, dto)
+

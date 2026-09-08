@@ -3,6 +3,8 @@ import { CommonModule } from '@angular/common';
 import { DashboardService } from '../../core/dashboard.service';
 import { LookupService } from '../../core/lookup.service';
 import { LookupItemDto } from '../../core/api.models';
+import { LanguageService } from '../../core/language.service';
+import { LocationPickerComponent } from '../location-picker/location-picker.component';
 import { EditorSavePatch } from './editor-save-patch';
 import { AllowedUserTextDirective } from '../../core/directives/allowed-user-text.directive';
 import { extractApiErrorMessage } from '../../core/utils/api-error.util';
@@ -12,7 +14,7 @@ import { firstInvalidSocialUrlMessage } from '../../core/utils/social-url.util';
 @Component({
   selector: 'app-athlete-profile-modal',
   standalone: true,
-  imports: [CommonModule, AllowedUserTextDirective],
+  imports: [CommonModule, AllowedUserTextDirective, LocationPickerComponent],
   template: `
     @if (open()) {
       <div
@@ -29,13 +31,13 @@ import { firstInvalidSocialUrlMessage } from '../../core/utils/social-url.util';
             type="button"
             (click)="close.emit()"
             class="absolute top-4 right-4 h-8 w-8 rounded-full bg-gray-100 dark:bg-white/10 text-gray-500 grid place-items-center text-xs font-bold cursor-pointer z-10"
-            aria-label="Cerrar"
+            [attr.aria-label]="t().common.close"
           >
             ✕
           </button>
-          <h3 class="font-display text-xl font-black text-gray-950 dark:text-white pr-8">Perfil de atleta</h3>
+          <h3 class="font-display text-xl font-black text-gray-950 dark:text-white pr-8">{{ t().pageEditorModals.editProfileTitle }}</h3>
           <p class="text-xs text-gray-500 dark:text-gray-400 mt-1 font-medium">
-            Avatar, portada, nombre y redes de tu tarjeta pública.
+            {{ t().pageEditorModals.editProfileSubtitle }}
           </p>
 
           @if (error()) {
@@ -54,10 +56,10 @@ import { firstInvalidSocialUrlMessage } from '../../core/utils/social-url.util';
                 }
               </div>
               <div>
-                <h4 class="text-sm font-black text-gray-900 dark:text-white">Foto de Perfil</h4>
-                <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Avatar circular para tu perfil y top de atletas.</p>
+                <h4 class="text-sm font-black text-gray-900 dark:text-white">{{ t().pageEditorModals.avatarTitle }}</h4>
+                <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{{ t().pageEditorModals.avatarDesc }}</p>
                 <label class="mt-2 inline-block rounded-xl border border-gray-200 dark:border-white/10 px-3 py-1.5 text-xs font-bold text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-white/5 cursor-pointer">
-                  {{ uploadingAvatar() ? 'Subiendo...' : 'Subir foto' }}
+                  {{ uploadingAvatar() ? t().pageEditorModals.uploading : t().pageEditorModals.uploadAvatar }}
                   <input type="file" accept="image/*" class="hidden" (change)="onAvatarSelected($event)" [disabled]="uploadingAvatar()" />
                 </label>
               </div>
@@ -76,10 +78,10 @@ import { firstInvalidSocialUrlMessage } from '../../core/utils/social-url.util';
                 }
               </div>
               <div>
-                <h4 class="text-sm font-black text-gray-900 dark:text-white">Portada de Perfil</h4>
-                <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Banner principal del Hero en tu perfil público.</p>
+                <h4 class="text-sm font-black text-gray-900 dark:text-white">{{ t().pageEditorModals.coverTitle }}</h4>
+                <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{{ t().pageEditorModals.coverDesc }}</p>
                 <label class="mt-2 inline-block rounded-xl border border-gray-200 dark:border-white/10 px-3 py-1.5 text-xs font-bold text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-white/5 cursor-pointer">
-                  {{ uploadingCover() ? 'Subiendo...' : 'Subir portada' }}
+                  {{ uploadingCover() ? t().pageEditorModals.uploading : t().pageEditorModals.uploadCover }}
                   <input type="file" accept="image/*" class="hidden" (change)="onCoverSelected($event)" [disabled]="uploadingCover()" />
                 </label>
               </div>
@@ -88,7 +90,7 @@ import { firstInvalidSocialUrlMessage } from '../../core/utils/social-url.util';
 
           <div class="mt-6 space-y-4">
             <div>
-              <label class="block text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 mb-1">Nombre público</label>
+              <label class="block text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 mb-1">{{ t().pageEditorModals.fullNameLabel }}</label>
               <input
                 type="text"
                 appAllowedUserText
@@ -100,7 +102,7 @@ import { firstInvalidSocialUrlMessage } from '../../core/utils/social-url.util';
             </div>
             <div>
               <div class="flex items-center justify-between mb-1">
-                <label class="block text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300">Biografía deportiva</label>
+                <label class="block text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300">{{ t().pageEditorModals.bioLabel }}</label>
                 <span class="text-[10px] font-semibold text-gray-400">{{ bio().length }}/2000</span>
               </div>
               <textarea
@@ -112,39 +114,31 @@ import { firstInvalidSocialUrlMessage } from '../../core/utils/social-url.util';
                 (input)="bio.set(filterText($any($event.target).value))"
               ></textarea>
             </div>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label class="block text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 mb-1">Ciudad / País</label>
-                <input
-                  type="text"
-                  appAllowedUserText
-                  maxlength="100"
-                  placeholder="Ej. CDMX, México"
-                  class="w-full rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#191c1d] px-4 py-3 text-sm font-semibold text-gray-900 dark:text-white focus:border-[#c9ff3d] focus:outline-none"
-                  [value]="city()"
-                  (input)="city.set(filterText($any($event.target).value))"
-                />
-              </div>
-              <div>
-                <label class="block text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 mb-1">Disciplina principal</label>
-                <select
-                  class="w-full rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#191c1d] px-4 py-3 text-sm font-semibold text-gray-900 dark:text-white focus:border-[#c9ff3d] focus:outline-none"
-                  [value]="primarySportCode()"
-                  (change)="primarySportCode.set(+$any($event.target).value)"
-                >
-                  @for (sport of sports(); track sport.code) {
-                    <option [value]="sport.code">{{ sport.label }}</option>
-                  }
-                </select>
-              </div>
+            <div>
+              <label class="block text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 mb-2">{{ t().pageEditorModals.cityLabel }}</label>
+              <app-location-picker
+                [initialCityId]="cityId()"
+                (cityIdChange)="cityId.set($event)"
+                (labelChange)="city.set($event || '')"
+              />
+            </div>
+            <div>
+              <label class="block text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 mb-1">{{ t().pageEditorModals.disciplineLabel }}</label>
+              <select
+                class="w-full rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#191c1d] px-4 py-3 text-sm font-semibold text-gray-900 dark:text-white focus:border-[#c9ff3d] focus:outline-none"
+                [value]="primarySportCode()"
+                (change)="primarySportCode.set(+$any($event.target).value)"
+              >
+                @for (sport of sports(); track sport.code) {
+                  <option [value]="sport.code">{{ languageService.translateDiscipline(sport.label) }}</option>
+                }
+              </select>
             </div>
 
             <div class="pt-2 border-t border-gray-100 dark:border-white/10 space-y-4">
               <div>
-                <h4 class="text-sm font-black text-gray-900 dark:text-white">Redes sociales</h4>
-                <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                  Solo se aceptan enlaces reales de cada plataforma (https://...). Déjalos vacíos si no quieres mostrarlos.
-                </p>
+                <h4 class="text-sm font-black text-gray-900 dark:text-white">{{ t().pageEditorModals.socialTitle }}</h4>
+                <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{{ t().pageEditorModals.socialSubtitle }}</p>
               </div>
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
@@ -173,7 +167,7 @@ import { firstInvalidSocialUrlMessage } from '../../core/utils/social-url.util';
             [disabled]="saving() || !fullName().trim()"
             class="mt-6 rounded-full bg-[#c9ff3d] px-8 py-3 text-xs font-black text-gray-950 disabled:opacity-50 cursor-pointer"
           >
-            {{ saving() ? 'Guardando…' : 'Guardar perfil' }}
+            {{ saving() ? t().pageEditorModals.saving : t().pageEditorModals.saveChanges }}
           </button>
         </div>
       </div>
@@ -187,11 +181,14 @@ export class AthleteProfileModalComponent {
 
   private readonly dashboard = inject(DashboardService);
   private readonly lookup = inject(LookupService);
+  readonly languageService = inject(LanguageService);
+  readonly t = this.languageService.currentTranslations;
 
   readonly sports = signal<LookupItemDto[]>([]);
   readonly fullName = signal('');
   readonly bio = signal('');
   readonly city = signal('');
+  readonly cityId = signal<number | null>(null);
   readonly primarySportCode = signal(101);
   readonly avatarUrl = signal<string | null>(null);
   readonly coverImageUrl = signal<string | null>(null);
@@ -218,6 +215,7 @@ export class AthleteProfileModalComponent {
           this.fullName.set(p.full_name);
           this.bio.set(p.bio || '');
           this.city.set(p.city || '');
+          this.cityId.set(p.city_id ?? null);
           this.primarySportCode.set(p.primary_sport_code || 101);
           this.avatarUrl.set(p.avatar_url);
           this.coverImageUrl.set(p.cover_image_url);
@@ -226,7 +224,7 @@ export class AthleteProfileModalComponent {
           this.facebookUrl.set(p.facebook_url || '');
           this.twitterUrl.set(p.twitter_url || '');
         },
-        error: () => this.error.set('No se pudo cargar el perfil.'),
+        error: () => this.error.set(this.t().pageEditorModals.profileLoadError),
       });
     });
   }
@@ -250,7 +248,7 @@ export class AthleteProfileModalComponent {
       },
       error: () => {
         this.uploadingAvatar.set(false);
-        this.error.set('Error al subir imagen de avatar.');
+        this.error.set(this.languageService.currentLang() === 'en' ? 'Failed to upload avatar image.' : 'Error al subir imagen de avatar.');
       },
     });
   }
@@ -266,7 +264,7 @@ export class AthleteProfileModalComponent {
       },
       error: () => {
         this.uploadingCover.set(false);
-        this.error.set('Error al subir imagen de portada.');
+        this.error.set(this.languageService.currentLang() === 'en' ? 'Failed to upload cover image.' : 'Error al subir imagen de portada.');
       },
     });
   }
@@ -289,7 +287,7 @@ export class AthleteProfileModalComponent {
       .updateProfile({
         full_name: this.fullName(),
         bio: this.bio(),
-        city: this.city(),
+        city_id: this.cityId(),
         primary_sport_code: this.primarySportCode(),
         avatar_url: this.avatarUrl() || undefined,
         cover_image_url: this.coverImageUrl() || undefined,
@@ -316,7 +314,7 @@ export class AthleteProfileModalComponent {
         },
         error: (err) => {
           this.saving.set(false);
-          this.error.set(extractApiErrorMessage(err, 'Error al guardar.'));
+          this.error.set(extractApiErrorMessage(err, this.languageService.currentLang() === 'en' ? 'Error saving changes.' : 'Error al guardar.'));
         },
       });
   }

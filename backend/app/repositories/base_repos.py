@@ -1,5 +1,6 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from decimal import Decimal
+from typing import Any
 from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -7,6 +8,7 @@ from sqlalchemy.orm import selectinload
 from app.models.entities import (
     AppVersion,
     AthleteFollow,
+    AthletePayouts,
     AthleteProfile,
     AthleteReferrals,
     BookingAppointment,
@@ -27,6 +29,7 @@ from app.models.entities import (
     TierBenefit,
     Transaction,
     User,
+    WithdrawalRequest,
 )
 from app.services.profile_helpers import athlete_load_options
 
@@ -48,6 +51,11 @@ class UserRepository:
 
     async def get_by_email(self, email: str) -> User | None:
         query = select(User).where(User.email == email)
+        result = await self.session.execute(query)
+        return result.scalar_one_or_none()
+
+    async def get_by_firebase_uid(self, firebase_uid: str) -> User | None:
+        query = select(User).where(User.firebase_uid == firebase_uid)
         result = await self.session.execute(query)
         return result.scalar_one_or_none()
 
@@ -215,10 +223,21 @@ class DashboardRepository:
     def __init__(self, session: AsyncSession):
         self.session = session
 
-    async def get_metrics_30d(self, athlete_id: int) -> dict:
-        since_date = datetime.now() - timedelta(days=30)
+    async def get_metrics(self, athlete_id: int, period: str = "30d") -> dict:
+        from datetime import datetime, timedelta
+        now = datetime.now()
+        if period == "7d":
+            since_date = now - timedelta(days=7)
+        elif period == "30d":
+            since_date = now - timedelta(days=30)
+        elif period == "90d":
+            since_date = now - timedelta(days=90)
+        elif period == "all_time":
+            since_date = datetime(2000, 1, 1)
+        else:
+            since_date = now - timedelta(days=30)
         
-        # Transacciones de los últimos 30 días
+        # Transacciones en el periodo
         query = (
             select(
                 Transaction.transaction_type_code,
@@ -294,14 +313,19 @@ class GoalRepository:
         return result.scalar_one_or_none()
 
     async def create_goal(self, goal: Goal) -> Goal:
-        # Desactivar todas las otras metas del atleta si esta nueva viene activa
+        # Desactivar otras metas; excluir esta instancia si ya tiene id
         if goal.is_active:
             from sqlalchemy import update
-            await self.session.execute(
-                update(Goal).where(Goal.athlete_id == goal.athlete_id).values(is_active=False)
-            )
+
+            stmt = update(Goal).where(Goal.athlete_id == goal.athlete_id).values(is_active=False)
+            if goal.id is not None:
+                stmt = stmt.where(Goal.id != goal.id)
+            await self.session.execute(stmt)
 
         self.session.add(goal)
+        await self.session.flush()
+        # Asegurar que quede activa tras el bulk update
+        goal.is_active = True
         await self.session.flush()
         await self.session.refresh(goal)
         return goal
@@ -796,14 +820,30 @@ class OtpRepository:
     def __init__(self, session: AsyncSession):
         self.session = session
 
+    async def get_latest_otp(self, email: str, purpose: str = "supporter_follow") -> EmailVerification | None:
+        """Obtiene el último OTP generado (activo o no) para validar rate limit."""
+        query = (
+            select(EmailVerification)
+            .where(
+                EmailVerification.email == email,
+                EmailVerification.purpose == purpose,
+            )
+            .order_by(EmailVerification.created_at.desc())
+            .limit(1)
+        )
+        result = await self.session.execute(query)
+        return result.scalar_one_or_none()
+
     async def get_latest_active_otp(self, email: str, purpose: str = "supporter_follow") -> EmailVerification | None:
-        """Obtiene el último OTP generado aún no utilizado."""
+        """Obtiene el último OTP generado aún no utilizado y no expirado."""
+        now_utc = datetime.now(timezone.utc).replace(tzinfo=None)
         query = (
             select(EmailVerification)
             .where(
                 EmailVerification.email == email,
                 EmailVerification.purpose == purpose,
                 EmailVerification.is_used == False,
+                EmailVerification.expires_at >= now_utc,
             )
             .order_by(EmailVerification.created_at.desc())
             .limit(1)
@@ -829,7 +869,7 @@ class OtpRepository:
     async def clean_expired_otps(self) -> int:
         """Elimina OTPs expirados con más de 24 horas de antigüedad para mantener la tabla liviana."""
         from sqlalchemy import delete
-        cutoff = datetime.now() - timedelta(hours=24)
+        cutoff = datetime.now(timezone.utc).replace(tzinfo=None) - timedelta(hours=24)
         stmt = (
             delete(EmailVerification)
             .where(
@@ -847,6 +887,7 @@ class OtpRepository:
             purpose=purpose,
             metadata_=metadata,
             expires_at=expires_at,
+            created_at=datetime.now(timezone.utc).replace(tzinfo=None),
             is_used=False,
         )
         self.session.add(record)
@@ -854,13 +895,14 @@ class OtpRepository:
         return record
 
     async def get_valid_otp(self, email: str, code: str) -> EmailVerification | None:
+        now_utc = datetime.now(timezone.utc).replace(tzinfo=None)
         query = (
             select(EmailVerification)
             .where(
                 EmailVerification.email == email,
                 EmailVerification.code == code,
                 EmailVerification.is_used == False,
-                EmailVerification.expires_at >= datetime.now(),
+                EmailVerification.expires_at >= now_utc,
             )
             .order_by(EmailVerification.created_at.desc())
         )
@@ -870,6 +912,22 @@ class OtpRepository:
     async def mark_used(self, otp_record: EmailVerification) -> None:
         otp_record.is_used = True
         await self.session.flush()
+
+    async def record_failed_attempt(self, email: str, purpose: str = "supporter_follow", max_attempts: int = 5) -> int:
+        """Incrementa el contador de intentos fallidos en el último OTP activo. Si supera max_attempts, lo invalida."""
+        from sqlalchemy.orm.attributes import flag_modified
+        record = await self.get_latest_active_otp(email, purpose=purpose)
+        if not record:
+            return 0
+        meta = dict(record.metadata_ or {})
+        attempts = int(meta.get("failed_attempts", 0)) + 1
+        meta["failed_attempts"] = attempts
+        record.metadata_ = meta
+        flag_modified(record, "metadata_")
+        if attempts >= max_attempts:
+            record.is_used = True
+        await self.session.commit()
+        return attempts
 
 
 class FollowRepository:
@@ -940,4 +998,108 @@ class FollowRepository:
             await self.session.flush()
             return True
         return False
+
+
+# ==============================================================================
+# REPOSITORIO DE RETIROS (WITHDRAWALS - BDER ARCHITECTURE)
+# ==============================================================================
+
+class WithdrawalRepository:
+    def __init__(self, session: AsyncSession):
+        self.session = session
+
+    async def get_athlete_balance(self, athlete_id: int) -> dict[str, Any]:
+        """Calcula balance disponible según la regla contable de BDER:
+        Balance Disponible = Ganancias Netas (302) - Retiros completados ('completed').
+        Las solicitudes pending, processing o failed NO descuentan balance.
+        """
+        # 1. Total ganado neto completado
+        q_earnings = select(func.coalesce(func.sum(Transaction.net_athlete_amount), Decimal("0.00"))).where(
+            Transaction.athlete_id == athlete_id,
+            Transaction.status_code == 302,
+        )
+        total_earned = (await self.session.execute(q_earnings)).scalar() or Decimal("0.00")
+
+        # 2. Total retirado completado
+        q_withdrawn = select(func.coalesce(func.sum(WithdrawalRequest.amount_usd), Decimal("0.00"))).where(
+            WithdrawalRequest.athlete_id == athlete_id,
+            WithdrawalRequest.status == "completed",
+        )
+        total_withdrawn = (await self.session.execute(q_withdrawn)).scalar() or Decimal("0.00")
+
+        # 3. Total pendiente en revisión (para visualización informativa)
+        q_pending = select(func.coalesce(func.sum(WithdrawalRequest.amount_usd), Decimal("0.00"))).where(
+            WithdrawalRequest.athlete_id == athlete_id,
+            WithdrawalRequest.status.in_(["pending", "processing"]),
+        )
+        pending_amount = (await self.session.execute(q_pending)).scalar() or Decimal("0.00")
+
+        available_balance = max(Decimal("0.00"), total_earned - total_withdrawn)
+
+        # Consultar estado de cuenta Stripe Connect
+        payouts_q = select(AthletePayouts).where(AthletePayouts.athlete_id == athlete_id)
+        payouts_row = (await self.session.execute(payouts_q)).scalar_one_or_none()
+
+        return {
+            "total_earned": total_earned,
+            "total_withdrawn": total_withdrawn,
+            "available_balance": available_balance,
+            "pending_withdrawal_amount": pending_amount,
+            "currency": "USD",
+            "destination_country": payouts_row.country_code if payouts_row else "MX",
+            "payouts_enabled": payouts_row.payouts_enabled if payouts_row else False,
+            "details_submitted": payouts_row.stripe_details_submitted if payouts_row else False,
+        }
+
+    async def create_request(
+        self,
+        athlete_id: int,
+        amount_usd: Decimal,
+        destination_country: str = "MX",
+    ) -> WithdrawalRequest:
+        """Crea una solicitud de retiro en estado 'pending'. NO toca Stripe."""
+        amount_cents = int((amount_usd * 100).to_integral_value())
+        req = WithdrawalRequest(
+            athlete_id=athlete_id,
+            amount_usd=amount_usd,
+            amount_cents=amount_cents,
+            currency="USD",
+            destination_country=destination_country,
+            status="pending",
+        )
+        self.session.add(req)
+        await self.session.flush()
+        return req
+
+    async def get_by_id(self, withdrawal_id: int) -> WithdrawalRequest | None:
+        q = (
+            select(WithdrawalRequest)
+            .options(
+                selectinload(WithdrawalRequest.athlete).selectinload(AthleteProfile.user),
+                selectinload(WithdrawalRequest.athlete).selectinload(AthleteProfile.payouts),
+            )
+            .where(WithdrawalRequest.id == withdrawal_id)
+        )
+        return (await self.session.execute(q)).scalar_one_or_none()
+
+    async def list_by_athlete(self, athlete_id: int) -> list[WithdrawalRequest]:
+        q = (
+            select(WithdrawalRequest)
+            .where(WithdrawalRequest.athlete_id == athlete_id)
+            .order_by(WithdrawalRequest.requested_at.desc())
+        )
+        return list((await self.session.execute(q)).scalars().all())
+
+    async def list_all_admin(self, status_filter: str | None = None) -> list[WithdrawalRequest]:
+        q = (
+            select(WithdrawalRequest)
+            .options(
+                selectinload(WithdrawalRequest.athlete).selectinload(AthleteProfile.user),
+            )
+            .order_by(WithdrawalRequest.requested_at.desc())
+        )
+        if status_filter:
+            q = q.where(WithdrawalRequest.status == status_filter)
+        return list((await self.session.execute(q)).scalars().all())
+
 

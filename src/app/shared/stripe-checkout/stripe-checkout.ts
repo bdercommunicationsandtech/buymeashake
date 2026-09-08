@@ -1,6 +1,7 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { CheckoutService } from '../../core/checkout.service';
 import { PaymentService } from '../../core/payment.service';
+import { LanguageService } from '../../core/language.service';
 import { AnimatedShakerComponent } from '../icons/animated-shaker';
 
 /** Duración del estado "Procesando…" antes de mostrar la confirmación. */
@@ -17,6 +18,8 @@ const FAKE_PROCESSING_MS = 1000;
 export class StripeCheckout {
   readonly checkout = inject(CheckoutService);
   private readonly paymentService = inject(PaymentService);
+  readonly i18n = inject(LanguageService);
+  readonly t = this.i18n.t;
 
   readonly email = signal('supporter@buymeashake.fit');
   readonly cardName = signal('Supporter Fan');
@@ -33,7 +36,7 @@ export class StripeCheckout {
     if (first === '5') return 'Mastercard';
     if (first === '3') return 'Amex';
     if (first === '6') return 'Discover';
-    return 'Tarjeta';
+    return this.i18n.lang() === 'es' ? 'Tarjeta' : 'Card';
   });
 
   readonly canPay = computed(() => {
@@ -90,13 +93,17 @@ export class StripeCheckout {
       return;
     }
 
+    const isEn = this.i18n.currentLang() === 'en';
+    const defaultAnon = isEn ? 'Someone anonymous' : 'Alguien anónimo';
+    const defaultFan = isEn ? 'A Fan' : 'Un Fan';
+
     // Caso 1: Membresía Recurrente (Subscription)
     if (draft.type === 'membership' && draft.tierId) {
       this.paymentService
         .createSubscriptionCheckoutSession({
           tier_id: draft.tierId,
           supporter_email: this.email() || undefined,
-          supporter_name: draft.isAnonymous ? 'Alguien anónimo' : (draft.supporterName || this.cardName() || 'Un Fan'),
+          supporter_name: draft.isAnonymous ? defaultAnon : (draft.supporterName || this.cardName() || defaultFan),
         })
         .subscribe({
           next: (sessionRes) => {
@@ -107,13 +114,25 @@ export class StripeCheckout {
             // En modo mock / desarrollo: marcar como pagado/suscrito
             setTimeout(() => {
               this.processing.set(false);
-              this.checkout.markPaid(null, null, `¡Te has suscrito con éxito al nivel ${draft.title}!`);
+              this.checkout.markPaid(
+                null,
+                null,
+                isEn
+                  ? `Successfully subscribed to tier ${draft.title}!`
+                  : `¡Te has suscrito con éxito al nivel ${draft.title}!`
+              );
             }, FAKE_PROCESSING_MS);
           },
           error: (err) => {
             setTimeout(() => {
               this.processing.set(false);
-              this.checkout.markPaid(null, null, `¡Te has suscrito con éxito al nivel ${draft.title}!`);
+              this.checkout.markPaid(
+                null,
+                null,
+                isEn
+                  ? `Successfully subscribed to tier ${draft.title}!`
+                  : `¡Te has suscrito con éxito al nivel ${draft.title}!`
+              );
             }, FAKE_PROCESSING_MS);
           },
         });
@@ -124,7 +143,7 @@ export class StripeCheckout {
     const shakePayload = {
       athlete_handle: draft.creatorHandle,
       currency: draft.currency,
-      supporter_name: draft.isAnonymous ? 'Alguien anónimo' : (draft.supporterName || this.cardName() || 'Un Fan'),
+      supporter_name: draft.isAnonymous ? defaultAnon : (draft.supporterName || this.cardName() || defaultFan),
       supporter_email: this.email() || undefined,
       shake_details: {
         shakes_count: draft.shakes,

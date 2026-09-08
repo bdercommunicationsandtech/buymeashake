@@ -131,8 +131,9 @@ class StripeService:
         supporter_message: str | None = None,
         is_anonymous: bool = False,
         supporter_user: User | None = None,
+        recurring: bool = False,
     ) -> dict[str, str]:
-        """Genera una sesión alojada de Stripe Checkout para pagar Shakes."""
+        """Genera una sesión alojada de Stripe Checkout para pagar Shakes (único o mensual recurrente)."""
         unit_price = get_shake_price(athlete)
         gross_amount = unit_price * Decimal(shakes_count)
         unit_amount_cents = int((unit_price * 100).to_integral_value())
@@ -166,44 +167,67 @@ class StripeService:
             "supporter_message": (supporter_message or "")[:240],
             "is_anonymous": "true" if is_anonymous else "false",
             "supporter_user_id": str(supporter_user.id) if supporter_user else "",
-            "kind": "shake_donation",
+            "kind": "monthly_shake_support" if recurring else "shake_donation",
+            "is_recurring": "true" if recurring else "false",
         }
+
+        price_data: dict[str, Any] = {
+            "currency": currency.lower(),
+            "product_data": {
+                "name": (
+                    f"{shakes_count} Shakes Mensuales para {athlete.user.full_name}"
+                    if recurring
+                    else f"{shakes_count} Shakes para {athlete.user.full_name}"
+                ),
+                "description": (
+                    f"Apoyo mensual recurrente a @{athlete.handle} en buymeashake.fit"
+                    if recurring
+                    else f"Apoyo deportivo a @{athlete.handle} en buymeashake.fit"
+                ),
+            },
+            "unit_amount": unit_amount_cents,
+        }
+        if recurring:
+            price_data["recurring"] = {"interval": "month"}
 
         session_params: dict[str, Any] = {
             "payment_method_types": ["card"],
             "line_items": [
                 {
-                    "price_data": {
-                        "currency": currency.lower(),
-                        "product_data": {
-                            "name": f"{shakes_count} Shakes para {athlete.user.full_name}",
-                            "description": f"Apoyo deportivo a @{athlete.handle} en buymeashake.fit",
-                        },
-                        "unit_amount": unit_amount_cents,
-                    },
+                    "price_data": price_data,
                     "quantity": shakes_count,
                 }
             ],
-            "mode": "payment",
+            "mode": "subscription" if recurring else "payment",
             "success_url": success_url,
             "cancel_url": cancel_url,
             "client_reference_id": tx_uuid,
             "metadata": shared_metadata,
-            # Metadata también en PaymentIntent: webhooks payment_intent.* la necesitan
-            "payment_intent_data": {
-                "metadata": shared_metadata,
-            },
         }
 
-        # Si el atleta tiene cuenta Connect activa, configurar split con application_fee
         payouts = athlete.payouts
-        if payouts and payouts.stripe_connect_account_id and payouts.payouts_enabled:
-            total_cents = unit_amount_cents * shakes_count
-            platform_fee_cents = int(Decimal(total_cents) * Decimal(str(settings.PLATFORM_FEE_PERCENTAGE)))
-            session_params["payment_intent_data"]["application_fee_amount"] = platform_fee_cents
-            session_params["payment_intent_data"]["transfer_data"] = {
-                "destination": payouts.stripe_connect_account_id,
+        has_connect = payouts and payouts.stripe_connect_account_id and payouts.payouts_enabled
+
+        if recurring:
+            session_params["subscription_data"] = {
+                "metadata": shared_metadata,
             }
+            if has_connect:
+                session_params["subscription_data"]["application_fee_percent"] = float(settings.PLATFORM_FEE_PERCENTAGE) * 100
+                session_params["subscription_data"]["transfer_data"] = {
+                    "destination": payouts.stripe_connect_account_id,
+                }
+        else:
+            session_params["payment_intent_data"] = {
+                "metadata": shared_metadata,
+            }
+            if has_connect:
+                total_cents = unit_amount_cents * shakes_count
+                platform_fee_cents = int(Decimal(total_cents) * Decimal(str(settings.PLATFORM_FEE_PERCENTAGE)))
+                session_params["payment_intent_data"]["application_fee_amount"] = platform_fee_cents
+                session_params["payment_intent_data"]["transfer_data"] = {
+                    "destination": payouts.stripe_connect_account_id,
+                }
 
         if customer_id:
             session_params["customer"] = customer_id
@@ -465,12 +489,13 @@ class StripeService:
         athlete_res = await self.session.execute(athlete_stmt)
         athlete = athlete_res.scalar_one_or_none()
 
+        shake_word = "Shake" if shakes_count == 1 else "Shakes"
         supporter_display = "Alguien anónimo" if is_anonymous else (tx.supporter_name or "Un Supporter")
         if athlete and athlete.user_id:
             notif = Notification(
                 user_id=athlete.user_id,
-                title=f"¡Recibiste {shakes_count} Shakes!",
-                message=f"{supporter_display} te apoyó con {shakes_count} Shakes (${tx.gross_amount} USD).",
+                title=f"¡Recibiste {shakes_count} {shake_word}!",
+                message=f"{supporter_display} te apoyó con {shakes_count} {shake_word} (${tx.gross_amount} USD).",
                 type_code=401,
                 action_url="/dashboard/supporters",
             )
@@ -659,14 +684,21 @@ class StripeService:
     # 2. STRIPE CONNECT EXPRESS (ONBOARDING & RETIROS)
     # ==========================================================================
 
-    async def create_or_get_connect_account(self, athlete: AthleteProfile) -> str:
-        """Crea una cuenta Express en Stripe Connect o devuelve la existente."""
+    async def create_or_get_connect_account(
+        self, athlete: AthleteProfile, country_code: str | None = None
+    ) -> str:
+        """Crea una cuenta Express en Stripe Connect o devuelve la existente para MX o US."""
         payouts = await ensure_payouts(self.session, athlete)
         if payouts.stripe_connect_account_id:
             return payouts.stripe_connect_account_id
 
+        target_country = (country_code or payouts.country_code or "MX").upper()
+        if target_country not in ("MX", "US"):
+            target_country = "MX"
+        payouts.country_code = target_country
+
         if not settings.STRIPE_SECRET_KEY or settings.STRIPE_SECRET_KEY.startswith("sk_test_placeholder"):
-            mock_acct = f"acct_mock_{athlete.id}"
+            mock_acct = f"acct_mock_{target_country}_{athlete.id}"
             payouts.stripe_connect_account_id = mock_acct
             await self.session.flush()
             return mock_acct
@@ -674,7 +706,7 @@ class StripeService:
         user = athlete.user
         account_params: dict[str, Any] = {
             "type": "express",
-            "country": "MX",  # Por defecto MX (o configurable por atleta)
+            "country": target_country,
             "business_type": "individual",
             "capabilities": {
                 "transfers": {"requested": True},
@@ -709,9 +741,11 @@ class StripeService:
         await self.session.flush()
         return account.id
 
-    async def generate_connect_onboarding_link(self, athlete: AthleteProfile) -> dict[str, str]:
-        """Crea el enlace de Stripe AccountLink para onboarding Express."""
-        account_id = await self.create_or_get_connect_account(athlete)
+    async def generate_connect_onboarding_link(
+        self, athlete: AthleteProfile, country_code: str | None = None
+    ) -> dict[str, str]:
+        """Crea el enlace de Stripe AccountLink para onboarding Express (MX o US)."""
+        account_id = await self.create_or_get_connect_account(athlete, country_code=country_code)
 
         if not settings.STRIPE_SECRET_KEY or settings.STRIPE_SECRET_KEY.startswith("sk_test_placeholder"):
             return {
@@ -800,14 +834,25 @@ class StripeService:
         if not settings.STRIPE_SECRET_KEY or settings.STRIPE_SECRET_KEY.startswith("sk_test_placeholder"):
             return f"tr_mock_{withdrawal_id}"
 
-        transfer = stripe.Transfer.create(
-            amount=amount_cents,
-            currency="usd",
-            destination=payouts.stripe_connect_account_id,
-            description=f"Retiro de fondos #{withdrawal_id} para @{athlete.handle}",
-            idempotency_key=f"withdrawal_{withdrawal_id}",
-        )
-        return transfer.id
+        try:
+            transfer = stripe.Transfer.create(
+                amount=amount_cents,
+                currency="usd",
+                destination=payouts.stripe_connect_account_id,
+                description=f"Retiro de fondos #{withdrawal_id} para @{athlete.handle}",
+                idempotency_key=f"withdrawal_{withdrawal_id}",
+            )
+            return transfer.id
+        except stripe.error.InvalidRequestError as err:
+            # En entorno de prueba (test keys), si Stripe no tiene saldo líquido por ciclo bancario de MX
+            if "insufficient available funds" in str(err).lower() and settings.STRIPE_SECRET_KEY.startswith("sk_test_"):
+                logger.warning(
+                    "[STRIPE TEST MODE FALLBACK] Fondos insuficientes en Stripe sandbox (%s). "
+                    "Generando ID de transferencia simulada para permitir probar el flujo contable completo.",
+                    str(err)
+                )
+                return f"tr_test_{withdrawal_id}_{payouts.stripe_connect_account_id[:12]}"
+            raise
 
     # ==========================================================================
     # 3.5 VERIFICACIÓN DIRECTA DE SESIÓN (CALLBACK DE RETORNO EN LOCAL / CLIENTE)
@@ -1089,12 +1134,13 @@ class StripeService:
         )
 
         # Crear notificación para el atleta
+        shake_word = "Shake" if shakes_count == 1 else "Shakes"
         supporter_display = "Alguien anónimo" if is_anonymous else (supporter_name or "Un Supporter")
         if athlete.user_id:
             notif = Notification(
                 user_id=athlete.user_id,
-                title=f"¡Recibiste {shakes_count} Shakes!",
-                message=f"{supporter_display} te apoyó con {shakes_count} Shakes (${gross_amount} USD).",
+                title=f"¡Recibiste {shakes_count} {shake_word}!",
+                message=f"{supporter_display} te apoyó con {shakes_count} {shake_word} (${gross_amount} USD).",
                 type_code=401,
                 action_url="/dashboard/supporters",
             )
@@ -1164,6 +1210,13 @@ class StripeService:
             metadata = _stripe_obj_to_dict(metadata)
         tx_uuid = metadata.get("transaction_uuid") or session_obj.get("client_reference_id")
         stripe_sub_id = _stripe_resource_id(session_obj.get("subscription"))
+
+        # Si es un apoyo recurrente simple de shakes ("monthly_shake_support")
+        if metadata.get("kind") == "monthly_shake_support":
+            res = await self._process_successful_payment(session_obj, "checkout.session.completed")
+            if stripe_sub_id:
+                res["subscription_id"] = stripe_sub_id
+            return res
 
         if not stripe_sub_id:
             logger.warning("checkout.session.completed en modo subscription sin subscription ID.")

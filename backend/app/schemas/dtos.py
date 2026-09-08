@@ -87,6 +87,7 @@ class RequestOtpRequest(BaseModel):
     email: EmailStr = Field(max_length=191)
     name: str | None = Field(default=None, max_length=150)
     athlete_handle: str | None = Field(default=None, max_length=50)
+    purpose: str | None = "login"
 
     @field_validator("name", mode="before")
     @classmethod
@@ -135,6 +136,11 @@ class RefreshTokenRequest(BaseModel):
     refresh_token: str
 
 
+class FirebaseAuthRequest(BaseModel):
+    id_token: str = Field(min_length=10)
+    role: str | None = Field(default=None, pattern="^(supporter|athlete)$")
+
+
 class UserMeResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -147,6 +153,19 @@ class UserMeResponse(BaseModel):
     athlete_handle: str | None = None
     referral_code: str | None = None
 
+
+class UpgradeToAthleteRequest(BaseModel):
+    handle: str = Field(min_length=3, max_length=30, pattern="^[a-z0-9_]{3,30}$")
+    full_name: str | None = Field(default=None, min_length=2, max_length=150)
+    primary_sport_code: int | None = Field(default=None)
+    bio: str | None = Field(default=None, max_length=2000)
+    city: str | None = Field(default=None, max_length=255)
+    shake_price: Decimal | None = Field(default=None, ge=1)
+
+    @field_validator("full_name", "bio", "city", mode="before")
+    @classmethod
+    def validate_upgrade_text_chars(cls, value: Any) -> str | None:
+        return validate_allowed_user_text(value)
 
 
 # ==============================================================================
@@ -278,6 +297,7 @@ class ShakeCheckoutCreateRequest(BaseModel):
     supporter_name: str | None = Field(default=None, max_length=150)
     supporter_email: str | None = Field(default=None, max_length=191)
     shake_details: ShakeDetailsRequest = Field(default_factory=ShakeDetailsRequest)
+    recurring: bool = False
 
     @field_validator("supporter_name", mode="before")
     @classmethod
@@ -515,7 +535,8 @@ class AthleteProfileUpdateRequest(BaseModel):
     agenda_title: str | None = Field(default=None, max_length=200)
     agenda_description: str | None = Field(default=None, max_length=2000)
     agenda_image_url: str | None = Field(default=None, max_length=255)
-    city: str | None = Field(default=None, max_length=100)
+    city: str | None = Field(default=None, max_length=255)
+    city_id: int | None = None
     primary_sport_code: int | None = None
     shake_price: Decimal | None = Field(default=None, gt=0)
     currency: str | None = Field(default=None, pattern="^USD$")
@@ -565,6 +586,7 @@ class AthleteProfileFullResponse(BaseModel):
     agenda_description: str | None = None
     agenda_image_url: str | None = None
     city: str | None
+    city_id: int | None = None
     primary_sport_code: int | None
     shake_price: Decimal
     currency: str
@@ -712,4 +734,96 @@ class SupportersDashboardResponse(BaseModel):
     all_time_total: Decimal
     currency: str = "USD"
     items: list[SupporterItemResponse]
+
+
+# ==============================================================================
+# RETIROS (WITHDRAWALS - BDER ARCHITECTURE)
+# ==============================================================================
+
+class AthleteBalanceResponse(BaseModel):
+    total_earned: Decimal
+    total_withdrawn: Decimal
+    available_balance: Decimal
+    pending_withdrawal_amount: Decimal
+    currency: str = "USD"
+    destination_country: str = "MX"
+    payouts_enabled: bool = False
+    details_submitted: bool = False
+
+
+class WithdrawalRequestCreate(BaseModel):
+    amount_usd: Decimal = Field(gt=Decimal("0.00"), description="Monto en USD a retirar")
+    destination_country: str = Field(default="MX", pattern="^(MX|US)$")
+
+
+class WithdrawalRequestResponse(BaseModel):
+    id: int
+    athlete_id: int
+    athlete_handle: str | None = None
+    athlete_name: str | None = None
+    amount_usd: Decimal
+    currency: str
+    destination_country: str
+    status: str
+    stripe_transfer_id: str | None = None
+    failure_reason: str | None = None
+    admin_notes: str | None = None
+    requested_at: datetime
+    processed_at: datetime | None = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class AdminWithdrawalActionRequest(BaseModel):
+    action: str = Field(pattern="^(approve|reject)$", description="'approve' o 'reject'")
+    failure_reason: str | None = Field(default=None, max_length=255)
+    admin_notes: str | None = Field(default=None, max_length=2000)
+
+    @field_validator("failure_reason", "admin_notes", mode="before")
+    @classmethod
+    def validate_withdrawal_admin_text(cls, value: Any) -> str | None:
+        return validate_allowed_user_text(value)
+
+
+# ==============================================================================
+# 9. COMPLIANCE & ABUSE REPORTS
+# ==============================================================================
+
+class ComplianceReportRequest(BaseModel):
+    creator_target: str = Field(min_length=2, max_length=255)
+    reason_code: str = Field(min_length=1, max_length=50)
+    reason_title: str = Field(min_length=3, max_length=150)
+    description: str = Field(min_length=15, max_length=4000)
+    evidence_links: list[str] = Field(default_factory=list)
+    attached_file: str | None = None
+    reporter_email: EmailStr
+
+
+class ComplianceReportResponse(BaseModel):
+    folio: str
+    message: str
+    status: str = "received"
+
+
+class AdminReportVerdictRequest(BaseModel):
+    reporter_email: EmailStr
+    creator_target: str = Field(min_length=2, max_length=255)
+    verdict: str = Field(
+        pattern="^(action_taken|dismissed|warning)$",
+        description="Resultado: 'action_taken' (sanción), 'dismissed' (desestimado), 'warning' (advertencia)",
+    )
+    verdict_title: str = Field(min_length=3, max_length=200)
+    admin_notes: str = Field(min_length=10, max_length=4000)
+    action_details: str | None = Field(default=None, max_length=1000)
+
+
+class AdminReportVerdictResponse(BaseModel):
+    folio: str
+    verdict: str
+    status: str = "resolved"
+    email_sent: bool = True
+    message: str
+
+
+
 

@@ -12,6 +12,7 @@ import {
   QUICK_SHAKES,
   SHAKE_PRICE,
 } from '../../core/demo';
+import { LanguageService } from '../../core/language.service';
 import {
   AnimatedShakerComponent,
   IconBoltComponent,
@@ -134,6 +135,9 @@ export class Creator {
   private readonly paymentService = inject(PaymentService);
   private readonly authService = inject(AuthService);
   private readonly supporterService = inject(SupporterService);
+  readonly languageService = inject(LanguageService);
+  readonly i18n = this.languageService;
+  readonly t = this.languageService.t;
 
   readonly username = input.required<string>();
   readonly editMode = input(false);
@@ -181,19 +185,24 @@ export class Creator {
     '09:00 AM', '10:30 AM', '12:00 PM', '04:00 PM', '05:30 PM', '07:00 PM',
   ]);
 
-  readonly calendarDays = signal<CalendarDay[]>([
-    { dayNumber: 3, dateStr: '2026-09-03', isAvailable: true, isPast: false, dayName: 'Jue' },
-    { dayNumber: 4, dateStr: '2026-09-04', isAvailable: true, isPast: false, dayName: 'Vie' },
-    { dayNumber: 5, dateStr: '2026-09-05', isAvailable: true, isPast: false, dayName: 'Sáb' },
-    { dayNumber: 7, dateStr: '2026-09-07', isAvailable: true, isPast: false, dayName: 'Lun' },
-  ]);
+  readonly calendarDays = computed<CalendarDay[]>(() => {
+    const isEn = this.languageService.currentLang() === 'en';
+    return [
+      { dayNumber: 3, dateStr: '2026-09-03', isAvailable: true, isPast: false, dayName: isEn ? 'Thu' : 'Jue' },
+      { dayNumber: 4, dateStr: '2026-09-04', isAvailable: true, isPast: false, dayName: isEn ? 'Fri' : 'Vie' },
+      { dayNumber: 5, dateStr: '2026-09-05', isAvailable: true, isPast: false, dayName: isEn ? 'Sat' : 'Sáb' },
+      { dayNumber: 7, dateStr: '2026-09-07', isAvailable: true, isPast: false, dayName: isEn ? 'Mon' : 'Lun' },
+    ];
+  });
 
   readonly pageTitleLines = computed(() => {
     const raw = this.creatorView()?.pageTitle?.trim();
     if (raw) {
       return raw.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
     }
-    return ['Fuerza', 'Disciplina', 'Propósito'];
+    return this.languageService.currentLang() === 'en'
+      ? ['Strength', 'Discipline', 'Purpose']
+      : ['Fuerza', 'Disciplina', 'Propósito'];
   });
 
   readonly pageDescriptionText = computed(() => {
@@ -202,17 +211,33 @@ export class Creator {
   });
 
   readonly agendaTitleText = computed(
-    () => this.creatorView()?.agendaTitle?.trim() || 'Entrena, mejora y alcanza tus metas',
+    () =>
+      this.creatorView()?.agendaTitle?.trim() ||
+      (this.languageService.currentLang() === 'en'
+        ? 'Train, improve, and reach your goals'
+        : 'Entrena, mejora y alcanza tus metas'),
   );
 
   readonly agendaDescriptionText = computed(
     () =>
       this.creatorView()?.agendaDescription?.trim() ||
-      'Sesiones 1 a 1 para técnica, consultoría y seguimiento personalizado.',
+      (this.languageService.currentLang() === 'en'
+        ? '1-on-1 sessions for technique, consulting, and personalized coaching.'
+        : 'Sesiones 1 a 1 para técnica, consultoría y seguimiento personalizado.'),
   );
 
-  /** Hay agenda usable si el atleta publicó al menos un servicio de booking. */
-  readonly hasAgendaAvailable = computed(() => this.bookingServices().length > 0);
+  /**
+   * Agenda "activa" si hay copy/imagen configurados o servicios publicables.
+   * Antes solo mirábamos bookingServices y ocultábamos el texto guardado.
+   */
+  readonly hasAgendaAvailable = computed(() => {
+    if (this.bookingServices().length > 0) return true;
+    const c = this.creatorView();
+    if (!c) return false;
+    return Boolean(
+      c.agendaTitle?.trim() || c.agendaDescription?.trim() || c.agendaImageUrl?.trim(),
+    );
+  });
 
   readonly hasActiveGoal = computed(() => Boolean(this.creatorView()?.hasActiveGoal));
 
@@ -509,10 +534,10 @@ export class Creator {
               message: s.shake_details?.supporter_message || '¡Mucho éxito en tus metas deportivas!',
               creator_reply: s.shake_details?.creator_reply,
               creator_reply_at: s.shake_details?.creator_reply_at
-                ? new Date(s.shake_details.creator_reply_at).toLocaleDateString('es-MX')
+                ? new Date(s.shake_details.creator_reply_at).toLocaleDateString(this.i18n.lang() === 'es' ? 'es-MX' : 'en-US')
                 : null,
               is_liked_by_creator: s.shake_details?.is_liked_by_creator,
-              when: new Date(s.created_at).toLocaleDateString('es-MX'),
+              when: new Date(s.created_at).toLocaleDateString(this.i18n.lang() === 'es' ? 'es-MX' : 'en-US'),
               initials: s.supporter_name
                 .split(' ')
                 .map((w) => w[0])
@@ -572,7 +597,7 @@ export class Creator {
               authorName: c.name,
               authorHandle: c.handle,
               authorAvatar: c.avatarUrl,
-              publishedAt: new Date(p.published_at).toLocaleDateString('es-MX'),
+              publishedAt: new Date(p.published_at).toLocaleDateString(this.i18n.lang() === 'es' ? 'es-MX' : 'en-US'),
               likesCount: p.likes_count,
               commentsCount: p.comments?.length || 0,
               isMembersOnly: p.is_members_only,
@@ -615,11 +640,11 @@ export class Creator {
         .join('')
         .slice(0, 2)
         .toUpperCase(),
-      goalTitle: profile.active_goal_title || '',
+      goalTitle: profile.active_goal_title?.trim() || '',
       goalTarget: goalTarget,
       goalRaised: goalRaised,
       goalCoverImageUrl: profile.active_goal_cover_image_url ?? null,
-      hasActiveGoal: Boolean(profile.active_goal_title),
+      hasActiveGoal: Boolean(profile.active_goal_title?.trim()),
       supporters: followersCount,
       shakesReceived,
       disciplines: [profile.primary_sport],
@@ -806,16 +831,21 @@ export class Creator {
 
     this.openingStripe.set(true);
 
+    const isEn = this.languageService.currentLang() === 'en';
+    const defaultAnon = isEn ? 'Someone anonymous' : 'Alguien anónimo';
+    const defaultFan = isEn ? 'A Fan' : 'Un Fan';
+
     this.paymentService
       .createStripeCheckoutSession({
         athlete_handle: c.handle,
         currency: this.currency(),
-        supporter_name: this.isAnonymous() ? 'Alguien anónimo' : (this.supporterName() || 'Un Fan'),
+        supporter_name: this.isAnonymous() ? defaultAnon : (this.supporterName() || defaultFan),
         shake_details: {
           shakes_count: this.shakes(),
           supporter_message: this.message(),
           is_anonymous: this.isAnonymous(),
         },
+        recurring: this.supportMode() === 'recurring',
       })
       .subscribe({
         next: (sessionRes) => {

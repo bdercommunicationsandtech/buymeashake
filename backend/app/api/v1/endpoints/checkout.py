@@ -71,6 +71,7 @@ async def create_stripe_checkout_session(
         supporter_message=dto.shake_details.supporter_message,
         is_anonymous=dto.shake_details.is_anonymous,
         supporter_user=user,
+        recurring=dto.recurring,
     )
     # Persistir tx pendiente ANTES de devolver la URL de Stripe
     await session.commit()
@@ -205,10 +206,11 @@ async def stripe_webhook(
 async def get_stripe_connect_onboarding_link(
     athlete: CurrentAthlete,
     session: DatabaseSession,
+    country_code: Annotated[str | None, Query(description="MX o US")] = None,
 ) -> StripeConnectLinkResponse:
-    """Genera el enlace de Stripe Connect Express para que el atleta conecte su cuenta bancaria."""
+    """Genera el enlace de Stripe Connect Express para que el atleta conecte su cuenta bancaria (MX o US)."""
     stripe_svc = StripeService(session)
-    data = await stripe_svc.generate_connect_onboarding_link(athlete)
+    data = await stripe_svc.generate_connect_onboarding_link(athlete, country_code=country_code)
     await session.commit()
     return StripeConnectLinkResponse(**data)
 

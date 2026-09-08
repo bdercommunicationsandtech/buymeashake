@@ -14,9 +14,10 @@ class DomainException(Exception):
 
 
 class EntityNotFoundError(DomainException):
-    def __init__(self, entity_name: str, identifier: Any):
+    def __init__(self, entity_name: str, identifier: Any, message: str | None = None):
+        msg = message or f"{entity_name} not found."
         super().__init__(
-            message=f"{entity_name} not found.",
+            message=msg,
             code="ENTITY_NOT_FOUND",
             details={"entity": entity_name, "identifier": str(identifier)},
         )
@@ -32,8 +33,8 @@ class EntityAlreadyExistsError(DomainException):
 
 
 class UnauthorizedError(DomainException):
-    def __init__(self, message: str = "Invalid credentials or session expired."):
-        super().__init__(message=message, code="UNAUTHORIZED")
+    def __init__(self, message: str = "Invalid credentials or session expired.", details: dict[str, Any] | None = None):
+        super().__init__(message=message, code="UNAUTHORIZED", details=details)
 
 
 class ForbiddenError(DomainException):
@@ -47,7 +48,7 @@ class RateLimitExceededError(DomainException):
         super().__init__(
             message=msg,
             code="RATE_LIMIT_EXCEEDED",
-            details={"wait_seconds": wait_seconds},
+            details={"wait_seconds": wait_seconds, "has_active_otp": True},
         )
 
 
@@ -59,6 +60,21 @@ class PaymentProcessingError(DomainException):
 class BusinessLogicError(DomainException):
     def __init__(self, message: str, details: dict[str, Any] | None = None):
         super().__init__(message=message, code="BUSINESS_LOGIC_ERROR", details=details)
+
+
+class NeedsRoleError(DomainException):
+    """Usuario social nuevo: el cliente debe elegir athlete o supporter."""
+
+    def __init__(self, email: str, full_name: str):
+        super().__init__(
+            message="Elige si quieres ser atleta o apoyar a tus atletas favoritos.",
+            code="NEEDS_ROLE",
+            details={
+                "needs_role": True,
+                "email": email,
+                "full_name": full_name,
+            },
+        )
 
 
 def _first_validation_message(exc: RequestValidationError) -> str:
@@ -116,6 +132,13 @@ def register_exception_handlers(app: FastAPI) -> None:
 
     @app.exception_handler(EntityAlreadyExistsError)
     async def entity_exists_handler(request: Request, exc: EntityAlreadyExistsError) -> JSONResponse:
+        return JSONResponse(
+            status_code=status.HTTP_409_CONFLICT,
+            content={"error": {"code": exc.code, "message": exc.message, "details": exc.details}},
+        )
+
+    @app.exception_handler(NeedsRoleError)
+    async def needs_role_handler(request: Request, exc: NeedsRoleError) -> JSONResponse:
         return JSONResponse(
             status_code=status.HTTP_409_CONFLICT,
             content={"error": {"code": exc.code, "message": exc.message, "details": exc.details}},

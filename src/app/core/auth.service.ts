@@ -3,7 +3,15 @@ import { inject, Injectable, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { BehaviorSubject, catchError, filter, Observable, switchMap, take, tap, throwError } from 'rxjs';
 import { environment } from '../../environments/environment';
-import { TokenResponse, UserLoginPayload, UserMe, UserRegisterPayload } from './api.models';
+import {
+  FirebaseAuthPayload,
+  FirebaseNeedsRoleDetails,
+  TokenResponse,
+  UpgradeToAthletePayload,
+  UserLoginPayload,
+  UserMe,
+  UserRegisterPayload,
+} from './api.models';
 
 @Injectable({
   providedIn: 'root',
@@ -91,6 +99,12 @@ export class AuthService {
     return this.http.post<{ message: string; expires_in_seconds: number; demo_code?: string }>(`${this.apiUrl}/request-otp`, payload);
   }
 
+  checkOtpStatus(email: string): Observable<{ has_active_otp: boolean; user_exists?: boolean; wait_seconds: number; message?: string }> {
+    return this.http.get<{ has_active_otp: boolean; user_exists?: boolean; wait_seconds: number; message?: string }>(
+      `${this.apiUrl}/check-otp-status?email=${encodeURIComponent(email.trim().toLowerCase())}`
+    );
+  }
+
   verifyOtp(payload: { email: string; code: string }): Observable<TokenResponse> {
     return this.http.post<TokenResponse>(`${this.apiUrl}/verify-otp`, payload).pipe(
       tap((res) => {
@@ -107,6 +121,26 @@ export class AuthService {
     );
   }
 
+  /**
+   * Exchange a Firebase ID token for app JWTs.
+   * On first signup without role, the API returns 409 NEEDS_ROLE.
+   */
+  loginWithFirebase(payload: FirebaseAuthPayload): Observable<UserMe> {
+    return this.http.post<TokenResponse>(`${this.apiUrl}/firebase`, payload).pipe(
+      tap((res) => this.saveTokens(res)),
+      switchMap(() => this.loadMe())
+    );
+  }
+
+  static parseNeedsRole(err: unknown): FirebaseNeedsRoleDetails | null {
+    const details = (err as { error?: { error?: { code?: string; details?: FirebaseNeedsRoleDetails } } })
+      ?.error?.error;
+    if (details?.code !== 'NEEDS_ROLE' || !details.details?.needs_role) {
+      return null;
+    }
+    return details.details;
+  }
+
   loadMe(): Observable<UserMe> {
     return this.http.get<UserMe>(`${this.apiUrl}/me`).pipe(
       tap((user) => {
@@ -118,6 +152,14 @@ export class AuthService {
 
   updateProfile(payload: { full_name?: string; password?: string; avatar_url?: string }): Observable<UserMe> {
     return this.http.put<UserMe>(`${this.apiUrl}/profile`, payload).pipe(
+      tap((user) => {
+        this.currentUser.set(user);
+      })
+    );
+  }
+
+  upgradeToAthlete(payload: UpgradeToAthletePayload): Observable<UserMe> {
+    return this.http.post<UserMe>(`${this.apiUrl}/upgrade-to-athlete`, payload).pipe(
       tap((user) => {
         this.currentUser.set(user);
       })

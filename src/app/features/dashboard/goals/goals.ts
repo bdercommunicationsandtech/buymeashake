@@ -1,19 +1,27 @@
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
 import { DashboardService } from '../../../core/dashboard.service';
 import { AuthService } from '../../../core/auth.service';
 import { GoalItem } from '../../../core/api.models';
+import { LanguageService } from '../../../core/language.service';
 import {
-  IconBoltComponent,
   IconDumbbellComponent,
   IconShakerComponent,
-  IconTrophyComponent,
 } from '../../../shared/icons';
 import { AllowedUserTextDirective } from '../../../core/directives/allowed-user-text.directive';
 
 export type GoalCategory = 'equipment' | 'travel' | 'nutrition' | 'camp';
+
+export type GoalNotificationKey =
+  | 'notifyCoverUploaded'
+  | 'notifyGoalPublishedActive'
+  | 'notifyGoalCreatedActive'
+  | 'notifyGoalDraftSaved'
+  | 'notifyGoalCardSaved'
+  | 'notifyGoalActivated'
+  | 'notifyGoalPaused'
+  | 'notifyGoalError';
 
 @Component({
   selector: 'app-goals',
@@ -21,11 +29,8 @@ export type GoalCategory = 'equipment' | 'travel' | 'nutrition' | 'camp';
   imports: [
     CommonModule,
     FormsModule,
-    RouterLink,
     IconShakerComponent,
     IconDumbbellComponent,
-    IconTrophyComponent,
-    IconBoltComponent,
     AllowedUserTextDirective,
   ],
   templateUrl: './goals.html',
@@ -33,12 +38,19 @@ export type GoalCategory = 'equipment' | 'travel' | 'nutrition' | 'camp';
 export class DashboardGoals implements OnInit {
   private readonly dashboardService = inject(DashboardService);
   private readonly authService = inject(AuthService);
+  readonly languageService = inject(LanguageService);
+  readonly t = this.languageService.currentTranslations;
 
   readonly loading = signal(true);
   readonly goals = signal<GoalItem[]>([]);
   readonly saving = signal(false);
   readonly uploadingCover = signal(false);
-  readonly successMessage = signal<string | null>(null);
+  readonly successMessageKey = signal<GoalNotificationKey | null>(null);
+  readonly successMessage = computed(() => {
+    const key = this.successMessageKey();
+    if (!key) return null;
+    return this.t().dashboard.goalsView[key];
+  });
 
   // Control de vista: modal de creación/edición abierto o vista de lista de tarjetas
   readonly isEditorOpen = signal(false);
@@ -136,12 +148,15 @@ export class DashboardGoals implements OnInit {
   }
 
   openNewGoalModal(): void {
+    const isEn = this.languageService.currentLang() === 'en';
     this.editingGoalId.set(null);
     this.selectedCategory.set('equipment');
-    this.goalTitle.set('Renovación de Rack y Discos Olímpicos');
+    this.goalTitle.set(isEn ? 'Olympic Rack & Plates Upgrade' : 'Renovación de Rack y Discos Olímpicos');
     this.goalTarget.set(1500);
     this.goalDescription.set(
-      'Este nuevo equipamiento nos permitirá entrenar con máxima intensidad y preparar la próxima clasificatoria.'
+      isEn
+        ? 'This new equipment will allow us to train with maximum intensity and prepare for the upcoming qualifiers.'
+        : 'Este nuevo equipamiento nos permitirá entrenar con máxima intensidad y preparar la próxima clasificatoria.'
     );
     this.goalCoverUrl.set(null);
     this.isEditorOpen.set(true);
@@ -161,22 +176,23 @@ export class DashboardGoals implements OnInit {
 
   setCategory(cat: GoalCategory): void {
     this.selectedCategory.set(cat);
+    const isEn = this.languageService.currentLang() === 'en';
     if (!this.editingGoalId()) {
       switch (cat) {
         case 'equipment':
-          this.goalTitle.set('Renovación de Rack y Discos Olímpicos');
+          this.goalTitle.set(isEn ? 'Olympic Rack & Plates Upgrade' : 'Renovación de Rack y Discos Olímpicos');
           this.goalTarget.set(1500);
           break;
         case 'travel':
-          this.goalTitle.set('Vuelos y Hospedaje para el Nacional');
+          this.goalTitle.set(isEn ? 'Flights & Lodging for Nationals' : 'Vuelos y Hospedaje para el Nacional');
           this.goalTarget.set(1200);
           break;
         case 'nutrition':
-          this.goalTitle.set('Suplementación y Proteína de 3 Meses');
+          this.goalTitle.set(isEn ? '3-Month Supplements & Protein' : 'Suplementación y Proteína de 3 Meses');
           this.goalTarget.set(600);
           break;
         case 'camp':
-          this.goalTitle.set('Campamento de Alto Rendimiento');
+          this.goalTitle.set(isEn ? 'High Performance Training Camp' : 'Campamento de Alto Rendimiento');
           this.goalTarget.set(2000);
           break;
       }
@@ -189,172 +205,201 @@ export class DashboardGoals implements OnInit {
 
     const file = input.files[0];
     this.uploadingCover.set(true);
-
-    this.dashboardService.uploadImage(file).subscribe({
-      next: (res) => {
-        this.goalCoverUrl.set(res.url);
-        this.uploadingCover.set(false);
-        this.showSuccess('Imagen de portada cargada con éxito.');
-      },
-      error: () => {
-        this.uploadingCover.set(false);
-      },
-    });
-  }
-
-  removeCover(): void {
-    this.goalCoverUrl.set(null);
-  }
-
-  /**
-   * Publicar Meta en el perfil:
-   * 1. Si está guardando (saving() === true), bloquea para evitar doble clic (idempotencia).
-   * 2. Al activarse, el backend desactiva automáticamente cualquier otra meta del atleta.
-   * 3. Cierra el modal y deja la tarjeta visible en el Dashboard.
-   */
-  publishGoal(): void {
-    if (this.saving()) return; // Idempotencia en cliente contra clicks repetidos
-
-    const title = this.goalTitle().trim();
-    const target = this.goalTarget();
-    if (!title || target <= 0) return;
-
-    this.saving.set(true);
-    this.successMessage.set(null);
-
-    const currentId = this.editingGoalId();
-
-    if (currentId) {
-      this.dashboardService
-        .updateGoal(currentId, {
-          title,
-          target_amount: target,
-          is_active: true,
-          cover_image_url: this.goalCoverUrl(),
-        })
-        .subscribe({
-          next: () => {
-            this.saving.set(false);
-            this.isEditorOpen.set(false); // Cierra el modal
-            this.showSuccess('¡Meta deportiva publicada como activa en tu perfil público!');
-            this.loadGoals();
-          },
-          error: () => this.saving.set(false),
-        });
-    } else {
-      this.dashboardService
-        .createGoal({
-          title,
-          target_amount: target,
-          currency: 'USD',
-          cover_image_url: this.goalCoverUrl(),
-        })
-        .subscribe({
-          next: () => {
-            this.saving.set(false);
-            this.isEditorOpen.set(false); // Cierra el modal
-            this.showSuccess('¡Tu nueva meta deportiva está publicada y activa!');
-            this.loadGoals();
-          },
-          error: () => this.saving.set(false),
-        });
-    }
-  }
-
-  /**
-   * Guardar como borrador / tarjeta reutilizable sin activar en el perfil
-   */
-  saveDraft(): void {
-    if (this.saving()) return;
-
-    const title = this.goalTitle().trim();
-    const target = this.goalTarget();
-    if (!title || target <= 0) return;
-
-    this.saving.set(true);
-    const currentId = this.editingGoalId();
-
-    if (currentId) {
-      this.dashboardService
-        .updateGoal(currentId, {
-          title,
-          target_amount: target,
-          is_active: false,
-          cover_image_url: this.goalCoverUrl(),
-        })
-        .subscribe({
-          next: () => {
-            this.saving.set(false);
-            this.isEditorOpen.set(false);
-            this.showSuccess('Meta guardada en tus borradores.');
-            this.loadGoals();
-          },
-          error: () => this.saving.set(false),
-        });
-    } else {
-      this.dashboardService
-        .createGoal({
-          title,
-          target_amount: target,
-          currency: 'USD',
-          cover_image_url: this.goalCoverUrl(),
-        })
-        .subscribe({
-          next: (created) => {
-            this.dashboardService
-              .updateGoal(created.id, { is_active: false })
-              .subscribe(() => {
-                this.saving.set(false);
-                this.isEditorOpen.set(false);
-                this.showSuccess('Guardada como tarjeta en tus metas para reutilizar.');
-                this.loadGoals();
-              });
-          },
-          error: () => this.saving.set(false),
-        });
-    }
-  }
-
-  /**
-   * Activar directamente una meta desde su tarjeta guardada
-   */
-  activateSavedGoal(goalId: number): void {
-    if (this.saving()) return;
-    this.saving.set(true);
-
-    this.dashboardService
-      .updateGoal(goalId, { is_active: true })
-      .subscribe({
-        next: () => {
-          this.saving.set(false);
-          this.showSuccess('Meta activada en tu perfil.');
-          this.loadGoals();
-        },
-        error: () => this.saving.set(false),
-      });
-  }
-
-  /**
-   * Pausar la meta activa para que no aparezca en el perfil
-   */
-  pauseActiveGoal(goalId: number): void {
-    if (this.saving()) return;
-    this.saving.set(true);
-
-    this.dashboardService
-      .updateGoal(goalId, { is_active: false })
-      .subscribe({
-        next: () => {
-          this.saving.set(false);
-          this.showSuccess('Meta pausada. Ahora se encuentra en tus metas guardadas.');
-          this.loadGoals();
-        },
-        error: () => this.saving.set(false),
-      });
-  }
-
-  private showSuccess(msg: string): void {
-    this.successMessage.set(msg);
-    setTimeout(() => this.successMessage.set(null), 4000);
-  }
-}
+ 
+     this.dashboardService.uploadImage(file).subscribe({
+       next: (res) => {
+         this.goalCoverUrl.set(res.url);
+         this.uploadingCover.set(false);
+         this.showSuccess('notifyCoverUploaded');
+       },
+       error: () => {
+         this.uploadingCover.set(false);
+         this.showSuccess('notifyGoalError');
+       },
+     });
+   }
+ 
+   removeCover(): void {
+     this.goalCoverUrl.set(null);
+   }
+ 
+   /**
+    * Publicar Meta en el perfil:
+    * 1. Si está guardando (saving() === true), bloquea para evitar doble clic (idempotencia).
+    * 2. Al activarse, el backend desactiva automáticamente cualquier otra meta del atleta.
+    * 3. Cierra el modal y deja la tarjeta visible en el Dashboard.
+    */
+   publishGoal(): void {
+     if (this.saving()) return; // Idempotencia en cliente contra clicks repetidos
+ 
+     const title = this.goalTitle().trim();
+     const target = this.goalTarget();
+     if (!title || target <= 0) return;
+ 
+     this.saving.set(true);
+     this.successMessageKey.set(null);
+ 
+     const currentId = this.editingGoalId();
+ 
+     if (currentId) {
+       this.dashboardService
+         .updateGoal(currentId, {
+           title,
+           target_amount: target,
+           is_active: true,
+           cover_image_url: this.goalCoverUrl(),
+         })
+         .subscribe({
+           next: () => {
+             this.saving.set(false);
+             this.isEditorOpen.set(false); // Cierra el modal
+             this.showSuccess('notifyGoalPublishedActive');
+             this.loadGoals();
+           },
+           error: () => {
+             this.saving.set(false);
+             this.showSuccess('notifyGoalError');
+           },
+         });
+     } else {
+       this.dashboardService
+         .createGoal({
+           title,
+           target_amount: target,
+           currency: 'USD',
+           cover_image_url: this.goalCoverUrl(),
+         })
+         .subscribe({
+           next: () => {
+             this.saving.set(false);
+             this.isEditorOpen.set(false); // Cierra el modal
+             this.showSuccess('notifyGoalCreatedActive');
+             this.loadGoals();
+           },
+           error: () => {
+             this.saving.set(false);
+             this.showSuccess('notifyGoalError');
+           },
+         });
+     }
+   }
+ 
+   /**
+    * Guardar como borrador / tarjeta reutilizable sin activar en el perfil
+    */
+   saveDraft(): void {
+     if (this.saving()) return;
+ 
+     const title = this.goalTitle().trim();
+     const target = this.goalTarget();
+     if (!title || target <= 0) return;
+ 
+     this.saving.set(true);
+     const currentId = this.editingGoalId();
+ 
+     if (currentId) {
+       this.dashboardService
+         .updateGoal(currentId, {
+           title,
+           target_amount: target,
+           is_active: false,
+           cover_image_url: this.goalCoverUrl(),
+         })
+         .subscribe({
+           next: () => {
+             this.saving.set(false);
+             this.isEditorOpen.set(false);
+             this.showSuccess('notifyGoalDraftSaved');
+             this.loadGoals();
+           },
+           error: () => {
+             this.saving.set(false);
+             this.showSuccess('notifyGoalError');
+           },
+         });
+     } else {
+       this.dashboardService
+         .createGoal({
+           title,
+           target_amount: target,
+           currency: 'USD',
+           cover_image_url: this.goalCoverUrl(),
+         })
+         .subscribe({
+           next: (created) => {
+             this.dashboardService
+               .updateGoal(created.id, { is_active: false })
+               .subscribe({
+                 next: () => {
+                   this.saving.set(false);
+                   this.isEditorOpen.set(false);
+                   this.showSuccess('notifyGoalCardSaved');
+                   this.loadGoals();
+                 },
+                 error: () => {
+                   this.saving.set(false);
+                   this.showSuccess('notifyGoalError');
+                 },
+               });
+           },
+           error: () => {
+             this.saving.set(false);
+             this.showSuccess('notifyGoalError');
+           },
+         });
+     }
+   }
+ 
+   /**
+    * Activar directamente una meta desde su tarjeta guardada
+    */
+   activateSavedGoal(goalId: number): void {
+     if (this.saving()) return;
+     this.saving.set(true);
+ 
+     this.dashboardService
+       .updateGoal(goalId, { is_active: true })
+       .subscribe({
+         next: () => {
+           this.saving.set(false);
+           this.showSuccess('notifyGoalActivated');
+           this.loadGoals();
+         },
+         error: () => {
+           this.saving.set(false);
+           this.showSuccess('notifyGoalError');
+         },
+       });
+   }
+ 
+   /**
+    * Pausar la meta activa para que no aparezca en el perfil
+    */
+   pauseActiveGoal(goalId: number): void {
+     if (this.saving()) return;
+     this.saving.set(true);
+ 
+     this.dashboardService
+       .updateGoal(goalId, { is_active: false })
+       .subscribe({
+         next: () => {
+           this.saving.set(false);
+           this.showSuccess('notifyGoalPaused');
+           this.loadGoals();
+         },
+         error: () => {
+           this.saving.set(false);
+           this.showSuccess('notifyGoalError');
+         },
+       });
+   }
+ 
+   private showSuccess(key: GoalNotificationKey): void {
+     this.successMessageKey.set(key);
+     setTimeout(() => {
+       if (this.successMessageKey() === key) {
+         this.successMessageKey.set(null);
+       }
+     }, 4000);
+   }
+ }

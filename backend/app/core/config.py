@@ -84,6 +84,10 @@ class Settings(BaseSettings):
     )
     EMAILS_FROM_NAME: str = "Buymeashake.fit"
 
+    # Firebase Auth (Google / Apple). Path to service-account JSON, or raw JSON string.
+    FIREBASE_CREDENTIALS_JSON: str | None = None
+    FIREBASE_PROJECT_ID: str | None = None
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",

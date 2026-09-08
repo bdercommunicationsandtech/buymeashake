@@ -10,6 +10,7 @@ import { SHAKE_PRICE } from '../../core/demo';
 import {
   AnimatedShakerComponent,
   IconButtonShareComponent,
+  IconButtonSupportComponent,
   IconDumbbellComponent,
   IconRunningComponent,
   IconShakerComponent,
@@ -38,6 +39,7 @@ export interface FloatingAthlete {
     IconDumbbellComponent,
     IconRunningComponent,
     IconButtonShareComponent,
+    IconButtonSupportComponent,
     IconStarComponent,
     AnimatedShakerComponent,
     AllowedUserTextDirective,

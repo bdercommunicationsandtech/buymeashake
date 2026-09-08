@@ -184,20 +184,20 @@ class UserRole(Base):
     __tablename__ = "user_roles"
     __table_args__ = (UniqueConstraint("user_id", "role_id", name="uq_user_role"),)
 
-    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    id: Mapped[int] = mapped_column(BIGINT(unsigned=True), primary_key=True, autoincrement=True)
     user_id: Mapped[int] = mapped_column(
-        BigInteger, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
+        BIGINT(unsigned=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
     )
     role_id: Mapped[int] = mapped_column(
-        BigInteger, ForeignKey("lookup_items.id", ondelete="RESTRICT"), nullable=False, index=True
+        BIGINT(unsigned=True), ForeignKey("lookup_items.id", ondelete="RESTRICT"), nullable=False, index=True
     )
-    created_by: Mapped[int] = mapped_column(BigInteger, nullable=False)
+    created_by: Mapped[int] = mapped_column(BIGINT(unsigned=True), nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(
         DateTime, server_default=func.now(), onupdate=func.now()
     )
     status_id: Mapped[int] = mapped_column(
-        BigInteger, ForeignKey("lookup_items.id", ondelete="RESTRICT"), nullable=False, index=True
+        BIGINT(unsigned=True), ForeignKey("lookup_items.id", ondelete="RESTRICT"), nullable=False, index=True
     )
 
     user: Mapped[User] = relationship("User", back_populates="user_roles", foreign_keys=[user_id])

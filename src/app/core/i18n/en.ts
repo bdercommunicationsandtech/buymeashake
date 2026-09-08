@@ -45,6 +45,10 @@ export const en: TranslationSchema = {
     rights: 'All rights reserved.',
     tagline: 'The platform for athletes and fans to connect through genuine support.',
     disclaimer: 'No real payments: checkout replicates Stripe design for prototyping purposes only.',
+    legal: 'Legal',
+    terms: 'Terms of service',
+    privacy: 'Privacy policy',
+    report: 'Report a creator',
   },
   dashboard: {
     title: 'Dashboard',

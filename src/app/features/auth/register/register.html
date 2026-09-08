@@ -183,6 +183,18 @@
           </button>
         </div>
 
+        <!-- Aviso Legal -->
+        <p class="text-center text-[11px] text-gray-500 dark:text-white/40 leading-relaxed">
+          {{ lang() === 'es' ? 'Al registrarte, confirmas tener al menos 18 años y aceptas los' : 'By registering, you confirm you are at least 18 and agree to the' }}
+          <a routerLink="/terms" target="_blank" class="font-semibold text-gray-900 dark:text-lime hover:underline">
+            {{ lang() === 'es' ? 'Términos de Servicio' : 'Terms of Service' }}
+          </a>
+          {{ lang() === 'es' ? 'y la' : 'and the' }}
+          <a routerLink="/privacy" target="_blank" class="font-semibold text-gray-900 dark:text-lime hover:underline">
+            {{ lang() === 'es' ? 'Política de Privacidad' : 'Privacy Policy' }}
+          </a>.
+        </p>
+
         <!-- Link a login -->
         <p class="text-center text-xs text-gray-500 dark:text-gray-400 pt-2 font-medium">
           {{ t().auth.alreadyHaveAccountPrompt }}

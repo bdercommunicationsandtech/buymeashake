@@ -7,15 +7,22 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
-import firebase_admin
-from firebase_admin import auth, credentials
+try:
+    import firebase_admin
+    from firebase_admin import auth, credentials
+except ImportError:
+    firebase_admin = None
+    auth = None
+    credentials = None
 
 from app.core.config import settings
 from app.core.exceptions import UnauthorizedError
 
 
 @lru_cache(maxsize=1)
-def _ensure_firebase_app() -> firebase_admin.App:
+def _ensure_firebase_app() -> Any:
+    if firebase_admin is None:
+        raise UnauthorizedError("firebase-admin no está instalado en el entorno.")
     if firebase_admin._apps:
         return firebase_admin.get_app()
 

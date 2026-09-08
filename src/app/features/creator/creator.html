@@ -226,6 +226,17 @@
           >
             <app-icon-button-share size="14" />
           </button>
+          <a
+            [routerLink]="['/report']"
+            [queryParams]="{ creator: creator.handle }"
+            class="grid h-8 w-8 place-items-center rounded-xl border border-white/10 bg-white/5 text-white/50 transition hover:bg-red-500/15 hover:text-red-400 hover:border-red-500/30"
+            [attr.aria-label]="i18n.lang() === 'es' ? 'Reportar este atleta' : 'Report this creator'"
+            [attr.title]="i18n.lang() === 'es' ? 'Reportar este atleta' : 'Report this creator'"
+          >
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9" />
+            </svg>
+          </a>
         </div>
       </aside>
       </app-edit-section-overlay>
@@ -863,6 +874,20 @@
         </div>
       </div>
     </section>
+
+    <!-- Footer actions / Report link -->
+    <div class="pt-6 pb-2 text-center border-t border-gray-200/60 dark:border-white/5">
+      <a
+        [routerLink]="['/report']"
+        [queryParams]="{ creator: creator.handle }"
+        class="inline-flex items-center gap-1.5 text-xs text-gray-400 dark:text-white/40 hover:text-red-600 dark:hover:text-red-400 transition"
+      >
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9" />
+        </svg>
+        <span>{{ i18n.lang() === 'es' ? '¿Problemas con esta página? Reportar atleta o contenido' : 'Issues with this page? Report creator or content' }}</span>
+      </a>
+    </div>
   </main>
   }
 

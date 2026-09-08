@@ -640,3 +640,45 @@ class AdminWithdrawalActionRequest(BaseModel):
     admin_notes: str | None = None
 
 
+# ==============================================================================
+# 9. COMPLIANCE & ABUSE REPORTS
+# ==============================================================================
+
+class ComplianceReportRequest(BaseModel):
+    creator_target: str = Field(min_length=2, max_length=255)
+    reason_code: str = Field(min_length=1, max_length=50)
+    reason_title: str = Field(min_length=3, max_length=150)
+    description: str = Field(min_length=15, max_length=4000)
+    evidence_links: list[str] = Field(default_factory=list)
+    attached_file: str | None = None
+    reporter_email: EmailStr
+
+
+class ComplianceReportResponse(BaseModel):
+    folio: str
+    message: str
+    status: str = "received"
+
+
+class AdminReportVerdictRequest(BaseModel):
+    reporter_email: EmailStr
+    creator_target: str = Field(min_length=2, max_length=255)
+    verdict: str = Field(
+        pattern="^(action_taken|dismissed|warning)$",
+        description="Resultado: 'action_taken' (sanción), 'dismissed' (desestimado), 'warning' (advertencia)",
+    )
+    verdict_title: str = Field(min_length=3, max_length=200)
+    admin_notes: str = Field(min_length=10, max_length=4000)
+    action_details: str | None = Field(default=None, max_length=1000)
+
+
+class AdminReportVerdictResponse(BaseModel):
+    folio: str
+    verdict: str
+    status: str = "resolved"
+    email_sent: bool = True
+    message: str
+
+
+
+

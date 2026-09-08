@@ -48,6 +48,7 @@ export const en: TranslationSchema = {
     legal: 'Legal',
     terms: 'Terms of service',
     privacy: 'Privacy policy',
+    report: 'Report a creator',
   },
   dashboard: {
     title: 'Dashboard',

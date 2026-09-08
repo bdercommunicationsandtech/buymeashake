@@ -46,6 +46,7 @@ export interface TranslationSchema {
     legal: string;
     terms: string;
     privacy: string;
+    report: string;
   };
   dashboard: {
     title: string;

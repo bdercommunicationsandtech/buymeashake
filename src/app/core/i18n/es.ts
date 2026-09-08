@@ -48,6 +48,7 @@ export const es: TranslationSchema = {
     legal: 'Legal',
     terms: 'Términos de servicio',
     privacy: 'Política de privacidad',
+    report: 'Reportar un atleta',
   },
   dashboard: {
     title: 'Panel de Control',

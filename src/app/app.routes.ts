@@ -33,6 +33,16 @@ export const routes: Routes = [
     redirectTo: 'privacy',
     pathMatch: 'full',
   },
+  {
+    path: 'report',
+    title: 'Reportar un atleta o abuso — buymeashake',
+    loadComponent: () => import('./features/legal/report/report').then((m) => m.Report),
+  },
+  {
+    path: 'reportar',
+    redirectTo: 'report',
+    pathMatch: 'full',
+  },
 
   // 2. Flujo de Autenticación y Onboarding
   {

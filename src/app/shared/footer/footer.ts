@@ -41,6 +41,7 @@ export class Footer {
         links: [
           { path: '/terms', label: t.footer.terms },
           { path: '/privacy', label: t.footer.privacy },
+          { path: '/report', label: t.footer.report },
         ],
       },
     ];

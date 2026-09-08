@@ -88,6 +88,21 @@ async def is_admin(session: AsyncSession, user_id: int) -> bool:
     return await has_role(session, user_id, ROLE_ADMIN)
 
 
+async def count_active_role(session: AsyncSession, role_name: str) -> int:
+    """Cuenta usuarios con un rol ACTIVE (p.ej. supporter | athlete | admin)."""
+    from sqlalchemy import func
+
+    role_id = await _role_item_id(session, role_name)
+    active_id = await _active_status_id(session)
+    result = await session.execute(
+        select(func.count(UserRole.id)).where(
+            UserRole.role_id == role_id,
+            UserRole.status_id == active_id,
+        )
+    )
+    return int(result.scalar_one() or 0)
+
+
 async def primary_product_role(session: AsyncSession, user_id: int) -> str:
     names = await get_active_role_names(session, user_id)
     if ROLE_ATHLETE in names:

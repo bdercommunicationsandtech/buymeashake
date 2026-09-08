@@ -86,6 +86,38 @@ class AdminMeResponse(BaseModel):
     avatar_url: str | None = None
 
 
+class AdminUserCounts(BaseModel):
+    supporters: int
+    athletes: int
+    total: int
+
+
+class AdminGmvStats(BaseModel):
+    total: Decimal
+    currency: str = "USD"
+    shakes: Decimal
+    memberships: Decimal
+    shop: Decimal
+    bookings: Decimal
+    successful_count: int
+
+
+class AdminRecentUserItem(BaseModel):
+    id: int
+    email: str
+    full_name: str
+    role: str
+    created_at: datetime | None = None
+    athlete_handle: str | None = None
+
+
+class AdminPlatformStatsResponse(BaseModel):
+    users: AdminUserCounts
+    gmv: AdminGmvStats
+    recent_supporters: list[AdminRecentUserItem] = []
+    recent_athletes: list[AdminRecentUserItem] = []
+
+
 class RequestOtpRequest(BaseModel):
     email: EmailStr
     name: str | None = None

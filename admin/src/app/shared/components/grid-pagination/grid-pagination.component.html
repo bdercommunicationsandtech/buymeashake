@@ -1,0 +1,28 @@
+<div class="grid-pagination">
+  <div class="pagination-left">
+    <label class="pagination-label">Registros por página</label>
+    <select
+      class="pagination-select"
+      [ngModel]="limit()"
+      (ngModelChange)="onLimitChange($event)"
+    >
+      @for (opt of pageSizeOptions(); track opt) {
+        <option [value]="opt">{{ opt === 0 ? 'Todos' : opt }}</option>
+      }
+    </select>
+  </div>
+  <div class="pagination-center">
+    <span class="pagination-info">
+      Mostrando {{ fromRecord() }}-{{ toRecord() }} de {{ total() }} registros
+    </span>
+  </div>
+  <div class="pagination-right">
+    <button type="button" class="btn-page" [disabled]="!hasPrev()" (click)="goPrev()">
+      Anterior
+    </button>
+    <span class="pagination-page">Página {{ page() }} de {{ totalPages() }}</span>
+    <button type="button" class="btn-page" [disabled]="!hasNext()" (click)="goNext()">
+      Siguiente
+    </button>
+  </div>
+</div>

@@ -62,6 +62,30 @@ class UserLoginRequest(BaseModel):
     password: str
 
 
+class AdminLoginRequest(BaseModel):
+    email: EmailStr
+    password: str = Field(min_length=1, max_length=256)
+
+
+class AdminLoginResponse(BaseModel):
+    access_token: str
+    refresh_token: str | None = None
+    token_type: str = "bearer"
+    expires_in: int | None = None
+
+
+class AdminMeResponse(BaseModel):
+    id: int
+    email: str
+    full_name: str
+    username: str
+    first_name: str
+    last_name: str
+    roles: list[str]
+    is_admin: bool = True
+    avatar_url: str | None = None
+
+
 class RequestOtpRequest(BaseModel):
     email: EmailStr
     name: str | None = None

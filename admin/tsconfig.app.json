@@ -1,0 +1,34 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "./out-tsc/app",
+    "types": []
+  },
+  "include": [
+    "src/**/*.ts"
+  ],
+  "exclude": [
+    "src/**/*.spec.ts",
+    "src/app/features/users/**",
+    "src/app/features/banners/**",
+    "src/app/features/contact/**",
+    "src/app/features/reports/**",
+    "src/app/features/listings/**",
+    "src/app/core/services/users-api.service.ts",
+    "src/app/core/services/banners-api.service.ts",
+    "src/app/core/services/contact-api.service.ts",
+    "src/app/core/services/listings.service.ts",
+    "src/app/core/services/stats.service.ts",
+    "src/app/core/services/trust-reports-api.service.ts",
+    "src/app/core/services/profile-photo.service.ts",
+    "src/app/core/services/timezone.service.ts",
+    "src/app/core/services/datetime.service.ts",
+    "src/app/core/guards/roles.guard.ts",
+    "src/app/core/interceptors/buyer1-client.interceptor.ts",
+    "src/app/core/interceptors/timezone.interceptor.ts",
+    "src/app/core/models/**",
+    "src/app/shared/components/grid-pagination/**",
+    "src/app/shared/pipes/**",
+    "src/app/shared/utils/**"
+  ]
+}

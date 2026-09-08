@@ -1,10 +1,22 @@
 from fastapi import APIRouter
 
-from app.api.v1.endpoints import auth, checkout, dashboard, explore, fan, geo, system, uploads, withdrawals
+from app.api.v1.endpoints import (
+    admin_auth,
+    auth,
+    checkout,
+    dashboard,
+    explore,
+    fan,
+    geo,
+    system,
+    uploads,
+    withdrawals,
+)
 
 api_router = APIRouter()
 
 api_router.include_router(auth.router, tags=["Auth"])
+api_router.include_router(admin_auth.router, tags=["Admin Auth"])
 api_router.include_router(fan.router, tags=["Fan", "Supporter"])
 api_router.include_router(system.router, tags=["System"])
 api_router.include_router(explore.router, tags=["Explore", "Creators"])

@@ -92,8 +92,7 @@ def get_cover_url(profile: AthleteProfile) -> str | None:
     return None
 
 
-def get_page_field(profile: AthleteDiscipline,
-    AthleteProfile, field: str) -> str | None:
+def get_page_field(profile: AthleteProfile, field: str) -> str | None:
     ps = profile.page_settings
     if not ps:
         return None
@@ -141,8 +140,13 @@ async def resolve_sport_item_ids(session: AsyncSession, sport_codes: list[int] |
     return list(result.scalars().all())
 
 
-async def ensure_child_rows(session: AsyncSession, athlete: AthleteDiscipline,
-    AthleteProfile, *, referral_code: str, referred_by_id: int | None = None) -> None:
+async def ensure_child_rows(
+    session: AsyncSession,
+    athlete: AthleteProfile,
+    *,
+    referral_code: str,
+    referred_by_id: int | None = None,
+) -> None:
     """Create default child rows for a new athlete profile."""
     if athlete.id:
         existing_ps = await session.get(AthletePageSettings, athlete.id)
@@ -184,8 +188,11 @@ async def ensure_child_rows(session: AsyncSession, athlete: AthleteDiscipline,
     await session.flush()
 
 
-async def upsert_social_links(session: AsyncSession, athlete: AthleteDiscipline,
-    AthleteProfile, urls: dict[str, str | None]) -> None:
+async def upsert_social_links(
+    session: AsyncSession,
+    athlete: AthleteProfile,
+    urls: dict[str, str | None],
+) -> None:
     existing = {link.platform: link for link in (athlete.social_links or [])}
     for platform in SOCIAL_PLATFORMS:
         if platform not in urls:

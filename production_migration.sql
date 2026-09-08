@@ -4,17 +4,19 @@
 
 -- 1. Crear la nueva tabla pivot (athlete_disciplines) para permitir múltiples deportes por atleta
 CREATE TABLE IF NOT EXISTS athlete_disciplines (
-    athlete_id INT NOT NULL,
-    discipline_item_id INT NOT NULL,
+    athlete_id BIGINT UNSIGNED NOT NULL,
+    discipline_item_id BIGINT UNSIGNED NOT NULL,
+    is_primary BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (athlete_id, discipline_item_id),
     CONSTRAINT athlete_disciplines_athlete_fk FOREIGN KEY (athlete_id) REFERENCES athlete_profiles (id) ON DELETE CASCADE,
     CONSTRAINT athlete_disciplines_sport_fk FOREIGN KEY (discipline_item_id) REFERENCES lookup_items (id) ON DELETE CASCADE
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 2. Migrar los datos existentes (Crucial en producción para no borrar el deporte actual de los atletas)
 -- Esto copia el 'primary_sport_item_id' de athlete_profiles y lo inserta en la nueva tabla athlete_disciplines.
-INSERT IGNORE INTO athlete_disciplines (athlete_id, discipline_item_id)
-SELECT id, primary_sport_item_id
+INSERT IGNORE INTO athlete_disciplines (athlete_id, discipline_item_id, is_primary)
+SELECT id, primary_sport_item_id, TRUE
 FROM athlete_profiles
 WHERE primary_sport_item_id IS NOT NULL;
 

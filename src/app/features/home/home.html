@@ -64,7 +64,19 @@
 
   
   <!-- ------------------------------------------------------------- 2. TOP ATHLETES SHOWCASE -->
-  <section class="max-w-5xl mx-auto px-5 mb-24 mt-20">
+  <section class="relative w-full overflow-hidden mb-24 mt-20 py-10">
+    <!-- DECO TEXT BKG -->
+    <div class="absolute inset-0 pointer-events-none select-none z-0 overflow-hidden flex items-center justify-between px-2 xl:px-10">
+      <div class="hidden lg:flex flex-col justify-center items-start gap-32 font-marker text-7xl xl:text-8xl text-gray-900/15 dark:text-white/10 opacity-100">
+         <span class="transform -rotate-6">WORK HARD</span>
+         <span class="transform rotate-2">JUST RESULTS</span>
+      </div>
+      <div class="hidden lg:flex flex-col justify-center items-end gap-32 font-marker text-7xl xl:text-8xl text-gray-900/15 dark:text-white/10 opacity-100 text-right">
+         <span class="transform rotate-3">NO EXCUSES</span>
+         <span class="transform -rotate-2">NO DAYS OFF</span>
+      </div>
+    </div>
+    <div class="max-w-5xl mx-auto px-5 relative z-10">
     <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-10">
       <div>
         <span class="text-[11px] font-black uppercase tracking-widest text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 border border-transparent dark:border-amber-500/20 px-3 py-1.5 rounded-lg mb-3 inline-block">
@@ -231,9 +243,23 @@
             </div>
           }
         </div>
+      </div>
   </section>
   <!-- ------------------------------------------------------------- 3. EL CAMINO AL PATROCINIO (BENTO GRID) -->
-  <section class="py-24 px-5 sm:px-10 bg-white dark:bg-[#0c0f10] border-t border-gray-200/60 dark:border-white/5 transition-colors duration-300">
+  <section class="relative overflow-hidden py-24 px-5 sm:px-10 bg-white dark:bg-[#0c0f10] border-t border-gray-200/60 dark:border-white/5 transition-colors duration-300">
+  <!-- DECO TEXT BKG -->
+  <div class="absolute inset-0 pointer-events-none select-none z-0 overflow-hidden flex items-center justify-between px-2 xl:px-10">
+    <div class="hidden lg:flex flex-col justify-center items-start gap-24 font-marker text-7xl xl:text-8xl text-gray-900/15 dark:text-white/10 opacity-100">
+       <span class="transform -rotate-6">NEVER GIVE UP</span>
+       <span class="transform -rotate-2">NO PAIN NO GAIN</span>
+    </div>
+    <div class="hidden lg:flex flex-col justify-center items-end gap-24 font-marker text-7xl xl:text-8xl text-[#c9ff3d]/30 dark:text-[#c9ff3d]/15 opacity-100 text-right">
+       <span class="transform rotate-3">NO LIMITS</span>
+       <span class="transform -rotate-3">CHALLENGE</span>
+    </div>
+  </div>
+  <div class="relative z-10">
+
     <div class="max-w-5xl mx-auto">
       
       <div class="text-center max-w-2xl mx-auto mb-16">
@@ -291,10 +317,24 @@
 
       </div>
     </div>
+  </div>
   </section>
 
   <!-- ------------------------------------------------------------- 4. CÓMO FUNCIONA / 3 FORMAS DE GANAR -->
-  <section class="max-w-5xl mx-auto px-5 mb-24">
+  <section class="relative w-full overflow-hidden mb-24">
+  <!-- DECO TEXT BKG -->
+  <div class="absolute inset-0 pointer-events-none select-none z-0 overflow-hidden flex items-center justify-between px-2 xl:px-10">
+    <div class="hidden lg:flex flex-col justify-center items-start gap-32 font-marker text-7xl xl:text-8xl text-emerald-900/15 dark:text-[#c9ff3d]/15 opacity-100">
+       <span class="transform -rotate-3">TEAM CREW</span>
+       <span class="transform rotate-2">BETTER</span>
+    </div>
+    <div class="hidden lg:flex flex-col justify-center items-end gap-32 font-marker text-7xl xl:text-8xl text-gray-900/15 dark:text-white/10 opacity-100 text-right">
+       <span class="transform -rotate-2">IF NOT YOU WHO?</span>
+       <span class="transform rotate-3">IF NOT NOW WHEN?</span>
+    </div>
+  </div>
+  <div class="max-w-5xl mx-auto px-5 relative z-10">
+
     <div class="text-center max-w-xl mx-auto mb-12">
       <span class="text-[11px] font-black uppercase tracking-widest text-gray-400 dark:text-gray-500">{{ t().home.monetizationBadge }}</span>
       <h2 class="text-2xl sm:text-4xl font-black text-gray-950 dark:text-white mt-2 tracking-tight">
@@ -344,6 +384,7 @@
       </div>
 
     </div>
+  </div>
   </section>
 
   <!-- ------------------------------------------------------------- 5. CTA FINAL -->

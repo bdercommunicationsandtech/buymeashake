@@ -264,7 +264,7 @@ import { FollowedAthlete, PostResponse } from '../../../core/api.models';
                       {{ athlete.name }}
                     </p>
                     <p class="text-[11px] text-gray-500 dark:text-gray-400 truncate">
-                      {{ athlete.primary_sport || athlete.bio || t().supporterArea.athleteRole }}
+                      {{ athlete.disciplines?.join(', ') || athlete.bio || t().supporterArea.athleteRole }}
                     </p>
                   </div>
                 </a>

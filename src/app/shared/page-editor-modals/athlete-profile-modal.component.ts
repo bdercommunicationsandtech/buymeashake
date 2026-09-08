@@ -1,4 +1,4 @@
-import { Component, effect, inject, input, output, signal } from '@angular/core';
+import { Component, effect, inject, input, output, signal , computed} from "@angular/core";
 import { CommonModule } from '@angular/common';
 import { DashboardService } from '../../core/dashboard.service';
 import { LookupService } from '../../core/lookup.service';
@@ -113,15 +113,55 @@ import { EditorSavePatch } from './editor-save-patch';
             </div>
             <div>
               <label class="block text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 mb-1">{{ t().pageEditorModals.disciplineLabel }}</label>
-              <select
-                class="w-full rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#191c1d] px-4 py-3 text-sm font-semibold text-gray-900 dark:text-white focus:border-[#c9ff3d] focus:outline-none"
-                [value]="primarySportCode()"
-                (change)="primarySportCode.set(+$any($event.target).value)"
-              >
-                @for (sport of sports(); track sport.code) {
-                  <option [value]="sport.code">{{ languageService.translateDiscipline(sport.label) }}</option>
+              <div class="relative">
+                <button
+                  type="button"
+                  (click)="dropdownOpen.set(!dropdownOpen()); searchSport.set('')"
+                  class="relative w-full rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#191c1d] px-4 py-3 text-left text-sm font-semibold text-gray-900 dark:text-white focus:border-[#c9ff3d] focus:outline-none cursor-pointer"
+                >
+                  @if (disciplineCodes().length === 0) {
+                    <span class="text-gray-400">Selecciona disciplinas...</span>
+                  } @else {
+                    <div class="flex flex-wrap gap-1.5">
+                      @for (code of disciplineCodes(); track code) {
+                        <span class="inline-flex items-center gap-1 bg-gray-100 dark:bg-white/10 text-gray-800 dark:text-gray-200 px-2 py-0.5 rounded-md text-xs font-bold">
+                          {{ getDisciplineLabel(code) }}
+                          <span class="text-gray-400 hover:text-gray-900 dark:hover:text-white ml-1" (click)="$event.stopPropagation(); toggleSport(code)">&times;</span>
+                        </span>
+                      }
+                    </div>
+                  }
+                </button>
+
+                @if (dropdownOpen()) {
+                  <div class="absolute z-10 w-full mt-2 bg-white dark:bg-[#191c1d] border border-gray-200 dark:border-white/10 rounded-xl shadow-xl max-h-72 overflow-hidden flex flex-col">
+                    
+                <div class="p-2 border-b border-gray-100 dark:border-white/5">
+                  <input
+                    type="text"
+                    placeholder="Buscar disciplina..."
+                    class="w-full bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-white font-medium focus:outline-none focus:border-[#c9ff3d] dark:focus:border-[#c9ff3d]"
+                    [value]="searchSport()"
+                    (input)="searchSport.set($any($event.target).value)"
+                    (click)="$event.stopPropagation()"
+                  />
+                </div>
+                <ul class="py-1 overflow-y-auto text-sm font-semibold text-gray-900 dark:text-white flex-1">
+                  @for (sport of filteredSports(); track sport.code) {
+                        <li
+                          (click)="toggleSport(sport.code)"
+                          class="px-4 py-2.5 hover:bg-gray-100 dark:hover:bg-white/5 cursor-pointer flex justify-between items-center transition-colors"
+                        >
+                          <span>{{ languageService.translateDiscipline(sport.label) }}</span>
+                          @if (disciplineCodes().includes(sport.code)) {
+                            <span class="text-black dark:text-[#c9ff3d] text-lg leading-none">✓</span>
+                          }
+                        </li>
+                      }
+                    </ul>
+                  </div>
                 }
-              </select>
+              </div>
             </div>
 
             <div class="pt-2 border-t border-gray-100 dark:border-white/10 space-y-4">
@@ -178,7 +218,17 @@ export class AthleteProfileModalComponent {
   readonly bio = signal('');
   readonly city = signal('');
   readonly cityId = signal<number | null>(null);
-  readonly primarySportCode = signal(101);
+  readonly disciplineCodes = signal<number[]>([]);
+  readonly dropdownOpen = signal(false);
+  readonly searchSport = signal('');
+  readonly filteredSports = computed(() => {
+    const q = this.searchSport().toLowerCase().trim();
+    const all = this.sports();
+    if (!q) return all;
+    return all.filter((s) =>
+      this.languageService.translateDiscipline(s.label).toLowerCase().includes(q)
+    );
+  });
   readonly avatarUrl = signal<string | null>(null);
   readonly coverImageUrl = signal<string | null>(null);
   readonly instagramUrl = signal('');
@@ -205,7 +255,7 @@ export class AthleteProfileModalComponent {
           this.bio.set(p.bio || '');
           this.city.set(p.city || '');
           this.cityId.set(p.city_id ?? null);
-          this.primarySportCode.set(p.primary_sport_code || 101);
+          this.disciplineCodes.set(p.discipline_codes || []);
           this.avatarUrl.set(p.avatar_url);
           this.coverImageUrl.set(p.cover_image_url);
           this.instagramUrl.set(p.instagram_url || '');
@@ -254,6 +304,21 @@ export class AthleteProfileModalComponent {
     });
   }
 
+
+  toggleSport(code: number): void {
+    const current = this.disciplineCodes();
+    if (current.includes(code)) {
+      this.disciplineCodes.set(current.filter((c: number) => c !== code));
+    } else {
+      this.disciplineCodes.set([...current, code]);
+    }
+  }
+
+  getDisciplineLabel(code: number): string {
+    const sport = this.sports().find((s) => s.code === code);
+    return sport ? this.languageService.translateDiscipline(sport.label) : '';
+  }
+
   save(): void {
     this.saving.set(true);
     this.error.set(null);
@@ -262,7 +327,7 @@ export class AthleteProfileModalComponent {
         full_name: this.fullName(),
         bio: this.bio(),
         city_id: this.cityId(),
-        primary_sport_code: this.primarySportCode(),
+        discipline_codes: this.disciplineCodes(),
         avatar_url: this.avatarUrl() || undefined,
         cover_image_url: this.coverImageUrl() || undefined,
         instagram_url: this.instagramUrl().trim() || null,

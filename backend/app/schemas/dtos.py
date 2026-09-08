@@ -158,7 +158,7 @@ class UpgradeToAthleteRequest(BaseModel):
     handle: str = Field(min_length=3, max_length=30, pattern="^[a-z0-9_]{3,30}$")
     full_name: str | None = Field(default=None, min_length=2, max_length=150)
     primary_sport_code: int | None = Field(default=None)
-    bio: str | None = Field(default=None, max_length=2000)
+    bio: str | None = Field(default=None, max_length=600)
     city: str | None = Field(default=None, max_length=255)
     shake_price: Decimal | None = Field(default=None, ge=1)
 
@@ -379,7 +379,7 @@ class TierBenefitDto(BaseModel):
 
 class MembershipTierCreateRequest(BaseModel):
     name: str = Field(min_length=2, max_length=100)
-    description: str | None = Field(default=None, max_length=2000)
+    description: str | None = Field(default=None, max_length=200)
     monthly_price: Decimal = Field(gt=0)
     currency: str = Field(default="USD", pattern="^USD$")
     benefits: list[str] = []
@@ -427,7 +427,7 @@ class MembershipTierResponse(BaseModel):
 # Tienda Digital (Products)
 class DigitalProductCreateRequest(BaseModel):
     title: str = Field(min_length=2, max_length=200)
-    description: str | None = Field(default=None, max_length=2000)
+    description: str | None = Field(default=None, max_length=200)
     price: Decimal = Field(gt=0)
     currency: str = Field(default="USD", pattern="^USD$")
     file_type: str = Field(pattern="^(PDF|Video_Link|Template_Notion|Zip)$")
@@ -465,7 +465,7 @@ class AvailabilitySlotDto(BaseModel):
 
 class BookingServiceCreateRequest(BaseModel):
     title: str = Field(min_length=2, max_length=200)
-    description: str | None = Field(default=None, max_length=2000)
+    description: str | None = Field(default=None, max_length=200)
     duration_minutes: int = Field(default=45, ge=15, le=180)
     price: Decimal = Field(gt=0)
     currency: str = Field(default="USD", pattern="^USD$")
@@ -529,11 +529,11 @@ class ReferralDashboardResponse(BaseModel):
 # Perfil & Configuración de Atleta
 class AthleteProfileUpdateRequest(BaseModel):
     full_name: str | None = Field(default=None, min_length=2, max_length=150)
-    bio: str | None = Field(default=None, max_length=2000)
+    bio: str | None = Field(default=None, max_length=600)
     page_title: str | None = Field(default=None, max_length=200)
-    page_description: str | None = Field(default=None, max_length=2000)
+    page_description: str | None = Field(default=None, max_length=400)
     agenda_title: str | None = Field(default=None, max_length=200)
-    agenda_description: str | None = Field(default=None, max_length=2000)
+    agenda_description: str | None = Field(default=None, max_length=300)
     agenda_image_url: str | None = Field(default=None, max_length=255)
     city: str | None = Field(default=None, max_length=255)
     city_id: int | None = None
@@ -547,7 +547,7 @@ class AthleteProfileUpdateRequest(BaseModel):
     tiktok_url: str | None = Field(default=None, max_length=255)
     facebook_url: str | None = Field(default=None, max_length=255)
     twitter_url: str | None = Field(default=None, max_length=255)
-    thank_you_message: str | None = Field(default=None, max_length=1000)
+    thank_you_message: str | None = Field(default=None, max_length=200)
 
     @field_validator(
         "full_name",
@@ -649,7 +649,7 @@ class UploadFileResponse(BaseModel):
 
 # Publicaciones & Comentarios (Posts & Comments)
 class PostCommentCreateRequest(BaseModel):
-    content: str = Field(min_length=1, max_length=1000)
+    content: str = Field(min_length=1, max_length=200)
 
     @field_validator("content", mode="before")
     @classmethod

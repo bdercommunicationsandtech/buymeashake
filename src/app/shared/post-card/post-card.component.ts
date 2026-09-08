@@ -172,7 +172,7 @@ export interface PostItem {
               <input
                 type="text"
                 appAllowedUserText
-                maxlength="1000"
+                maxlength="200"
                 [placeholder]="t().post.writeComment"
                 class="flex-1 text-xs p-2.5 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50/50 dark:bg-white/5 text-gray-900 dark:text-white outline-none focus:border-[#c9ff3d]"
                 [ngModel]="newCommentText()"

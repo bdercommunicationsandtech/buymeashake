@@ -103,12 +103,12 @@ import { firstInvalidSocialUrlMessage } from '../../core/utils/social-url.util';
             <div>
               <div class="flex items-center justify-between mb-1">
                 <label class="block text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300">{{ t().pageEditorModals.bioLabel }}</label>
-                <span class="text-[10px] font-semibold text-gray-400">{{ bio().length }}/2000</span>
+                <span class="text-[10px] font-semibold text-gray-400">{{ bio().length }}/600</span>
               </div>
               <textarea
                 rows="3"
                 appAllowedUserText
-                maxlength="2000"
+                maxlength="600"
                 class="w-full rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#191c1d] px-4 py-3 text-sm font-medium text-gray-900 dark:text-white focus:border-[#c9ff3d] focus:outline-none"
                 [value]="bio()"
                 (input)="bio.set(filterText($any($event.target).value))"

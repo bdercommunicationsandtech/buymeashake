@@ -63,7 +63,7 @@ import {
           </label>
           <textarea
             rows="4"
-            maxlength="2000"
+            maxlength="400"
             appAllowedUserText
             [placeholder]="t().pageEditorModals.pageDescPlaceholder"
             class="w-full rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#191c1d] px-4 py-3 text-sm font-medium text-gray-900 dark:text-white focus:border-[#c9ff3d] focus:outline-none"

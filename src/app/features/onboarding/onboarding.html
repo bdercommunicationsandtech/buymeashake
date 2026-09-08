@@ -45,8 +45,8 @@
       </div>
       <div>
         <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1.5">{{ t().onboarding.bioLabel }}</label>
-        <textarea appAllowedUserText maxlength="2000" class="block w-full rounded-xl border border-gray-300 dark:border-white/15 bg-white dark:bg-[#191c1d] px-4 py-3 text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:border-gray-900 dark:focus:border-[#c9ff3d] transition" rows="4" [ngModel]="bio()" (ngModelChange)="bio.set($event)" name="bio"></textarea>
-        <span class="mt-1 block text-right text-[10px] text-gray-400">{{ bio().length }}/2000</span>
+        <textarea appAllowedUserText maxlength="600" class="block w-full rounded-xl border border-gray-300 dark:border-white/15 bg-white dark:bg-[#191c1d] px-4 py-3 text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:border-gray-900 dark:focus:border-[#c9ff3d] transition" rows="4" [ngModel]="bio()" (ngModelChange)="bio.set($event)" name="bio"></textarea>
+        <span class="mt-1 block text-right text-[10px] text-gray-400">{{ bio().length }}/600</span>
       </div>
       <div>
         <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1.5">{{ t().onboarding.priceLabel }}</label>

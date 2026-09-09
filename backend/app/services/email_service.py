@@ -1230,3 +1230,101 @@ def send_support_ticket_user_ack_sync(
         description=description,
     )
     return send_email_sync(user_email, email_subject, html)
+
+
+def generate_support_ticket_reply_html(
+    folio: str,
+    name: str,
+    subject: str,
+    reply_message: str,
+    admin_name: str | None = None,
+) -> str:
+    """Plantilla de correo enviada al usuario con la respuesta oficial del equipo de soporte."""
+    esc_folio = _esc(folio)
+    esc_name = _esc(name)
+    esc_subject = _esc(subject)
+    esc_reply = _esc(reply_message)
+    admin_display = _esc(admin_name) if admin_name else "Equipo de Soporte Buymeashake"
+
+    return f"""
+    <!DOCTYPE html>
+    <html lang="es">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Respuesta a tu ticket de soporte {esc_folio}</title>
+    </head>
+    <body style="margin: 0; padding: 0; background-color: #090c0a; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #ffffff;">
+      <table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 540px; margin: 40px auto; background-color: #121614; border-radius: 24px; border: 1px solid rgba(255,255,255,0.1); overflow: hidden; box-shadow: 0 20px 40px rgba(0,0,0,0.5);">
+
+        <!-- Header con Logo -->
+        <tr>
+          <td align="center" style="padding: 32px 24px 16px 24px;">
+            <div style="display: inline-block; background-color: #c9ff3d; color: #070a08; font-weight: 900; font-size: 13px; padding: 6px 14px; border-radius: 999px; margin-bottom: 12px; letter-spacing: 0.5px;">
+              MESA DE AYUDA &bull; ATENCIÓN OFICIAL
+            </div>
+            <h1 style="margin: 0; font-size: 22px; font-weight: 900; letter-spacing: -0.5px; color: #ffffff;">
+              buymeashake<span style="color: #c9ff3d;">.fit</span>
+            </h1>
+          </td>
+        </tr>
+
+        <!-- Mensaje de Respuesta -->
+        <tr>
+          <td style="padding: 16px 32px 28px 32px;">
+            <p style="margin: 0 0 12px 0; font-size: 15px; color: #d4d4d8; line-height: 1.5;">
+              Hola <strong style="color: #ffffff;">{esc_name}</strong>,
+            </p>
+            <p style="margin: 0 0 20px 0; font-size: 14px; color: #a1a1aa; line-height: 1.6;">
+              Hemos revisado tu ticket de soporte <strong style="color: #c9ff3d;">{esc_folio}</strong> referente a <em style="color: #ffffff;">"{esc_subject}"</em>. A continuación encontrarás la respuesta y solución de nuestro equipo:
+            </p>
+
+            <!-- Card de Respuesta del Moderador -->
+            <div style="background-color: #181d1a; border-left: 4px solid #c9ff3d; border-radius: 12px; padding: 18px 20px; margin-bottom: 24px;">
+              <p style="margin: 0 0 8px 0; font-size: 11px; font-weight: 800; color: #c9ff3d; text-transform: uppercase; letter-spacing: 0.5px;">
+                Respuesta de {admin_display}:
+              </p>
+              <div style="font-size: 14px; line-height: 1.6; color: #ffffff; white-space: pre-wrap;">
+{esc_reply}
+              </div>
+            </div>
+
+            <p style="margin: 0 0 16px 0; font-size: 13px; color: #71717a; line-height: 1.5;">
+              Si consideras que tu inquietud requiere atención complementaria o tienes dudas adicionales, puedes responder directamente a este correo o abrir una nueva solicitud con el número de folio de referencia.
+            </p>
+          </td>
+        </tr>
+
+        <!-- Footer -->
+        <tr>
+          <td align="center" style="padding: 20px 24px; background-color: #0a0d0b; border-top: 1px solid rgba(255,255,255,0.06);">
+            <p style="margin: 0; font-size: 11px; color: #52525b; font-weight: 500;">
+              &copy; 2026 Buymeashake.fit &middot; Soporte al Atleta y Comunidad
+            </p>
+          </td>
+        </tr>
+
+      </table>
+    </body>
+    </html>
+    """
+
+
+def send_support_ticket_reply_sync(
+    folio: str,
+    name: str,
+    user_email: str,
+    subject: str,
+    reply_message: str,
+    admin_name: str | None = None,
+) -> bool:
+    """Envía la respuesta del ticket de soporte directamente al correo del usuario."""
+    email_subject = f"Re: [{folio}] {subject} - Respuesta de Soporte Buymeashake"
+    html = generate_support_ticket_reply_html(
+        folio=folio,
+        name=name,
+        subject=subject,
+        reply_message=reply_message,
+        admin_name=admin_name,
+    )
+    return send_email_sync(user_email, email_subject, html)

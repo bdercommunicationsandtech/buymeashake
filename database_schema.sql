@@ -606,6 +606,39 @@ CREATE TABLE compliance_reports (
 
 
 -- ==============================================================================
+-- TABLA: support_tickets (Mesa de Ayuda, Contacto y Soporte al Atleta)
+-- ==============================================================================
+DROP TABLE IF EXISTS support_tickets;
+CREATE TABLE support_tickets (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    folio VARCHAR(50) NOT NULL UNIQUE,
+    name VARCHAR(150) NOT NULL,
+    email VARCHAR(191) NOT NULL,
+    user_role VARCHAR(50) NOT NULL DEFAULT 'athlete',
+    category VARCHAR(50) NOT NULL DEFAULT 'general',
+    category_title VARCHAR(150) NOT NULL DEFAULT 'Consulta General',
+    subject VARCHAR(255) NOT NULL,
+    description TEXT NOT NULL,
+    related_folio_or_handle VARCHAR(100) NULL,
+    attached_file VARCHAR(255) NULL,
+    is_read TINYINT(1) NOT NULL DEFAULT 0,
+    status VARCHAR(30) NOT NULL DEFAULT 'open',
+    assigned_admin_id BIGINT UNSIGNED NULL,
+    admin_notes TEXT NULL,
+    reply_message TEXT NULL,
+    replied_at TIMESTAMP NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (assigned_admin_id) REFERENCES users(id) ON DELETE SET NULL,
+    INDEX idx_support_tickets_status (status),
+    INDEX idx_support_tickets_is_read (is_read),
+    INDEX idx_support_tickets_email (email),
+    INDEX idx_support_tickets_category (category),
+    INDEX idx_support_tickets_created (created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+
+-- ==============================================================================
 -- VISTA: Top 10 Atletas del Mes
 -- ==============================================================================
 CREATE OR REPLACE VIEW view_monthly_athlete_leaderboard AS

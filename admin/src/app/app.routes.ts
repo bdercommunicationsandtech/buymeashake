@@ -35,6 +35,11 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/reports/reports-panel.component').then((m) => m.ReportsPanelComponent),
       },
+      {
+        path: 'contact',
+        loadComponent: () =>
+          import('./features/contact/contact-panel.component').then((m) => m.ContactPanelComponent),
+      },
     ],
   },
   {

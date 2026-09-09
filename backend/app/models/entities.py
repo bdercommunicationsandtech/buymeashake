@@ -731,3 +731,37 @@ class ComplianceReport(Base):
     athlete: Mapped["AthleteProfile | None"] = relationship("AthleteProfile")
     assigned_moderator: Mapped["User | None"] = relationship("User", foreign_keys=[assigned_moderator_id])
 
+
+# ==============================================================================
+# MÓDULO 9: MESA DE AYUDA, TICKETS & SOPORTE
+# ==============================================================================
+
+class SupportTicket(Base):
+    __tablename__ = "support_tickets"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    folio: Mapped[str] = mapped_column(String(50), unique=True, nullable=False, index=True)
+    name: Mapped[str] = mapped_column(String(150), nullable=False)
+    email: Mapped[str] = mapped_column(String(191), nullable=False, index=True)
+    user_role: Mapped[str] = mapped_column(String(50), default="athlete", nullable=False)
+    category: Mapped[str] = mapped_column(String(50), default="general", nullable=False, index=True)
+    category_title: Mapped[str] = mapped_column(String(150), default="Consulta General", nullable=False)
+    subject: Mapped[str] = mapped_column(String(255), nullable=False)
+    description: Mapped[str] = mapped_column(Text, nullable=False)
+    related_folio_or_handle: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    attached_file: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    is_read: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False, index=True)
+    status: Mapped[str] = mapped_column(
+        String(30), default="open", nullable=False, index=True
+    )  # open, in_progress, resolved, closed
+    assigned_admin_id: Mapped[int | None] = mapped_column(
+        BigInteger, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True
+    )
+    admin_notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+    reply_message: Mapped[str | None] = mapped_column(Text, nullable=True)
+    replied_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now(), index=True)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now(), onupdate=func.now())
+
+    assigned_admin: Mapped["User | None"] = relationship("User", foreign_keys=[assigned_admin_id])
+

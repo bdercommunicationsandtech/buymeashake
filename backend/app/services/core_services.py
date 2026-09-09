@@ -2,6 +2,7 @@ import secrets
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 from typing import Any
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import (
@@ -20,6 +21,7 @@ from app.core.security import (
     verify_password,
 )
 from app.models.entities import (
+    AthleteDiscipline,
     AthleteMonetization,
     AthleteProfile,
     BookingAppointment,
@@ -30,9 +32,9 @@ from app.models.entities import (
     Notification,
     Post,
     ShakeDetails,
+    Subscription,
     Transaction,
     User,
-    AthleteDiscipline,
 )
 from app.services.profile_helpers import (
     ensure_child_rows,
@@ -460,6 +462,10 @@ class AuthService:
         if dto.avatar_url is not None:
             user.avatar_url = dto.avatar_url
         if dto.password:
+            # Si el usuario ya posee una contraseña configurada, exigir la contraseña actual
+            if user.password_hash:
+                if not dto.current_password or not verify_password(dto.current_password, user.password_hash):
+                    raise UnauthorizedError("La contraseña actual es incorrecta o no fue proporcionada.")
             user.password_hash = get_password_hash(dto.password)
 
         await self.session.flush()
@@ -548,19 +554,41 @@ class SupporterService:
 
     async def get_feed(self, supporter_id: int, page: int = 1, page_size: int = 10) -> PaginatedResponse[PostResponse]:
         posts, total = await self.follow_repo.get_feed_posts(supporter_id, page=page, page_size=page_size)
+
+        # Consultar atletas para los cuales el seguidor tiene una suscripción activa
+        sub_query = (
+            select(MembershipTier.athlete_id)
+            .join(Subscription, Subscription.tier_id == MembershipTier.id)
+            .where(
+                Subscription.user_id == supporter_id,
+                Subscription.status == "active",
+            )
+        )
+        sub_res = await self.session.execute(sub_query)
+        active_subscribed_athlete_ids = set(sub_res.scalars().all())
+
         items = []
         for p in posts:
             author_name = p.athlete.user.full_name if p.athlete and p.athlete.user else "Atleta"
             author_handle = p.athlete.handle if p.athlete else ""
+            is_members_only = p.access_type == "members_only"
+            has_active_sub = p.athlete_id in active_subscribed_athlete_ids
+
+            # Si la publicación es exclusiva para miembros y el usuario no tiene suscripción activa,
+            # no filtrar el texto completo para preservar el paywall
+            if is_members_only and not has_active_sub:
+                display_content = "<p><em>Contenido exclusivo para miembros activos. Suscríbete para acceder.</em></p>"
+            else:
+                display_content = p.content_html
 
             items.append(PostResponse(
                 id=p.id,
                 title=p.title,
-                content_html=p.content_html,
+                content_html=display_content,
                 access_type=p.access_type,
                 likes_count=p.likes_count or 0,
                 published_at=p.published_at,
-                is_members_only=p.access_type == "members_only",
+                is_members_only=is_members_only,
                 author_name=author_name,
                 author_handle=author_handle,
             ))
@@ -702,7 +730,7 @@ class AthleteService:
                 price=p.price,
                 currency=p.currency,
                 file_type=p.file_type,
-                file_url=p.file_url,
+                file_url=None,  # Protegido: la URL física no se expone en el perfil público
                 is_active=p.is_active,
             )
             for p in profile.products
@@ -1354,13 +1382,24 @@ class StorageService:
     @staticmethod
     async def save_image(file_bytes: bytes, original_filename: str, content_type: str) -> UploadFileResponse:
         import os
-        allowed = ["image/jpeg", "image/png", "image/webp", "image/gif"]
-        if content_type not in allowed:
+
+        MAX_IMAGE_SIZE = 5 * 1024 * 1024  # 5 MB
+        if len(file_bytes) > MAX_IMAGE_SIZE:
+            raise ValueError("La imagen excede el tamaño máximo permitido (5 MB).")
+
+        mime_to_ext = {
+            "image/jpeg": "jpg",
+            "image/png": "png",
+            "image/webp": "webp",
+            "image/gif": "gif",
+        }
+        cleaned_type = (content_type or "").strip().lower()
+        if cleaned_type not in mime_to_ext:
             raise ValueError(f"Formato no permitido: {content_type}. Solo se aceptan JPEG, PNG, WEBP o GIF.")
 
-        ext = original_filename.split(".")[-1] if "." in original_filename else "png"
+        ext = mime_to_ext[cleaned_type]
         unique_name = f"img_{secrets.token_hex(10)}.{ext}"
-        
+
         static_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "static", "uploads", "images")
         os.makedirs(static_dir, exist_ok=True)
         file_path = os.path.join(static_dir, unique_name)
@@ -1371,20 +1410,32 @@ class StorageService:
         return UploadFileResponse(
             url=f"/static/uploads/images/{unique_name}",
             filename=unique_name,
-            content_type=content_type,
+            content_type=cleaned_type,
             size_bytes=len(file_bytes),
         )
 
     @staticmethod
     async def save_product_file(file_bytes: bytes, original_filename: str, content_type: str) -> UploadFileResponse:
         import os
-        allowed = ["application/pdf", "application/zip", "application/x-zip-compressed"]
-        if content_type not in allowed and not original_filename.endswith((".pdf", ".zip")):
+
+        MAX_PRODUCT_SIZE = 50 * 1024 * 1024  # 50 MB
+        if len(file_bytes) > MAX_PRODUCT_SIZE:
+            raise ValueError("El archivo excede el tamaño máximo permitido (50 MB).")
+
+        cleaned_type = (content_type or "").strip().lower()
+        lower_name = (original_filename or "").lower()
+
+        if "pdf" in cleaned_type or lower_name.endswith(".pdf"):
+            ext = "pdf"
+            final_content_type = "application/pdf"
+        elif "zip" in cleaned_type or lower_name.endswith(".zip") or "compressed" in cleaned_type:
+            ext = "zip"
+            final_content_type = "application/zip"
+        else:
             raise ValueError("Solo se permiten archivos PDF o ZIP para productos digitales.")
 
-        ext = original_filename.split(".")[-1] if "." in original_filename else "pdf"
         unique_name = f"doc_{secrets.token_hex(10)}.{ext}"
-        
+
         static_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "static", "uploads", "products")
         os.makedirs(static_dir, exist_ok=True)
         file_path = os.path.join(static_dir, unique_name)
@@ -1395,7 +1446,7 @@ class StorageService:
         return UploadFileResponse(
             url=f"/static/uploads/products/{unique_name}",
             filename=unique_name,
-            content_type=content_type,
+            content_type=final_content_type,
             size_bytes=len(file_bytes),
         )
 

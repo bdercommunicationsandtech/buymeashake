@@ -1,4 +1,5 @@
-import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, OnInit, OnDestroy, signal, PLATFORM_ID } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { CheckoutService } from '../../core/checkout.service';
@@ -46,7 +47,9 @@ export interface FloatingAthlete {
   ],
   templateUrl: './home.html',
 })
-export class Home implements OnInit {
+export class Home implements OnInit, OnDestroy {
+  private intervalId: any;
+  private platformId = inject(PLATFORM_ID);
   private readonly checkout = inject(CheckoutService);
   readonly languageService = inject(LanguageService);
   private readonly lookupService = inject(LookupService);
@@ -58,7 +61,33 @@ export class Home implements OnInit {
   readonly shakesCount = signal(3);
   readonly supportMessage = signal('');
   readonly disciplines = signal<LookupItemDto[]>([]);
+
+  readonly featuredDisciplines = [
+    { name: 'Fuerza & Levantamiento', tag: 'Power & Gym', icon: 'dumbbell' },
+    { name: 'Running & Atletismo', tag: 'Pista & Maratón', icon: 'runner' },
+    { name: 'Ciclismo & Ruta', tag: 'Ruta, Gravel & MTB', icon: 'cycling' },
+    { name: 'Deportes Acuáticos', tag: 'Natación & Surf', icon: 'swimmer' },
+    { name: 'Fútbol & Derivados', tag: 'Soccer, Futsal & 7', icon: 'soccer' },
+    { name: 'Artes Marciales & Boxeo', tag: 'Boxeo, MMA & BJJ', icon: 'boxing' },
+    { name: 'CrossFit & Funcional', tag: 'WODs & Calistenia', icon: 'crossfit' },
+    { name: 'Básquetbol', tag: 'Baloncesto & 3x3', icon: 'basketball' },
+    { name: 'Deportes de Raqueta', tag: 'Tenis, Pádel & Squash', icon: 'racket' },
+    { name: 'Gimnasia & Acrobacia', tag: 'Artística & Parkour', icon: 'gymnastics' },
+    { name: 'Deportes Extremos', tag: 'Skate, BMX & Escalada', icon: 'extreme' },
+    { name: 'Yoga & Pilates', tag: 'Flexibilidad & Core', icon: 'yoga' },
+    { name: 'Deportes de Motor', tag: 'Karting, Moto & Rally', icon: 'motor' },
+    { name: 'Esports & Gaming', tag: 'Competitivo & Sim', icon: 'gaming' },
+  ];
+
   readonly liveAthletes = signal<AthleteLeaderboardItem[]>([]);
+  readonly heroImages = [
+    'https://images.unsplash.com/photo-1517838277536-f5f99be501cd?q=80&w=2000&auto=format&fit=crop',
+    'https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?q=80&w=2000&auto=format&fit=crop',
+    'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=2000&auto=format&fit=crop',
+    'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=2000&auto=format&fit=crop'
+  ];
+  readonly currentHeroImageIndex = signal(0);
+
 
   readonly leftAthletes = computed<FloatingAthlete[]>(() => {
     return this.liveAthletes().map((a, i) => ({
@@ -93,9 +122,26 @@ export class Home implements OnInit {
       next: (items) => this.disciplines.set(items),
     });
 
+
     this.exploreService.getMonthlyLeaderboard(3).subscribe({
       next: (athletes) => this.liveAthletes.set(athletes),
     });
+
+    
+    if (isPlatformBrowser(this.platformId)) {
+      this.intervalId = setInterval(() => {
+        this.currentHeroImageIndex.update(i => (i + 1) % this.heroImages.length);
+      }, 4500);
+    }
+
+
+  }
+
+
+  ngOnDestroy(): void {
+    if (this.intervalId) {
+      clearInterval(this.intervalId);
+    }
   }
 
   setShakes(n: number): void {

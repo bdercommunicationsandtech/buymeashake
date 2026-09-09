@@ -28,7 +28,7 @@
     [attr.aria-label]="
       showCarousel
         ? 'Carrusel de figuras deportivas. Usa las flechas para cambiar y la barra espaciadora para pausar.'
-        : 'Shaker interactivo. Pasa el cursor, arrástralo para agitarlo o pulsa la barra espaciadora.'
+        : 'Shake interactivo. Pasa el cursor, arrástralo para agitarlo o pulsa la barra espaciadora.'
     "
     (pointerenter)="onPointerEnter()"
     (pointerleave)="onPointerLeave()"
@@ -361,7 +361,7 @@
   @if (!showCarousel) {
     <p class="solo-hint">
       <span class="solo-dot" [class.is-on]="live()"></span>
-      {{ live() ? '¡Agitando!' : 'Pasa el cursor o arrástralo para agitar el shaker' }}
+      {{ live() ? '¡Agitando!' : 'Pasa el cursor o arrástralo para agitar el shake' }}
     </p>
   }
 

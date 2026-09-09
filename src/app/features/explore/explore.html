@@ -58,6 +58,7 @@
   <!-- Contenedor Principal -->
   <div class="mx-auto max-w-5xl px-5 pt-8">
     
+    @if (searchQuery() === '' && selectedCategory() === 'ALL') {
     <!-- TOP 10 MENSUAL -->
     <section class="mb-14 relative z-10 max-w-[1200px] mx-auto">
   
@@ -94,7 +95,7 @@
   @if (topRemaining().length > 0) {
     <div class="mt-8">
       <div class="flex items-center justify-between mb-4 px-2">
-        <h3 class="text-lg font-black tracking-tight text-gray-900 dark:text-white uppercase flex items-center gap-2">
+        <h3 class="text-lg font-black tracking-tight text-gray-900 dark:text-white uppercase flex items-center gap-2 truncate w-full">
           <span>{{ t().explore.fullRanking }}</span>
         </h3>
         <!-- Eliminamos el botón de deslizar según la petición del usuario -->
@@ -143,6 +144,7 @@
     </div>
   }
 </section>
+    }
 
 <!-- Template del Carrusel Compacto -->
 <ng-template #carouselCard let-athlete="athlete" let-rank="rank">
@@ -220,10 +222,10 @@
         }
       </div>
       <!-- NICKNAME ONLY -->
-      <h3 class="text-xl sm:text-2xl font-black text-gray-900 dark:text-white tracking-tight break-all">&#64;{{ athlete.handle }}</h3>
+      <h3 class="text-xl sm:text-2xl font-black text-gray-900 dark:text-white tracking-tight truncate w-full">&#64;{{ athlete.handle }}</h3>
       
       <div class="mt-2.5">
-        <span class="inline-block px-3 py-1 rounded-full border text-[10px] font-bold leading-tight break-words max-w-full"
+        <span class="inline-block px-3 py-1 rounded-full border text-[10px] font-bold leading-tight truncate max-w-[90%]"
               [ngClass]="isGold ? 'bg-amber-50 dark:bg-[#20272b] border-amber-200 dark:border-[#354047] text-amber-700 dark:text-[#c9ff3d]' : 'bg-gray-50 dark:bg-[#181d20] border-gray-200 dark:border-[#2b3237] text-gray-700 dark:text-slate-300'">
           {{ languageService.translateDiscipline(athlete.sport) }}
         </span>
@@ -256,7 +258,7 @@
     @if (searchQuery() !== '' || selectedCategory() !== 'ALL') {
       <section>
         <div class="flex items-center justify-between mb-4 mt-8 border-t border-gray-200 dark:border-white/10 pt-8">
-          <h3 class="text-xl font-black text-gray-900 dark:text-white">{{ t().explore.exploreByDiscipline }}</h3>
+          <h3 class="text-xl font-black text-gray-900 dark:text-white truncate w-full">{{ t().explore.exploreByDiscipline }}</h3>
           <span class="text-xs text-gray-500 dark:text-slate-400">
             {{ filteredAthletes().length }} {{ filteredAthletes().length === 1 ? t().explore.athleteFound : t().explore.athletesFound }}
           </span>
@@ -277,7 +279,7 @@
                       </div>
                     }
                     <div>
-                      <h3 class="font-extrabold text-gray-900 dark:text-white text-base">{{ athlete.name }}</h3>
+                      <h3 class="font-extrabold text-gray-900 dark:text-white text-base truncate w-full">{{ athlete.name }}</h3>
                       <p class="text-xs text-gray-500 dark:text-slate-400 font-medium">&#64;{{ athlete.handle }}</p>
                     </div>
                   </div>

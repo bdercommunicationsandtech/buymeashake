@@ -1,7 +1,10 @@
+import logging
 from typing import Any
 from fastapi import FastAPI, Request, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
+
+logger = logging.getLogger(__name__)
 
 
 class DomainException(Exception):
@@ -181,13 +184,20 @@ def register_exception_handlers(app: FastAPI) -> None:
 
     @app.exception_handler(Exception)
     async def unhandled_exception_handler(request: Request, exc: Exception) -> JSONResponse:
+        from app.core.config import settings
+
+        logger.exception("Excepción no controlada en la petición %s %s: %s", request.method, request.url.path, exc)
+
+        is_dev = getattr(settings, "ENVIRONMENT", "development").lower() == "development"
+        details = {"type": type(exc).__name__, "detail": str(exc)} if is_dev else {}
+
         return JSONResponse(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             content={
                 "error": {
                     "code": "INTERNAL_ERROR",
-                    "message": "Unexpected server error.",
-                    "details": {"type": type(exc).__name__, "detail": str(exc)},
+                    "message": "Unexpected server error." if is_dev else "Ha ocurrido un error inesperado en el servidor.",
+                    "details": details,
                 }
             },
         )

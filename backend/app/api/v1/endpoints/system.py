@@ -1,11 +1,14 @@
+from collections import defaultdict
 import json
 import random
+import time
 from typing import Literal
 
 from fastapi import APIRouter, BackgroundTasks, HTTPException, Request, status
 
-from app.api.dependencies import DatabaseSession
+from app.api.dependencies import CurrentAdmin, DatabaseSession
 from app.core.config import settings
+from app.core.exceptions import RateLimitExceededError
 from app.repositories.base_repos import AthleteRepository
 from app.schemas.dtos import (
     AdminReportVerdictRequest,
@@ -27,6 +30,30 @@ from app.services.email_service import (
 )
 
 router = APIRouter()
+
+
+class InMemoryRateLimiter:
+    """Limitador de frecuencia en memoria con ventana deslizante para prevenir abusos en endpoints públicos."""
+    def __init__(self, max_requests: int = 5, window_seconds: int = 300):
+        self.max_requests = max_requests
+        self.window_seconds = window_seconds
+        self.requests: dict[str, list[float]] = defaultdict(list)
+
+    def check(self, key: str) -> None:
+        now = time.time()
+        self.requests[key] = [t for t in self.requests[key] if now - t < self.window_seconds]
+        if len(self.requests[key]) >= self.max_requests:
+            oldest = self.requests[key][0]
+            wait = max(1, int(self.window_seconds - (now - oldest)))
+            raise RateLimitExceededError(
+                wait_seconds=wait,
+                message=f"Has alcanzado el límite de solicitudes permitido. Por favor espera {wait} segundos antes de enviar nuevamente.",
+            )
+        self.requests[key].append(now)
+
+
+report_limiter = InMemoryRateLimiter(max_requests=5, window_seconds=300)
+ticket_limiter = InMemoryRateLimiter(max_requests=5, window_seconds=300)
 
 
 @router.get("/system/lookups", response_model=list[LookupGroupResponse])
@@ -54,6 +81,9 @@ async def submit_compliance_report(
     session: DatabaseSession,
 ) -> ComplianceReportResponse:
     """Registra una denuncia por conducta o infracción deportiva con soporte de archivo adjunto multipart o JSON."""
+    client_ip = request.client.host if request.client else "unknown"
+    report_limiter.check(f"ip:{client_ip}")
+
     content_type = request.headers.get("content-type", "")
     attached_file = None
     attached_file_bytes = None
@@ -91,6 +121,9 @@ async def submit_compliance_report(
         evidence_links = payload.evidence_links
         attached_file = payload.attached_file
         reporter_email = payload.reporter_email
+
+    if reporter_email and reporter_email.lower() != "confidencial":
+        report_limiter.check(f"email:{reporter_email.strip().lower()}")
 
     # 1. Normalizar y extraer el handle limpio
     clean_handle = (
@@ -165,6 +198,7 @@ async def submit_report_verdict(
     folio: str,
     payload: AdminReportVerdictRequest,
     background_tasks: BackgroundTasks,
+    _admin: CurrentAdmin,
 ) -> AdminReportVerdictResponse:
     """Envía la resolución oficial de un reporte desde el panel de administración al denunciante."""
     clean_folio = folio.strip()
@@ -197,6 +231,9 @@ async def submit_support_ticket(
     background_tasks: BackgroundTasks,
 ) -> SupportTicketResponse:
     """Registra un ticket de soporte/asistencia con generación de folio único y notificación dual."""
+    client_ip = request.client.host if request.client else "unknown"
+    ticket_limiter.check(f"ip:{client_ip}")
+
     content_type = request.headers.get("content-type", "")
     attached_file = None
     attached_file_bytes = None
@@ -233,6 +270,9 @@ async def submit_support_ticket(
         description = payload.description.strip()
         related_ref = payload.related_folio_or_handle
         attached_file = payload.attached_file
+
+    if email:
+        ticket_limiter.check(f"email:{email.strip().lower()}")
 
     if not name or not email or not subject or not description:
         raise HTTPException(

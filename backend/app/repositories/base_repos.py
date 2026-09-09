@@ -564,7 +564,14 @@ class PostRepository:
         return list(result.scalars().all())
 
     async def get_by_id(self, post_id: int) -> Post | None:
-        query = select(Post).options(selectinload(Post.comments).selectinload(PostComment.user)).where(Post.id == post_id)
+        query = (
+            select(Post)
+            .options(
+                selectinload(Post.comments).selectinload(PostComment.user),
+                selectinload(Post.athlete),
+            )
+            .where(Post.id == post_id)
+        )
         result = await self.session.execute(query)
         return result.scalar_one_or_none()
 
@@ -1027,8 +1034,8 @@ class WithdrawalRepository:
 
     async def get_athlete_balance(self, athlete_id: int) -> dict[str, Any]:
         """Calcula balance disponible según la regla contable de BDER:
-        Balance Disponible = Ganancias Netas (302) - Retiros completados ('completed').
-        Las solicitudes pending, processing o failed NO descuentan balance.
+        Balance Disponible = Ganancias Netas (302) - Retiros completados ('completed') - Retiros comprometidos ('pending', 'processing').
+        Las solicitudes failed o rejected NO descuentan balance (los fondos se liberan).
         """
         # 1. Total ganado neto completado
         q_earnings = select(func.coalesce(func.sum(Transaction.net_athlete_amount), Decimal("0.00"))).where(
@@ -1044,14 +1051,14 @@ class WithdrawalRepository:
         )
         total_withdrawn = (await self.session.execute(q_withdrawn)).scalar() or Decimal("0.00")
 
-        # 3. Total pendiente en revisión (para visualización informativa)
+        # 3. Total pendiente en revisión / proceso (fondos comprometidos)
         q_pending = select(func.coalesce(func.sum(WithdrawalRequest.amount_usd), Decimal("0.00"))).where(
             WithdrawalRequest.athlete_id == athlete_id,
             WithdrawalRequest.status.in_(["pending", "processing"]),
         )
         pending_amount = (await self.session.execute(q_pending)).scalar() or Decimal("0.00")
 
-        available_balance = max(Decimal("0.00"), total_earned - total_withdrawn)
+        available_balance = max(Decimal("0.00"), total_earned - total_withdrawn - pending_amount)
 
         # Consultar estado de cuenta Stripe Connect
         payouts_q = select(AthletePayouts).where(AthletePayouts.athlete_id == athlete_id)

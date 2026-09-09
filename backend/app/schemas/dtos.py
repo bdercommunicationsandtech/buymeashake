@@ -178,6 +178,7 @@ class ResetPasswordResponse(BaseModel):
 
 class UpdateProfileRequest(BaseModel):
     full_name: str | None = Field(default=None, min_length=2, max_length=150)
+    current_password: str | None = Field(default=None, min_length=1, max_length=128)
     password: str | None = Field(default=None, min_length=8, max_length=128)
     avatar_url: str | None = Field(default=None, max_length=255)
 
@@ -530,7 +531,7 @@ class DigitalProductResponse(BaseModel):
     price: Decimal
     currency: str
     file_type: str
-    file_url: str
+    file_url: str | None = None
     is_active: bool
 
 

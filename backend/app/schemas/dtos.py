@@ -86,6 +86,7 @@ class UserLoginRequest(BaseModel):
 class AdminLoginRequest(BaseModel):
     email: EmailStr
     password: str = Field(min_length=1, max_length=256)
+    cf_turnstile_token: str | None = None
 
 
 class AdminLoginResponse(BaseModel):

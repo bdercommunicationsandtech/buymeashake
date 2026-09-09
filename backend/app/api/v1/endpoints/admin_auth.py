@@ -1,7 +1,8 @@
-"""Auth del panel admin Angular (login + me)."""
-from fastapi import APIRouter, status
+import logging
+from fastapi import APIRouter, HTTPException, status
 
 from app.api.dependencies import CurrentAdmin, DatabaseSession
+from app.core.config import settings
 from app.core.exceptions import ForbiddenError, UnauthorizedError
 from app.core.security import create_access_token, create_refresh_token, verify_password
 from app.repositories.base_repos import UserRepository
@@ -9,6 +10,37 @@ from app.schemas.dtos import AdminLoginRequest, AdminLoginResponse, AdminMeRespo
 from app.services import user_roles_service as user_roles
 
 router = APIRouter()
+logger = logging.getLogger("uvicorn.error")
+
+
+async def _verify_turnstile_if_configured(token: str | None) -> None:
+    secret = (getattr(settings, "CLOUDFLARE_TURNSTILE_SECRET_KEY", "") or "").strip()
+    if not secret:
+        return
+    if not token:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Se requiere el token de verificación de Cloudflare Turnstile.",
+        )
+    try:
+        import httpx
+
+        async with httpx.AsyncClient(timeout=5.0) as client:
+            res = await client.post(
+                "https://challenges.cloudflare.com/turnstile/v0/siteverify",
+                data={"secret": secret, "response": token},
+            )
+            verification = res.json()
+            if not verification.get("success"):
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Validación de CAPTCHA inválida o expirada.",
+                )
+    except HTTPException:
+        raise
+    except Exception as exc:
+        # Fail-open en caso de problemas de conectividad con Cloudflare
+        logger.warning("Turnstile verify failed open: %s", exc)
 
 
 def _split_full_name(full_name: str) -> tuple[str, str]:
@@ -46,6 +78,8 @@ def _to_admin_me(
 @router.post("/admin/login", response_model=AdminLoginResponse)
 async def admin_login(dto: AdminLoginRequest, session: DatabaseSession) -> AdminLoginResponse:
     """Login del panel admin. 401 credenciales; 403 sin rol admin."""
+    await _verify_turnstile_if_configured(dto.cf_turnstile_token)
+
     email = str(dto.email).strip().lower()
     user_repo = UserRepository(session)
     user = await user_repo.get_by_email(email)

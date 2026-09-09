@@ -91,6 +91,12 @@ class Settings(BaseSettings):
     FIREBASE_CREDENTIALS_JSON: str | None = None
     FIREBASE_PROJECT_ID: str | None = None
 
+    # Cloudflare Turnstile (Admin Login CAPTCHA)
+    CLOUDFLARE_TURNSTILE_SECRET_KEY: str = Field(
+        default="",
+        validation_alias=AliasChoices("CLOUDFLARE_TURNSTILE_SECRET_KEY", "CF_TURNSTILE_SECRET_KEY"),
+    )
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",

@@ -139,6 +139,60 @@ class AdminPlatformStatsResponse(BaseModel):
     recent_athletes: list[AdminRecentUserItem] = []
 
 
+class AdminGoalSummary(BaseModel):
+    id: int
+    title: str
+    cover_image_url: str | None = None
+    target_amount: Decimal
+    raised_amount: Decimal
+    currency: str = "USD"
+    is_active: bool = True
+    progress_pct: float = 0.0
+    achieved_at: datetime | None = None
+    created_at: datetime | None = None
+
+
+class AdminUserFinancialSummary(BaseModel):
+    total_raised: Decimal = Decimal("0.00")
+    currency: str = "USD"
+    successful_tx_count: int = 0
+    total_shakes_count: int = 0
+    total_contributed: Decimal = Decimal("0.00")
+
+
+class AdminUserCatalogItem(BaseModel):
+    id: int
+    email: str
+    full_name: str
+    avatar_url: str | None = None
+    is_email_verified: bool = False
+    is_active: bool = True
+    created_at: datetime | None = None
+    roles: list[str] = []
+    athlete_id: int | None = None
+    athlete_handle: str | None = None
+    is_verified_athlete: bool = False
+    active_goals: list[AdminGoalSummary] = []
+    active_goals_count: int = 0
+    total_goals_count: int = 0
+    financials: AdminUserFinancialSummary
+
+
+class AdminUserCatalogResponse(BaseModel):
+    items: list[AdminUserCatalogItem]
+    total: int
+    page: int
+    limit: int
+    total_pages: int
+
+
+class AdminUserDetailResponse(BaseModel):
+    user: AdminUserCatalogItem
+    all_goals: list[AdminGoalSummary] = []
+    bio: str | None = None
+    city: str | None = None
+
+
 class RequestOtpRequest(BaseModel):
     email: EmailStr = Field(max_length=191)
     name: str | None = Field(default=None, max_length=150)

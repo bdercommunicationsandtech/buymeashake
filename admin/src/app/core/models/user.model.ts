@@ -1,5 +1,78 @@
 export type AccountEnforcementStatus = 'ACTIVE' | 'SUSPENDED' | 'BANNED' | 'RESTRICTED';
 
+export interface AdminGoalSummary {
+  id: number;
+  title: string;
+  cover_image_url?: string | null;
+  target_amount: number;
+  raised_amount: number;
+  currency: string;
+  is_active: boolean;
+  progress_pct: number;
+  achieved_at?: string | null;
+  created_at?: string | null;
+}
+
+export interface AdminUserFinancialSummary {
+  total_raised: number;
+  currency: string;
+  successful_tx_count: number;
+  total_shakes_count: number;
+  total_contributed: number;
+}
+
+export interface AdminUserCatalogItem {
+  id: number;
+  email: string;
+  full_name: string;
+  avatar_url?: string | null;
+  is_email_verified: boolean;
+  is_active: boolean;
+  created_at?: string | null;
+  roles: string[];
+  athlete_id?: number | null;
+  athlete_handle?: string | null;
+  is_verified_athlete: boolean;
+  active_goals: AdminGoalSummary[];
+  active_goals_count: number;
+  total_goals_count: number;
+  financials: AdminUserFinancialSummary;
+}
+
+export interface AdminUserCatalogResponse {
+  items: AdminUserCatalogItem[];
+  total: number;
+  page: number;
+  limit: number;
+  total_pages: number;
+}
+
+export interface AdminUserDetailResponse {
+  user: AdminUserCatalogItem;
+  all_goals: AdminGoalSummary[];
+  bio?: string | null;
+  city?: string | null;
+}
+
+export interface AdminUserCatalogParams {
+  search?: string;
+  role?: string;
+  status?: string;
+  goals_filter?: string;
+  revenue_filter?: string;
+  sort_by?: string;
+  sort_order?: string;
+  page?: number;
+  limit?: number;
+}
+
+export const BMS_ROLES = [
+  { key: 'all', label: 'Todos' },
+  { key: 'athlete', label: 'Atletas' },
+  { key: 'supporter', label: 'Supporters' },
+  { key: 'admin', label: 'Admins' },
+] as const;
+
 export interface AdminUserEnforcement {
   status: AccountEnforcementStatus | string;
   suspended_until?: string | null;

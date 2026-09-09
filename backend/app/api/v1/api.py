@@ -3,6 +3,7 @@ from fastapi import APIRouter
 from app.api.v1.endpoints import (
     admin_auth,
     admin_stats,
+    admin_users,
     auth,
     checkout,
     dashboard,
@@ -19,6 +20,7 @@ api_router = APIRouter()
 api_router.include_router(auth.router, tags=["Auth"])
 api_router.include_router(admin_auth.router, tags=["Admin Auth"])
 api_router.include_router(admin_stats.router, tags=["Admin Stats"])
+api_router.include_router(admin_users.router, tags=["Admin Users"])
 api_router.include_router(fan.router, tags=["Fan", "Supporter"])
 api_router.include_router(system.router, tags=["System"])
 api_router.include_router(explore.router, tags=["Explore", "Creators"])

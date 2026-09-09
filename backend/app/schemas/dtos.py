@@ -132,6 +132,7 @@ class VerifyOtpRequest(BaseModel):
 
 class UpdateProfileRequest(BaseModel):
     full_name: str | None = None
+    current_password: str | None = Field(default=None, min_length=1)
     password: str | None = Field(default=None, min_length=8)
     avatar_url: str | None = None
 
@@ -421,7 +422,7 @@ class DigitalProductResponse(BaseModel):
     price: Decimal
     currency: str
     file_type: str
-    file_url: str
+    file_url: str | None = None
     is_active: bool
 
 

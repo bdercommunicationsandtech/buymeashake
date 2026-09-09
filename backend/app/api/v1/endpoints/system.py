@@ -4,7 +4,7 @@ from typing import Literal
 
 from fastapi import APIRouter, BackgroundTasks, HTTPException, Request, status
 
-from app.api.dependencies import DatabaseSession
+from app.api.dependencies import CurrentAdmin, DatabaseSession
 from app.core.config import settings
 from app.repositories.base_repos import AthleteRepository
 from app.schemas.dtos import (
@@ -165,6 +165,7 @@ async def submit_report_verdict(
     folio: str,
     payload: AdminReportVerdictRequest,
     background_tasks: BackgroundTasks,
+    _admin: CurrentAdmin,
 ) -> AdminReportVerdictResponse:
     """Envía la resolución oficial de un reporte desde el panel de administración al denunciante."""
     clean_folio = folio.strip()

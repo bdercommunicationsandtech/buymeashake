@@ -1,6 +1,6 @@
-import { Component, computed, inject, OnDestroy, signal } from '@angular/core';
+import { Component, computed, inject, OnDestroy, SecurityContext, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+import { DomSanitizer } from '@angular/platform-browser';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { ExploreService } from '../../../core/explore.service';
@@ -68,11 +68,12 @@ export class PostDetail implements OnDestroy {
     return extractFirstImageUrl(p.content_html);
   });
 
-  readonly bodyHtml = computed<SafeHtml | null>(() => {
+  readonly bodyHtml = computed<string | null>(() => {
     const p = this.post();
     if (!p) return null;
     const hasCover = !!extractFirstImageUrl(p.content_html);
-    return this.sanitizer.bypassSecurityTrustHtml(toRenderableHtml(p.content_html, hasCover));
+    const rawRendered = toRenderableHtml(p.content_html, hasCover);
+    return this.sanitizer.sanitize(SecurityContext.HTML, rawRendered);
   });
 
   readonly publishedLabel = computed(() => {

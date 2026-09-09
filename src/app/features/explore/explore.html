@@ -230,10 +230,10 @@
 
     <!-- Estadísticas & CTA -->
     <div class="mt-6 pt-4 border-t border-gray-100 dark:border-[#1e2327]">
-      <div class="flex items-center justify-center mb-4 bg-gray-50 dark:bg-[#0c0f10] p-2.5 rounded-2xl border border-gray-200 dark:border-[#22292d]">
-        <div class="text-center">
-          <span class="text-[9px] uppercase font-bold text-gray-400 dark:text-slate-500 tracking-wider leading-none block mb-1">Shakers</span>
-          <div class="text-xl font-black text-gray-900 dark:text-white flex items-center justify-center gap-1">
+      <div class="grid grid-cols-2 gap-2 mb-4 text-left bg-gray-50 dark:bg-[#0c0f10] p-2.5 rounded-2xl border border-gray-200 dark:border-[#22292d]">
+        <div>
+          <span class="text-[9px] uppercase font-bold text-gray-400 dark:text-slate-500 tracking-wider leading-none block mb-1">Shakes</span>
+          <div class="text-xl font-black text-gray-900 dark:text-white flex items-center gap-1">
             {{ athlete.shakesThisMonth }}
             <app-icon-shaker size="14" [customClass]="isGold ? 'text-amber-500 dark:text-slate-500' : 'text-gray-400 dark:text-slate-500'" />
           </div>

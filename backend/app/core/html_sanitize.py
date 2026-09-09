@@ -42,8 +42,15 @@ ALLOWED_ATTRS: dict[str, frozenset[str]] = {
 
 
 def _is_safe_http_url(value: str) -> bool:
+    """Allow absolute http(s) URLs and same-origin /static upload paths."""
+    raw = value.strip()
+    if not raw or raw.startswith("//") or "\\" in raw:
+        return False
+    # Uploaded media is stored/served under /static/...
+    if raw.startswith("/static/") and "://" not in raw and ".." not in raw:
+        return True
     try:
-        parsed = urlparse(value.strip())
+        parsed = urlparse(raw)
     except Exception:
         return False
     if parsed.scheme.lower() not in {"http", "https"}:

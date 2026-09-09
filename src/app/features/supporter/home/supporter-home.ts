@@ -7,6 +7,7 @@ import { AuthService } from '../../../core/auth.service';
 import { SupporterService } from '../../../core/supporter.service';
 import { LanguageService } from '../../../core/language.service';
 import { FollowedAthlete, PostResponse } from '../../../core/api.models';
+import { resolveMediaUrl } from '../../../core/media-url';
 
 @Component({
   selector: 'app-supporter-home',
@@ -191,13 +192,33 @@ import { FollowedAthlete, PostResponse } from '../../../core/api.models';
         <!-- Columna Central: Feed de Publicaciones de Atletas Seguidos (Captura 3) -->
         <div class="lg:col-span-6 space-y-6">
           
-          <div class="flex items-center justify-between pb-2 border-b border-gray-200/80 dark:border-white/10">
+          <div class="flex items-center justify-between pb-2 border-b border-gray-200/80 dark:border-white/10 gap-3 flex-wrap">
             <h1 class="font-display text-xl font-black text-gray-950 dark:text-white">
               {{ t().supporterArea.followingTitle }}
             </h1>
             <span class="text-xs font-bold text-gray-400">
               {{ followedAthletes().length }} {{ t().supporterArea.followedAthletesCount }}
             </span>
+          </div>
+
+          <div class="flex items-center gap-2 flex-wrap">
+            @for (filter of feedFilters; track filter.value) {
+              <button
+                type="button"
+                (click)="setFeedFilter(filter.value)"
+                class="text-[11px] font-bold px-3 py-1.5 rounded-full border transition cursor-pointer"
+                [class]="
+                  feedFilter() === filter.value
+                    ? 'bg-gray-950 text-white dark:bg-[#c9ff3d] dark:text-gray-950 border-transparent'
+                    : 'bg-white dark:bg-white/5 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-white/10 hover:border-gray-400'
+                "
+              >
+                {{ filter.labelKey === 'all' ? t().supporterArea.feedFilterAll
+                  : filter.labelKey === 'public' ? t().supporterArea.feedFilterPublic
+                  : filter.labelKey === 'shake' ? t().supporterArea.feedFilterShake
+                  : t().supporterArea.feedFilterMembers }}
+              </button>
+            }
           </div>
 
           <!-- Loading State -->
@@ -303,6 +324,13 @@ export class DashboardSupporterHome implements OnInit {
 
   readonly followedAthletes = signal<FollowedAthlete[]>([]);
   readonly feedPosts = signal<PostItem[]>([]);
+  readonly feedFilter = signal<'all' | 'public' | 'shake_supporters' | 'members_only'>('all');
+  readonly feedFilters = [
+    { value: 'all' as const, labelKey: 'all' },
+    { value: 'public' as const, labelKey: 'public' },
+    { value: 'shake_supporters' as const, labelKey: 'shake' },
+    { value: 'members_only' as const, labelKey: 'members' },
+  ];
 
   isAthlete(): boolean {
     return this.authService.isAthlete();
@@ -332,22 +360,60 @@ export class DashboardSupporterHome implements OnInit {
     });
   }
 
+  setFeedFilter(value: 'all' | 'public' | 'shake_supporters' | 'members_only'): void {
+    this.feedFilter.set(value);
+    this.loadFeed();
+  }
+
   loadFeed(): void {
     this.loading.set(true);
-    this.supporterService.getFeed(1, 10).subscribe({
+    const filter = this.feedFilter();
+    const accessType =
+      filter === 'all' ? null : (filter as 'public' | 'shake_supporters' | 'members_only');
+    this.supporterService.getFeed(1, 10, accessType).subscribe({
       next: (res) => {
         this.loading.set(false);
-        const mapped: PostItem[] = res.items.map((item: PostResponse) => ({
-          id: String(item.id),
-          title: item.title,
-          excerpt: item.content_html.replace(/<[^>]+>/g, '').slice(0, 160) + '...',
-          authorName: item.author_name || 'Atleta',
-          authorHandle: item.author_handle || '',
-          publishedAt: new Date(item.published_at).toLocaleDateString(),
-          likesCount: item.likes_count,
-          commentsCount: 0,
-          isMembersOnly: item.access_type === 'members_only',
-        }));
+        const mapped: PostItem[] = res.items.map((item: PostResponse) => {
+          const isMembersOnly = item.access_type === 'members_only' || !!item.is_members_only;
+          const isShakeSupporters =
+            item.access_type === 'shake_supporters' || !!item.is_shake_supporters;
+          const isUnlocked = item.is_unlocked !== false;
+          const plainExcerpt = (value: string) =>
+            value
+              .replace(/<img\b[^>]*>/gi, ' ')
+              .replace(/!\[[^\]]*]\([^)]*\)/g, ' ')
+              .replace(/<[^>]+>/g, ' ')
+              .replace(/\s+/g, ' ')
+              .trim();
+          const excerptRaw =
+            !isUnlocked
+              ? (item.excerpt || '').trim()
+              : (item.excerpt || '').trim() || plainExcerpt(item.content_html).slice(0, 180);
+          const fromApi = resolveMediaUrl(item.cover_image_url);
+          const htmlMatch = isUnlocked
+            ? item.content_html.match(/<img[^>]+src=["']([^"']+)["']/i)
+            : null;
+          const mdMatch = isUnlocked
+            ? item.content_html.match(/!\[[^\]]*]\(([^)\s]+)\)/)
+            : null;
+          return {
+            id: String(item.id),
+            title: item.title,
+            excerpt: plainExcerpt(excerptRaw),
+            content: item.content_html,
+            authorName: item.author_name || 'Atleta',
+            authorHandle: item.author_handle || '',
+            publishedAt: new Date(item.published_at).toLocaleDateString(),
+            likesCount: item.likes_count,
+            commentsCount: 0,
+            isMembersOnly,
+            isShakeSupporters,
+            isUnlocked,
+            coverImageUrl:
+              fromApi ||
+              (isUnlocked ? resolveMediaUrl(htmlMatch?.[1] || mdMatch?.[1] || null) : null),
+          };
+        });
         this.feedPosts.set(mapped);
       },
       error: () => {

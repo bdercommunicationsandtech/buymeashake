@@ -305,6 +305,8 @@ export interface TranslationSchema {
       audienceTitle: string;
       audiencePublicTitle: string;
       audiencePublicDesc: string;
+      audienceShakeTitle: string;
+      audienceShakeDesc: string;
       audienceMembersTitle: string;
       audienceMembersExclusive: string;
       audienceMembersDesc: string;
@@ -318,6 +320,9 @@ export interface TranslationSchema {
       contentRequiredError: string;
       publishFailedError: string;
       saveFailedError: string;
+      draftSaved: string;
+      draftFailedError: string;
+      savingDraft: string;
     };
     payoutsView: {
       subtitle: string;
@@ -499,10 +504,15 @@ export interface TranslationSchema {
   post: {
     membersOnly: string;
     public: string;
+    draft: string;
+    shakeSupporters: string;
     exclusiveContent: string;
     exclusivePromptPrefix: string;
     exclusivePromptSuffix: string;
+    shakeExclusivePromptPrefix: string;
+    shakeExclusivePromptSuffix: string;
     unlockWithMembership: string;
+    unlockWithShake: string;
     likeAria: string;
     comments: string;
     comment: string;
@@ -835,6 +845,10 @@ export interface TranslationSchema {
     loadingFeed: string;
     feedEmptyTitle: string;
     feedEmptyDesc: string;
+    feedFilterAll: string;
+    feedFilterPublic: string;
+    feedFilterShake: string;
+    feedFilterMembers: string;
     discoverAthletes: string;
     followingSidebar: string;
     findMoreAthletes: string;

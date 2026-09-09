@@ -752,12 +752,21 @@ class PostCommentResponse(BaseModel):
 class PostCreateRequest(BaseModel):
     title: str = Field(min_length=3, max_length=255)
     content_html: str = Field(min_length=1, max_length=50_000)
-    access_type: str = Field(default="public", pattern="^(public|followers_only|members_only)$")
+    excerpt: str | None = Field(default=None, max_length=200)
+    access_type: str = Field(
+        default="public",
+        pattern="^(public|draft|shake_supporters|members_only)$",
+    )
 
     @field_validator("title", mode="before")
     @classmethod
     def validate_post_title_chars(cls, value: Any) -> str:
         return validate_required_allowed_user_text(value)
+
+    @field_validator("excerpt", mode="before")
+    @classmethod
+    def validate_post_excerpt_chars(cls, value: Any) -> str | None:
+        return validate_allowed_user_text(value)
 
     @field_validator("content_html", mode="before")
     @classmethod
@@ -768,11 +777,20 @@ class PostCreateRequest(BaseModel):
 class PostUpdateRequest(BaseModel):
     title: str | None = Field(default=None, min_length=3, max_length=255)
     content_html: str | None = Field(default=None, min_length=1, max_length=50_000)
-    access_type: str | None = Field(default=None, pattern="^(public|followers_only|members_only)$")
+    excerpt: str | None = Field(default=None, max_length=200)
+    access_type: str | None = Field(
+        default=None,
+        pattern="^(public|draft|shake_supporters|members_only)$",
+    )
 
     @field_validator("title", mode="before")
     @classmethod
     def validate_post_update_title_chars(cls, value: Any) -> str | None:
+        return validate_allowed_user_text(value)
+
+    @field_validator("excerpt", mode="before")
+    @classmethod
+    def validate_post_update_excerpt_chars(cls, value: Any) -> str | None:
         return validate_allowed_user_text(value)
 
     @field_validator("content_html", mode="before")
@@ -791,10 +809,15 @@ class PostResponse(BaseModel):
     id: int
     title: str
     content_html: str
+    excerpt: str | None = None
+    cover_image_url: str | None = None
     access_type: str
     likes_count: int
     published_at: datetime
     is_members_only: bool = False
+    is_draft: bool = False
+    is_shake_supporters: bool = False
+    is_unlocked: bool = True
     author_name: str | None = None
     author_handle: str | None = None
     comments: list[PostCommentResponse] = []

@@ -1,12 +1,12 @@
 {
   "/api": {
-    "target": "http://207.38.88.6",
+    "target": "http://localhost:8000",
     "secure": false,
     "changeOrigin": true,
     "logLevel": "silent"
   },
   "/static": {
-    "target": "http://207.38.88.6",
+    "target": "http://localhost:8000",
     "secure": false,
     "changeOrigin": true,
     "logLevel": "silent"

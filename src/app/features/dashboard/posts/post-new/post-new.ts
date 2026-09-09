@@ -5,6 +5,7 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { DashboardService } from '../../../../core/dashboard.service';
 import { AllowedUserTextDirective } from '../../../../core/directives/allowed-user-text.directive';
 import { LanguageService } from '../../../../core/language.service';
+import { resolveMediaUrl } from '../../../../core/media-url';
 
 @Component({
   selector: 'app-dashboard-post-new',
@@ -37,26 +38,30 @@ import { LanguageService } from '../../../../core/language.service';
         </div>
 
         <div class="flex items-center gap-3">
-          @if (!isEditMode()) {
-            <button
-              type="button"
-              (click)="saveDraft()"
-              class="px-5 py-2.5 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-white/5 text-xs font-bold text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-white/10 transition"
-            >
-              {{ t().dashboard.postsView.saveDraft }}
-            </button>
-          }
+          <button
+            type="button"
+            (click)="saveDraft()"
+            [disabled]="isPublishing() || isSavingDraft() || isLoading() || !title().trim()"
+            class="px-5 py-2.5 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-white/5 text-xs font-bold text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-white/10 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+          >
+            @if (isSavingDraft()) {
+              <span class="inline-block h-3.5 w-3.5 border-2 border-gray-500 border-t-transparent rounded-full animate-spin"></span>
+              <span>{{ t().dashboard.postsView.savingDraft }}</span>
+            } @else {
+              <span>{{ t().dashboard.postsView.saveDraft }}</span>
+            }
+          </button>
           <button
             type="button"
             (click)="publishPost()"
-            [disabled]="isPublishing() || isLoading() || !title().trim()"
+            [disabled]="isPublishing() || isSavingDraft() || isLoading() || !title().trim()"
             class="px-6 py-2.5 rounded-xl bg-[#c9ff3d] hover:bg-[#bbf033] text-gray-950 text-xs font-black transition shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
           >
             @if (isPublishing()) {
               <span class="inline-block h-3.5 w-3.5 border-2 border-gray-950 border-t-transparent rounded-full animate-spin"></span>
-              <span>{{ isEditMode() ? t().dashboard.postsView.saving : t().dashboard.postsView.publishing }}</span>
+              <span>{{ isEditMode() && !isCurrentDraft() ? t().dashboard.postsView.saving : t().dashboard.postsView.publishing }}</span>
             } @else {
-              <span>{{ isEditMode() ? t().dashboard.postsView.saveChanges : t().dashboard.postsView.publishNow }}</span>
+              <span>{{ isEditMode() && !isCurrentDraft() ? t().dashboard.postsView.saveChanges : t().dashboard.postsView.publishNow }}</span>
               <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
               </svg>
@@ -176,7 +181,24 @@ import { LanguageService } from '../../../../core/language.service';
                 </div>
               </label>
 
-              <!-- Opción 2: Solo Miembros -->
+              <!-- Opción 2: Shake supporters -->
+              <label
+                (click)="audience.set('shake')"
+                class="p-4 rounded-2xl border transition flex items-start gap-3 cursor-pointer"
+                [class]="
+                  audience() === 'shake'
+                    ? 'border-[#c9ff3d] bg-[#c9ff3d]/10 dark:bg-[#c9ff3d]/15 text-gray-950 dark:text-white ring-2 ring-[#c9ff3d]/30'
+                    : 'border-gray-200 dark:border-white/10 bg-gray-50/50 dark:bg-white/5 text-gray-700 dark:text-gray-300 hover:border-gray-300'
+                "
+              >
+                <input type="radio" name="audience" [checked]="audience() === 'shake'" class="mt-1 text-[#c9ff3d] focus:ring-[#c9ff3d]" />
+                <div>
+                  <p class="text-xs font-black text-gray-900 dark:text-white">{{ t().dashboard.postsView.audienceShakeTitle }}</p>
+                  <p class="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5">{{ t().dashboard.postsView.audienceShakeDesc }}</p>
+                </div>
+              </label>
+
+              <!-- Opción 3: Solo Miembros -->
               <label
                 (click)="audience.set('members')"
                 class="p-4 rounded-2xl border transition flex items-start gap-3 cursor-pointer"
@@ -218,9 +240,9 @@ import { LanguageService } from '../../../../core/language.service';
           <div class="bg-white dark:bg-[#121614] rounded-3xl p-6 border border-gray-200/80 dark:border-white/10 shadow-xs space-y-3">
             <h3 class="font-display text-sm font-black text-gray-950 dark:text-white">{{ t().dashboard.postsView.coverPhotoTitle }}</h3>
             
-            @if (coverUrl()) {
+            @if (coverPreviewUrl(); as coverPreview) {
               <div class="relative rounded-2xl overflow-hidden h-36 w-full border border-gray-200 dark:border-white/10">
-                <img [src]="coverUrl()" alt="Cover" class="w-full h-full object-cover" />
+                <img [src]="coverPreview" alt="Cover" class="w-full h-full object-cover" />
                 <button
                   type="button"
                   (click)="coverUrl.set(null)"
@@ -258,14 +280,17 @@ export class DashboardPostNew implements OnInit {
   readonly editingPostId = signal<number | null>(null);
   readonly isEditMode = computed(() => this.editingPostId() !== null);
   readonly isLoading = signal(false);
+  readonly isCurrentDraft = signal(false);
 
   readonly title = signal('');
   readonly content = signal('');
   readonly excerpt = signal('');
-  readonly audience = signal<'public' | 'members'>('public');
+  readonly audience = signal<'public' | 'shake' | 'members'>('public');
   readonly requiredTier = signal('Todos los Miembros');
-  readonly coverUrl = signal<string | null>('https://images.unsplash.com/photo-1517838277536-f5f99be501cd?q=80&w=1200&auto=format&fit=crop');
+  readonly coverUrl = signal<string | null>(null);
+  readonly coverPreviewUrl = computed(() => resolveMediaUrl(this.coverUrl()));
   readonly isPublishing = signal(false);
+  readonly isSavingDraft = signal(false);
   readonly errorMessage = signal<string | null>(null);
 
   ngOnInit(): void {
@@ -285,8 +310,18 @@ export class DashboardPostNew implements OnInit {
     this.dashboardService.getPost(postId).subscribe({
       next: (post) => {
         this.title.set(post.title);
-        this.content.set(this.htmlToEditorText(post.content_html));
-        this.audience.set(post.access_type === 'members_only' ? 'members' : 'public');
+        const { cover, body } = this.splitCoverFromHtml(post.content_html);
+        this.coverUrl.set(cover);
+        this.content.set(this.htmlToEditorText(body));
+        this.excerpt.set((post.excerpt || '').trim());
+        this.isCurrentDraft.set(post.access_type === 'draft' || !!post.is_draft);
+        if (post.access_type === 'members_only') {
+          this.audience.set('members');
+        } else if (post.access_type === 'shake_supporters') {
+          this.audience.set('shake');
+        } else {
+          this.audience.set('public');
+        }
         this.isLoading.set(false);
       },
       error: (err) => {
@@ -318,17 +353,72 @@ export class DashboardPostNew implements OnInit {
         .replace(/&quot;/g, '"')
         .replace(/&#39;/g, "'");
 
+    // Prefer editable markdown for stored <img> tags.
+    const withMarkdownImages = trimmed.replace(
+      /<img\b[^>]*\bsrc=["']([^"']+)["'][^>]*>/gi,
+      (_m, src: string) => `![Imagen](${src})`,
+    );
+
     // Unwrap plain paragraph-only HTML produced by the create flow.
-    if (/^(?:<p>[^<]*<\/p>\s*)+$/i.test(trimmed)) {
+    if (/^(?:<p>[\s\S]*?<\/p>\s*)+$/i.test(withMarkdownImages)) {
       return decode(
-        trimmed
+        withMarkdownImages
           .replace(/<\/p>\s*<p>/gi, '\n')
           .replace(/<\/?p>/gi, '')
           .replace(/<br\s*\/?>/gi, '\n'),
-      );
+      ).trim();
     }
 
-    return trimmed;
+    return decode(withMarkdownImages);
+  }
+
+  private splitCoverFromHtml(html: string): { cover: string | null; body: string } {
+    const trimmed = (html || '').trim();
+    if (!trimmed) return { cover: null, body: '' };
+
+    const imgMatch = trimmed.match(/^<img\b[^>]*\bsrc=["']([^"']+)["'][^>]*>\s*/i);
+    if (imgMatch) {
+      return { cover: imgMatch[1], body: trimmed.slice(imgMatch[0].length).trim() };
+    }
+
+    const wrappedMatch = trimmed.match(
+      /^<p>\s*<img\b[^>]*\bsrc=["']([^"']+)["'][^>]*>\s*<\/p>\s*/i,
+    );
+    if (wrappedMatch) {
+      return { cover: wrappedMatch[1], body: trimmed.slice(wrappedMatch[0].length).trim() };
+    }
+
+    return { cover: null, body: trimmed };
+  }
+
+  private escapeHtmlAttr(value: string): string {
+    return value
+      .replace(/&/g, '&amp;')
+      .replace(/"/g, '&quot;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+  }
+
+  private markdownImagesToHtml(text: string): string {
+    return text.replace(/!\[([^\]]*)]\(([^)\s]+)\)/g, (_m, alt: string, src: string) => {
+      const safeAlt = this.escapeHtmlAttr(String(alt || 'Imagen'));
+      const safeSrc = this.escapeHtmlAttr(String(src));
+      return `<img src="${safeSrc}" alt="${safeAlt}" loading="lazy" />`;
+    });
+  }
+
+  private wrapPlainTextAsHtml(text: string): string {
+    const parts = text.split(/(<img\b[^>]*>)/i);
+    return parts
+      .map((part) => {
+        if (!part) return '';
+        if (/^<img\b/i.test(part)) return part;
+        const trimmed = part.trim();
+        if (!trimmed) return '';
+        if (/^<[a-z]/i.test(trimmed)) return trimmed;
+        return `<p>${trimmed.replace(/\n+/g, '</p><p>')}</p>`;
+      })
+      .join('');
   }
 
   insertFormat(prefix: string, suffix: string): void {
@@ -368,32 +458,93 @@ export class DashboardPostNew implements OnInit {
     });
   }
 
+  private buildHtmlContent(): string | null {
+    const rawContent = this.content().trim();
+    const cover = (this.coverUrl() || '').trim();
+    if (!rawContent && !cover) {
+      this.errorMessage.set(this.t().dashboard.postsView.contentRequiredError);
+      return null;
+    }
+
+    let body = rawContent ? this.markdownImagesToHtml(rawContent) : '';
+    body = body ? this.wrapPlainTextAsHtml(body) : '';
+
+    if (cover) {
+      const safeCover = this.escapeHtmlAttr(cover);
+      const coverImg = `<img src="${safeCover}" alt="Cover" loading="lazy" />`;
+      // Avoid duplicating the same cover if the body already starts with it.
+      if (!body.includes(`src="${safeCover}"`)) {
+        body = `${coverImg}${body}`;
+      }
+    }
+
+    return body || '<p></p>';
+  }
+
+  private audienceToAccessType(): 'public' | 'shake_supporters' | 'members_only' {
+    if (this.audience() === 'members') return 'members_only';
+    if (this.audience() === 'shake') return 'shake_supporters';
+    return 'public';
+  }
+
   saveDraft(): void {
-    this.router.navigate(['/dashboard/posts']);
+    if (!this.title().trim()) return;
+    const html = this.buildHtmlContent();
+    if (!html) return;
+
+    this.isSavingDraft.set(true);
+    this.errorMessage.set(null);
+    const payload = {
+      title: this.title().trim(),
+      content_html: html,
+      excerpt: this.excerpt().trim() || null,
+      access_type: 'draft' as const,
+    };
+
+    const postId = this.editingPostId();
+    const request$ = postId
+      ? this.dashboardService.updatePost(postId, payload)
+      : this.dashboardService.createPost(payload);
+
+    request$.subscribe({
+      next: (saved) => {
+        this.isSavingDraft.set(false);
+        this.isCurrentDraft.set(true);
+        if (!postId) {
+          this.editingPostId.set(saved.id);
+          this.router.navigate(['/dashboard/posts', saved.id, 'edit'], { replaceUrl: true });
+          return;
+        }
+        this.router.navigate(['/dashboard/posts']);
+      },
+      error: (err) => {
+        this.isSavingDraft.set(false);
+        const apiMessage = err?.error?.error?.message || err?.error?.detail;
+        if (err?.status === 401) {
+          this.errorMessage.set(this.t().dashboard.postsView.sessionExpired);
+        } else if (err?.status === 403) {
+          this.errorMessage.set(this.t().dashboard.postsView.noAthleteProfile);
+        } else {
+          this.errorMessage.set(apiMessage || this.t().dashboard.postsView.draftFailedError);
+        }
+      },
+    });
   }
 
   publishPost(): void {
     if (!this.title().trim()) return;
 
-    const rawContent = this.content().trim();
-    if (!rawContent) {
-      this.errorMessage.set(this.t().dashboard.postsView.contentRequiredError);
-      return;
-    }
+    const html = this.buildHtmlContent();
+    if (!html) return;
 
     this.isPublishing.set(true);
     this.errorMessage.set(null);
-    const html = rawContent.startsWith('<')
-      ? rawContent
-      : `<p>${rawContent.replace(/\n/g, '</p><p>')}</p>`;
 
     const payload = {
       title: this.title().trim(),
       content_html: html,
-      access_type: (this.audience() === 'members' ? 'members_only' : 'public') as
-        | 'public'
-        | 'followers_only'
-        | 'members_only',
+      excerpt: this.excerpt().trim() || null,
+      access_type: this.audienceToAccessType(),
     };
 
     const postId = this.editingPostId();

@@ -2,7 +2,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Query
 
-from app.api.dependencies import DatabaseSession
+from app.api.dependencies import DatabaseSession, OptionalUser
 from app.schemas.dtos import AthleteLeaderboardItemResponse, CreatorPublicProfileResponse, PostResponse
 from app.services.core_services import AthleteService
 
@@ -39,14 +39,23 @@ async def get_creator_profile(handle: str, session: DatabaseSession) -> CreatorP
 
 
 @router.get("/creators/{handle}/posts", response_model=list[PostResponse])
-async def get_creator_posts(handle: str, session: DatabaseSession) -> list[PostResponse]:
-    """Retorna las publicaciones públicas del atleta."""
+async def get_creator_posts(
+    handle: str,
+    session: DatabaseSession,
+    viewer: OptionalUser,
+) -> list[PostResponse]:
+    """Publicaciones del perfil: public + gated (teaser si el viewer no tiene acceso)."""
     service = AthleteService(session)
-    return await service.get_public_posts(handle)
+    return await service.get_public_posts(handle, viewer=viewer)
 
 
 @router.get("/creators/{handle}/posts/{post_id}", response_model=PostResponse)
-async def get_creator_post(handle: str, post_id: int, session: DatabaseSession) -> PostResponse:
-    """Retorna una publicación pública completa del atleta."""
+async def get_creator_post(
+    handle: str,
+    post_id: int,
+    session: DatabaseSession,
+    viewer: OptionalUser,
+) -> PostResponse:
+    """Detalle de publicación; gated sin entitlement solo recibe teaser/paywall."""
     service = AthleteService(session)
-    return await service.get_public_post(handle, post_id)
+    return await service.get_public_post(handle, post_id, viewer=viewer)

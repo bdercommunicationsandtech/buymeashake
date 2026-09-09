@@ -324,7 +324,7 @@ ALTER TABLE `users` DROP COLUMN `role_code`;
 
 -- Expand access_type enum, drop access_type_code
 ALTER TABLE `posts`
-  MODIFY `access_type` enum('public','followers_only','members_only') COLLATE utf8mb4_unicode_ci DEFAULT 'public';
+  MODIFY `access_type` enum('public','draft','shake_supporters','members_only') COLLATE utf8mb4_unicode_ci DEFAULT 'public';
 
 ALTER TABLE `posts` DROP INDEX `ix_posts_access_type_code`;
 ALTER TABLE `posts` DROP COLUMN `access_type_code`;

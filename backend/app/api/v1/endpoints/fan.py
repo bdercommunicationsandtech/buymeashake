@@ -19,10 +19,20 @@ async def get_fan_feed(
     session: DatabaseSession,
     page: int = Query(1, ge=1),
     page_size: int = Query(10, ge=1, le=50),
+    access_type: str | None = Query(
+        default=None,
+        pattern="^(public|shake_supporters|members_only)$",
+        description="Filtra el feed por categoría de visibilidad del post",
+    ),
 ) -> PaginatedResponse[PostResponse]:
     """Obtiene el feed de publicaciones de los atletas seguidos por el supporter autenticado."""
     service = SupporterService(session)
-    return await service.get_feed(supporter_id=user.id, page=page, page_size=page_size)
+    return await service.get_feed(
+        supporter_id=user.id,
+        page=page,
+        page_size=page_size,
+        access_type=access_type,
+    )
 
 
 @router.get("/following", response_model=list[FollowedAthleteResponse])

@@ -29,16 +29,12 @@
           <div class="flex items-center gap-2">
             <span
               class="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md flex items-center gap-1"
-              [class]="
-                post.is_members_only
-                  ? 'bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-[#c9ff3d] border border-amber-200 dark:border-amber-900/40'
-                  : 'bg-gray-100 dark:bg-white/10 text-gray-700 dark:text-gray-300'
-              "
+              [class]="accessBadgeClass(post)"
             >
-              @if (post.is_members_only) {
+              @if (post.is_members_only || post.access_type === 'members_only') {
                 <app-icon-lock size="11" />
               }
-              <span>{{ post.is_members_only ? t().post.membersOnly : t().post.public }}</span>
+              <span>{{ accessLabel(post) }}</span>
             </span>
             <span class="text-xs text-gray-400 font-medium">{{ formatDate(post.published_at) }}</span>
           </div>

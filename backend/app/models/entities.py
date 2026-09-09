@@ -560,8 +560,10 @@ class Post(Base):
     athlete_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("athlete_profiles.id", ondelete="CASCADE"), nullable=False)
     title: Mapped[str] = mapped_column(String(255), nullable=False)
     content_html: Mapped[str] = mapped_column(LONGTEXT, nullable=False)
+    excerpt: Mapped[str | None] = mapped_column(String(200), nullable=True)
     access_type: Mapped[str] = mapped_column(
-        Enum("public", "followers_only", "members_only", name="post_access_enum"), default="public"
+        Enum("public", "draft", "shake_supporters", "members_only", name="post_access_enum"),
+        default="public",
     )
     minimum_tier_id: Mapped[int | None] = mapped_column(BigInteger, ForeignKey("membership_tiers.id", ondelete="SET NULL"), nullable=True)
     likes_count: Mapped[int] = mapped_column(Integer, default=0)

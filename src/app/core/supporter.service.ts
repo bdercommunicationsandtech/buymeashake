@@ -11,10 +11,16 @@ export class SupporterService {
   private readonly http = inject(HttpClient);
   private readonly apiUrl = `${environment.apiUrl}/fan`;
 
-  getFeed(page: number = 1, pageSize: number = 10): Observable<PaginatedResponse<PostResponse>> {
-    return this.http.get<PaginatedResponse<PostResponse>>(`${this.apiUrl}/feed`, {
-      params: { page, page_size: pageSize },
-    });
+  getFeed(
+    page: number = 1,
+    pageSize: number = 10,
+    accessType?: 'public' | 'shake_supporters' | 'members_only' | null,
+  ): Observable<PaginatedResponse<PostResponse>> {
+    const params: Record<string, string | number> = { page, page_size: pageSize };
+    if (accessType) {
+      params['access_type'] = accessType;
+    }
+    return this.http.get<PaginatedResponse<PostResponse>>(`${this.apiUrl}/feed`, { params });
   }
 
   getFollowing(): Observable<FollowedAthlete[]> {

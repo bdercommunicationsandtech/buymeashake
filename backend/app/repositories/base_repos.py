@@ -554,10 +554,14 @@ class PostRepository:
         return list(result.scalars().all())
 
     async def get_public_by_athlete_id(self, athlete_id: int) -> list[Post]:
+        """Posts visibles en perfil público: no drafts (incluye public, shake y members)."""
         query = (
             select(Post)
             .options(selectinload(Post.comments).selectinload(PostComment.user))
-            .where(Post.athlete_id == athlete_id, Post.access_type == "public")
+            .where(
+                Post.athlete_id == athlete_id,
+                Post.access_type.in_(("public", "shake_supporters", "members_only")),
+            )
             .order_by(Post.published_at.desc())
         )
         result = await self.session.execute(query)
@@ -984,18 +988,31 @@ class FollowRepository:
         result = await self.session.execute(query)
         return list(result.scalars().all())
 
-    async def get_feed_posts(self, supporter_id: int, page: int = 1, page_size: int = 10) -> tuple[list[Post], int]:
+    async def get_feed_posts(
+        self,
+        supporter_id: int,
+        page: int = 1,
+        page_size: int = 10,
+        access_type: str | None = None,
+    ) -> tuple[list[Post], int]:
         # Subquery de athlete_ids que sigue
         subq = select(AthleteFollow.athlete_id).where(AthleteFollow.supporter_id == supporter_id)
-        
-        count_q = select(func.count(Post.id)).where(Post.athlete_id.in_(subq))
+
+        conditions = [
+            Post.athlete_id.in_(subq),
+            Post.access_type != "draft",
+        ]
+        if access_type is not None:
+            conditions.append(Post.access_type == access_type)
+
+        count_q = select(func.count(Post.id)).where(*conditions)
         total = (await self.session.execute(count_q)).scalar() or 0
 
         offset = (page - 1) * page_size
         posts_q = (
             select(Post)
             .options(selectinload(Post.athlete).selectinload(AthleteProfile.user))
-            .where(Post.athlete_id.in_(subq))
+            .where(*conditions)
             .order_by(Post.published_at.desc())
             .offset(offset)
             .limit(page_size)

@@ -31,8 +31,20 @@
 
         <div class="space-y-6 px-5 py-7 sm:px-10 sm:py-10">
           <div class="flex flex-wrap items-center gap-3 text-xs">
-            <span class="rounded-full bg-gray-100 px-3 py-1 font-black uppercase tracking-wider text-gray-700 dark:bg-white/10 dark:text-gray-200">
-              {{ p.is_members_only ? t().post.membersOnly : t().post.public }}
+            <span
+              class="inline-flex items-center gap-1.5 rounded-full px-3 py-1 font-black uppercase tracking-wider"
+              [class]="
+                isMembersOnly()
+                  ? 'bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-950/30 dark:text-[#c9ff3d] dark:border-amber-900/40'
+                  : isShakeSupporters()
+                    ? 'bg-sky-50 text-sky-700 border border-sky-200 dark:bg-sky-950/30 dark:text-sky-300 dark:border-sky-900/40'
+                    : 'bg-gray-100 text-gray-700 dark:bg-white/10 dark:text-gray-200'
+              "
+            >
+              @if (isLocked()) {
+                <app-icon-lock size="11" />
+              }
+              {{ accessLabel() }}
             </span>
             <span class="font-medium text-gray-400">{{ publishedLabel() }}</span>
           </div>
@@ -55,10 +67,42 @@
             </a>
           </header>
 
-          <div
-            class="post-body prose-post space-y-4 text-[15px] leading-relaxed text-gray-700 dark:text-gray-300"
-            [innerHTML]="bodyHtml()"
-          ></div>
+          @if (isLocked()) {
+            <div class="space-y-5">
+              @if (teaserText()) {
+                <p class="text-[15px] leading-relaxed text-gray-700 dark:text-gray-300">
+                  {{ teaserText() }}
+                </p>
+              }
+
+              <div class="rounded-2xl border border-gray-200 bg-gray-50/80 p-5 text-center dark:border-white/10 dark:bg-white/5">
+                <div class="mx-auto mb-3 grid h-12 w-12 place-items-center rounded-2xl bg-gray-950 text-[#c9ff3d]">
+                  <app-icon-lock size="22" />
+                </div>
+                <h2 class="text-base font-black text-gray-950 dark:text-white">{{ t().post.exclusiveContent }}</h2>
+                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                  @if (isShakeSupporters()) {
+                    {{ t().post.shakeExclusivePromptPrefix }} {{ authorName() }} {{ t().post.shakeExclusivePromptSuffix }}
+                  } @else {
+                    {{ t().post.exclusivePromptPrefix }} {{ authorName() }} {{ t().post.exclusivePromptSuffix }}
+                  }
+                </p>
+                <a
+                  [routerLink]="['/', handle()]"
+                  [fragment]="unlockFragment()"
+                  [queryParams]="isShakeSupporters() ? { support: 'once' } : { support: 'recurring' }"
+                  class="mt-4 inline-flex rounded-full bg-[#c9ff3d] px-6 py-2.5 text-xs font-black text-gray-950 transition hover:bg-[#bbf033]"
+                >
+                  {{ isShakeSupporters() ? t().post.unlockWithShake : t().post.unlockWithMembership }}
+                </a>
+              </div>
+            </div>
+          } @else {
+            <div
+              class="post-body prose-post space-y-4 text-[15px] leading-relaxed text-gray-700 dark:text-gray-300"
+              [innerHTML]="bodyHtml()"
+            ></div>
+          }
 
           <div class="flex items-center gap-4 border-t border-gray-100 pt-5 text-xs font-bold text-gray-500 dark:border-white/10 dark:text-gray-400">
             <span class="inline-flex items-center gap-1.5">

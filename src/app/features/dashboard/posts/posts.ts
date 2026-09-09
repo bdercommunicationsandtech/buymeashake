@@ -63,6 +63,28 @@ export class DashboardPosts implements OnInit {
     return text.length > 120 ? `${text.slice(0, 120)}…` : text;
   }
 
+  accessLabel(post: PostItemDto): string {
+    if (post.is_draft || post.access_type === 'draft') return this.t().post.draft;
+    if (post.is_shake_supporters || post.access_type === 'shake_supporters') {
+      return this.t().post.shakeSupporters;
+    }
+    if (post.is_members_only || post.access_type === 'members_only') return this.t().post.membersOnly;
+    return this.t().post.public;
+  }
+
+  accessBadgeClass(post: PostItemDto): string {
+    if (post.is_draft || post.access_type === 'draft') {
+      return 'bg-slate-100 dark:bg-white/10 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-white/10';
+    }
+    if (post.is_shake_supporters || post.access_type === 'shake_supporters') {
+      return 'bg-sky-50 dark:bg-sky-950/30 text-sky-700 dark:text-sky-300 border border-sky-200 dark:border-sky-900/40';
+    }
+    if (post.is_members_only || post.access_type === 'members_only') {
+      return 'bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-[#c9ff3d] border border-amber-200 dark:border-amber-900/40';
+    }
+    return 'bg-gray-100 dark:bg-white/10 text-gray-700 dark:text-gray-300';
+  }
+
   formatDate(value: string): string {
     const date = new Date(value);
     if (Number.isNaN(date.getTime())) return value;

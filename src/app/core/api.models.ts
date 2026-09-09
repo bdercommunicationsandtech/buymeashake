@@ -347,10 +347,15 @@ export interface PostResponse {
   id: number;
   title: string;
   content_html: string;
+  excerpt?: string | null;
+  cover_image_url?: string | null;
   access_type: string;
   likes_count: number;
   published_at: string;
   is_members_only: boolean;
+  is_draft?: boolean;
+  is_shake_supporters?: boolean;
+  is_unlocked?: boolean;
   author_name?: string | null;
   author_handle?: string | null;
   comments?: PostCommentDto[];
@@ -360,25 +365,34 @@ export interface PostItemDto {
   id: number;
   title: string;
   content_html: string;
+  excerpt?: string | null;
+  cover_image_url?: string | null;
   access_type: string;
   likes_count: number;
   published_at: string;
   is_members_only: boolean;
+  is_draft?: boolean;
+  is_shake_supporters?: boolean;
+  is_unlocked?: boolean;
   author_name?: string | null;
   author_handle?: string | null;
   comments?: PostCommentDto[];
 }
 
+export type PostAccessType = 'public' | 'draft' | 'shake_supporters' | 'members_only';
+
 export interface PostCreatePayload {
   title: string;
   content_html: string;
-  access_type?: 'public' | 'followers_only' | 'members_only';
+  excerpt?: string | null;
+  access_type?: PostAccessType;
 }
 
 export interface PostUpdatePayload {
   title?: string;
   content_html?: string;
-  access_type?: 'public' | 'followers_only' | 'members_only';
+  excerpt?: string | null;
+  access_type?: PostAccessType;
 }
 
 export interface ShakeDetailsDto {

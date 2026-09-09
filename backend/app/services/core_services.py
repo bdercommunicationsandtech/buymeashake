@@ -1,6 +1,8 @@
+import html
 import secrets
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal
+import re
 from typing import Any
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -21,6 +23,49 @@ from app.core.security import (
     get_password_hash,
     verify_password,
 )
+
+POST_ACCESS_TYPES = frozenset({"public", "draft", "shake_supporters", "members_only"})
+FEED_ACCESS_TYPES = frozenset({"public", "shake_supporters", "members_only"})
+
+
+def _normalize_post_access_type(value: str | None, *, fallback: str = "public") -> str:
+    if value in POST_ACCESS_TYPES:
+        return value  # type: ignore[return-value]
+    return fallback
+
+
+def _post_access_flags(access_type: str) -> dict[str, bool]:
+    return {
+        "is_draft": access_type == "draft",
+        "is_members_only": access_type == "members_only",
+        "is_shake_supporters": access_type == "shake_supporters",
+    }
+
+
+def _locked_public_teaser(post: Any) -> str:
+    """Teaser visible sin entitlement: solo el extracto escrito por el atleta (nunca el body ni media)."""
+    raw = (getattr(post, "excerpt", None) or "").strip()
+    if not raw:
+        return ""
+    # Evitar filtrar markdown/HTML de imágenes aunque alguien lo pegue en el extracto.
+    text = re.sub(r"<img\b[^>]*>", " ", raw, flags=re.IGNORECASE)
+    text = re.sub(r"!\[[^\]]*]\([^)]*\)", " ", text)
+    text = re.sub(r"<[^>]+>", " ", text)
+    return re.sub(r"\s+", " ", text).strip()
+
+
+def _extract_post_cover_url(content_html: str | None) -> str | None:
+    """Primera imagen del post: visible como teaser incluso cuando el body está bloqueado."""
+    raw = content_html or ""
+    html_match = re.search(r'<img[^>]+src=["\']([^"\']+)["\']', raw, flags=re.IGNORECASE)
+    if html_match:
+        return html_match.group(1).strip() or None
+    md_match = re.search(r"!\[[^\]]*]\(([^)\s]+)\)", raw)
+    if md_match:
+        return md_match.group(1).strip() or None
+    return None
+
+
 from app.models.entities import (
     AthleteDiscipline,
     AthleteMonetization,
@@ -670,10 +715,22 @@ class SupporterService:
             ))
         return res
 
-    async def get_feed(self, supporter_id: int, page: int = 1, page_size: int = 10) -> PaginatedResponse[PostResponse]:
-        posts, total = await self.follow_repo.get_feed_posts(supporter_id, page=page, page_size=page_size)
+    async def get_feed(
+        self,
+        supporter_id: int,
+        page: int = 1,
+        page_size: int = 10,
+        access_type: str | None = None,
+    ) -> PaginatedResponse[PostResponse]:
+        filter_access = access_type if access_type in FEED_ACCESS_TYPES else None
+        posts, total = await self.follow_repo.get_feed_posts(
+            supporter_id,
+            page=page,
+            page_size=page_size,
+            access_type=filter_access,
+        )
 
-        # Consultar atletas para los cuales el seguidor tiene una suscripción activa
+        # Suscripciones activas del viewer
         sub_query = (
             select(MembershipTier.athlete_id)
             .join(Subscription, Subscription.tier_id == MembershipTier.id)
@@ -685,30 +742,51 @@ class SupporterService:
         sub_res = await self.session.execute(sub_query)
         active_subscribed_athlete_ids = set(sub_res.scalars().all())
 
+        # Atletas a los que el viewer compró al menos un shake completado
+        shake_query = (
+            select(Transaction.athlete_id)
+            .where(
+                Transaction.supporter_id == supporter_id,
+                Transaction.transaction_type_code == 201,
+                Transaction.status_code == 302,
+            )
+            .distinct()
+        )
+        shake_res = await self.session.execute(shake_query)
+        shake_supporter_athlete_ids = set(shake_res.scalars().all())
+
         items = []
         for p in posts:
             author_name = p.athlete.user.full_name if p.athlete and p.athlete.user else "Atleta"
             author_handle = p.athlete.handle if p.athlete else ""
-            is_members_only = p.access_type == "members_only"
-            has_active_sub = p.athlete_id in active_subscribed_athlete_ids
+            access = str(p.access_type)
+            flags = _post_access_flags(access)
 
-            # Si la publicación es exclusiva para miembros y el usuario no tiene suscripción activa,
-            # no filtrar el texto completo para preservar el paywall
-            if is_members_only and not has_active_sub:
-                display_content = "<p><em>Contenido exclusivo para miembros activos. Suscríbete para acceder.</em></p>"
-            else:
+            is_unlocked = not (
+                (flags["is_members_only"] and p.athlete_id not in active_subscribed_athlete_ids)
+                or (flags["is_shake_supporters"] and p.athlete_id not in shake_supporter_athlete_ids)
+            )
+            if is_unlocked:
+                excerpt = (p.excerpt or "").strip() or AthleteService._resolve_excerpt(p)
                 display_content = p.content_html
+            else:
+                excerpt = _locked_public_teaser(p)
+                safe = html.escape(excerpt) if excerpt else ""
+                display_content = f"<p>{safe}</p>" if safe else "<p></p>"
 
             items.append(PostResponse(
                 id=p.id,
                 title=p.title,
                 content_html=display_content,
-                access_type=p.access_type,
+                excerpt=excerpt or None,
+                cover_image_url=_extract_post_cover_url(p.content_html),
+                access_type=access,
                 likes_count=p.likes_count or 0,
                 published_at=p.published_at,
-                is_members_only=is_members_only,
                 author_name=author_name,
                 author_handle=author_handle,
+                is_unlocked=is_unlocked,
+                **flags,
             ))
         total_pages = (total + page_size - 1) // page_size if total > 0 else 1
         return PaginatedResponse(
@@ -927,7 +1005,11 @@ class AthleteService:
         )
         return [AthleteLeaderboardItemResponse(**item) for item in raw_items]
 
-    async def get_public_posts(self, handle: str) -> list[PostResponse]:
+    async def get_public_posts(
+        self,
+        handle: str,
+        viewer: User | None = None,
+    ) -> list[PostResponse]:
         profile = await self.athlete_repo.get_by_handle(handle)
         if not profile:
             raise EntityNotFoundError("Atleta", handle)
@@ -935,27 +1017,116 @@ class AthleteService:
         post_repo = PostRepository(self.session)
         posts = await post_repo.get_public_by_athlete_id(profile.id)
         author_name = profile.user.full_name if profile.user else profile.handle
+        entitlements = await self._viewer_post_entitlements(
+            viewer,
+            athlete_id=profile.id,
+            owner_user_id=profile.user_id,
+        )
         return [
-            self._to_post_response(p, author_name=author_name, author_handle=profile.handle)
+            self._to_post_response(
+                p,
+                author_name=author_name,
+                author_handle=profile.handle,
+                is_unlocked=self._can_view_full_post(p, entitlements),
+                redact_locked=True,
+            )
             for p in posts
         ]
 
-    async def get_public_post(self, handle: str, post_id: int) -> PostResponse:
+    async def get_public_post(
+        self,
+        handle: str,
+        post_id: int,
+        viewer: User | None = None,
+    ) -> PostResponse:
         profile = await self.athlete_repo.get_by_handle(handle)
         if not profile:
             raise EntityNotFoundError("Atleta", handle)
 
         post_repo = PostRepository(self.session)
         post = await post_repo.get_by_id(post_id)
-        if not post or post.athlete_id != profile.id:
+        if not post or post.athlete_id != profile.id or post.access_type == "draft":
             raise EntityNotFoundError("Publicación", post_id)
 
-        is_members_only = post.access_type == "members_only"
-        if is_members_only or post.access_type != "public":
-            raise EntityNotFoundError("Publicación", post_id)
-
+        entitlements = await self._viewer_post_entitlements(
+            viewer,
+            athlete_id=profile.id,
+            owner_user_id=profile.user_id,
+        )
+        is_unlocked = self._can_view_full_post(post, entitlements)
         author_name = profile.user.full_name if profile.user else profile.handle
-        return self._to_post_response(post, author_name=author_name, author_handle=profile.handle)
+        return self._to_post_response(
+            post,
+            author_name=author_name,
+            author_handle=profile.handle,
+            is_unlocked=is_unlocked,
+            redact_locked=True,
+        )
+
+    async def _viewer_post_entitlements(
+        self,
+        viewer: User | None,
+        *,
+        athlete_id: int,
+        owner_user_id: int | None,
+    ) -> dict[str, bool]:
+        if not viewer:
+            return {"has_sub": False, "has_shake": False, "is_owner": False}
+
+        is_owner = owner_user_id is not None and owner_user_id == viewer.id
+
+        sub_query = (
+            select(Subscription.id)
+            .join(MembershipTier, MembershipTier.id == Subscription.tier_id)
+            .where(
+                MembershipTier.athlete_id == athlete_id,
+                Subscription.user_id == viewer.id,
+                Subscription.status == "active",
+            )
+            .limit(1)
+        )
+        has_sub = (await self.session.execute(sub_query)).scalar_one_or_none() is not None
+
+        shake_query = (
+            select(Transaction.id)
+            .where(
+                Transaction.athlete_id == athlete_id,
+                Transaction.supporter_id == viewer.id,
+                Transaction.transaction_type_code == 201,
+                Transaction.status_code == 302,
+            )
+            .limit(1)
+        )
+        has_shake = (await self.session.execute(shake_query)).scalar_one_or_none() is not None
+
+        return {"has_sub": has_sub, "has_shake": has_shake, "is_owner": is_owner}
+
+    def _can_view_full_post(
+        self,
+        post: Post,
+        entitlements: dict[str, bool],
+    ) -> bool:
+        access = str(post.access_type)
+        if access == "public":
+            return True
+        if entitlements.get("is_owner"):
+            return True
+        if access == "members_only":
+            return bool(entitlements.get("has_sub"))
+        if access == "shake_supporters":
+            return bool(entitlements.get("has_shake"))
+        return False
+
+    @staticmethod
+    def _resolve_excerpt(post: Post) -> str:
+        if post.excerpt and post.excerpt.strip():
+            return post.excerpt.strip()
+        text = post.content_html or ""
+        text = re.sub(r"<img\b[^>]*>", " ", text, flags=re.IGNORECASE)
+        text = re.sub(r"!\[[^\]]*]\([^)]*\)", " ", text)
+        text = re.sub(r"<[^>]+>", " ", text)
+        text = re.sub(r"\s+", " ", text).strip()
+        return text[:180] + ("…" if len(text) > 180 else "")
 
     def _to_post_response(
         self,
@@ -963,18 +1134,20 @@ class AthleteService:
         *,
         author_name: str | None = None,
         author_handle: str | None = None,
+        is_unlocked: bool = True,
+        redact_locked: bool = False,
     ) -> PostResponse:
-        return PostResponse(
-            id=post.id,
-            title=post.title,
-            content_html=post.content_html,
-            access_type=str(post.access_type),
-            likes_count=post.likes_count or 0,
-            published_at=post.published_at,
-            is_members_only=post.access_type == "members_only",
-            author_name=author_name,
-            author_handle=author_handle,
-            comments=[
+        access = str(post.access_type)
+        if redact_locked and not is_unlocked:
+            excerpt = _locked_public_teaser(post)
+            # Solo teaser seguro; el CTA de desbloqueo vive en el frontend.
+            safe_excerpt = html.escape(excerpt) if excerpt else ""
+            content = f"<p>{safe_excerpt}</p>" if safe_excerpt else "<p></p>"
+            comments: list = []
+        else:
+            excerpt = self._resolve_excerpt(post)
+            content = post.content_html
+            comments = [
                 PostCommentResponse(
                     id=c.id,
                     post_id=c.post_id,
@@ -986,7 +1159,22 @@ class AthleteService:
                     created_at=c.created_at,
                 )
                 for c in (post.comments or [])
-            ],
+            ]
+
+        return PostResponse(
+            id=post.id,
+            title=post.title,
+            content_html=content,
+            excerpt=excerpt or None,
+            cover_image_url=_extract_post_cover_url(post.content_html),
+            access_type=access,
+            likes_count=post.likes_count or 0,
+            published_at=post.published_at,
+            author_name=author_name,
+            author_handle=author_handle,
+            comments=comments,
+            is_unlocked=is_unlocked,
+            **_post_access_flags(access),
         )
 
 
@@ -1256,49 +1444,38 @@ class DashboardService:
 
     async def get_posts(self, athlete: AthleteProfile) -> list[PostResponse]:
         posts = await self.post_repo.get_by_athlete_id(athlete.id)
-        return [
-            PostResponse(
-                id=p.id,
-                title=p.title,
-                content_html=p.content_html,
-                access_type=p.access_type,
-                likes_count=p.likes_count,
-                published_at=p.published_at,
-                is_members_only=p.access_type == "members_only",
-            )
-            for p in posts
-        ]
+        return [self._to_dashboard_post_response(p) for p in posts]
 
     async def create_post(self, athlete: AthleteProfile, dto: PostCreateRequest) -> PostResponse:
-        access_type = dto.access_type if dto.access_type in ("public", "followers_only", "members_only") else "public"
+        access_type = _normalize_post_access_type(dto.access_type)
+        excerpt = (dto.excerpt or "").strip() or None
+        content_html = dto.content_html.strip() or "<p></p>"
         post = Post(
             athlete_id=athlete.id,
             title=dto.title.strip(),
-            content_html=dto.content_html.strip() or "<p></p>",
+            content_html=content_html,
+            excerpt=excerpt,
             access_type=access_type,
             likes_count=0,
             published_at=datetime.utcnow(),
         )
         created = await self.post_repo.create(post)
-        return PostResponse(
-            id=created.id,
-            title=created.title,
-            content_html=created.content_html,
-            access_type=str(created.access_type),
-            likes_count=created.likes_count or 0,
-            published_at=created.published_at or datetime.utcnow(),
-            is_members_only=created.access_type == "members_only",
-        )
+        return self._to_dashboard_post_response(created)
 
     def _to_dashboard_post_response(self, post: Post) -> PostResponse:
+        access = str(post.access_type)
+        excerpt = (post.excerpt or "").strip() or None
         return PostResponse(
             id=post.id,
             title=post.title,
             content_html=post.content_html,
-            access_type=str(post.access_type),
+            excerpt=excerpt,
+            cover_image_url=_extract_post_cover_url(post.content_html),
+            access_type=access,
             likes_count=post.likes_count or 0,
             published_at=post.published_at or datetime.utcnow(),
-            is_members_only=post.access_type == "members_only",
+            is_unlocked=True,
+            **_post_access_flags(access),
         )
 
     async def get_post(self, athlete: AthleteProfile, post_id: int) -> PostResponse:
@@ -1319,10 +1496,13 @@ class DashboardService:
             post.title = updates["title"].strip()
         if "content_html" in updates and updates["content_html"] is not None:
             post.content_html = updates["content_html"].strip() or "<p></p>"
+        if "excerpt" in updates:
+            raw_excerpt = updates["excerpt"]
+            post.excerpt = (raw_excerpt or "").strip() or None
         if "access_type" in updates and updates["access_type"] is not None:
-            access_type = updates["access_type"]
-            post.access_type = (
-                access_type if access_type in ("public", "followers_only", "members_only") else post.access_type
+            post.access_type = _normalize_post_access_type(
+                updates["access_type"],
+                fallback=str(post.access_type),
             )
 
         updated = await self.post_repo.update(post)

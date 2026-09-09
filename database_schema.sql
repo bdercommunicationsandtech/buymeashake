@@ -486,7 +486,8 @@ CREATE TABLE posts (
     athlete_id BIGINT UNSIGNED NOT NULL,
     title VARCHAR(255) NOT NULL,
     content_html LONGTEXT NOT NULL,
-    access_type ENUM('public', 'followers_only', 'members_only') DEFAULT 'public',
+    excerpt VARCHAR(200) NULL,
+    access_type ENUM('public', 'draft', 'shake_supporters', 'members_only') DEFAULT 'public',
     minimum_tier_id BIGINT UNSIGNED NULL,
     likes_count INT UNSIGNED DEFAULT 0,
     published_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -607,7 +608,8 @@ INSERT INTO lookup_groups (code, name, description) VALUES
 (400, 'Tipos de Notificación', 'Alertas y eventos de la plataforma'),
 (500, 'Estados de Cita / Booking', 'Estados de citas 1-a-1'),
 (600, 'Account Roles', 'Roles de cuenta de la plataforma'),
-(700, 'Account Role Statuses', 'Estado de una asignación en user_roles');
+(700, 'Account Role Statuses', 'Estado de una asignación en user_roles'),
+(800, 'Post Access Types', 'Categorías de visibilidad de publicaciones');
 
 SET @sports_group_id = (SELECT id FROM lookup_groups WHERE code = 100);
 SET @trans_group_id = (SELECT id FROM lookup_groups WHERE code = 200);
@@ -616,6 +618,7 @@ SET @notif_group_id = (SELECT id FROM lookup_groups WHERE code = 400);
 SET @booking_group_id = (SELECT id FROM lookup_groups WHERE code = 500);
 SET @roles_group_id = (SELECT id FROM lookup_groups WHERE code = 600);
 SET @role_status_group_id = (SELECT id FROM lookup_groups WHERE code = 700);
+SET @post_access_group_id = (SELECT id FROM lookup_groups WHERE code = 800);
 
 INSERT INTO lookup_items (lookup_group_id, code, label, icon, sort_order) VALUES
 (@sports_group_id, 101, 'Fuerza & Levantamiento', 'dumbbell', 1),
@@ -661,6 +664,12 @@ INSERT INTO lookup_items (lookup_group_id, code, label, icon, sort_order) VALUES
 INSERT INTO lookup_items (lookup_group_id, code, label, icon, sort_order) VALUES
 (@role_status_group_id, 701, 'ACTIVE', 'check', 1),
 (@role_status_group_id, 702, 'INACTIVE', 'x', 2);
+
+INSERT INTO lookup_items (lookup_group_id, code, label, icon, sort_order, metadata) VALUES
+(@post_access_group_id, 801, 'Public', 'globe', 1, CAST('{"access_type":"public"}' AS JSON)),
+(@post_access_group_id, 802, 'Draft', 'file', 2, CAST('{"access_type":"draft"}' AS JSON)),
+(@post_access_group_id, 803, 'Shake supporters', 'shake', 3, CAST('{"access_type":"shake_supporters"}' AS JSON)),
+(@post_access_group_id, 804, 'Members only', 'lock', 4, CAST('{"access_type":"members_only"}' AS JSON));
 
 INSERT INTO app_versions (platform, version_name, version_code, min_supported_version_code, force_update, update_url, release_notes) VALUES
 ('ios', '1.0.0', 100, 100, FALSE, 'https://apps.apple.com/app/buymeashake/id0000000', 'Versión inicial oficial'),

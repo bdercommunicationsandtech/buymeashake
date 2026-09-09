@@ -35,6 +35,7 @@ import { PricesModalComponent } from '../../shared/page-editor-modals/prices-mod
 import { EditorSavePatch } from '../../shared/page-editor-modals/editor-save-patch';
 import { CreatorProfile } from '../../core/api.models';
 import { AllowedUserTextDirective } from '../../core/directives/allowed-user-text.directive';
+import { resolveMediaUrl } from '../../core/media-url';
 
 export interface CreatorProduct {
   title: string;
@@ -353,6 +354,18 @@ export class Creator {
       }
     });
 
+    this.route.queryParamMap.subscribe((params) => {
+      const support = params.get('support');
+      if (support === 'once' || support === 'recurring') {
+        this.supportMode.set(support);
+      }
+    });
+
+    this.route.fragment.subscribe((fragment) => {
+      if (fragment === 'support') {
+        setTimeout(() => this.scrollToId('support'), 350);
+      }
+    });
     // Escucha en tiempo real si el supporter completó una donación
     // (retorno Stripe lo maneja App al boot para mostrar overlay al instante)
     effect(() => {
@@ -586,26 +599,48 @@ export class Creator {
         if (!c) return;
         this.posts.set(
           items.map((p) => {
-            const htmlMatch = p.content_html.match(/<img[^>]+src=["']([^"']+)["']/i);
-            const mdMatch = p.content_html.match(/!\[[^\]]*]\(([^)\s]+)\)/);
-            const coverImageUrl = htmlMatch?.[1] || mdMatch?.[1] || null;
+            const isUnlocked = p.is_unlocked !== false;
+            const plainExcerpt = (value: string) =>
+              value
+                .replace(/<img\b[^>]*>/gi, ' ')
+                .replace(/!\[[^\]]*]\([^)]*\)/g, ' ')
+                .replace(/<[^>]+>/g, ' ')
+                .replace(/\s+/g, ' ')
+                .trim();
+            const excerptRaw =
+              !isUnlocked
+                ? (p.excerpt || '').trim()
+                : (p.excerpt || '').trim() || plainExcerpt(p.content_html).slice(0, 180);
+            // Cover es teaser público; el body/media extra solo si está desbloqueado.
+            const fromApi = resolveMediaUrl(p.cover_image_url);
+            const htmlMatch = isUnlocked
+              ? p.content_html.match(/<img[^>]+src=["']([^"']+)["']/i)
+              : null;
+            const mdMatch = isUnlocked
+              ? p.content_html.match(/!\[[^\]]*]\(([^)\s]+)\)/)
+              : null;
+            const coverImageUrl =
+              fromApi ||
+              (isUnlocked ? resolveMediaUrl(htmlMatch?.[1] || mdMatch?.[1] || null) : null);
             return {
               id: String(p.id),
               title: p.title,
-              excerpt: p.content_html.replace(/<[^>]+>/g, '').replace(/!\[[^\]]*]\([^)]*\)/g, '').slice(0, 180),
+              excerpt: plainExcerpt(excerptRaw),
               content: p.content_html,
               authorName: c.name,
               authorHandle: c.handle,
-              authorAvatar: c.avatarUrl,
+              authorAvatar: resolveMediaUrl(c.avatarUrl) || c.avatarUrl,
               publishedAt: new Date(p.published_at).toLocaleDateString(this.i18n.lang() === 'es' ? 'es-MX' : 'en-US'),
               likesCount: p.likes_count,
               commentsCount: p.comments?.length || 0,
-              isMembersOnly: p.is_members_only,
+              isMembersOnly: p.is_members_only || p.access_type === 'members_only',
+              isShakeSupporters: !!p.is_shake_supporters || p.access_type === 'shake_supporters',
+              isUnlocked,
               coverImageUrl,
               comments: (p.comments || []).map((cm) => ({
                 id: cm.id,
                 userName: cm.user_name,
-                userAvatar: cm.user_avatar,
+                userAvatar: resolveMediaUrl(cm.user_avatar) || cm.user_avatar,
                 content: cm.content,
                 createdAt: new Date(cm.created_at).toLocaleDateString('es-MX'),
               })),
@@ -712,8 +747,8 @@ export class Creator {
     });
   }
 
-  unlockPost(_post: PostItem): void {
-    this.scrollToSupport('recurring');
+  unlockPost(post: PostItem): void {
+    this.scrollToSupport(post.isShakeSupporters ? 'once' : 'recurring');
   }
 
   setShakes(value: number): void {

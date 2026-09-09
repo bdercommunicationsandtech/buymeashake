@@ -26,6 +26,7 @@ export interface PostItem {
   likesCount: number;
   commentsCount: number;
   isMembersOnly: boolean;
+  isShakeSupporters?: boolean;
   requiredTierName?: string | null;
   mediaType?: 'article' | 'video' | 'audio' | null;
   coverImageUrl?: string | null;
@@ -41,15 +42,15 @@ export interface PostItem {
   template: `
     <article class="bg-white dark:bg-[#121614] rounded-3xl border border-gray-200/80 dark:border-white/10 overflow-hidden shadow-xs hover:border-gray-300 dark:hover:border-white/20 transition-all duration-200">
       
-      <!-- Portada con badge y estado de bloqueo -->
+      <!-- Portada como teaser (también visible si el post está bloqueado) -->
       @if (post().coverImageUrl) {
         <a [routerLink]="['/', post().authorHandle, 'posts', post().id]" class="relative block h-56 sm:h-72 w-full bg-gray-900 overflow-hidden">
           <img
             [src]="post().coverImageUrl"
             [alt]="post().title"
             class="w-full h-full object-cover transition-transform duration-700"
-            [class.blur-sm]="post().isMembersOnly && !post().isUnlocked"
-            [class.opacity-40]="post().isMembersOnly && !post().isUnlocked"
+            [class.blur-[2px]]="isLocked()"
+            [class.scale-105]="isLocked()"
           />
           
           <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
@@ -61,6 +62,11 @@ export interface PostItem {
                 <app-icon-lock size="13" />
                 <span>{{ t().post.membersOnly }} {{ post().requiredTierName ? '(' + post().requiredTierName + ')' : '' }}</span>
               </span>
+            } @else if (post().isShakeSupporters) {
+              <span class="inline-flex items-center gap-1.5 rounded-full bg-black/70 backdrop-blur-md px-3 py-1 text-xs font-black text-sky-300 border border-sky-400/30">
+                <app-icon-lock size="13" />
+                <span>{{ t().post.shakeSupporters }}</span>
+              </span>
             } @else {
               <span class="inline-flex items-center gap-1 rounded-full bg-black/60 backdrop-blur-md px-3 py-1 text-xs font-bold text-white">
                 {{ t().post.public }}
@@ -68,26 +74,65 @@ export interface PostItem {
             }
           </div>
 
-          <!-- Overlay de Bloqueo Exclusivo -->
-          @if (post().isMembersOnly && !post().isUnlocked) {
-            <div class="absolute inset-0 flex flex-col items-center justify-center p-6 text-center z-10">
+          @if (isLocked()) {
+            <div class="absolute inset-0 flex flex-col items-center justify-center p-6 text-center z-10 bg-black/35">
               <div class="h-14 w-14 rounded-2xl bg-black/80 backdrop-blur-md border border-white/20 flex items-center justify-center text-amber-400 dark:text-[#c9ff3d] mb-3 shadow-xl">
                 <app-icon-lock size="24" />
               </div>
               <h4 class="text-base font-black text-white max-w-xs">{{ t().post.exclusiveContent }}</h4>
               <p class="text-xs text-gray-300 mt-1 max-w-xs">
-                {{ t().post.exclusivePromptPrefix }} {{ post().authorName }} {{ t().post.exclusivePromptSuffix }}
+                @if (post().isShakeSupporters) {
+                  {{ t().post.shakeExclusivePromptPrefix }} {{ post().authorName }} {{ t().post.shakeExclusivePromptSuffix }}
+                } @else {
+                  {{ t().post.exclusivePromptPrefix }} {{ post().authorName }} {{ t().post.exclusivePromptSuffix }}
+                }
               </p>
               <button
                 type="button"
                 (click)="$event.preventDefault(); $event.stopPropagation(); onUnlock.emit(post())"
                 class="mt-4 rounded-full bg-[#c9ff3d] hover:bg-[#bbf033] text-gray-950 px-6 py-2.5 text-xs font-black transition shadow-lg shadow-[#c9ff3d]/20 active:scale-95"
               >
-                {{ t().post.unlockWithMembership }}
+                {{ post().isShakeSupporters ? t().post.unlockWithShake : t().post.unlockWithMembership }}
               </button>
             </div>
           }
         </a>
+      } @else if (isLocked()) {
+        <div class="relative block h-44 sm:h-52 w-full bg-gradient-to-br from-gray-900 via-[#121614] to-gray-950 overflow-hidden">
+          <div class="absolute inset-0 flex flex-col items-center justify-center p-6 text-center z-10">
+            <div class="h-14 w-14 rounded-2xl bg-black/80 backdrop-blur-md border border-white/20 flex items-center justify-center text-amber-400 dark:text-[#c9ff3d] mb-3 shadow-xl">
+              <app-icon-lock size="24" />
+            </div>
+            <h4 class="text-base font-black text-white max-w-xs">{{ t().post.exclusiveContent }}</h4>
+            <p class="text-xs text-gray-300 mt-1 max-w-xs">
+              @if (post().isShakeSupporters) {
+                {{ t().post.shakeExclusivePromptPrefix }} {{ post().authorName }} {{ t().post.shakeExclusivePromptSuffix }}
+              } @else {
+                {{ t().post.exclusivePromptPrefix }} {{ post().authorName }} {{ t().post.exclusivePromptSuffix }}
+              }
+            </p>
+            <button
+              type="button"
+              (click)="onUnlock.emit(post())"
+              class="mt-4 rounded-full bg-[#c9ff3d] hover:bg-[#bbf033] text-gray-950 px-6 py-2.5 text-xs font-black transition shadow-lg shadow-[#c9ff3d]/20 active:scale-95"
+            >
+              {{ post().isShakeSupporters ? t().post.unlockWithShake : t().post.unlockWithMembership }}
+            </button>
+          </div>
+          <div class="absolute top-4 left-4">
+            @if (post().isMembersOnly) {
+              <span class="inline-flex items-center gap-1.5 rounded-full bg-black/70 backdrop-blur-md px-3 py-1 text-xs font-black text-amber-400 dark:text-[#c9ff3d] border border-amber-400/30">
+                <app-icon-lock size="13" />
+                <span>{{ t().post.membersOnly }}</span>
+              </span>
+            } @else if (post().isShakeSupporters) {
+              <span class="inline-flex items-center gap-1.5 rounded-full bg-black/70 backdrop-blur-md px-3 py-1 text-xs font-black text-sky-300 border border-sky-400/30">
+                <app-icon-lock size="13" />
+                <span>{{ t().post.shakeSupporters }}</span>
+              </span>
+            }
+          </div>
+        </div>
       }
 
       <!-- Cuerpo del Post -->
@@ -111,8 +156,23 @@ export interface PostItem {
           <span class="text-gray-400 font-medium">{{ post().publishedAt }}</span>
         </div>
 
-        <!-- Título y Extracto -->
+        <!-- Título y teaser -->
         <div>
+          @if (!post().coverImageUrl && !isLocked() && (post().isMembersOnly || post().isShakeSupporters)) {
+            <div class="mb-2">
+              @if (post().isMembersOnly) {
+                <span class="inline-flex items-center gap-1 rounded-full bg-amber-50 dark:bg-amber-950/30 px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider text-amber-700 dark:text-[#c9ff3d] border border-amber-200 dark:border-amber-900/40">
+                  <app-icon-lock size="11" />
+                  {{ t().post.membersOnly }}
+                </span>
+              } @else if (post().isShakeSupporters) {
+                <span class="inline-flex items-center gap-1 rounded-full bg-sky-50 dark:bg-sky-950/30 px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider text-sky-700 dark:text-sky-300 border border-sky-200 dark:border-sky-900/40">
+                  <app-icon-lock size="11" />
+                  {{ t().post.shakeSupporters }}
+                </span>
+              }
+            </div>
+          }
           <h3 class="font-display text-xl font-black text-gray-950 dark:text-white tracking-tight leading-snug">
             <a
               [routerLink]="['/', post().authorHandle, 'posts', post().id]"
@@ -121,9 +181,11 @@ export interface PostItem {
               {{ post().title }}
             </a>
           </h3>
-          <p class="mt-2 text-sm text-gray-600 dark:text-gray-300 leading-relaxed font-normal">
-            {{ post().excerpt }}
-          </p>
+          @if (post().excerpt) {
+            <p class="mt-2 text-sm text-gray-600 dark:text-gray-300 leading-relaxed font-normal">
+              {{ post().excerpt }}
+            </p>
+          }
         </div>
 
         <!-- Barra inferior interactiva: Likes y Comentarios -->
@@ -153,7 +215,15 @@ export interface PostItem {
             </button>
           </div>
 
-          @if (!post().isMembersOnly || post().isUnlocked) {
+          @if (isLocked()) {
+            <button
+              type="button"
+              (click)="onUnlock.emit(post())"
+              class="text-emerald-600 dark:text-[#c9ff3d] font-black hover:underline cursor-pointer"
+            >
+              {{ post().isShakeSupporters ? t().post.unlockWithShake : t().post.unlockWithMembership }}
+            </button>
+          } @else {
             <a
               [routerLink]="['/', post().authorHandle, 'posts', post().id]"
               class="text-emerald-600 dark:text-[#c9ff3d] font-black hover:underline cursor-pointer"
@@ -228,6 +298,10 @@ export class PostCardComponent {
 
   readonly commentsOpen = signal(false);
   readonly newCommentText = signal('');
+
+  isLocked(): boolean {
+    return this.post().isUnlocked === false;
+  }
 
   toggleComments(): void {
     this.commentsOpen.update((v) => !v);

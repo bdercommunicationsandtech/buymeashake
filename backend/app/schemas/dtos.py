@@ -764,6 +764,26 @@ class PostCreateRequest(BaseModel):
         return sanitize_post_html(value)
 
 
+class PostUpdateRequest(BaseModel):
+    title: str | None = Field(default=None, min_length=3, max_length=255)
+    content_html: str | None = Field(default=None, min_length=1, max_length=50_000)
+    access_type: str | None = Field(default=None, pattern="^(public|followers_only|members_only)$")
+
+    @field_validator("title", mode="before")
+    @classmethod
+    def validate_post_update_title_chars(cls, value: Any) -> str | None:
+        return validate_allowed_user_text(value)
+
+    @field_validator("content_html", mode="before")
+    @classmethod
+    def sanitize_update_content_html(cls, value: Any) -> str | None:
+        if value is None:
+            return None
+        if isinstance(value, str) and not value.strip():
+            return None
+        return sanitize_post_html(value)
+
+
 class PostResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 

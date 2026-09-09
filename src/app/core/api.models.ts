@@ -375,6 +375,12 @@ export interface PostCreatePayload {
   access_type?: 'public' | 'followers_only' | 'members_only';
 }
 
+export interface PostUpdatePayload {
+  title?: string;
+  content_html?: string;
+  access_type?: 'public' | 'followers_only' | 'members_only';
+}
+
 export interface ShakeDetailsDto {
   shakes_count: number;
   supporter_message: string | null;

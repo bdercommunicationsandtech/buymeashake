@@ -578,6 +578,15 @@ class PostRepository:
         await self.session.refresh(post)
         return post
 
+    async def update(self, post: Post) -> Post:
+        await self.session.flush()
+        await self.session.refresh(post)
+        return post
+
+    async def delete(self, post: Post) -> None:
+        await self.session.delete(post)
+        await self.session.flush()
+
     async def like_post(self, post_id: int, user_id: int) -> int:
         post = await self.get_by_id(post_id)
         if not post:

@@ -268,6 +268,10 @@ export interface TranslationSchema {
     postsView: {
       subtitle: string;
       edit: string;
+      delete: string;
+      deleting: string;
+      deleteConfirm: string;
+      deleteFailedError: string;
       chooseToCreate: string;
       postTypePost: string;
       postTypeGallery: string;
@@ -276,12 +280,17 @@ export interface TranslationSchema {
       sessionExpired: string;
       noAthleteProfile: string;
       loadError: string;
+      postNotFound: string;
       backAria: string;
       newPostTitle: string;
       newPostSubtitle: string;
+      editPostTitle: string;
+      editPostSubtitle: string;
       saveDraft: string;
       publishNow: string;
       publishing: string;
+      saveChanges: string;
+      saving: string;
       postTitlePlaceholder: string;
       toolbarBold: string;
       toolbarItalic: string;
@@ -308,6 +317,7 @@ export interface TranslationSchema {
       coverImageFormatHelp: string;
       contentRequiredError: string;
       publishFailedError: string;
+      saveFailedError: string;
     };
     payoutsView: {
       subtitle: string;

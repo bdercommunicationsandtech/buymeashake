@@ -99,6 +99,7 @@ from app.schemas.dtos import (
     PaymentIntentResponse,
     PostCommentResponse,
     PostCreateRequest,
+    PostUpdateRequest,
     PostResponse,
     ReferralDashboardResponse,
     RefreshTokenRequest,
@@ -1224,6 +1225,50 @@ class DashboardService:
             published_at=created.published_at or datetime.utcnow(),
             is_members_only=created.access_type == "members_only",
         )
+
+    def _to_dashboard_post_response(self, post: Post) -> PostResponse:
+        return PostResponse(
+            id=post.id,
+            title=post.title,
+            content_html=post.content_html,
+            access_type=str(post.access_type),
+            likes_count=post.likes_count or 0,
+            published_at=post.published_at or datetime.utcnow(),
+            is_members_only=post.access_type == "members_only",
+        )
+
+    async def get_post(self, athlete: AthleteProfile, post_id: int) -> PostResponse:
+        post = await self.post_repo.get_by_id(post_id)
+        if not post or post.athlete_id != athlete.id:
+            raise EntityNotFoundError("Publicación", str(post_id))
+        return self._to_dashboard_post_response(post)
+
+    async def update_post(
+        self, athlete: AthleteProfile, post_id: int, dto: PostUpdateRequest
+    ) -> PostResponse:
+        post = await self.post_repo.get_by_id(post_id)
+        if not post or post.athlete_id != athlete.id:
+            raise EntityNotFoundError("Publicación", str(post_id))
+
+        updates = dto.model_dump(exclude_unset=True)
+        if "title" in updates and updates["title"] is not None:
+            post.title = updates["title"].strip()
+        if "content_html" in updates and updates["content_html"] is not None:
+            post.content_html = updates["content_html"].strip() or "<p></p>"
+        if "access_type" in updates and updates["access_type"] is not None:
+            access_type = updates["access_type"]
+            post.access_type = (
+                access_type if access_type in ("public", "followers_only", "members_only") else post.access_type
+            )
+
+        updated = await self.post_repo.update(post)
+        return self._to_dashboard_post_response(updated)
+
+    async def delete_post(self, athlete: AthleteProfile, post_id: int) -> None:
+        post = await self.post_repo.get_by_id(post_id)
+        if not post or post.athlete_id != athlete.id:
+            raise EntityNotFoundError("Publicación", str(post_id))
+        await self.post_repo.delete(post)
 
     async def get_supporters(self, athlete: AthleteProfile) -> SupportersDashboardResponse:
         data = await self.supporter_repo.get_dashboard_summary(athlete.id)

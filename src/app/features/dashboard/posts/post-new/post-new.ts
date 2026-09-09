@@ -1,7 +1,7 @@
-import { Component, inject, signal, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, signal, ChangeDetectionStrategy, OnInit, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { DashboardService } from '../../../../core/dashboard.service';
 import { AllowedUserTextDirective } from '../../../../core/directives/allowed-user-text.directive';
 import { LanguageService } from '../../../../core/language.service';
@@ -27,30 +27,36 @@ import { LanguageService } from '../../../../core/language.service';
             </svg>
           </a>
           <div>
-            <h1 class="font-display text-xl sm:text-2xl font-black text-gray-950 dark:text-white">{{ t().dashboard.postsView.newPostTitle }}</h1>
-            <p class="text-xs text-gray-500 dark:text-gray-400">{{ t().dashboard.postsView.newPostSubtitle }}</p>
+            <h1 class="font-display text-xl sm:text-2xl font-black text-gray-950 dark:text-white">
+              {{ isEditMode() ? t().dashboard.postsView.editPostTitle : t().dashboard.postsView.newPostTitle }}
+            </h1>
+            <p class="text-xs text-gray-500 dark:text-gray-400">
+              {{ isEditMode() ? t().dashboard.postsView.editPostSubtitle : t().dashboard.postsView.newPostSubtitle }}
+            </p>
           </div>
         </div>
 
         <div class="flex items-center gap-3">
-          <button
-            type="button"
-            (click)="saveDraft()"
-            class="px-5 py-2.5 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-white/5 text-xs font-bold text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-white/10 transition"
-          >
-            {{ t().dashboard.postsView.saveDraft }}
-          </button>
+          @if (!isEditMode()) {
+            <button
+              type="button"
+              (click)="saveDraft()"
+              class="px-5 py-2.5 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-white/5 text-xs font-bold text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-white/10 transition"
+            >
+              {{ t().dashboard.postsView.saveDraft }}
+            </button>
+          }
           <button
             type="button"
             (click)="publishPost()"
-            [disabled]="isPublishing() || !title().trim()"
+            [disabled]="isPublishing() || isLoading() || !title().trim()"
             class="px-6 py-2.5 rounded-xl bg-[#c9ff3d] hover:bg-[#bbf033] text-gray-950 text-xs font-black transition shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
           >
             @if (isPublishing()) {
               <span class="inline-block h-3.5 w-3.5 border-2 border-gray-950 border-t-transparent rounded-full animate-spin"></span>
-              <span>{{ t().dashboard.postsView.publishing }}</span>
+              <span>{{ isEditMode() ? t().dashboard.postsView.saving : t().dashboard.postsView.publishing }}</span>
             } @else {
-              <span>{{ t().dashboard.postsView.publishNow }}</span>
+              <span>{{ isEditMode() ? t().dashboard.postsView.saveChanges : t().dashboard.postsView.publishNow }}</span>
               <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
               </svg>
@@ -65,6 +71,9 @@ import { LanguageService } from '../../../../core/language.service';
         </div>
       }
 
+      @if (isLoading()) {
+        <p class="text-xs text-gray-500 dark:text-gray-400">{{ t().common.loading }}</p>
+      } @else {
       <!-- Editor Main Container -->
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         
@@ -235,14 +244,20 @@ import { LanguageService } from '../../../../core/language.service';
         </div>
 
       </div>
+      }
     </div>
   `,
 })
-export class DashboardPostNew {
+export class DashboardPostNew implements OnInit {
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
   private readonly dashboardService = inject(DashboardService);
   readonly languageService = inject(LanguageService);
   readonly t = this.languageService.currentTranslations;
+
+  readonly editingPostId = signal<number | null>(null);
+  readonly isEditMode = computed(() => this.editingPostId() !== null);
+  readonly isLoading = signal(false);
 
   readonly title = signal('');
   readonly content = signal('');
@@ -252,6 +267,69 @@ export class DashboardPostNew {
   readonly coverUrl = signal<string | null>('https://images.unsplash.com/photo-1517838277536-f5f99be501cd?q=80&w=1200&auto=format&fit=crop');
   readonly isPublishing = signal(false);
   readonly errorMessage = signal<string | null>(null);
+
+  ngOnInit(): void {
+    const rawId = this.route.snapshot.paramMap.get('postId');
+    if (!rawId) return;
+
+    const postId = Number(rawId);
+    if (!Number.isFinite(postId) || postId <= 0) {
+      this.errorMessage.set(this.t().dashboard.postsView.loadError);
+      return;
+    }
+
+    this.editingPostId.set(postId);
+    this.isLoading.set(true);
+    this.coverUrl.set(null);
+
+    this.dashboardService.getPost(postId).subscribe({
+      next: (post) => {
+        this.title.set(post.title);
+        this.content.set(this.htmlToEditorText(post.content_html));
+        this.audience.set(post.access_type === 'members_only' ? 'members' : 'public');
+        this.isLoading.set(false);
+      },
+      error: (err) => {
+        this.isLoading.set(false);
+        const apiMessage = err?.error?.error?.message || err?.error?.detail;
+        if (err?.status === 401) {
+          this.errorMessage.set(this.t().dashboard.postsView.sessionExpired);
+        } else if (err?.status === 403) {
+          this.errorMessage.set(this.t().dashboard.postsView.noAthleteProfile);
+        } else if (err?.status === 404) {
+          this.errorMessage.set(this.t().dashboard.postsView.postNotFound);
+        } else {
+          this.errorMessage.set(apiMessage || this.t().dashboard.postsView.loadError);
+        }
+      },
+    });
+  }
+
+  private htmlToEditorText(html: string): string {
+    const trimmed = (html || '').trim();
+    if (!trimmed) return '';
+
+    const decode = (value: string) =>
+      value
+        .replace(/&nbsp;/gi, ' ')
+        .replace(/&amp;/g, '&')
+        .replace(/&lt;/g, '<')
+        .replace(/&gt;/g, '>')
+        .replace(/&quot;/g, '"')
+        .replace(/&#39;/g, "'");
+
+    // Unwrap plain paragraph-only HTML produced by the create flow.
+    if (/^(?:<p>[^<]*<\/p>\s*)+$/i.test(trimmed)) {
+      return decode(
+        trimmed
+          .replace(/<\/p>\s*<p>/gi, '\n')
+          .replace(/<\/?p>/gi, '')
+          .replace(/<br\s*\/?>/gi, '\n'),
+      );
+    }
+
+    return trimmed;
+  }
 
   insertFormat(prefix: string, suffix: string): void {
     const textarea = document.getElementById('post-content-area') as HTMLTextAreaElement;
@@ -309,28 +387,41 @@ export class DashboardPostNew {
       ? rawContent
       : `<p>${rawContent.replace(/\n/g, '</p><p>')}</p>`;
 
-    this.dashboardService
-      .createPost({
-        title: this.title().trim(),
-        content_html: html,
-        access_type: this.audience() === 'members' ? 'members_only' : 'public',
-      })
-      .subscribe({
-        next: () => {
-          this.isPublishing.set(false);
-          this.router.navigate(['/dashboard/posts']);
-        },
-        error: (err) => {
-          this.isPublishing.set(false);
-          const apiMessage = err?.error?.error?.message || err?.error?.detail;
-          if (err?.status === 401) {
-            this.errorMessage.set(this.t().dashboard.postsView.sessionExpired);
-          } else if (err?.status === 403) {
-            this.errorMessage.set(this.t().dashboard.postsView.noAthleteProfile);
-          } else {
-            this.errorMessage.set(apiMessage || this.t().dashboard.postsView.publishFailedError);
-          }
-        },
-      });
+    const payload = {
+      title: this.title().trim(),
+      content_html: html,
+      access_type: (this.audience() === 'members' ? 'members_only' : 'public') as
+        | 'public'
+        | 'followers_only'
+        | 'members_only',
+    };
+
+    const postId = this.editingPostId();
+    const request$ = postId
+      ? this.dashboardService.updatePost(postId, payload)
+      : this.dashboardService.createPost(payload);
+
+    request$.subscribe({
+      next: () => {
+        this.isPublishing.set(false);
+        this.router.navigate(['/dashboard/posts']);
+      },
+      error: (err) => {
+        this.isPublishing.set(false);
+        const apiMessage = err?.error?.error?.message || err?.error?.detail;
+        if (err?.status === 401) {
+          this.errorMessage.set(this.t().dashboard.postsView.sessionExpired);
+        } else if (err?.status === 403) {
+          this.errorMessage.set(this.t().dashboard.postsView.noAthleteProfile);
+        } else {
+          this.errorMessage.set(
+            apiMessage ||
+              (postId
+                ? this.t().dashboard.postsView.saveFailedError
+                : this.t().dashboard.postsView.publishFailedError),
+          );
+        }
+      },
+    });
   }
 }

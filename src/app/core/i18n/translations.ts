@@ -268,6 +268,10 @@ export interface TranslationSchema {
     postsView: {
       subtitle: string;
       edit: string;
+      delete: string;
+      deleting: string;
+      deleteConfirm: string;
+      deleteFailedError: string;
       chooseToCreate: string;
       postTypePost: string;
       postTypeGallery: string;
@@ -276,12 +280,17 @@ export interface TranslationSchema {
       sessionExpired: string;
       noAthleteProfile: string;
       loadError: string;
+      postNotFound: string;
       backAria: string;
       newPostTitle: string;
       newPostSubtitle: string;
+      editPostTitle: string;
+      editPostSubtitle: string;
       saveDraft: string;
       publishNow: string;
       publishing: string;
+      saveChanges: string;
+      saving: string;
       postTitlePlaceholder: string;
       toolbarBold: string;
       toolbarItalic: string;
@@ -308,6 +317,7 @@ export interface TranslationSchema {
       coverImageFormatHelp: string;
       contentRequiredError: string;
       publishFailedError: string;
+      saveFailedError: string;
     };
     payoutsView: {
       subtitle: string;
@@ -659,6 +669,22 @@ export interface TranslationSchema {
     loginHeroPoint3Text: string;
     loginHeroNote: string;
     forgotPassword: string;
+    forgotTitle: string;
+    forgotSubtitleEmail: string;
+    forgotSubtitleReset: string;
+    forgotSendCode: string;
+    forgotSendingCode: string;
+    forgotCodeLabel: string;
+    forgotNewPasswordLabel: string;
+    forgotConfirmPasswordLabel: string;
+    forgotConfirmPasswordPlaceholder: string;
+    forgotResetButton: string;
+    forgotResetting: string;
+    forgotSuccessTitle: string;
+    forgotSuccessSubtitle: string;
+    forgotSendCodeError: string;
+    forgotResetError: string;
+    passwordMismatchError: string;
     newHerePrompt: string;
     createAccountCta: string;
     registerTitle: string;

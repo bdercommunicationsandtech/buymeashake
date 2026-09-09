@@ -184,20 +184,20 @@ class UserRole(Base):
     __tablename__ = "user_roles"
     __table_args__ = (UniqueConstraint("user_id", "role_id", name="uq_user_role"),)
 
-    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    id: Mapped[int] = mapped_column(BIGINT(unsigned=True), primary_key=True, autoincrement=True)
     user_id: Mapped[int] = mapped_column(
-        BigInteger, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
+        BIGINT(unsigned=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
     )
     role_id: Mapped[int] = mapped_column(
-        BigInteger, ForeignKey("lookup_items.id", ondelete="RESTRICT"), nullable=False, index=True
+        BIGINT(unsigned=True), ForeignKey("lookup_items.id", ondelete="RESTRICT"), nullable=False, index=True
     )
-    created_by: Mapped[int] = mapped_column(BigInteger, nullable=False)
+    created_by: Mapped[int] = mapped_column(BIGINT(unsigned=True), nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(
         DateTime, server_default=func.now(), onupdate=func.now()
     )
     status_id: Mapped[int] = mapped_column(
-        BigInteger, ForeignKey("lookup_items.id", ondelete="RESTRICT"), nullable=False, index=True
+        BIGINT(unsigned=True), ForeignKey("lookup_items.id", ondelete="RESTRICT"), nullable=False, index=True
     )
 
     user: Mapped[User] = relationship("User", back_populates="user_roles", foreign_keys=[user_id])
@@ -222,7 +222,7 @@ class AthleteProfile(Base):
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
     user_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("users.id", ondelete="CASCADE"), unique=True, nullable=False)
     handle: Mapped[str] = mapped_column(String(50), unique=True, nullable=False, index=True)
-    bio: Mapped[str | None] = mapped_column(Text, nullable=True)
+    bio: Mapped[str | None] = mapped_column(String(600), nullable=True)
     city: Mapped[str | None] = mapped_column(String(255), nullable=True)
     city_id: Mapped[int | None] = mapped_column(
         MEDIUMINT(unsigned=True), ForeignKey("cities.id", ondelete="SET NULL"), nullable=True, index=True
@@ -276,11 +276,11 @@ class AthletePageSettings(Base):
         BigInteger, ForeignKey("athlete_profiles.id", ondelete="CASCADE"), primary_key=True
     )
     page_title: Mapped[str | None] = mapped_column(String(200), nullable=True)
-    page_description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    page_description: Mapped[str | None] = mapped_column(String(400), nullable=True)
     agenda_title: Mapped[str | None] = mapped_column(String(200), nullable=True)
-    agenda_description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    agenda_description: Mapped[str | None] = mapped_column(String(300), nullable=True)
     agenda_image_url: Mapped[str | None] = mapped_column(String(255), nullable=True)
-    thank_you_message: Mapped[str | None] = mapped_column(Text, nullable=True)
+    thank_you_message: Mapped[str | None] = mapped_column(String(200), nullable=True)
     cover_image_url: Mapped[str | None] = mapped_column(String(255), nullable=True)
     google_analytics_id: Mapped[str | None] = mapped_column(String(50), nullable=True)
     updated_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now(), onupdate=func.now())
@@ -388,7 +388,7 @@ class MembershipTier(Base):
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
     athlete_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("athlete_profiles.id", ondelete="CASCADE"), nullable=False)
     name: Mapped[str] = mapped_column(String(100), nullable=False)
-    description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    description: Mapped[str | None] = mapped_column(String(200), nullable=True)
     monthly_price: Mapped[Decimal] = mapped_column(Numeric(8, 2), nullable=False)
     currency: Mapped[str] = mapped_column(Enum("USD", "MXN", name="tier_currency_enum"), default="USD")
     stripe_price_id: Mapped[str | None] = mapped_column(String(100), nullable=True)
@@ -435,7 +435,7 @@ class DigitalProduct(Base):
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
     athlete_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("athlete_profiles.id", ondelete="CASCADE"), nullable=False)
     title: Mapped[str] = mapped_column(String(200), nullable=False)
-    description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    description: Mapped[str | None] = mapped_column(String(200), nullable=True)
     price: Mapped[Decimal] = mapped_column(Numeric(8, 2), nullable=False)
     currency: Mapped[str] = mapped_column(Enum("USD", "MXN", name="product_currency_enum"), default="USD")
     file_type: Mapped[str] = mapped_column(Enum("PDF", "Video_Link", "Template_Notion", "Zip", name="file_type_enum"), nullable=False)
@@ -453,7 +453,7 @@ class BookingService(Base):
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
     athlete_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("athlete_profiles.id", ondelete="CASCADE"), nullable=False)
     title: Mapped[str] = mapped_column(String(200), nullable=False)
-    description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    description: Mapped[str | None] = mapped_column(String(200), nullable=True)
     duration_minutes: Mapped[int] = mapped_column(Integer, default=45)
     price: Mapped[Decimal] = mapped_column(Numeric(8, 2), nullable=False)
     currency: Mapped[str] = mapped_column(Enum("USD", "MXN", name="booking_currency_enum"), default="USD")
@@ -592,7 +592,7 @@ class PostComment(Base):
     id: Mapped[int] = mapped_column(BIGINT(unsigned=True), primary_key=True, autoincrement=True)
     post_id: Mapped[int] = mapped_column(BIGINT(unsigned=True), ForeignKey("posts.id", ondelete="CASCADE"), nullable=False, index=True)
     user_id: Mapped[int] = mapped_column(BIGINT(unsigned=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
-    content: Mapped[str] = mapped_column(Text, nullable=False)
+    content: Mapped[str] = mapped_column(String(200), nullable=False)
     likes_count: Mapped[int] = mapped_column(Integer, default=0)
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now(), onupdate=func.now())

@@ -6,12 +6,13 @@ import { AuthService } from '../../core/auth.service';
 import { DashboardService } from '../../core/dashboard.service';
 import { LookupService } from '../../core/lookup.service';
 import { LookupItemDto } from '../../core/api.models';
+import { AllowedUserTextDirective } from '../../core/directives/allowed-user-text.directive';
 import { LanguageService } from '../../core/language.service';
 
 @Component({
   selector: 'app-onboarding',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink, AllowedUserTextDirective],
   templateUrl: './onboarding.html',
 })
 export class Onboarding implements OnInit {

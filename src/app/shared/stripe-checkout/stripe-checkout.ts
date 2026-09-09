@@ -50,11 +50,11 @@ export class StripeCheckout {
   });
 
   onEmailInput(value: string): void {
-    this.email.set(value);
+    this.email.set(value.slice(0, 191));
   }
 
   onNameInput(value: string): void {
-    this.cardName.set(value);
+    this.cardName.set(value.slice(0, 150));
   }
 
   /** Agrupa el número en bloques de cuatro dígitos mientras se escribe. */

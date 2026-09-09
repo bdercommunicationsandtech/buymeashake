@@ -4,13 +4,16 @@ import { FormsModule } from '@angular/forms';
 import { DashboardService } from '../../../core/dashboard.service';
 import { LookupService } from '../../../core/lookup.service';
 import { AthleteProfileFull, LookupItemDto } from '../../../core/api.models';
+import { AllowedUserTextDirective } from '../../../core/directives/allowed-user-text.directive';
+import { extractApiErrorMessage } from '../../../core/utils/api-error.util';
+import { firstInvalidSocialUrlMessage } from '../../../core/utils/social-url.util';
 import { LanguageService } from '../../../core/language.service';
 import { LocationPickerComponent } from '../../../shared/location-picker/location-picker.component';
 
 @Component({
   selector: 'app-dashboard-settings',
   standalone: true,
-  imports: [CommonModule, FormsModule, LocationPickerComponent],
+  imports: [CommonModule, FormsModule, AllowedUserTextDirective, LocationPickerComponent],
   templateUrl: './settings.html',
 })
 export class DashboardSettings implements OnInit {
@@ -174,6 +177,17 @@ export class DashboardSettings implements OnInit {
   }
 
   saveProfile(): void {
+    const socialError = firstInvalidSocialUrlMessage({
+      instagram: this.instagramUrl(),
+      tiktok: this.tiktokUrl(),
+      facebook: this.facebookUrl(),
+      twitter: this.twitterUrl(),
+    });
+    if (socialError) {
+      this.errorMessage.set(socialError);
+      return;
+    }
+
     this.loading.set(true);
     this.errorMessage.set(null);
 
@@ -199,8 +213,7 @@ export class DashboardSettings implements OnInit {
       },
       error: (err) => {
         this.loading.set(false);
-        const msg = err.error?.error?.message || this.t().dashboard.settingsView.saveProfileError;
-        this.errorMessage.set(msg);
+        this.errorMessage.set(extractApiErrorMessage(err, this.t().dashboard.settingsView.saveProfileError));
       },
     });
   }

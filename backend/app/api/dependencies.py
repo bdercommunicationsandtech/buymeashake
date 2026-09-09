@@ -12,8 +12,9 @@ from app.services import user_roles_service as user_roles
 
 security_scheme = HTTPBearer(auto_error=False)
 
-# Anotación reutilizable para inyección de sesión de BD
-DatabaseSession = Annotated[AsyncSession, Depends(get_db_session)]
+# Commit before the response is sent so clients can immediately call /auth/me
+# after register/login (FastAPI default scope="request" commits after the response).
+DatabaseSession = Annotated[AsyncSession, Depends(get_db_session, scope="function")]
 
 
 async def get_current_user(

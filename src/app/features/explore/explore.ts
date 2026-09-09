@@ -4,8 +4,9 @@ import { RouterLink } from '@angular/router';
 import { ExploreService } from '../../core/explore.service';
 import { LookupService } from '../../core/lookup.service';
 import { LanguageService } from '../../core/language.service';
-import { IconShakerComponent, IconTrophyComponent } from '../../shared/icons';
+import { IconShakerComponent } from '../../shared/icons';
 import { AthleteLeaderboardItem } from '../../core/api.models';
+import { AllowedUserTextDirective } from '../../core/directives/allowed-user-text.directive';
 
 export interface AthleteProfile {
   id: string;
@@ -34,7 +35,7 @@ function normalizeText(text: string | null | undefined): string {
 @Component({
   selector: 'app-explore',
   standalone: true,
-  imports: [CommonModule, RouterLink, IconTrophyComponent, IconShakerComponent],
+  imports: [CommonModule, RouterLink, IconShakerComponent, AllowedUserTextDirective],
   templateUrl: './explore.html',
 })
 export class Explore implements OnInit {

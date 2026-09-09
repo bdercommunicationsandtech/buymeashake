@@ -10,11 +10,13 @@ import { SHAKE_PRICE } from '../../core/demo';
 import {
   AnimatedShakerComponent,
   IconButtonShareComponent,
+  IconButtonSupportComponent,
   IconDumbbellComponent,
   IconCalendarComponent,
   IconShakerComponent,
   IconStarComponent,
 } from '../../shared/icons';
+import { AllowedUserTextDirective } from '../../core/directives/allowed-user-text.directive';
 
 export interface FloatingAthlete {
   name: string;
@@ -37,8 +39,10 @@ export interface FloatingAthlete {
     IconDumbbellComponent,
     IconCalendarComponent,
     IconButtonShareComponent,
+    IconButtonSupportComponent,
     IconStarComponent,
     AnimatedShakerComponent,
+    AllowedUserTextDirective,
   ],
   templateUrl: './home.html',
 })

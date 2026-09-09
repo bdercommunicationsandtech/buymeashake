@@ -1,6 +1,7 @@
 import logging
 from typing import Any
 from fastapi import FastAPI, Request, status
+from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
 logger = logging.getLogger(__name__)
@@ -79,9 +80,52 @@ class NeedsRoleError(DomainException):
         )
 
 
+def _first_validation_message(exc: RequestValidationError) -> str:
+    errors = exc.errors()
+    if not errors:
+        return "Datos inválidos."
+    first = errors[0]
+    msg = str(first.get("msg") or "Datos inválidos.")
+    if msg.lower().startswith("value error,"):
+        msg = msg.split(",", 1)[1].strip()
+    return msg
+
+
+def _json_safe_validation_errors(exc: RequestValidationError) -> list[dict[str, Any]]:
+    """Pydantic may embed exception objects in error ctx; keep only JSON-safe data."""
+    safe: list[dict[str, Any]] = []
+    for item in exc.errors():
+        entry: dict[str, Any] = {
+            "type": item.get("type"),
+            "loc": list(item.get("loc") or ()),
+            "msg": item.get("msg"),
+        }
+        input_value = item.get("input")
+        if isinstance(input_value, (str, int, float, bool)) or input_value is None:
+            entry["input"] = input_value
+        elif input_value is not None:
+            entry["input"] = str(input_value)[:200]
+        safe.append(entry)
+    return safe
+
+
 def register_exception_handlers(app: FastAPI) -> None:
     """Registra los manejadores globales de excepciones de dominio en FastAPI."""
-    
+
+    @app.exception_handler(RequestValidationError)
+    async def validation_exception_handler(request: Request, exc: RequestValidationError) -> JSONResponse:
+        message = _first_validation_message(exc)
+        return JSONResponse(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            content={
+                "error": {
+                    "code": "VALIDATION_ERROR",
+                    "message": message,
+                    "details": {"errors": _json_safe_validation_errors(exc)},
+                }
+            },
+        )
+
     @app.exception_handler(EntityNotFoundError)
     async def entity_not_found_handler(request: Request, exc: EntityNotFoundError) -> JSONResponse:
         return JSONResponse(

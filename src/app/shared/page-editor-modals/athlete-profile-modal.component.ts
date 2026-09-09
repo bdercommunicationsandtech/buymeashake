@@ -6,11 +6,15 @@ import { LookupItemDto } from '../../core/api.models';
 import { LanguageService } from '../../core/language.service';
 import { LocationPickerComponent } from '../location-picker/location-picker.component';
 import { EditorSavePatch } from './editor-save-patch';
+import { AllowedUserTextDirective } from '../../core/directives/allowed-user-text.directive';
+import { extractApiErrorMessage } from '../../core/utils/api-error.util';
+import { filterAllowedUserText } from '../../core/utils/allowed-user-text.util';
+import { firstInvalidSocialUrlMessage } from '../../core/utils/social-url.util';
 
 @Component({
   selector: 'app-athlete-profile-modal',
   standalone: true,
-  imports: [CommonModule, LocationPickerComponent],
+  imports: [CommonModule, AllowedUserTextDirective, LocationPickerComponent],
   template: `
     @if (open()) {
       <div
@@ -89,18 +93,25 @@ import { EditorSavePatch } from './editor-save-patch';
               <label class="block text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 mb-1">{{ t().pageEditorModals.fullNameLabel }}</label>
               <input
                 type="text"
+                appAllowedUserText
+                maxlength="150"
                 class="w-full rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#191c1d] px-4 py-3 text-sm font-semibold text-gray-900 dark:text-white focus:border-[#c9ff3d] focus:outline-none"
                 [value]="fullName()"
-                (input)="fullName.set($any($event.target).value)"
+                (input)="fullName.set(filterText($any($event.target).value))"
               />
             </div>
             <div>
-              <label class="block text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 mb-1">{{ t().pageEditorModals.bioLabel }}</label>
+              <div class="flex items-center justify-between mb-1">
+                <label class="block text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300">{{ t().pageEditorModals.bioLabel }}</label>
+                <span class="text-[10px] font-semibold text-gray-400">{{ bio().length }}/600</span>
+              </div>
               <textarea
                 rows="3"
+                appAllowedUserText
+                maxlength="600"
                 class="w-full rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#191c1d] px-4 py-3 text-sm font-medium text-gray-900 dark:text-white focus:border-[#c9ff3d] focus:outline-none"
                 [value]="bio()"
-                (input)="bio.set($any($event.target).value)"
+                (input)="bio.set(filterText($any($event.target).value))"
               ></textarea>
             </div>
             <div>
@@ -172,19 +183,19 @@ import { EditorSavePatch } from './editor-save-patch';
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label class="block text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 mb-1">Instagram</label>
-                  <input type="url" class="w-full rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#191c1d] px-4 py-3 text-sm font-semibold text-gray-900 dark:text-white focus:border-[#c9ff3d] focus:outline-none" [value]="instagramUrl()" (input)="instagramUrl.set($any($event.target).value)" />
+                  <input type="url" maxlength="255" placeholder="https://instagram.com/tu_usuario" class="w-full rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#191c1d] px-4 py-3 text-sm font-semibold text-gray-900 dark:text-white focus:border-[#c9ff3d] focus:outline-none" [value]="instagramUrl()" (input)="instagramUrl.set($any($event.target).value)" />
                 </div>
                 <div>
                   <label class="block text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 mb-1">TikTok</label>
-                  <input type="url" class="w-full rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#191c1d] px-4 py-3 text-sm font-semibold text-gray-900 dark:text-white focus:border-[#c9ff3d] focus:outline-none" [value]="tiktokUrl()" (input)="tiktokUrl.set($any($event.target).value)" />
+                  <input type="url" maxlength="255" placeholder="https://tiktok.com/@tu_usuario" class="w-full rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#191c1d] px-4 py-3 text-sm font-semibold text-gray-900 dark:text-white focus:border-[#c9ff3d] focus:outline-none" [value]="tiktokUrl()" (input)="tiktokUrl.set($any($event.target).value)" />
                 </div>
                 <div>
                   <label class="block text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 mb-1">Facebook</label>
-                  <input type="url" class="w-full rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#191c1d] px-4 py-3 text-sm font-semibold text-gray-900 dark:text-white focus:border-[#c9ff3d] focus:outline-none" [value]="facebookUrl()" (input)="facebookUrl.set($any($event.target).value)" />
+                  <input type="url" maxlength="255" placeholder="https://facebook.com/tu_pagina" class="w-full rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#191c1d] px-4 py-3 text-sm font-semibold text-gray-900 dark:text-white focus:border-[#c9ff3d] focus:outline-none" [value]="facebookUrl()" (input)="facebookUrl.set($any($event.target).value)" />
                 </div>
                 <div>
                   <label class="block text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 mb-1">Twitter / X</label>
-                  <input type="url" class="w-full rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#191c1d] px-4 py-3 text-sm font-semibold text-gray-900 dark:text-white focus:border-[#c9ff3d] focus:outline-none" [value]="twitterUrl()" (input)="twitterUrl.set($any($event.target).value)" />
+                  <input type="url" maxlength="255" placeholder="https://x.com/tu_usuario" class="w-full rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#191c1d] px-4 py-3 text-sm font-semibold text-gray-900 dark:text-white focus:border-[#c9ff3d] focus:outline-none" [value]="twitterUrl()" (input)="twitterUrl.set($any($event.target).value)" />
                 </div>
               </div>
             </div>
@@ -268,6 +279,10 @@ export class AthleteProfileModalComponent {
     });
   }
 
+  filterText(value: string): string {
+    return filterAllowedUserText(value);
+  }
+
   onBackdrop(event: MouseEvent): void {
     if (event.target === event.currentTarget) this.close.emit();
   }
@@ -320,6 +335,17 @@ export class AthleteProfileModalComponent {
   }
 
   save(): void {
+    const socialError = firstInvalidSocialUrlMessage({
+      instagram: this.instagramUrl(),
+      tiktok: this.tiktokUrl(),
+      facebook: this.facebookUrl(),
+      twitter: this.twitterUrl(),
+    });
+    if (socialError) {
+      this.error.set(socialError);
+      return;
+    }
+
     this.saving.set(true);
     this.error.set(null);
     this.dashboard
@@ -353,7 +379,7 @@ export class AthleteProfileModalComponent {
         },
         error: (err) => {
           this.saving.set(false);
-          this.error.set(err.error?.error?.message || (this.languageService.currentLang() === 'en' ? 'Error saving changes.' : 'Error al guardar.'));
+          this.error.set(extractApiErrorMessage(err, this.languageService.currentLang() === 'en' ? 'Error saving changes.' : 'Error al guardar.'));
         },
       });
   }

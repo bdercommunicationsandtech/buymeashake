@@ -14,6 +14,7 @@ import {
   MembershipTierItem,
   PostCreatePayload,
   PostItemDto,
+  PostUpdatePayload,
   ReferralDashboardData,
   SupportersDashboardDto,
   UploadFileResult,
@@ -99,8 +100,20 @@ export class DashboardService {
     return this.http.get<PostItemDto[]>(`${this.apiUrl}/posts`);
   }
 
+  getPost(postId: number): Observable<PostItemDto> {
+    return this.http.get<PostItemDto>(`${this.apiUrl}/posts/${postId}`);
+  }
+
   createPost(payload: PostCreatePayload): Observable<PostItemDto> {
     return this.http.post<PostItemDto>(`${this.apiUrl}/posts`, payload);
+  }
+
+  updatePost(postId: number, payload: PostUpdatePayload): Observable<PostItemDto> {
+    return this.http.put<PostItemDto>(`${this.apiUrl}/posts/${postId}`, payload);
+  }
+
+  deletePost(postId: number): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/posts/${postId}`);
   }
 
   getSupporters(): Observable<SupportersDashboardDto> {

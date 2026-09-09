@@ -315,11 +315,12 @@
                 <label class="text-[10px] font-black uppercase tracking-wider text-gray-300">
                   {{ t().dashboard.goalsView.goalTitleLabel }}
                 </label>
-                <span class="text-[10px] font-semibold text-gray-400">{{ goalTitle().length }}/60</span>
+                <span class="text-[10px] font-semibold text-gray-400">{{ goalTitle().length }}/200</span>
               </div>
               <input
                 type="text"
-                maxlength="60"
+                maxlength="200"
+                appAllowedUserText
                 class="w-full rounded-xl border border-white/15 bg-white/5 px-3.5 py-2.5 text-sm font-bold text-white outline-none focus:border-[#c9ff3d] transition placeholder:text-gray-500"
                 [placeholder]="t().dashboard.goalsView.goalTitlePlaceholder"
                 [ngModel]="goalTitle()"
@@ -398,6 +399,8 @@
               </label>
               <textarea
                 rows="2"
+                maxlength="500"
+                appAllowedUserText
                 class="w-full rounded-xl border border-white/15 bg-white/5 p-3 text-xs text-white outline-none focus:border-[#c9ff3d] transition placeholder:text-gray-500"
                 [ngModel]="goalDescription()"
                 (ngModelChange)="goalDescription.set($event)"

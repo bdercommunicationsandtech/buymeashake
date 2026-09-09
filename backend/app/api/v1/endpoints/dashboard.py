@@ -18,6 +18,7 @@ from app.schemas.dtos import (
     NotificationResponse,
     PostCreateRequest,
     PostResponse,
+    PostUpdateRequest,
     ReferralDashboardResponse,
     ReplySupporterRequest,
     SupportersDashboardResponse,
@@ -206,6 +207,40 @@ async def create_my_post(
     """Crea una nueva publicación."""
     service = DashboardService(session)
     return await service.create_post(athlete, dto)
+
+
+@router.get("/dashboard/posts/{post_id}", response_model=PostResponse)
+async def get_my_post(
+    post_id: int,
+    athlete: CurrentAthlete,
+    session: DatabaseSession,
+) -> PostResponse:
+    """Obtiene una publicación propia para editarla."""
+    service = DashboardService(session)
+    return await service.get_post(athlete, post_id)
+
+
+@router.put("/dashboard/posts/{post_id}", response_model=PostResponse)
+async def update_my_post(
+    post_id: int,
+    dto: PostUpdateRequest,
+    athlete: CurrentAthlete,
+    session: DatabaseSession,
+) -> PostResponse:
+    """Actualiza título, contenido o visibilidad de una publicación propia."""
+    service = DashboardService(session)
+    return await service.update_post(athlete, post_id, dto)
+
+
+@router.delete("/dashboard/posts/{post_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_my_post(
+    post_id: int,
+    athlete: CurrentAthlete,
+    session: DatabaseSession,
+) -> None:
+    """Elimina una publicación propia."""
+    service = DashboardService(session)
+    await service.delete_post(athlete, post_id)
 
 
 @router.get("/dashboard/supporters", response_model=SupportersDashboardResponse)

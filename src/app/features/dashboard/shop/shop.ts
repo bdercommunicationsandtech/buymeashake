@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { IconCalendarComponent, IconPackageComponent } from '../../../shared/icons';
 import { DashboardService } from '../../../core/dashboard.service';
+import { AllowedUserTextDirective } from '../../../core/directives/allowed-user-text.directive';
 import { LanguageService } from '../../../core/language.service';
 
 export interface DigitalProduct {
@@ -40,7 +41,7 @@ export interface ScheduledSession {
 @Component({
   selector: 'app-dashboard-shop',
   standalone: true,
-  imports: [CommonModule, FormsModule, IconPackageComponent, IconCalendarComponent],
+  imports: [CommonModule, FormsModule, IconPackageComponent, IconCalendarComponent, AllowedUserTextDirective],
   templateUrl: './shop.html',
 })
 export class DashboardShop implements OnInit {

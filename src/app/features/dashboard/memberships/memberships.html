@@ -112,7 +112,7 @@
         <div class="space-y-4">
           <div>
             <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 uppercase mb-1">{{ t().dashboard.membershipsView.tierNameLabel }}</label>
-            <input type="text" [placeholder]="t().dashboard.membershipsView.tierNamePlaceholder" class="w-full rounded-xl border border-gray-300 dark:border-white/15 bg-white dark:bg-[#191c1d] p-3 text-sm outline-none focus:border-black dark:focus:border-[#c9ff3d] font-semibold text-gray-900 dark:text-white" [ngModel]="newName()" (ngModelChange)="newName.set($event)" />
+            <input type="text" appAllowedUserText maxlength="100" [placeholder]="t().dashboard.membershipsView.tierNamePlaceholder" class="w-full rounded-xl border border-gray-300 dark:border-white/15 bg-white dark:bg-[#191c1d] p-3 text-sm outline-none focus:border-black dark:focus:border-[#c9ff3d] font-semibold text-gray-900 dark:text-white" [ngModel]="newName()" (ngModelChange)="newName.set($event)" />
           </div>
 
           <div class="grid grid-cols-2 gap-3">
@@ -130,12 +130,12 @@
 
           <div>
             <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 uppercase mb-1">{{ t().dashboard.membershipsView.shortDescLabel }}</label>
-            <input type="text" [placeholder]="t().dashboard.membershipsView.shortDescPlaceholder" class="w-full rounded-xl border border-gray-300 dark:border-white/15 bg-white dark:bg-[#191c1d] p-3 text-sm outline-none focus:border-black dark:focus:border-[#c9ff3d] text-gray-900 dark:text-white" [ngModel]="newDescription()" (ngModelChange)="newDescription.set($event)" />
+            <input type="text" appAllowedUserText maxlength="200" [placeholder]="t().dashboard.membershipsView.shortDescPlaceholder" class="w-full rounded-xl border border-gray-300 dark:border-white/15 bg-white dark:bg-[#191c1d] p-3 text-sm outline-none focus:border-black dark:focus:border-[#c9ff3d] text-gray-900 dark:text-white" [ngModel]="newDescription()" (ngModelChange)="newDescription.set($event)" />
           </div>
 
           <div>
             <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 uppercase mb-1">{{ t().dashboard.membershipsView.benefitsLabel }}</label>
-            <textarea rows="3" [placeholder]="t().dashboard.membershipsView.benefitsPlaceholder" class="w-full rounded-xl border border-gray-300 dark:border-white/15 bg-white dark:bg-[#191c1d] p-3 text-sm outline-none focus:border-black dark:focus:border-[#c9ff3d] text-gray-900 dark:text-white" [ngModel]="newBenefitsText()" (ngModelChange)="newBenefitsText.set($event)"></textarea>
+            <textarea rows="3" appAllowedUserText [placeholder]="t().dashboard.membershipsView.benefitsPlaceholder" class="w-full rounded-xl border border-gray-300 dark:border-white/15 bg-white dark:bg-[#191c1d] p-3 text-sm outline-none focus:border-black dark:focus:border-[#c9ff3d] text-gray-900 dark:text-white" [ngModel]="newBenefitsText()" (ngModelChange)="newBenefitsText.set($event)"></textarea>
           </div>
         </div>
 

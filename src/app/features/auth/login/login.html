@@ -175,6 +175,7 @@
                     [(ngModel)]="email"
                     autocomplete="email"
                     required
+                    maxlength="191"
                     [placeholder]="t().auth.emailPlaceholder"
                     class="w-full border-0 bg-transparent py-3.5 text-sm font-semibold text-white placeholder-white/30 outline-none"
                   />
@@ -196,6 +197,7 @@
                     [(ngModel)]="password"
                     autocomplete="current-password"
                     required
+                    maxlength="128"
                     [placeholder]="t().auth.passwordPlaceholder"
                     class="w-full border-0 bg-transparent py-3.5 text-sm font-semibold text-white placeholder-white/30 outline-none"
                   />
@@ -218,7 +220,12 @@
                   </button>
                 </div>
                 <div class="mt-2 text-right">
-                  <span class="text-xs font-bold text-[#c9ff3d]/80">{{ t().auth.forgotPassword }}</span>
+                  <a
+                    routerLink="/auth/forgot-password"
+                    class="text-xs font-bold text-[#c9ff3d]/80 transition hover:text-[#c9ff3d] hover:underline"
+                  >
+                    {{ t().auth.forgotPassword }}
+                  </a>
                 </div>
               </div>
 
@@ -259,6 +266,7 @@
                       type="email"
                       [(ngModel)]="email"
                       required
+                      maxlength="191"
                       [placeholder]="t().auth.otpEmailPlaceholder"
                       class="w-full border-0 bg-transparent py-3.5 text-sm font-semibold text-white placeholder-white/30 outline-none"
                     />

@@ -250,6 +250,7 @@
                 type="email"
                 class="input"
                 autocomplete="email"
+                maxlength="191"
                 [value]="email()"
                 (input)="onEmailInput($any($event.target).value)"
               />
@@ -292,6 +293,7 @@
               <input
                 class="input"
                 autocomplete="cc-name"
+                maxlength="150"
                 [value]="cardName()"
                 (input)="onNameInput($any($event.target).value)"
               />

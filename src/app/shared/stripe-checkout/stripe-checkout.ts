@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, DestroyRef, inject, signal } from '@angular/core';
 import { CheckoutService } from '../../core/checkout.service';
 import { PaymentService } from '../../core/payment.service';
 import { LanguageService } from '../../core/language.service';
@@ -18,8 +18,25 @@ const FAKE_PROCESSING_MS = 1000;
 export class StripeCheckout {
   readonly checkout = inject(CheckoutService);
   private readonly paymentService = inject(PaymentService);
+  private readonly destroyRef = inject(DestroyRef);
   readonly i18n = inject(LanguageService);
   readonly t = this.i18n.t;
+
+  constructor() {
+    const resetProcessing = () => {
+      if (this.processing()) this.processing.set(false);
+    };
+    const onPageShow = () => resetProcessing();
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') resetProcessing();
+    };
+    window.addEventListener('pageshow', onPageShow);
+    document.addEventListener('visibilitychange', onVisible);
+    this.destroyRef.onDestroy(() => {
+      window.removeEventListener('pageshow', onPageShow);
+      document.removeEventListener('visibilitychange', onVisible);
+    });
+  }
 
   readonly email = signal('supporter@buymeashake.fit');
   readonly cardName = signal('Supporter Fan');

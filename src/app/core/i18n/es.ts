@@ -750,7 +750,12 @@ export const es: TranslationSchema = {
     totalPaidLabel: 'Total Pagado',
     backToAthletePage: 'Volver a la Página del Atleta',
     secureTransactionNotice: 'Transacción procesada de forma segura por Stripe Payments.',
-    chargesDisabledMessage: 'Este atleta aún no puede recibir pagos. Debe completar la verificación de Stripe Express.',
+    chargesDisabledTitle: 'Este atleta no puede recibir pagos',
+    chargesDisabledMessage:
+      'Por ahora no es posible enviarle un apoyo. El atleta aún no tiene habilitados los cobros en su cuenta.',
+    chargesDisabledHint:
+      'Cuando complete la configuración de pagos, podrás invitarle un shaker desde esta misma página.',
+    chargesDisabledClose: 'Entendido',
   },
   followModal: {
     closeAria: 'Cerrar modal',

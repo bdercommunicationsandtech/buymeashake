@@ -750,7 +750,12 @@ export const en: TranslationSchema = {
     totalPaidLabel: 'Total Paid',
     backToAthletePage: 'Back to Athlete Page',
     secureTransactionNotice: 'Transaction processed securely by Stripe Payments.',
-    chargesDisabledMessage: 'This athlete cannot accept payments yet. They must finish Stripe Express verification.',
+    chargesDisabledTitle: 'This athlete cannot receive payments',
+    chargesDisabledMessage:
+      'Support is unavailable right now. This athlete has not enabled payouts on their account yet.',
+    chargesDisabledHint:
+      'Once they finish setting up payments, you will be able to buy them a shake from this page.',
+    chargesDisabledClose: 'Got it',
   },
   followModal: {
     closeAria: 'Close modal',

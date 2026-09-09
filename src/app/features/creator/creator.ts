@@ -1,4 +1,4 @@
-import { Component, computed, effect, inject, input, signal } from '@angular/core';
+import { Component, computed, DestroyRef, effect, inject, input, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { CheckoutService } from '../../core/checkout.service';
@@ -136,6 +136,7 @@ export class Creator {
   private readonly paymentService = inject(PaymentService);
   private readonly authService = inject(AuthService);
   private readonly supporterService = inject(SupporterService);
+  private readonly destroyRef = inject(DestroyRef);
   readonly languageService = inject(LanguageService);
   readonly i18n = this.languageService;
   readonly t = this.languageService.t;
@@ -347,6 +348,23 @@ export class Creator {
   }
 
   constructor() {
+    // Al volver de Stripe con "atrás", el bfcache restaura openingStripe=true.
+    const resetOpeningStripe = () => {
+      if (!this.openingStripe()) return;
+      this.openingStripe.set(false);
+      this.openingStripeTierId.set(null);
+    };
+    const onPageShow = () => resetOpeningStripe();
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') resetOpeningStripe();
+    };
+    window.addEventListener('pageshow', onPageShow);
+    document.addEventListener('visibilitychange', onVisible);
+    this.destroyRef.onDestroy(() => {
+      window.removeEventListener('pageshow', onPageShow);
+      document.removeEventListener('visibilitychange', onVisible);
+    });
+
     effect(() => {
       const handle = this.username();
       if (handle) {

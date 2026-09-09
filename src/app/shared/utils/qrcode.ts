@@ -87,28 +87,55 @@ function roundRect(
   ctx.closePath();
 }
 
-function drawShakerIcon(ctx: CanvasRenderingContext2D, x: number, y: number, size: number): void {
-  // Lime rounded square
+const imageCache = new Map<string, HTMLImageElement>();
+
+function loadImage(src: string): Promise<HTMLImageElement> {
+  const cached = imageCache.get(src);
+  if (cached?.complete && cached.naturalWidth > 0) return Promise.resolve(cached);
+
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      imageCache.set(src, img);
+      resolve(img);
+    };
+    img.onerror = () => reject(new Error(`Failed to load image: ${src}`));
+    img.src = src;
+  });
+}
+
+function drawImageContain(
+  ctx: CanvasRenderingContext2D,
+  img: HTMLImageElement,
+  x: number,
+  y: number,
+  maxW: number,
+  maxH: number,
+): { width: number; height: number } {
+  const ratio = img.naturalWidth / img.naturalHeight;
+  let w = maxW;
+  let h = w / ratio;
+  if (h > maxH) {
+    h = maxH;
+    w = h * ratio;
+  }
+  ctx.drawImage(img, x, y + (maxH - h) / 2, w, h);
+  return { width: w, height: h };
+}
+
+function drawLogoBadge(
+  ctx: CanvasRenderingContext2D,
+  img: HTMLImageElement,
+  x: number,
+  y: number,
+  size: number,
+): void {
   ctx.fillStyle = '#c9ff3d';
   roundRect(ctx, x, y, size, size, size * 0.22);
   ctx.fill();
 
-  // Black shaker silhouette
-  const s = size;
-  const ox = x + s * 0.28;
-  const oy = y + s * 0.18;
-  ctx.fillStyle = '#0a0a0a';
-  // Cap
-  roundRect(ctx, ox + s * 0.12, oy, s * 0.2, s * 0.1, 2);
-  ctx.fill();
-  // Body
-  ctx.beginPath();
-  ctx.moveTo(ox + s * 0.06, oy + s * 0.12);
-  ctx.lineTo(ox + s * 0.38, oy + s * 0.12);
-  ctx.lineTo(ox + s * 0.34, oy + s * 0.55);
-  ctx.quadraticCurveTo(ox + s * 0.22, oy + s * 0.64, ox + s * 0.1, oy + s * 0.55);
-  ctx.closePath();
-  ctx.fill();
+  const inset = size * 0.14;
+  drawImageContain(ctx, img, x + inset, y + inset, size - inset * 2, size - inset * 2);
 }
 
 function drawPhoneIcon(
@@ -163,23 +190,28 @@ function drawCornerBrackets(
 /**
  * Renders the share card (light or dark) as a PNG data URL.
  */
-export function renderShareCardPng(params: {
+export async function renderShareCardPng(params: {
   profileUrl: string;
   displayPath: string;
   variant: QrVariant;
   width?: number;
   scanMeText?: string;
-}): string {
+}): Promise<string> {
   const width = params.width ?? 900;
   const height = Math.round(width * 1.28);
   const matrix = generateQrMatrix(params.profileUrl);
+
+  const isLight = params.variant === 'light';
+  const [logoImg, titleImg] = await Promise.all([
+    loadImage('/images/logo.png'),
+    loadImage(isLight ? '/images/light-title.png' : '/images/dark-title.png'),
+  ]);
 
   const canvas = document.createElement('canvas');
   canvas.width = width;
   canvas.height = height;
   const ctx = canvas.getContext('2d')!;
 
-  const isLight = params.variant === 'light';
   const lime = '#c9ff3d';
   const pad = width * 0.09;
 
@@ -213,15 +245,14 @@ export function renderShareCardPng(params: {
     ctx.restore();
   }
 
-  // Header: logo + brand
-  const logoSize = width * 0.07;
-  const headerY = pad * 0.95;
-  drawShakerIcon(ctx, pad, headerY, logoSize);
-
-  ctx.fillStyle = isLight ? '#0a0a0a' : '#ffffff';
-  ctx.font = `800 ${Math.round(width * 0.048)}px Montserrat, system-ui, sans-serif`;
-  ctx.textBaseline = 'middle';
-  ctx.fillText('buymeashake.fit', pad + logoSize + width * 0.03, headerY + logoSize / 2);
+  // Header: green badge with logo + brand title
+  const logoSize = width * 0.11;
+  const titleH = width * 0.145;
+  const headerY = pad * 0.7;
+  drawLogoBadge(ctx, logoImg, pad, headerY + (titleH - logoSize) / 2, logoSize);
+  const titleX = pad + logoSize + width * 0.03;
+  const titleMaxW = width - pad - titleX;
+  drawImageContain(ctx, titleImg, titleX, headerY, titleMaxW, titleH);
 
   // QR area
   const qrOuter = width * 0.58;

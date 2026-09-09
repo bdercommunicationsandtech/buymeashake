@@ -748,7 +748,10 @@ export interface TranslationSchema {
     totalPaidLabel: string;
     backToAthletePage: string;
     secureTransactionNotice: string;
+    chargesDisabledTitle: string;
     chargesDisabledMessage: string;
+    chargesDisabledHint: string;
+    chargesDisabledClose: string;
   };
   followModal: {
     closeAria: string;

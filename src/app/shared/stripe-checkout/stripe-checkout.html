@@ -1,5 +1,5 @@
 @if (checkout.open()) {
-  <div class="overlay" role="dialog" aria-modal="true" [attr.aria-label]="t().checkout.testPaymentTitle">
+  <div class="overlay" role="dialog" aria-modal="true" [attr.aria-label]="chargesBlocked() ? t().checkout.chargesDisabledTitle : t().checkout.testPaymentTitle">
     <button
       type="button"
       class="overlay-backdrop"
@@ -8,7 +8,7 @@
       (click)="close()"
     ></button>
 
-    <div class="sheet" [class.sheet-compact]="checkout.confirming() || checkout.paid()">
+    <div class="sheet" [class.sheet-compact]="checkout.confirming() || checkout.paid() || chargesBlocked()">
       @if (checkout.confirming() && !checkout.paid()) {
         <!-- ----------------------------------------- CONFIRMANDO RETORNO STRIPE -->
         <div class="done space-y-6 p-8 sm:p-12 text-center confirming-panel">
@@ -180,6 +180,43 @@
             {{ t().checkout.secureTransactionNotice }}
           </p>
         </div>
+      } @else if (chargesBlocked()) {
+        <!-- ------------------------- PAGOS NO DISPONIBLES (sin UI de Stripe) -->
+        <div class="done space-y-5 p-8 sm:p-10 text-center payments-blocked-panel">
+          <div
+            class="mx-auto flex h-20 w-20 items-center justify-center rounded-3xl bg-amber-500/15 border border-amber-500/35 text-amber-700 dark:text-amber-300"
+            aria-hidden="true"
+          >
+            <svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10" />
+              <path d="M12 8v5" />
+              <path d="M12 16h.01" />
+            </svg>
+          </div>
+          <div class="space-y-2">
+            <h2 class="text-2xl sm:text-3xl font-black text-gray-950 dark:text-white tracking-tight">
+              {{ t().checkout.chargesDisabledTitle }}
+            </h2>
+            <p class="text-sm text-gray-600 dark:text-gray-300 max-w-md mx-auto">
+              {{ t().checkout.chargesDisabledMessage }}
+            </p>
+            @if (checkout.draft()?.creatorName) {
+              <p class="text-xs font-semibold text-gray-500 dark:text-gray-400">
+                &#64;{{ checkout.draft()?.creatorHandle }} · {{ checkout.draft()?.creatorName }}
+              </p>
+            }
+            <p class="text-xs text-gray-400 dark:text-gray-500 max-w-sm mx-auto pt-1">
+              {{ t().checkout.chargesDisabledHint }}
+            </p>
+          </div>
+          <button
+            type="button"
+            (click)="close()"
+            class="w-full sm:w-auto min-w-[200px] rounded-2xl bg-gray-950 dark:bg-[#c9ff3d] hover:bg-black dark:hover:bg-[#bbf033] text-white dark:text-gray-950 py-3.5 px-8 text-xs font-black transition active:scale-95"
+          >
+            {{ t().checkout.chargesDisabledClose }}
+          </button>
+        </div>
       } @else {
         <div class="grid-panels">
           <!-- ------------------------------------------- Resumen -->
@@ -317,15 +354,9 @@
               }
             </button>
 
-            @if (chargesBlocked()) {
-              <p class="test-note" style="color:#b45309">
-                {{ t().checkout.chargesDisabledMessage }}
-              </p>
-            } @else {
-              <p class="test-note">
-                {{ t().checkout.testModeNote }}
-              </p>
-            }
+            <p class="test-note">
+              {{ t().checkout.testModeNote }}
+            </p>
           </section>
         </div>
       }

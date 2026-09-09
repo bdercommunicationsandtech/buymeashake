@@ -3,9 +3,11 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { API_CONFIG, API_ENDPOINTS } from '../config/api.config';
 import {
+  AdminReportVerdictPayload,
+  AdminReportVerdictResponse,
+  TrustReport,
   TrustReportListParams,
   TrustReportListResponse,
-  TrustReportMutationResponse,
   TrustReportStatusUpdatePayload,
 } from '../models/trust-report.model';
 
@@ -21,23 +23,34 @@ export class TrustReportsApiService {
       .set('limit', String(params.limit ?? 50))
       .set('offset', String(params.offset ?? 0));
 
-    if (params.status_filter) {
+    if (params.status_filter && params.status_filter !== 'all') {
       httpParams = httpParams.set('status_filter', params.status_filter);
     }
-    if (params.priority_filter) {
+    if (params.priority_filter && params.priority_filter !== 'all') {
       httpParams = httpParams.set('priority_filter', params.priority_filter);
     }
-    if (params.assigned_moderator_id != null) {
-      httpParams = httpParams.set('assigned_moderator_id', String(params.assigned_moderator_id));
+    if (params.search && params.search.trim()) {
+      httpParams = httpParams.set('search', params.search.trim());
     }
 
     return this.http.get<TrustReportListResponse>(this.base, { params: httpParams });
   }
 
+  getById(idOrFolio: string | number): Observable<TrustReport> {
+    return this.http.get<TrustReport>(`${this.base}/${idOrFolio}`);
+  }
+
   updateStatus(
-    id: number,
+    idOrFolio: string | number,
     payload: TrustReportStatusUpdatePayload,
-  ): Observable<TrustReportMutationResponse> {
-    return this.http.patch<TrustReportMutationResponse>(`${this.base}/${id}/status`, payload);
+  ): Observable<TrustReport> {
+    return this.http.patch<TrustReport>(`${this.base}/${idOrFolio}/status`, payload);
+  }
+
+  submitVerdict(
+    idOrFolio: string | number,
+    payload: AdminReportVerdictPayload,
+  ): Observable<AdminReportVerdictResponse> {
+    return this.http.post<AdminReportVerdictResponse>(`${this.base}/${idOrFolio}/verdict`, payload);
   }
 }

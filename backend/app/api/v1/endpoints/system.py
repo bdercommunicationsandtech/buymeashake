@@ -74,6 +74,31 @@ async def check_app_version(
     return await service.check_app_version(platform, version_code)
 
 
+def determine_report_priority(reason_code: str, recent_reports_count: int = 0) -> str:
+    """Clasifica la prioridad de la denuncia según la gravedad del motivo y la reincidencia."""
+    code = (reason_code or "").strip().lower()
+
+    # 1. Prioridad base según la gravedad del motivo
+    if code in {"doping", "medical_risk", "impersonation"}:
+        base_priority = "critical"
+    elif code in {"scam_fraud", "fraud", "harassment", "hate_speech", "unfulfilled_order"}:
+        base_priority = "high"
+    elif code in {"ip_theft", "copyright", "inappropriate", "nsfw", "other"}:
+        base_priority = "medium"
+    elif code in {"spam"}:
+        base_priority = "low"
+    else:
+        base_priority = "medium"
+
+    # 2. Escalación por reincidencia (si el creador ya tiene reportes activos previos)
+    if recent_reports_count >= 3:
+        return "critical"
+    elif recent_reports_count >= 1 and base_priority in {"medium", "low"}:
+        return "high"
+
+    return base_priority
+
+
 @router.post("/system/report", response_model=ComplianceReportResponse)
 async def submit_compliance_report(
     request: Request,
@@ -144,23 +169,53 @@ async def submit_compliance_report(
             detail="Debes especificar un enlace o nombre de usuario de creador válido.",
         )
 
-    # 2. Validar que el atleta exista en la base de datos
+    # 2. Validar si el atleta existe en la base de datos
     athlete_repo = AthleteRepository(session)
     athlete = await athlete_repo.get_by_handle(clean_handle)
-    if not athlete:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"El creador o atleta '@{clean_handle}' no existe en Buymeashake.",
-        )
 
-    athlete_display = f"@{athlete.handle}"
-    if athlete.user and athlete.user.full_name:
-        athlete_display = f"@{athlete.handle} ({athlete.user.full_name})"
+    if athlete:
+        athlete_display = f"@{athlete.handle}"
+        if athlete.user and athlete.user.full_name:
+            athlete_display = f"@{athlete.handle} ({athlete.user.full_name})"
+    else:
+        athlete_display = f"@{clean_handle}" if not creator_target.startswith("@") else creator_target
 
     folio_num = random.randint(10000, 99999)
     folio = f"SHK-{folio_num}"
 
-    # 3. Enviar notificación al equipo interno de cumplimiento (bdercommunications@gmail.com)
+    # 3. Persistir el reporte en la base de datos con prioridad calculada
+    from app.models.entities import ComplianceReport
+    from sqlalchemy import func, select
+
+    recent_reports_count = 0
+    if athlete:
+        recent_res = await session.execute(
+            select(func.count(ComplianceReport.id)).where(
+                ComplianceReport.athlete_id == athlete.id,
+                ComplianceReport.status.in_(["pending", "under_review", "resolved"]),
+            )
+        )
+        recent_reports_count = recent_res.scalar() or 0
+
+    calculated_priority = determine_report_priority(reason_code, recent_reports_count)
+
+    report_record = ComplianceReport(
+        folio=folio,
+        creator_target=athlete_display,
+        athlete_id=athlete.id if athlete else None,
+        reporter_email=reporter_email,
+        reason_code=reason_code,
+        reason_title=reason_title,
+        description=description,
+        evidence_links=evidence_links,
+        attached_file=attached_file,
+        status="pending",
+        priority=calculated_priority,
+    )
+    session.add(report_record)
+    await session.commit()
+
+    # 4. Enviar notificación al equipo interno de cumplimiento (bdercommunications@gmail.com)
     background_tasks.add_task(
         send_compliance_report_sync,
         to_email=settings.EMAILS_FROM_EMAIL,
@@ -176,7 +231,7 @@ async def submit_compliance_report(
         attached_file_type=attached_file_type,
     )
 
-    # 4. Enviar acuse de recibo de confirmación confidencial al denunciante
+    # 5. Enviar acuse de recibo de confirmación confidencial al denunciante
     background_tasks.add_task(
         send_reporter_confirmation_sync,
         to_email=reporter_email,

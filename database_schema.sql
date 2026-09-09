@@ -573,6 +573,39 @@ CREATE TABLE withdrawal_requests (
 
 
 -- ==============================================================================
+-- TABLA: compliance_reports (Trust & Safety / Denuncias y Moderación FSM)
+-- ==============================================================================
+DROP TABLE IF EXISTS compliance_reports;
+CREATE TABLE compliance_reports (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    folio VARCHAR(50) NOT NULL UNIQUE,
+    creator_target VARCHAR(255) NOT NULL,
+    athlete_id BIGINT UNSIGNED NULL,
+    reporter_email VARCHAR(191) NOT NULL,
+    reason_code VARCHAR(50) NOT NULL,
+    reason_title VARCHAR(150) NOT NULL,
+    description TEXT NOT NULL,
+    evidence_links JSON NULL,
+    attached_file VARCHAR(255) NULL,
+    status VARCHAR(30) NOT NULL DEFAULT 'pending',
+    priority VARCHAR(20) NOT NULL DEFAULT 'medium',
+    assigned_moderator_id BIGINT UNSIGNED NULL,
+    verdict VARCHAR(50) NULL,
+    verdict_title VARCHAR(200) NULL,
+    admin_notes TEXT NULL,
+    action_details VARCHAR(1000) NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    resolved_at TIMESTAMP NULL,
+    FOREIGN KEY (athlete_id) REFERENCES athlete_profiles(id) ON DELETE SET NULL,
+    FOREIGN KEY (assigned_moderator_id) REFERENCES users(id) ON DELETE SET NULL,
+    INDEX idx_compliance_status (status),
+    INDEX idx_compliance_priority (priority),
+    INDEX idx_compliance_reporter (reporter_email),
+    INDEX idx_compliance_creator (creator_target)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+
+-- ==============================================================================
 -- VISTA: Top 10 Atletas del Mes
 -- ==============================================================================
 CREATE OR REPLACE VIEW view_monthly_athlete_leaderboard AS

@@ -12,6 +12,7 @@ from app.models.entities import (
     BookingAvailability,
     BookingService,
     CommentLike,
+    ComplianceReport,
     DigitalProduct,
     EmailVerification,
     Goal,
@@ -28,6 +29,7 @@ from app.models.entities import (
     Transaction,
     User,
     UserRole,
+    WithdrawalRequest,
 )
 
 __all__ = [
@@ -44,6 +46,7 @@ __all__ = [
     "BookingAvailability",
     "BookingService",
     "CommentLike",
+    "ComplianceReport",
     "DigitalProduct",
     "EmailVerification",
     "Goal",
@@ -60,4 +63,5 @@ __all__ = [
     "Transaction",
     "User",
     "UserRole",
+    "WithdrawalRequest",
 ]

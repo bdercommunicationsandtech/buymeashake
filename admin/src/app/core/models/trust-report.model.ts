@@ -1,107 +1,128 @@
-/** Mirror of services trust_reports / TrustReportOut */
+/** Modelo para el Módulo de Reportes de Cumplimiento y Moderación (Trust & Safety) de Buy me a Shake */
 
-export type ReportStatus = 'PENDING' | 'UNDER_REVIEW' | 'RESOLVED' | 'DISMISSED';
+export type ReportStatus = 'pending' | 'under_review' | 'resolved' | 'dismissed' | string;
 
-export type ReportPriority = 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
-
-export type TargetEntityType =
-  | 'BUYER_PRODUCT'
-  | 'SELLER_PRODUCT'
-  | 'USER'
-  | 'OFFER'
-  | 'CHAT';
+export type ReportPriority = 'low' | 'medium' | 'high' | 'critical' | string;
 
 export interface TrustReport {
   id: number;
-  reporter_user_id: number;
-  target_type: TargetEntityType;
-  target_id: number;
-  reason_category: string;
-  subject: string;
-  message: string;
+  folio: string;
+  creator_target: string;
+  athlete_id?: number | null;
+  athlete_handle?: string | null;
+  athlete_name?: string | null;
+  athlete_avatar?: string | null;
+  reporter_email: string;
+  reason_code: string;
+  reason_title: string;
+  description: string;
+  evidence_links?: string[] | null;
+  attached_file?: string | null;
   status: ReportStatus;
   priority: ReportPriority;
-  duplicate_of?: number | null;
   assigned_moderator_id?: number | null;
-  resolution_action?: string | null;
-  resolution_notes?: string | null;
-  evidence_images?: string[] | null;
+  assigned_moderator_name?: string | null;
+  verdict?: string | null;
+  verdict_title?: string | null;
+  admin_notes?: string | null;
+  action_details?: string | null;
   created_at: string;
   resolved_at?: string | null;
 }
 
 export interface TrustReportListParams {
-  status_filter?: ReportStatus | '';
-  priority_filter?: ReportPriority | '';
-  assigned_moderator_id?: number;
+  status_filter?: string;
+  priority_filter?: string;
+  search?: string;
   limit?: number;
   offset?: number;
 }
 
 export interface TrustReportListResponse {
-  code?: number;
   message?: string;
   result: TrustReport[];
-  total?: number | null;
+  total?: number;
+  pending_count?: number;
 }
 
 export interface TrustReportStatusUpdatePayload {
-  status: ReportStatus;
-  resolution_action?: string;
-  resolution_notes?: string;
-  duplicate_of?: number;
+  status: string;
+  priority?: string;
+  admin_notes?: string;
 }
 
-export interface TrustReportMutationResponse {
-  code?: number;
-  message?: string;
-  result: TrustReport[];
+export interface AdminReportVerdictPayload {
+  reporter_email?: string;
+  creator_target?: string;
+  verdict: 'action_taken' | 'dismissed' | 'warning';
+  verdict_title: string;
+  admin_notes: string;
+  action_details?: string;
 }
 
-export const REPORT_STATUS_OPTIONS: { value: ReportStatus; label: string }[] = [
-  { value: 'PENDING', label: 'Pendiente' },
-  { value: 'UNDER_REVIEW', label: 'En revisión' },
-  { value: 'RESOLVED', label: 'Resuelto' },
-  { value: 'DISMISSED', label: 'Descartado' },
+export interface AdminReportVerdictResponse {
+  folio: string;
+  verdict: string;
+  status: string;
+  email_sent: boolean;
+  message: string;
+}
+
+export const REPORT_STATUS_OPTIONS: { value: string; label: string }[] = [
+  { value: 'all', label: 'Todos los estados' },
+  { value: 'pending', label: 'Pendiente' },
+  { value: 'under_review', label: 'En revisión' },
+  { value: 'resolved', label: 'Resuelto' },
+  { value: 'dismissed', label: 'Descartado' },
 ];
 
-export const REPORT_PRIORITY_OPTIONS: { value: ReportPriority; label: string }[] = [
-  { value: 'CRITICAL', label: 'Crítica' },
-  { value: 'HIGH', label: 'Alta' },
-  { value: 'MEDIUM', label: 'Media' },
-  { value: 'LOW', label: 'Baja' },
+export const REPORT_PRIORITY_OPTIONS: { value: string; label: string }[] = [
+  { value: 'all', label: 'Todas las prioridades' },
+  { value: 'critical', label: 'Crítica' },
+  { value: 'high', label: 'Alta' },
+  { value: 'medium', label: 'Media' },
+  { value: 'low', label: 'Baja' },
 ];
 
-export const TARGET_TYPE_LABELS: Record<TargetEntityType, string> = {
-  BUYER_PRODUCT: 'Producto (compra)',
-  SELLER_PRODUCT: 'Producto (venta)',
-  USER: 'Usuario',
-  OFFER: 'Oferta',
-  CHAT: 'Chat',
+export const REASON_CODE_LABELS: Record<string, string> = {
+  doping: 'Dopaje y sustancias prohibidas',
+  medical_risk: 'Intrusismo o riesgo para la salud',
+  impersonation: 'Suplantación de identidad',
+  scam_fraud: 'Fraude o engaño económico',
+  fraud: 'Fraude o engaño económico',
+  harassment: 'Acoso o intimidación',
+  hate_speech: 'Discurso de odio',
+  unfulfilled_order: 'Servicio / asesoría no cumplida',
+  ip_theft: 'Plagio de rutinas o guías',
+  copyright: 'Infracción de derechos de autor',
+  inappropriate: 'Contenido sexual o no apto',
+  nsfw: 'Contenido NSFW sin etiqueta',
+  spam: 'Spam o enlaces masivos',
+  other: 'Otro motivo',
 };
 
-export const REASON_CATEGORY_LABELS: Record<string, string> = {
-  SPAM: 'Spam o publicidad',
-  FRAUD: 'Sospecha de fraude',
-  INAPPROPRIATE_CONTENT: 'Contenido inapropiado',
-  OFFENSIVE_BEHAVIOR: 'Comportamiento ofensivo',
-  OTHER: 'Otro motivo',
-};
-
-export const RESOLUTION_ACTION_OPTIONS: { value: string; label: string }[] = [
-  { value: 'NO_VIOLATION', label: 'Sin infracción' },
-  { value: 'WARNING', label: 'Advertencia' },
-  { value: 'STRIKE', label: 'Strike' },
-  { value: 'LISTING_REMOVED', label: 'Publicación retirada' },
-  { value: 'TEMP_SUSPENSION', label: 'Suspensión temporal' },
-  { value: 'PERMANENT_BAN', label: 'Suspensión permanente' },
-  { value: 'DUPLICATE', label: 'Duplicado' },
+export const VERDICT_OPTIONS: {
+  value: 'action_taken' | 'warning' | 'dismissed';
+  label: string;
+  description: string;
+  tone: 'rose' | 'amber' | 'slate';
+}[] = [
+  {
+    value: 'action_taken',
+    label: 'Acción Tomada / Sanción',
+    description: 'Se constató la falta y se aplicaron medidas correctivas o disciplinarias.',
+    tone: 'rose',
+  },
+  {
+    value: 'warning',
+    label: 'Advertencia Oficial',
+    description: 'Se notificó formalmente al creador sobre las normas de la comunidad.',
+    tone: 'amber',
+  },
+  {
+    value: 'dismissed',
+    label: 'Desestimar Reporte',
+    description: 'No se encontraron evidencias suficientes o la denuncia no procede.',
+    tone: 'slate',
+  },
 ];
-
-/** FSM transitions allowed by moderation_service */
-export const ALLOWED_STATUS_TRANSITIONS: Record<ReportStatus, ReportStatus[]> = {
-  PENDING: ['UNDER_REVIEW', 'DISMISSED', 'RESOLVED'],
-  UNDER_REVIEW: ['RESOLVED', 'DISMISSED'],
-  RESOLVED: [],
-  DISMISSED: [],
-};

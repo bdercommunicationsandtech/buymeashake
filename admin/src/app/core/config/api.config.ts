@@ -20,7 +20,7 @@ export const API_ENDPOINTS = {
     listingsSell: '/admin/listings/seller',
     listingsBuy: '/admin/listings/buyer',
     stats: '/admin/stats',
-    trustReports: '/admin/trust/reports',
+    trustReports: '/admin/compliance/reports',
     contact: '/contact',
   },
 } as const;

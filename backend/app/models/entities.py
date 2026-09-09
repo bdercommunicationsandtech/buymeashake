@@ -692,3 +692,42 @@ class WithdrawalRequest(Base):
     athlete: Mapped[AthleteProfile] = relationship("AthleteProfile", back_populates="withdrawal_requests")
     processed_by: Mapped["User | None"] = relationship("User", foreign_keys=[processed_by_admin_id])
 
+
+# ==============================================================================
+# MÓDULO 8: COMPLIANCE, DENUNCIAS & MODERACIÓN (TRUST & SAFETY)
+# ==============================================================================
+
+class ComplianceReport(Base):
+    __tablename__ = "compliance_reports"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    folio: Mapped[str] = mapped_column(String(50), unique=True, nullable=False, index=True)
+    creator_target: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    athlete_id: Mapped[int | None] = mapped_column(
+        BigInteger, ForeignKey("athlete_profiles.id", ondelete="SET NULL"), nullable=True, index=True
+    )
+    reporter_email: Mapped[str] = mapped_column(String(191), nullable=False, index=True)
+    reason_code: Mapped[str] = mapped_column(String(50), nullable=False, index=True)
+    reason_title: Mapped[str] = mapped_column(String(150), nullable=False)
+    description: Mapped[str] = mapped_column(Text, nullable=False)
+    evidence_links: Mapped[list[str] | None] = mapped_column(JSON, nullable=True)
+    attached_file: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    status: Mapped[str] = mapped_column(
+        String(30), default="pending", nullable=False, index=True
+    )  # pending, under_review, resolved, dismissed
+    priority: Mapped[str] = mapped_column(
+        String(20), default="medium", nullable=False, index=True
+    )  # low, medium, high, critical
+    assigned_moderator_id: Mapped[int | None] = mapped_column(
+        BigInteger, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True
+    )
+    verdict: Mapped[str | None] = mapped_column(String(50), nullable=True)  # action_taken, dismissed, warning
+    verdict_title: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    admin_notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+    action_details: Mapped[str | None] = mapped_column(String(1000), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now(), index=True)
+    resolved_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+
+    athlete: Mapped["AthleteProfile | None"] = relationship("AthleteProfile")
+    assigned_moderator: Mapped["User | None"] = relationship("User", foreign_keys=[assigned_moderator_id])
+

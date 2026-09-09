@@ -9,8 +9,8 @@ router = APIRouter()
 
 @router.post("/uploads/image", response_model=UploadFileResponse)
 async def upload_image(
+    user: CurrentUser,
     file: UploadFile = File(...),
-    user: CurrentUser = None,
 ) -> UploadFileResponse:
     """Sube una imagen de avatar, portada o logo (JPEG, PNG, WEBP)."""
     file_bytes = await file.read()
@@ -21,8 +21,8 @@ async def upload_image(
 
 @router.post("/uploads/product", response_model=UploadFileResponse)
 async def upload_digital_product_file(
+    athlete: CurrentAthlete,
     file: UploadFile = File(...),
-    athlete: CurrentAthlete = None,
 ) -> UploadFileResponse:
     """Sube un archivo de producto digital (PDF, ZIP de rutinas)."""
     file_bytes = await file.read()

@@ -144,6 +144,86 @@ class StripeService:
             )
         return payouts
 
+    def _capability_status(self, account: Any, name: str) -> str | None:
+        caps = getattr(account, "capabilities", None)
+        if caps is None:
+            return None
+        if isinstance(caps, dict):
+            value = caps.get(name)
+        else:
+            value = getattr(caps, name, None)
+        return str(value) if value is not None else None
+
+    def _card_payments_active(self, account: Any) -> bool:
+        return self._capability_status(account, "card_payments") == "active"
+
+    async def _ensure_connect_capabilities(self, account_id: str) -> Any | None:
+        """Pide card_payments (+ transfers) en cuentas Express viejas creadas solo con transfers."""
+        if not settings.STRIPE_SECRET_KEY or settings.STRIPE_SECRET_KEY.startswith("sk_test_placeholder"):
+            return None
+        if account_id.startswith("acct_mock_"):
+            return None
+
+        try:
+            account = stripe.Account.retrieve(account_id)
+        except Exception as e:
+            logger.error("No se pudo retrieve Connect account %s: %s", account_id, e)
+            return None
+
+        card_status = self._capability_status(account, "card_payments")
+        transfers_status = self._capability_status(account, "transfers")
+        needs_card = card_status not in ("active", "pending")
+        needs_transfers = transfers_status not in ("active", "pending")
+
+        if not needs_card and not needs_transfers:
+            return account
+
+        capabilities: dict[str, Any] = {}
+        if needs_card:
+            capabilities["card_payments"] = {"requested": True}
+        if needs_transfers:
+            capabilities["transfers"] = {"requested": True}
+
+        try:
+            account = stripe.Account.modify(account_id, capabilities=capabilities)
+            logger.info(
+                "Connect account %s: capabilities requested %s (card was %s)",
+                account_id,
+                list(capabilities.keys()),
+                card_status,
+            )
+        except Exception as e:
+            logger.error("No se pudo pedir capabilities en %s: %s", account_id, e)
+        return account
+
+    def _sync_payouts_from_account(self, payouts: AthletePayouts, account: Any) -> None:
+        payouts.payouts_enabled = bool(getattr(account, "payouts_enabled", False))
+        payouts.stripe_details_submitted = bool(getattr(account, "details_submitted", False))
+        # Direct Charges requieren card_payments active; no confiar solo en charges_enabled.
+        charges = bool(getattr(account, "charges_enabled", False)) and self._card_payments_active(account)
+        payouts.charges_enabled = charges
+
+    async def _assert_card_payments_ready(self, payouts: AthletePayouts) -> str:
+        """Asegura capabilities y bloquea checkout si card_payments no está active."""
+        connect_account_id = payouts.stripe_connect_account_id
+        assert connect_account_id
+        try:
+            account = await self._ensure_connect_capabilities(connect_account_id)
+            if account is None:
+                account = stripe.Account.retrieve(connect_account_id)
+            self._sync_payouts_from_account(payouts, account)
+            await self.session.flush()
+            if not payouts.charges_enabled or not self._card_payments_active(account):
+                raise BusinessLogicError(
+                    "La cuenta Stripe Express del atleta aún no tiene card_payments activo. "
+                    "Debe reabrir el onboarding desde Retiros / Express."
+                )
+        except BusinessLogicError:
+            raise
+        except Exception as e:
+            logger.error("No se pudo verificar capabilities Connect antes del checkout: %s", e)
+        return connect_account_id
+
     def _presentment_currency(self, athlete: AthleteProfile, fallback: str = "USD") -> str:
         """Alinea moneda de cobro con país Connect cuando es posible."""
         payouts = athlete.payouts
@@ -195,8 +275,7 @@ class StripeService:
             }
 
         payouts = self._require_direct_charges_account(athlete)
-        connect_account_id = payouts.stripe_connect_account_id
-        assert connect_account_id  # guarded above
+        connect_account_id = await self._assert_card_payments_ready(payouts)
 
         shared_metadata = {
             "transaction_uuid": tx_uuid,
@@ -656,8 +735,7 @@ class StripeService:
             }
 
         payouts = self._require_direct_charges_account(athlete)
-        connect_account_id = payouts.stripe_connect_account_id
-        assert connect_account_id
+        connect_account_id = await self._assert_card_payments_ready(payouts)
 
         price_id = tier.stripe_price_id
         if not price_id:
@@ -752,7 +830,12 @@ class StripeService:
         """Crea una cuenta Express en Stripe Connect o devuelve la existente para MX o US."""
         payouts = ensure_payouts(self.session, athlete)
         if payouts.stripe_connect_account_id:
-            return payouts.stripe_connect_account_id
+            account_id = payouts.stripe_connect_account_id
+            account = await self._ensure_connect_capabilities(account_id)
+            if account is not None:
+                self._sync_payouts_from_account(payouts, account)
+                await self.session.flush()
+            return account_id
 
         target_country = (country_code or payouts.country_code or "MX").upper()
         if target_country not in ("MX", "US"):
@@ -804,6 +887,7 @@ class StripeService:
 
         account = stripe.Account.create(**account_params)
         payouts.stripe_connect_account_id = account.id
+        self._sync_payouts_from_account(payouts, account)
         await self.session.flush()
         return account.id
 
@@ -819,6 +903,7 @@ class StripeService:
                 "stripe_connect_account_id": account_id,
             }
 
+        # Tras pedir card_payments, el atleta debe completar onboarding de nuevo.
         link = stripe.AccountLink.create(
             account=account_id,
             refresh_url=settings.STRIPE_CONNECT_REFRESH_URL,
@@ -832,7 +917,7 @@ class StripeService:
         }
 
     async def create_express_dashboard_link(self, athlete: AthleteProfile) -> dict[str, str]:
-        """Portal Express o onboarding si details_submitted es false."""
+        """Portal Express o onboarding si details_submitted / card_payments incompletos."""
         payouts = ensure_payouts(self.session, athlete)
         account_id = payouts.stripe_connect_account_id
         if not account_id:
@@ -840,7 +925,7 @@ class StripeService:
             return {"action": "onboarding", "redirect_url": data["account_link_url"]}
 
         if not settings.STRIPE_SECRET_KEY or settings.STRIPE_SECRET_KEY.startswith("sk_test_placeholder"):
-            if payouts.stripe_details_submitted:
+            if payouts.stripe_details_submitted and payouts.charges_enabled:
                 return {
                     "action": "portal",
                     "redirect_url": f"{settings.STRIPE_CONNECT_RETURN_URL}&mock_express=true",
@@ -849,14 +934,18 @@ class StripeService:
             return {"action": "onboarding", "redirect_url": data["account_link_url"]}
 
         try:
-            account = stripe.Account.retrieve(account_id)
-            details_submitted = bool(account.details_submitted)
-            payouts.stripe_details_submitted = details_submitted
-            payouts.charges_enabled = bool(account.charges_enabled)
-            payouts.payouts_enabled = bool(account.payouts_enabled)
+            account = await self._ensure_connect_capabilities(account_id)
+            if account is None:
+                account = stripe.Account.retrieve(account_id)
+            self._sync_payouts_from_account(payouts, account)
             await self.session.flush()
 
-            if not details_submitted:
+            needs_onboarding = (
+                not bool(account.details_submitted)
+                or not self._card_payments_active(account)
+                or not bool(account.charges_enabled)
+            )
+            if needs_onboarding:
                 link = stripe.AccountLink.create(
                     account=account_id,
                     refresh_url=settings.STRIPE_CONNECT_REFRESH_URL,
@@ -895,25 +984,22 @@ class StripeService:
             }
 
         try:
-            account = stripe.Account.retrieve(account_id)
-            payouts_enabled = bool(account.payouts_enabled)
-            details_submitted = bool(account.details_submitted)
-            charges_enabled = bool(account.charges_enabled)
+            account = await self._ensure_connect_capabilities(account_id)
+            if account is None:
+                account = stripe.Account.retrieve(account_id)
 
             requirements_due: list[str] = []
             if account.requirements and account.requirements.currently_due:
                 requirements_due = list(account.requirements.currently_due)
 
-            payouts.payouts_enabled = payouts_enabled
-            payouts.stripe_details_submitted = details_submitted
-            payouts.charges_enabled = charges_enabled
+            self._sync_payouts_from_account(payouts, account)
             await self.session.flush()
 
             return {
                 "stripe_connect_account_id": account_id,
-                "payouts_enabled": payouts_enabled,
-                "details_submitted": details_submitted,
-                "charges_enabled": charges_enabled,
+                "payouts_enabled": payouts.payouts_enabled,
+                "details_submitted": payouts.stripe_details_submitted,
+                "charges_enabled": payouts.charges_enabled,
                 "requirements_due": requirements_due,
             }
         except Exception as e:
@@ -1321,9 +1407,14 @@ class StripeService:
         athlete = res.scalar_one_or_none()
         if athlete:
             payouts = ensure_payouts(self.session, athlete)
+            # Prefer full capability sync when Stripe sends capability fields
+            card_ok = True
+            caps = obj.get("capabilities")
+            if isinstance(caps, dict) and "card_payments" in caps:
+                card_ok = caps.get("card_payments") == "active"
             payouts.payouts_enabled = bool(obj.get("payouts_enabled", False))
-            payouts.charges_enabled = bool(obj.get("charges_enabled", False))
             payouts.stripe_details_submitted = bool(obj.get("details_submitted", False))
+            payouts.charges_enabled = bool(obj.get("charges_enabled", False)) and card_ok
             await self.session.flush()
 
         return {"handled": True, "account_id": account_id}

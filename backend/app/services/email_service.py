@@ -919,7 +919,8 @@ def generate_support_ticket_admin_html(
     role_label_map = {
         "athlete": "Atleta / Coach",
         "supporter": "Supporter / Donante",
-        "visitor": "Visitante general",
+        "brand": "Marcas & Alianzas",
+        "visitor": "Visitante u Otro",
     }
     role_display = role_label_map.get(user_role, user_role)
     esc_role = _esc(role_display)

@@ -34,6 +34,7 @@ import { GoalEditorModalComponent } from '../../shared/page-editor-modals/goal-e
 import { PricesModalComponent } from '../../shared/page-editor-modals/prices-modal.component';
 import { EditorSavePatch } from '../../shared/page-editor-modals/editor-save-patch';
 import { CreatorProfile } from '../../core/api.models';
+import { AllowedUserTextDirective } from '../../core/directives/allowed-user-text.directive';
 
 export interface CreatorProduct {
   title: string;
@@ -123,6 +124,7 @@ export interface CreatorView {
     AgendaCopyModalComponent,
     GoalEditorModalComponent,
     PricesModalComponent,
+    AllowedUserTextDirective,
   ],
   templateUrl: './creator.html',
 })

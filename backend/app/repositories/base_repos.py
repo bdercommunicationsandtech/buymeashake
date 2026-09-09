@@ -564,7 +564,14 @@ class PostRepository:
         return list(result.scalars().all())
 
     async def get_by_id(self, post_id: int) -> Post | None:
-        query = select(Post).options(selectinload(Post.comments).selectinload(PostComment.user)).where(Post.id == post_id)
+        query = (
+            select(Post)
+            .options(
+                selectinload(Post.comments).selectinload(PostComment.user),
+                selectinload(Post.athlete),
+            )
+            .where(Post.id == post_id)
+        )
         result = await self.session.execute(query)
         return result.scalar_one_or_none()
 
@@ -577,6 +584,15 @@ class PostRepository:
         await self.session.flush()
         await self.session.refresh(post)
         return post
+
+    async def update(self, post: Post) -> Post:
+        await self.session.flush()
+        await self.session.refresh(post)
+        return post
+
+    async def delete(self, post: Post) -> None:
+        await self.session.delete(post)
+        await self.session.flush()
 
     async def like_post(self, post_id: int, user_id: int) -> int:
         post = await self.get_by_id(post_id)
@@ -897,16 +913,21 @@ class OtpRepository:
         await self.session.flush()
         return record
 
-    async def get_valid_otp(self, email: str, code: str) -> EmailVerification | None:
+    async def get_valid_otp(
+        self, email: str, code: str, purpose: str | None = None
+    ) -> EmailVerification | None:
         now_utc = datetime.now(timezone.utc).replace(tzinfo=None)
+        conditions = [
+            EmailVerification.email == email,
+            EmailVerification.code == code,
+            EmailVerification.is_used == False,
+            EmailVerification.expires_at >= now_utc,
+        ]
+        if purpose is not None:
+            conditions.append(EmailVerification.purpose == purpose)
         query = (
             select(EmailVerification)
-            .where(
-                EmailVerification.email == email,
-                EmailVerification.code == code,
-                EmailVerification.is_used == False,
-                EmailVerification.expires_at >= now_utc,
-            )
+            .where(*conditions)
             .order_by(EmailVerification.created_at.desc())
         )
         result = await self.session.execute(query)

@@ -48,6 +48,26 @@ export interface UserLoginPayload {
   password: string;
 }
 
+export interface ForgotPasswordPayload {
+  email: string;
+}
+
+export interface ResetPasswordPayload {
+  email: string;
+  code: string;
+  new_password: string;
+}
+
+export interface ForgotPasswordResponse {
+  message: string;
+  expires_in_seconds: number;
+  demo_code?: string;
+}
+
+export interface ResetPasswordResponse {
+  message: string;
+}
+
 export interface FirebaseAuthPayload {
   id_token: string;
   role?: 'supporter' | 'athlete';
@@ -353,6 +373,12 @@ export interface PostItemDto {
 export interface PostCreatePayload {
   title: string;
   content_html: string;
+  access_type?: 'public' | 'followers_only' | 'members_only';
+}
+
+export interface PostUpdatePayload {
+  title?: string;
+  content_html?: string;
   access_type?: 'public' | 'followers_only' | 'members_only';
 }
 

@@ -3,12 +3,13 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DashboardService } from '../../../core/dashboard.service';
 import { SupporterItemDto } from '../../../core/api.models';
+import { AllowedUserTextDirective } from '../../../core/directives/allowed-user-text.directive';
 import { LanguageService } from '../../../core/language.service';
 
 @Component({
   selector: 'app-dashboard-supporters',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, AllowedUserTextDirective],
   templateUrl: './supporters.html',
 })
 export class DashboardSupporters implements OnInit {

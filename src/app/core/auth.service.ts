@@ -6,6 +6,10 @@ import { environment } from '../../environments/environment';
 import {
   FirebaseAuthPayload,
   FirebaseNeedsRoleDetails,
+  ForgotPasswordPayload,
+  ForgotPasswordResponse,
+  ResetPasswordPayload,
+  ResetPasswordResponse,
   TokenResponse,
   UpgradeToAthletePayload,
   UserLoginPayload,
@@ -76,10 +80,14 @@ export class AuthService {
     this.redirectAwayFromAuthPages();
   }
 
-  /** Si la pestaña está en login/register y ya hay sesión, manda al home del rol. */
+  /** Si la pestaña está en login/register/forgot-password y ya hay sesión, manda al home del rol. */
   redirectAwayFromAuthPages(): void {
     const url = this.router.url.split('?')[0];
-    if (!url.startsWith('/auth/login') && !url.startsWith('/auth/register')) {
+    if (
+      !url.startsWith('/auth/login') &&
+      !url.startsWith('/auth/register') &&
+      !url.startsWith('/auth/forgot-password')
+    ) {
       return;
     }
     if (!this.currentUser()) {
@@ -119,6 +127,14 @@ export class AuthService {
       tap((res) => this.saveTokens(res)),
       switchMap(() => this.loadMe())
     );
+  }
+
+  forgotPassword(payload: ForgotPasswordPayload): Observable<ForgotPasswordResponse> {
+    return this.http.post<ForgotPasswordResponse>(`${this.apiUrl}/forgot-password`, payload);
+  }
+
+  resetPassword(payload: ResetPasswordPayload): Observable<ResetPasswordResponse> {
+    return this.http.post<ResetPasswordResponse>(`${this.apiUrl}/reset-password`, payload);
   }
 
   /**

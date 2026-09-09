@@ -51,8 +51,19 @@
             <app-icon-button-support size="13" customClass="text-red-500" />
             <span>{{ post.likes_count }}</span>
           </span>
-          <button type="button" class="text-xs font-bold text-gray-700 dark:text-gray-300 hover:text-black dark:hover:text-white border border-gray-200 dark:border-white/10 rounded-xl px-3 py-1.5 transition cursor-pointer">
+          <a
+            [routerLink]="['/dashboard/posts', post.id, 'edit']"
+            class="text-xs font-bold text-gray-700 dark:text-gray-300 hover:text-black dark:hover:text-white border border-gray-200 dark:border-white/10 rounded-xl px-3 py-1.5 transition cursor-pointer"
+          >
             {{ t().dashboard.postsView.edit }}
+          </a>
+          <button
+            type="button"
+            (click)="deletePost(post)"
+            [disabled]="deletingPostId() === post.id"
+            class="text-xs font-bold text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 border border-red-200/80 dark:border-red-900/40 rounded-xl px-3 py-1.5 transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {{ deletingPostId() === post.id ? t().dashboard.postsView.deleting : t().dashboard.postsView.delete }}
           </button>
         </div>
       </article>

@@ -4,9 +4,13 @@ from fastapi import APIRouter, status
 from app.api.dependencies import CurrentUser, DatabaseSession
 from app.schemas.dtos import (
     FirebaseAuthRequest,
+    ForgotPasswordRequest,
+    ForgotPasswordResponse,
     RefreshTokenRequest,
     RequestOtpRequest,
     RequestOtpResponse,
+    ResetPasswordRequest,
+    ResetPasswordResponse,
     TokenResponse,
     UpdateProfileRequest,
     UpgradeToAthleteRequest,
@@ -53,6 +57,20 @@ async def login(dto: UserLoginRequest, session: DatabaseSession) -> TokenRespons
     """Inicia sesión con credenciales y retorna tokens JWT."""
     service = AuthService(session)
     return await service.login(dto)
+
+
+@router.post("/auth/forgot-password", response_model=ForgotPasswordResponse)
+async def forgot_password(dto: ForgotPasswordRequest, session: DatabaseSession) -> ForgotPasswordResponse:
+    """Envía un código OTP para restablecer la contraseña (respuesta genérica anti-enumeración)."""
+    service = AuthService(session)
+    return await service.forgot_password(dto)
+
+
+@router.post("/auth/reset-password", response_model=ResetPasswordResponse)
+async def reset_password(dto: ResetPasswordRequest, session: DatabaseSession) -> ResetPasswordResponse:
+    """Valida el OTP de recuperación y actualiza la contraseña del usuario."""
+    service = AuthService(session)
+    return await service.reset_password(dto)
 
 
 @router.post("/auth/firebase", response_model=TokenResponse)

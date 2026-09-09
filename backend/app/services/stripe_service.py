@@ -828,7 +828,7 @@ class StripeService:
         self, athlete: AthleteProfile, country_code: str | None = None
     ) -> str:
         """Crea una cuenta Express en Stripe Connect o devuelve la existente para MX o US."""
-        payouts = ensure_payouts(self.session, athlete)
+        payouts = await ensure_payouts(self.session, athlete)
         if payouts.stripe_connect_account_id:
             account_id = payouts.stripe_connect_account_id
             account = await self._ensure_connect_capabilities(account_id)
@@ -963,7 +963,7 @@ class StripeService:
 
     async def get_connect_account_status(self, athlete: AthleteProfile) -> dict[str, Any]:
         """Verifica en tiempo real con Stripe si el atleta completó sus datos bancarios."""
-        payouts = ensure_payouts(self.session, athlete)
+        payouts = await ensure_payouts(self.session, athlete)
         account_id = payouts.stripe_connect_account_id
         if not account_id:
             return {

@@ -59,6 +59,7 @@
             <input
               type="text"
               required
+              maxlength="30"
               [placeholder]="t().auth.handlePlaceholder"
               class="flex-1 min-w-0 block w-full px-3.5 py-3 text-sm text-gray-900 dark:text-white placeholder-gray-400 bg-white dark:bg-[#191c1d] outline-none font-bold"
               [value]="handle()"
@@ -75,6 +76,8 @@
           <input
             type="text"
             required
+            maxlength="150"
+            appAllowedUserText
             [placeholder]="t().auth.athleteNamePlaceholder"
             class="block w-full px-4 py-3 border border-gray-300 dark:border-white/15 rounded-xl shadow-xs bg-white dark:bg-[#191c1d] text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:border-gray-900 dark:focus:border-[#c9ff3d] text-sm font-semibold"
             [value]="name()"
@@ -149,6 +152,7 @@
           <input
             type="email"
             required
+            maxlength="191"
             [placeholder]="t().auth.emailPlaceholder"
             class="block w-full px-4 py-3 border border-gray-300 dark:border-white/15 rounded-xl shadow-xs bg-white dark:bg-[#191c1d] text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:border-gray-900 dark:focus:border-[#c9ff3d] text-sm font-semibold"
             [value]="email()"
@@ -165,6 +169,7 @@
             type="password"
             required
             minlength="8"
+            maxlength="128"
             [placeholder]="t().auth.passwordMinLengthPlaceholder"
             class="block w-full px-4 py-3 border border-gray-300 dark:border-white/15 rounded-xl shadow-xs bg-white dark:bg-[#191c1d] text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:border-gray-900 dark:focus:border-[#c9ff3d] text-sm font-semibold"
             [value]="password()"

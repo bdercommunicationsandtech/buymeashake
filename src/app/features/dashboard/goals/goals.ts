@@ -9,6 +9,7 @@ import {
   IconDumbbellComponent,
   IconShakerComponent,
 } from '../../../shared/icons';
+import { AllowedUserTextDirective } from '../../../core/directives/allowed-user-text.directive';
 
 export type GoalCategory = 'equipment' | 'travel' | 'nutrition' | 'camp';
 
@@ -30,6 +31,7 @@ export type GoalNotificationKey =
     FormsModule,
     IconShakerComponent,
     IconDumbbellComponent,
+    AllowedUserTextDirective,
   ],
   templateUrl: './goals.html',
 })

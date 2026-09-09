@@ -7,12 +7,21 @@ import { ExploreService } from '../../../core/explore.service';
 import { PostItemDto } from '../../../core/api.models';
 import { LanguageService } from '../../../core/language.service';
 
+function isSafeHttpUrl(url: string): boolean {
+  try {
+    const parsed = new URL(url, 'https://example.invalid');
+    return parsed.protocol === 'http:' || parsed.protocol === 'https:';
+  } catch {
+    return false;
+  }
+}
+
 function extractFirstImageUrl(content: string): string | null {
   const htmlMatch = content.match(/<img[^>]+src=["']([^"']+)["']/i);
-  if (htmlMatch?.[1]) return htmlMatch[1];
+  if (htmlMatch?.[1] && isSafeHttpUrl(htmlMatch[1])) return htmlMatch[1];
 
   const mdMatch = content.match(/!\[[^\]]*]\(([^)\s]+)\)/);
-  if (mdMatch?.[1]) return mdMatch[1];
+  if (mdMatch?.[1] && isSafeHttpUrl(mdMatch[1])) return mdMatch[1];
 
   return null;
 }
@@ -24,13 +33,23 @@ function stripFirstImage(content: string): string {
     .trim();
 }
 
+function escapeHtmlAttr(value: string): string {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
 function toRenderableHtml(content: string, stripLeadingImage = false): string {
   let html = (stripLeadingImage ? stripFirstImage(content) : content).trim();
   if (!html) return '';
 
   html = html.replace(/!\[([^\]]*)]\(([^)\s]+)\)/g, (_m, alt: string, src: string) => {
-    const safeAlt = String(alt || 'Imagen').replace(/"/g, '&quot;');
-    return `<img src="${src}" alt="${safeAlt}" loading="lazy" />`;
+    if (!isSafeHttpUrl(src)) return '';
+    const safeAlt = escapeHtmlAttr(String(alt || 'Imagen'));
+    const safeSrc = escapeHtmlAttr(src);
+    return `<img src="${safeSrc}" alt="${safeAlt}" loading="lazy" />`;
   });
 
   if (!html.includes('<')) {

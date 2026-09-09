@@ -147,44 +147,25 @@ async def ensure_child_rows(
     referral_code: str,
     referred_by_id: int | None = None,
 ) -> None:
-    """Create default child rows for a new athlete profile."""
-    if athlete.id:
-        existing_ps = await session.get(AthletePageSettings, athlete.id)
-        if not existing_ps:
-            ps = AthletePageSettings(athlete_id=athlete.id)
-            session.add(ps)
-            athlete.page_settings = ps
-        else:
-            athlete.page_settings = existing_ps
+    """Create default child rows for a new athlete profile.
 
-        existing_mon = await session.get(AthleteMonetization, athlete.id)
-        if not existing_mon:
-            mon = AthleteMonetization(athlete_id=athlete.id, shake_price=Decimal("3.00"), currency="USD")
-            session.add(mon)
-            athlete.monetization = mon
-        else:
-            athlete.monetization = existing_mon
-
-        existing_pay = await session.get(AthletePayouts, athlete.id)
-        if not existing_pay:
-            payouts = AthletePayouts(athlete_id=athlete.id, payouts_enabled=False)
-            session.add(payouts)
-            athlete.payouts = payouts
-        else:
-            athlete.payouts = existing_pay
-
-        existing_ref = await session.get(AthleteReferrals, athlete.id)
-        if not existing_ref:
-            referrals = AthleteReferrals(
-                athlete_id=athlete.id,
-                referral_code=referral_code,
-                referred_by_id=referred_by_id,
-            )
-            session.add(referrals)
-            athlete.referrals = referrals
-        else:
-            athlete.referrals = existing_ref
-
+    Uses session.get (not relationship attribute access) so AsyncSession never
+    triggers a sync lazy-load after schema normalization.
+    """
+    await ensure_page_settings(session, athlete)
+    await ensure_monetization(session, athlete, shake_price=Decimal("3.00"), currency="USD")
+    await ensure_payouts(session, athlete)
+    existing_ref = await session.get(AthleteReferrals, athlete.id)
+    if existing_ref is None:
+        referrals = AthleteReferrals(
+            athlete_id=athlete.id,
+            referral_code=referral_code,
+            referred_by_id=referred_by_id,
+        )
+        session.add(referrals)
+        athlete.referrals = referrals
+    else:
+        athlete.referrals = existing_ref
     await session.flush()
 
 
@@ -212,34 +193,44 @@ async def upsert_social_links(
     await session.flush()
 
 
-def ensure_page_settings(session: AsyncSession, athlete: AthleteProfile) -> AthletePageSettings:
-    from sqlalchemy import inspect
-    state = inspect(athlete)
-    if "page_settings" not in state.unloaded and athlete.page_settings:
-        return athlete.page_settings
+async def ensure_page_settings(session: AsyncSession, athlete: AthleteProfile) -> AthletePageSettings:
+    existing = await session.get(AthletePageSettings, athlete.id)
+    if existing:
+        athlete.page_settings = existing
+        return existing
     ps = AthletePageSettings(athlete_id=athlete.id)
     session.add(ps)
     athlete.page_settings = ps
     return ps
 
 
-def ensure_monetization(session: AsyncSession, athlete: AthleteProfile) -> AthleteMonetization:
-    from sqlalchemy import inspect
-    state = inspect(athlete)
-    if "monetization" not in state.unloaded and athlete.monetization:
-        return athlete.monetization
-    m = AthleteMonetization(athlete_id=athlete.id)
+async def ensure_monetization(
+    session: AsyncSession,
+    athlete: AthleteProfile,
+    *,
+    shake_price: Decimal | None = None,
+    currency: str | None = None,
+) -> AthleteMonetization:
+    existing = await session.get(AthleteMonetization, athlete.id)
+    if existing:
+        athlete.monetization = existing
+        return existing
+    m = AthleteMonetization(
+        athlete_id=athlete.id,
+        shake_price=shake_price if shake_price is not None else Decimal("3.00"),
+        currency=currency or "USD",
+    )
     session.add(m)
     athlete.monetization = m
     return m
 
 
-def ensure_payouts(session: AsyncSession, athlete: AthleteProfile) -> AthletePayouts:
-    from sqlalchemy import inspect
-    state = inspect(athlete)
-    if "payouts" not in state.unloaded and athlete.payouts:
-        return athlete.payouts
-    p = AthletePayouts(athlete_id=athlete.id)
+async def ensure_payouts(session: AsyncSession, athlete: AthleteProfile) -> AthletePayouts:
+    existing = await session.get(AthletePayouts, athlete.id)
+    if existing:
+        athlete.payouts = existing
+        return existing
+    p = AthletePayouts(athlete_id=athlete.id, payouts_enabled=False)
     session.add(p)
     athlete.payouts = p
     return p

@@ -145,6 +145,8 @@
               <div class="ml-4 pt-2 space-y-2">
                 <input
                   type="text"
+                  appAllowedUserText
+                  maxlength="500"
                   [placeholder]="t().dashboard.supportersView.replyPlaceholder"
                   class="w-full text-xs p-2.5 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#121614] text-gray-900 dark:text-white outline-none focus:border-black dark:focus:border-[#c9ff3d]"
                   [ngModel]="replyText()"
@@ -195,7 +197,7 @@
 
         <div>
           <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 uppercase mb-1">{{ t().dashboard.supportersView.defaultThankMessage }}</label>
-          <textarea rows="3" class="w-full rounded-xl border border-gray-300 dark:border-white/15 p-3 text-sm outline-none bg-white dark:bg-[#121614] text-gray-900 dark:text-white focus:border-black dark:focus:border-[#c9ff3d]" [ngModel]="thankMessage()" (ngModelChange)="thankMessage.set($event)"></textarea>
+          <textarea rows="3" appAllowedUserText maxlength="200" class="w-full rounded-xl border border-gray-300 dark:border-white/15 p-3 text-sm outline-none bg-white dark:bg-[#121614] text-gray-900 dark:text-white focus:border-black dark:focus:border-[#c9ff3d]" [ngModel]="thankMessage()" (ngModelChange)="thankMessage.set($event)"></textarea>
         </div>
 
         <button type="button" (click)="saveSettings()" [disabled]="savingSettings()" class="rounded-xl bg-black dark:bg-[#c9ff3d] text-white dark:text-gray-950 px-5 py-2.5 text-xs font-bold hover:opacity-90 transition disabled:opacity-50 cursor-pointer">

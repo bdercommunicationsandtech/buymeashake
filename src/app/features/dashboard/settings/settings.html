@@ -105,6 +105,8 @@
         <label class="block text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 mb-1">{{ t().dashboard.settingsView.fullNameLabel }}</label>
         <input
           type="text"
+          appAllowedUserText
+          maxlength="150"
           class="w-full rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#191c1d] px-4 py-3 text-sm font-semibold text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:border-black dark:focus:border-[#c9ff3d] focus:outline-none"
           [value]="fullName()"
           (input)="fullName.set($any($event.target).value)"
@@ -113,9 +115,14 @@
 
       <!-- Biografía -->
       <div>
-        <label class="block text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 mb-1">{{ t().dashboard.settingsView.bioLabel }}</label>
+        <div class="flex items-center justify-between mb-1">
+          <label class="block text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300">{{ t().dashboard.settingsView.bioLabel }}</label>
+          <span class="text-[10px] font-semibold text-gray-400">{{ bio().length }}/600</span>
+        </div>
         <textarea
           rows="3"
+          appAllowedUserText
+          maxlength="600"
           [placeholder]="t().dashboard.settingsView.bioPlaceholder"
           class="w-full rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#191c1d] px-4 py-3 text-sm font-medium text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:border-black dark:focus:border-[#c9ff3d] focus:outline-none"
           [value]="bio()"
@@ -203,6 +210,7 @@
             <label class="block text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 mb-1">{{ t().dashboard.settingsView.instagramLabel }}</label>
             <input
               type="url"
+              maxlength="255"
               placeholder="https://instagram.com/tu_usuario"
               class="w-full rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#191c1d] px-4 py-3 text-sm font-semibold text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:border-black dark:focus:border-[#c9ff3d] focus:outline-none"
               [value]="instagramUrl()"
@@ -213,6 +221,7 @@
             <label class="block text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 mb-1">{{ t().dashboard.settingsView.tiktokLabel }}</label>
             <input
               type="url"
+              maxlength="255"
               placeholder="https://tiktok.com/@tu_usuario"
               class="w-full rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#191c1d] px-4 py-3 text-sm font-semibold text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:border-black dark:focus:border-[#c9ff3d] focus:outline-none"
               [value]="tiktokUrl()"
@@ -223,6 +232,7 @@
             <label class="block text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 mb-1">{{ t().dashboard.settingsView.facebookLabel }}</label>
             <input
               type="url"
+              maxlength="255"
               placeholder="https://facebook.com/tu_pagina"
               class="w-full rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#191c1d] px-4 py-3 text-sm font-semibold text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:border-black dark:focus:border-[#c9ff3d] focus:outline-none"
               [value]="facebookUrl()"
@@ -233,6 +243,7 @@
             <label class="block text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 mb-1">{{ t().dashboard.settingsView.twitterLabel }}</label>
             <input
               type="url"
+              maxlength="255"
               placeholder="https://x.com/tu_usuario"
               class="w-full rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#191c1d] px-4 py-3 text-sm font-semibold text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:border-black dark:focus:border-[#c9ff3d] focus:outline-none"
               [value]="twitterUrl()"
@@ -290,6 +301,8 @@
         <label class="block text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300 mb-1">{{ t().dashboard.settingsView.goalTitleLabel }}</label>
         <input
           type="text"
+          appAllowedUserText
+          maxlength="200"
           [placeholder]="t().dashboard.settingsView.goalTitlePlaceholder"
           class="w-full rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#191c1d] px-4 py-3 text-sm font-semibold text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:border-black dark:focus:border-[#c9ff3d] focus:outline-none"
           [value]="goalTitle()"

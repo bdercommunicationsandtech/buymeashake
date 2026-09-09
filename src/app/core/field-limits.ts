@@ -1,0 +1,36 @@
+/**
+ * Max lengths aligned with DB columns (String(N)) and API Pydantic constraints.
+ * Use as HTML maxlength / slice caps on user-editable text fields.
+ */
+export const FIELD_LIMITS = {
+  email: 191,
+  fullName: 150,
+  handle: 30,
+  password: 128,
+  bio: 600,
+  city: 100,
+  pageTitle: 200,
+  pageDescription: 400,
+  agendaTitle: 200,
+  agendaDescription: 300,
+  thankYouMessage: 200,
+  socialUrl: 255,
+  googleAnalyticsId: 50,
+  goalTitle: 200,
+  tierName: 100,
+  tierDescription: 200,
+  benefitText: 255,
+  productTitle: 200,
+  productDescription: 200,
+  bookingTitle: 200,
+  bookingDescription: 200,
+  bookingNotes: 1000,
+  supporterMessage: 240,
+  supporterName: 150,
+  creatorReply: 500,
+  postTitle: 255,
+  postContentHtml: 50_000,
+  postExcerpt: 200,
+  comment: 200,
+  otpCode: 6,
+} as const;

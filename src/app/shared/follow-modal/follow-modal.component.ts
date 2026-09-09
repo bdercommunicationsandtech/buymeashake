@@ -2,13 +2,14 @@ import { Component, ChangeDetectionStrategy, inject, input, output, signal } fro
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../core/auth.service';
+import { AllowedUserTextDirective } from '../../core/directives/allowed-user-text.directive';
 import { LanguageService } from '../../core/language.service';
 
 @Component({
   selector: 'app-follow-modal',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, AllowedUserTextDirective],
   template: `
     @if (open()) {
       <div class="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-150" role="dialog" aria-modal="true">
@@ -50,6 +51,8 @@ import { LanguageService } from '../../core/language.service';
                   </label>
                   <input
                     type="text"
+                    appAllowedUserText
+                    maxlength="150"
                     [placeholder]="t().followModal.namePlaceholder"
                     [(ngModel)]="name"
                     class="block w-full px-4 py-3 border border-gray-300 dark:border-white/15 rounded-xl shadow-xs bg-white dark:bg-[#191c1d] text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:border-gray-900 dark:focus:border-[#c9ff3d] text-sm font-semibold"
@@ -63,6 +66,7 @@ import { LanguageService } from '../../core/language.service';
                   <input
                     type="email"
                     required
+                    maxlength="191"
                     [placeholder]="t().followModal.emailPlaceholder"
                     [(ngModel)]="email"
                     class="block w-full px-4 py-3 border border-gray-300 dark:border-white/15 rounded-xl shadow-xs bg-white dark:bg-[#191c1d] text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:border-gray-900 dark:focus:border-[#c9ff3d] text-sm font-semibold"

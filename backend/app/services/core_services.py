@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.exceptions import (
     EntityAlreadyExistsError,
     EntityNotFoundError,
+    ForbiddenError,
     NeedsRoleError,
     RateLimitExceededError,
     UnauthorizedError,
@@ -88,6 +89,8 @@ from app.schemas.dtos import (
     DigitalProductCreateRequest,
     DigitalProductResponse,
     FollowedAthleteResponse,
+    ForgotPasswordRequest,
+    ForgotPasswordResponse,
     GoalCreateRequest,
     GoalResponse,
     GoalUpdateRequest,
@@ -99,11 +102,14 @@ from app.schemas.dtos import (
     PaymentIntentResponse,
     PostCommentResponse,
     PostCreateRequest,
+    PostUpdateRequest,
     PostResponse,
     ReferralDashboardResponse,
     RefreshTokenRequest,
     RequestOtpRequest,
     RequestOtpResponse,
+    ResetPasswordRequest,
+    ResetPasswordResponse,
     FirebaseAuthRequest,
     ShakeCheckoutCreateRequest,
     SupporterItemResponse,
@@ -283,10 +289,15 @@ class AuthService:
 
     async def request_otp(self, dto: RequestOtpRequest) -> RequestOtpResponse:
         clean_email = dto.email.strip().lower()
-        # 0. Si el propósito es iniciar sesión, validar que el usuario exista en la base de datos
+        # 0. Validar si el usuario existe y si cuenta con rol de administrador
+        existing_user = await self.user_repo.get_by_email(clean_email)
+        if existing_user and await user_roles.is_admin(self.session, existing_user.id):
+            raise ForbiddenError(
+                "Las cuentas con privilegios de administrador deben iniciar sesión exclusivamente a través del portal de administración."
+            )
+
         if dto.purpose == "login" and not dto.athlete_handle:
-            user = await self.user_repo.get_by_email(clean_email)
-            if not user:
+            if not existing_user:
                 raise EntityNotFoundError(
                     "Usuario",
                     clean_email,
@@ -352,6 +363,14 @@ class AuthService:
                 "message": "No existe ninguna cuenta registrada con este correo electrónico. Por favor regístrate primero.",
             }
 
+        if await user_roles.is_admin(self.session, user.id):
+            return {
+                "has_active_otp": False,
+                "user_exists": True,
+                "wait_seconds": 0,
+                "message": "Las cuentas con privilegios de administrador deben iniciar sesión a través del portal de administración.",
+            }
+
         otp_repo = OtpRepository(self.session)
         active = await otp_repo.get_latest_active_otp(clean_email, purpose="supporter_follow")
         if not active:
@@ -371,11 +390,106 @@ class AuthService:
             "wait_seconds": wait_seconds,
         }
 
+    async def forgot_password(self, dto: ForgotPasswordRequest) -> ForgotPasswordResponse:
+        """Envía OTP de recuperación. Siempre responde genérico (anti-enumeración)."""
+        clean_email = dto.email.strip().lower()
+        generic_message = (
+            "Si existe una cuenta con ese correo, enviamos un código para restablecer la contraseña."
+        )
+        user = await self.user_repo.get_by_email(clean_email)
+        if not user:
+            return ForgotPasswordResponse(message=generic_message, expires_in_seconds=900)
+
+        otp_repo = OtpRepository(self.session)
+        await otp_repo.clean_expired_otps()
+
+        purpose = "password_reset"
+        latest = await otp_repo.get_latest_otp(clean_email, purpose=purpose)
+        if latest and latest.created_at:
+            now_utc = datetime.now(timezone.utc).replace(tzinfo=None)
+            created_at = latest.created_at.replace(tzinfo=None) if latest.created_at.tzinfo else latest.created_at
+            time_since_last = (now_utc - created_at).total_seconds()
+            if time_since_last < 0:
+                time_since_last = (datetime.now() - created_at).total_seconds()
+
+            if 0 <= time_since_last < 60:
+                wait_time = max(1, min(60, int(60 - time_since_last)))
+                raise RateLimitExceededError(
+                    wait_seconds=wait_time,
+                    message=f"Por favor espera {wait_time} segundos antes de solicitar otro código.",
+                )
+
+        await otp_repo.invalidate_previous_otps(clean_email, purpose=purpose)
+
+        code = f"{secrets.randbelow(900000) + 100000}"
+        expires_at = datetime.now(timezone.utc).replace(tzinfo=None) + timedelta(minutes=15)
+        await otp_repo.create(
+            email=clean_email,
+            code=code,
+            purpose=purpose,
+            metadata={},
+            expires_at=expires_at,
+        )
+
+        from app.services.email_service import send_password_reset_email
+        await send_password_reset_email(to_email=clean_email, code=code)
+
+        return ForgotPasswordResponse(
+            message=generic_message,
+            expires_in_seconds=900,
+            demo_code=code,
+        )
+
+    async def reset_password(self, dto: ResetPasswordRequest) -> ResetPasswordResponse:
+        """Valida OTP de password_reset y actualiza password_hash."""
+        clean_email = dto.email.strip().lower()
+        clean_code = dto.code.strip()
+        purpose = "password_reset"
+        otp_repo = OtpRepository(self.session)
+
+        otp_record = await otp_repo.get_valid_otp(clean_email, clean_code, purpose=purpose)
+        if not otp_record:
+            attempts = await otp_repo.record_failed_attempt(
+                clean_email, purpose=purpose, max_attempts=5
+            )
+            if attempts >= 5:
+                raise UnauthorizedError(
+                    "Has superado el número máximo de intentos permitidos. El código ha sido invalidado por seguridad; solicita uno nuevo.",
+                    details={"max_attempts_exceeded": True},
+                )
+            if attempts > 0:
+                remaining = max(0, 5 - attempts)
+                raise UnauthorizedError(
+                    f"Código incorrecto o expirado. Te quedan {remaining} intento{'s' if remaining != 1 else ''}.",
+                    details={"remaining_attempts": remaining},
+                )
+            raise UnauthorizedError(
+                "El código de verificación es inválido o ha expirado.",
+                details={"invalid_otp": True},
+            )
+
+        user = await self.user_repo.get_by_email(clean_email)
+        if not user:
+            await otp_repo.mark_used(otp_record)
+            raise EntityNotFoundError(
+                "Usuario",
+                clean_email,
+                message="No existe ninguna cuenta registrada con este correo electrónico.",
+            )
+
+        await otp_repo.mark_used(otp_record)
+        user.password_hash = get_password_hash(dto.new_password)
+        await self.session.flush()
+
+        return ResetPasswordResponse(
+            message="Contraseña actualizada correctamente. Ya puedes iniciar sesión.",
+        )
+
     async def verify_otp(self, dto: VerifyOtpRequest) -> TokenResponse:
         clean_email = dto.email.strip().lower()
         clean_code = dto.code.strip()
         otp_repo = OtpRepository(self.session)
-        otp_record = await otp_repo.get_valid_otp(clean_email, clean_code)
+        otp_record = await otp_repo.get_valid_otp(clean_email, clean_code, purpose="supporter_follow")
         if not otp_record:
             attempts = await otp_repo.record_failed_attempt(clean_email, purpose="supporter_follow", max_attempts=5)
             if attempts >= 5:
@@ -395,6 +509,10 @@ class AuthService:
 
         # Buscar usuario o crearlo como supporter
         user = await self.user_repo.get_by_email(clean_email)
+        if user and await user_roles.is_admin(self.session, user.id):
+            raise ForbiddenError(
+                "Las cuentas con privilegios de administrador deben iniciar sesión exclusivamente a través del portal de administración."
+            )
         metadata = otp_record.metadata_ or {}
         name = metadata.get("name") or "Supporter"
 
@@ -632,6 +750,24 @@ class SupporterService:
         post = await post_repo.get_by_id(post_id)
         if not post:
             raise EntityNotFoundError("Post", post_id)
+
+        # Si el post es exclusivo para miembros, verificar que el usuario sea el autor o tenga suscripción activa
+        if post.access_type == "members_only":
+            is_author = post.athlete and post.athlete.user_id == user.id
+            if not is_author:
+                sub_query = (
+                    select(Subscription.id)
+                    .join(MembershipTier, MembershipTier.id == Subscription.tier_id)
+                    .where(
+                        MembershipTier.athlete_id == post.athlete_id,
+                        Subscription.user_id == user.id,
+                        Subscription.status == "active",
+                    )
+                    .limit(1)
+                )
+                sub_res = await self.session.execute(sub_query)
+                if not sub_res.scalar_one_or_none():
+                    raise ForbiddenError("Esta publicación es exclusiva para miembros. Necesitas una suscripción activa para comentar.")
 
         comment = await post_repo.add_comment(post_id, user.id, content)
 
@@ -945,7 +1081,7 @@ class DashboardService:
             "thank_you_message",
         )
         if any(f in updates for f in page_fields):
-            ps = ensure_page_settings(self.session, athlete)
+            ps = await ensure_page_settings(self.session, athlete)
             for field in page_fields:
                 if field not in updates:
                     continue
@@ -955,7 +1091,7 @@ class DashboardService:
                 setattr(ps, field, value)
 
         if dto.shake_price is not None or dto.currency is not None:
-            mon = ensure_monetization(self.session, athlete)
+            mon = await ensure_monetization(self.session, athlete)
             if dto.shake_price is not None:
                 mon.shake_price = dto.shake_price
             if dto.currency is not None:
@@ -1154,6 +1290,50 @@ class DashboardService:
             published_at=created.published_at or datetime.utcnow(),
             is_members_only=created.access_type == "members_only",
         )
+
+    def _to_dashboard_post_response(self, post: Post) -> PostResponse:
+        return PostResponse(
+            id=post.id,
+            title=post.title,
+            content_html=post.content_html,
+            access_type=str(post.access_type),
+            likes_count=post.likes_count or 0,
+            published_at=post.published_at or datetime.utcnow(),
+            is_members_only=post.access_type == "members_only",
+        )
+
+    async def get_post(self, athlete: AthleteProfile, post_id: int) -> PostResponse:
+        post = await self.post_repo.get_by_id(post_id)
+        if not post or post.athlete_id != athlete.id:
+            raise EntityNotFoundError("Publicación", str(post_id))
+        return self._to_dashboard_post_response(post)
+
+    async def update_post(
+        self, athlete: AthleteProfile, post_id: int, dto: PostUpdateRequest
+    ) -> PostResponse:
+        post = await self.post_repo.get_by_id(post_id)
+        if not post or post.athlete_id != athlete.id:
+            raise EntityNotFoundError("Publicación", str(post_id))
+
+        updates = dto.model_dump(exclude_unset=True)
+        if "title" in updates and updates["title"] is not None:
+            post.title = updates["title"].strip()
+        if "content_html" in updates and updates["content_html"] is not None:
+            post.content_html = updates["content_html"].strip() or "<p></p>"
+        if "access_type" in updates and updates["access_type"] is not None:
+            access_type = updates["access_type"]
+            post.access_type = (
+                access_type if access_type in ("public", "followers_only", "members_only") else post.access_type
+            )
+
+        updated = await self.post_repo.update(post)
+        return self._to_dashboard_post_response(updated)
+
+    async def delete_post(self, athlete: AthleteProfile, post_id: int) -> None:
+        post = await self.post_repo.get_by_id(post_id)
+        if not post or post.athlete_id != athlete.id:
+            raise EntityNotFoundError("Publicación", str(post_id))
+        await self.post_repo.delete(post)
 
     async def get_supporters(self, athlete: AthleteProfile) -> SupportersDashboardResponse:
         data = await self.supporter_repo.get_dashboard_summary(athlete.id)

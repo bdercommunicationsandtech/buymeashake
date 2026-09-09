@@ -1,10 +1,10 @@
-"""Servicio integral de Stripe para BuyMeAShake (Arquitectura Dual):
-1. Stripe Checkout / PaymentIntent para compra de Shakes por fans.
-2. Stripe Connect Express para dispersión y retiro de ganancias de atletas.
+"""Servicio integral de Stripe para BuyMeAShake:
+1. Stripe Checkout Direct Charges en cuentas Connect Express de atletas.
+2. Stripe Connect Express (onboarding, portal, payouts automáticos).
 3. Webhook handler con idempotencia y actualización automática de Goals.
 """
 
-from decimal import Decimal
+from decimal import Decimal, ROUND_HALF_UP
 import logging
 import secrets
 from typing import Any
@@ -37,6 +37,17 @@ if not settings.STRIPE_VERIFY_SSL:
     # Workaround para entornos locales/corporativos con inspección SSL (CERT_VERIFY_FAILED)
     stripe.default_http_client = stripe.new_default_http_client(verify_ssl_certs=False)
     logger.warning("Stripe SSL verification DISABLED (STRIPE_VERIFY_SSL=false)")
+
+
+def compute_platform_fee_cents(gross_cents: int, fee_percentage: float | None = None) -> int:
+    """application_fee_amount con ROUND_HALF_UP (centavos enteros)."""
+    pct = Decimal(str(fee_percentage if fee_percentage is not None else settings.PLATFORM_FEE_PERCENTAGE))
+    return int((Decimal(gross_cents) * pct).quantize(Decimal("1"), rounding=ROUND_HALF_UP))
+
+
+def compute_platform_fee_amount(gross_amount: Decimal, fee_percentage: float | None = None) -> Decimal:
+    pct = Decimal(str(fee_percentage if fee_percentage is not None else settings.PLATFORM_FEE_PERCENTAGE))
+    return (gross_amount * pct).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
 
 
 def _stripe_resource_id(value: Any) -> str | None:
@@ -121,6 +132,27 @@ class StripeService:
             logger.warning("No se pudo crear/obtener Customer en Stripe: %s", str(e))
             return None
 
+    def _require_direct_charges_account(self, athlete: AthleteProfile) -> AthletePayouts:
+        payouts = athlete.payouts
+        if not payouts or not payouts.stripe_connect_account_id:
+            raise BusinessLogicError(
+                "Este atleta aún no tiene Stripe Connect configurado. No se pueden aceptar pagos."
+            )
+        if not payouts.charges_enabled:
+            raise BusinessLogicError(
+                "Este atleta aún no puede recibir pagos. Debe completar la verificación de Stripe Express."
+            )
+        return payouts
+
+    def _presentment_currency(self, athlete: AthleteProfile, fallback: str = "USD") -> str:
+        """Alinea moneda de cobro con país Connect cuando es posible."""
+        payouts = athlete.payouts
+        country = (payouts.country_code if payouts else None) or "MX"
+        if country.upper() == "MX":
+            # La app sigue presentando USD por defecto en monetization; respetar fallback del request.
+            return (fallback or "USD").lower()
+        return (fallback or "USD").lower()
+
     async def create_shake_checkout_session(
         self,
         athlete: AthleteProfile,
@@ -133,28 +165,38 @@ class StripeService:
         supporter_user: User | None = None,
         recurring: bool = False,
     ) -> dict[str, str]:
-        """Genera una sesión alojada de Stripe Checkout para pagar Shakes (único o mensual recurrente)."""
+        """Genera Checkout Session como Direct Charge en la cuenta Express del atleta."""
+        is_placeholder = (
+            not settings.STRIPE_SECRET_KEY
+            or settings.STRIPE_SECRET_KEY.startswith("sk_test_placeholder")
+        )
+
         unit_price = get_shake_price(athlete)
         gross_amount = unit_price * Decimal(shakes_count)
         unit_amount_cents = int((unit_price * 100).to_integral_value())
+        presentment_currency = self._presentment_currency(athlete, currency)
 
         # Buscar meta activa del atleta
         active_goal = next((g for g in athlete.goals if g.is_active), None)
         goal_id = str(active_goal.id) if active_goal else ""
 
         tx_uuid = secrets.token_hex(16)
-        customer_id = await self._get_or_create_customer(supporter_email, supporter_name, supporter_user)
+        # Direct Charges: no reutilizar Customer de la plataforma (cus_ cross-account).
+        checkout_email = supporter_email or (supporter_user.email if supporter_user else None)
 
         success_url = f"{settings.FRONTEND_URL}/{athlete.handle}?payment=success&tx={tx_uuid}&session_id={{CHECKOUT_SESSION_ID}}"
         cancel_url = f"{settings.FRONTEND_URL}/{athlete.handle}?payment=cancelled"
 
-        # Si estamos en modo placeholder (aún sin keys válidas), devolvemos URL mock
-        if not settings.STRIPE_SECRET_KEY or settings.STRIPE_SECRET_KEY.startswith("sk_test_placeholder"):
+        if is_placeholder:
             return {
                 "checkout_url": success_url,
                 "session_id": f"cs_mock_{tx_uuid}",
                 "transaction_uuid": tx_uuid,
             }
+
+        payouts = self._require_direct_charges_account(athlete)
+        connect_account_id = payouts.stripe_connect_account_id
+        assert connect_account_id  # guarded above
 
         shared_metadata = {
             "transaction_uuid": tx_uuid,
@@ -163,16 +205,17 @@ class StripeService:
             "goal_id": goal_id,
             "shakes_count": str(shakes_count),
             "supporter_name": supporter_name or "",
-            "supporter_email": supporter_email or "",
+            "supporter_email": checkout_email or "",
             "supporter_message": (supporter_message or "")[:240],
             "is_anonymous": "true" if is_anonymous else "false",
             "supporter_user_id": str(supporter_user.id) if supporter_user else "",
             "kind": "monthly_shake_support" if recurring else "shake_donation",
             "is_recurring": "true" if recurring else "false",
+            "charge_type": "direct",
         }
 
         price_data: dict[str, Any] = {
-            "currency": currency.lower(),
+            "currency": presentment_currency,
             "product_data": {
                 "name": (
                     f"{shakes_count} Shakes Mensuales para {athlete.user.full_name}"
@@ -190,6 +233,10 @@ class StripeService:
         if recurring:
             price_data["recurring"] = {"interval": "month"}
 
+        total_cents = unit_amount_cents * shakes_count
+        platform_fee_cents = compute_platform_fee_cents(total_cents)
+        application_fee_percent = float(settings.PLATFORM_FEE_PERCENTAGE) * 100
+
         session_params: dict[str, Any] = {
             "payment_method_types": ["card"],
             "line_items": [
@@ -205,36 +252,25 @@ class StripeService:
             "metadata": shared_metadata,
         }
 
-        payouts = athlete.payouts
-        has_connect = payouts and payouts.stripe_connect_account_id and payouts.payouts_enabled
-
         if recurring:
             session_params["subscription_data"] = {
                 "metadata": shared_metadata,
+                "application_fee_percent": application_fee_percent,
             }
-            if has_connect:
-                session_params["subscription_data"]["application_fee_percent"] = float(settings.PLATFORM_FEE_PERCENTAGE) * 100
-                session_params["subscription_data"]["transfer_data"] = {
-                    "destination": payouts.stripe_connect_account_id,
-                }
         else:
             session_params["payment_intent_data"] = {
                 "metadata": shared_metadata,
+                "application_fee_amount": platform_fee_cents,
             }
-            if has_connect:
-                total_cents = unit_amount_cents * shakes_count
-                platform_fee_cents = int(Decimal(total_cents) * Decimal(str(settings.PLATFORM_FEE_PERCENTAGE)))
-                session_params["payment_intent_data"]["application_fee_amount"] = platform_fee_cents
-                session_params["payment_intent_data"]["transfer_data"] = {
-                    "destination": payouts.stripe_connect_account_id,
-                }
 
-        if customer_id:
-            session_params["customer"] = customer_id
-        elif supporter_email:
-            session_params["customer_email"] = supporter_email
+        if checkout_email:
+            session_params["customer_email"] = checkout_email
 
-        checkout_session = stripe.checkout.Session.create(**session_params)
+        checkout_session = stripe.checkout.Session.create(
+            **session_params,
+            stripe_account=connect_account_id,
+            idempotency_key=f"cs_shake_{tx_uuid}",
+        )
 
         # Registrar transacción pendiente: si verify/webhook fallan por red/SSL,
         # aún podemos confirmarla con el tx_uuid del success_url.
@@ -245,7 +281,7 @@ class StripeService:
             shakes_count=shakes_count,
             gross_amount=gross_amount,
             supporter_name=supporter_name,
-            supporter_email=supporter_email,
+            supporter_email=checkout_email,
             supporter_message=supporter_message,
             is_anonymous=is_anonymous,
             supporter_user_id=supporter_user.id if supporter_user else None,
@@ -273,8 +309,8 @@ class StripeService:
         supporter_user_id: int | None,
         checkout_session_id: str | None = None,
     ) -> Transaction:
-        platform_fee = (gross_amount * Decimal(str(settings.PLATFORM_FEE_PERCENTAGE))).quantize(Decimal("0.01"))
-        stripe_fee = Decimal("0.30") + (gross_amount * Decimal("0.029")).quantize(Decimal("0.01"))
+        platform_fee = compute_platform_fee_amount(gross_amount)
+        stripe_fee = Decimal("0.30") + (gross_amount * Decimal("0.029")).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
         net_athlete = gross_amount - platform_fee - stripe_fee
 
         tx = Transaction(
@@ -309,6 +345,22 @@ class StripeService:
         await self.session.flush()
         return tx
 
+    async def _stripe_account_id_for_athlete(self, athlete_id: int | None) -> str | None:
+        if not athlete_id:
+            return None
+        stmt = select(AthletePayouts).where(AthletePayouts.athlete_id == athlete_id)
+        res = await self.session.execute(stmt)
+        payouts = res.scalar_one_or_none()
+        return payouts.stripe_connect_account_id if payouts else None
+
+    async def _retrieve_checkout_session(
+        self, session_id: str, *, stripe_account: str | None = None
+    ) -> Any:
+        kwargs: dict[str, Any] = {}
+        if stripe_account:
+            kwargs["stripe_account"] = stripe_account
+        return stripe.checkout.Session.retrieve(session_id, **kwargs)
+
     async def reconcile_pending_shake_transactions(
         self,
         *,
@@ -337,33 +389,31 @@ class StripeService:
         if not pending:
             return []
 
-        # Índice de client_reference_id -> session para txs sin cs_ guardado
-        sessions_by_ref: dict[str, Any] = {}
-        try:
-            listed = stripe.checkout.Session.list(limit=50)
-            for s in listed.data:
-                ref = getattr(s, "client_reference_id", None) or (s.get("client_reference_id") if isinstance(s, dict) else None)
-                if ref:
-                    sessions_by_ref[str(ref)] = s
-        except Exception as e:
-            logger.error("No se pudo listar Checkout Sessions para reconcile: %s", e)
-
         outcomes: list[dict[str, Any]] = []
         for tx in pending:
+            connect_acct = await self._stripe_account_id_for_athlete(tx.athlete_id)
             session_id = None
             if tx.stripe_payment_intent_id and str(tx.stripe_payment_intent_id).startswith("cs_"):
                 session_id = str(tx.stripe_payment_intent_id)
-            else:
-                matched = sessions_by_ref.get(tx.transaction_uuid)
-                if matched is not None:
-                    session_id = _stripe_resource_id(matched) or getattr(matched, "id", None)
+            elif connect_acct:
+                try:
+                    listed = stripe.checkout.Session.list(limit=50, stripe_account=connect_acct)
+                    for s in listed.data:
+                        ref = getattr(s, "client_reference_id", None)
+                        if ref and str(ref) == tx.transaction_uuid:
+                            session_id = _stripe_resource_id(s) or getattr(s, "id", None)
+                            break
+                except Exception as e:
+                    logger.error("No se pudo listar Checkout Sessions (acct=%s): %s", connect_acct, e)
 
             if not session_id:
                 outcomes.append({"transaction_uuid": tx.transaction_uuid, "status": "no_stripe_session"})
                 continue
 
             try:
-                checkout_session = stripe.checkout.Session.retrieve(session_id)
+                checkout_session = await self._retrieve_checkout_session(
+                    session_id, stripe_account=connect_acct
+                )
             except Exception as e:
                 outcomes.append({"transaction_uuid": tx.transaction_uuid, "status": "stripe_error", "error": str(e)})
                 continue
@@ -410,7 +460,7 @@ class StripeService:
         is_anonymous = bool(_shake_field(tx, "is_anonymous", False))
         goal_id = _shake_field(tx, "goal_id")
 
-        if tx.status_code == 302:
+        if tx.status_code in (302, 303):
             new_goal_raised = None
             if goal_id:
                 goal_res = await self.session.execute(select(Goal).where(Goal.id == goal_id))
@@ -538,10 +588,16 @@ class StripeService:
         tier_name: str,
         monthly_price: Decimal,
         currency: str = "USD",
+        *,
+        stripe_account: str | None = None,
     ) -> str | None:
-        """Crea un Product y Price recurrente en Stripe para el nivel de membresía."""
+        """Crea Product/Price recurrente en la cuenta Connect del atleta (Direct Charges)."""
         if not settings.STRIPE_SECRET_KEY or settings.STRIPE_SECRET_KEY.startswith("sk_test_placeholder"):
             return f"price_mock_{secrets.token_hex(8)}"
+
+        if not stripe_account:
+            payouts = self._require_direct_charges_account(athlete)
+            stripe_account = payouts.stripe_connect_account_id
 
         try:
             product = stripe.Product.create(
@@ -552,6 +608,7 @@ class StripeService:
                     "athlete_handle": athlete.handle,
                     "tier_name": tier_name,
                 },
+                stripe_account=stripe_account,
             )
 
             unit_amount_cents = int((monthly_price * 100).to_integral_value())
@@ -564,6 +621,7 @@ class StripeService:
                     "athlete_id": str(athlete.id),
                     "tier_name": tier_name,
                 },
+                stripe_account=stripe_account,
             )
             return price.id
         except Exception as e:
@@ -578,31 +636,37 @@ class StripeService:
         supporter_email: str | None = None,
         supporter_name: str | None = None,
     ) -> dict[str, str]:
-        """Crea una sesión de Checkout de Stripe en modo subscription para un Tier."""
+        """Checkout de membresía como Direct Charge en la cuenta Express del atleta."""
+        is_placeholder = (
+            not settings.STRIPE_SECRET_KEY
+            or settings.STRIPE_SECRET_KEY.startswith("sk_test_placeholder")
+        )
+
         tx_uuid = secrets.token_hex(16)
         email = (supporter_user.email if supporter_user else supporter_email) or ""
-        name = (supporter_user.full_name if supporter_user else supporter_name) or "Fan"
-
-        customer_id = await self._get_or_create_customer(email, name, supporter_user)
 
         success_url = f"{settings.FRONTEND_URL}/{athlete.handle}?membership=success&tx={tx_uuid}&session_id={{CHECKOUT_SESSION_ID}}"
         cancel_url = f"{settings.FRONTEND_URL}/{athlete.handle}?membership=cancelled"
 
-        if not settings.STRIPE_SECRET_KEY or settings.STRIPE_SECRET_KEY.startswith("sk_test_placeholder"):
+        if is_placeholder:
             return {
                 "checkout_url": success_url,
                 "session_id": f"cs_sub_mock_{tx_uuid}",
                 "transaction_uuid": tx_uuid,
             }
 
+        payouts = self._require_direct_charges_account(athlete)
+        connect_account_id = payouts.stripe_connect_account_id
+        assert connect_account_id
+
         price_id = tier.stripe_price_id
         if not price_id:
-            # Si no tenía price_id, generarlo sobre la marcha
             price_id = await self.create_stripe_tier_price(
                 athlete=athlete,
                 tier_name=tier.name,
                 monthly_price=tier.monthly_price,
                 currency=tier.currency,
+                stripe_account=connect_account_id,
             )
             if price_id:
                 tier.stripe_price_id = price_id
@@ -611,6 +675,7 @@ class StripeService:
         if not price_id:
             raise BusinessLogicError("No se pudo configurar el precio de la suscripción en Stripe.")
 
+        application_fee_percent = float(settings.PLATFORM_FEE_PERCENTAGE) * 100
         session_params: dict[str, Any] = {
             "payment_method_types": ["card"],
             "line_items": [
@@ -624,13 +689,14 @@ class StripeService:
             "cancel_url": cancel_url,
             "client_reference_id": tx_uuid,
             "subscription_data": {
-                "application_fee_percent": float(settings.PLATFORM_FEE_PERCENTAGE) * 100,  # ej. 5.0%
+                "application_fee_percent": application_fee_percent,
                 "metadata": {
                     "transaction_uuid": tx_uuid,
                     "tier_id": str(tier.id),
                     "athlete_id": str(athlete.id),
                     "supporter_user_id": str(supporter_user.id) if supporter_user else "",
                     "kind": "tier_subscription",
+                    "charge_type": "direct",
                 },
             },
             "metadata": {
@@ -639,22 +705,18 @@ class StripeService:
                 "athlete_id": str(athlete.id),
                 "supporter_user_id": str(supporter_user.id) if supporter_user else "",
                 "kind": "tier_subscription",
+                "charge_type": "direct",
             },
         }
 
-        # Si el atleta tiene cuenta Connect habilitada, destinar la suscripción a su cuenta
-        payouts = athlete.payouts
-        if payouts and payouts.stripe_connect_account_id and payouts.payouts_enabled:
-            session_params["subscription_data"]["transfer_data"] = {
-                "destination": payouts.stripe_connect_account_id,
-            }
-
-        if customer_id:
-            session_params["customer"] = customer_id
-        elif email:
+        if email:
             session_params["customer_email"] = email
 
-        checkout_session = stripe.checkout.Session.create(**session_params)
+        checkout_session = stripe.checkout.Session.create(
+            **session_params,
+            stripe_account=connect_account_id,
+            idempotency_key=f"cs_tier_{tx_uuid}",
+        )
 
         return {
             "checkout_url": checkout_session.url or "",
@@ -700,6 +762,9 @@ class StripeService:
         if not settings.STRIPE_SECRET_KEY or settings.STRIPE_SECRET_KEY.startswith("sk_test_placeholder"):
             mock_acct = f"acct_mock_{target_country}_{athlete.id}"
             payouts.stripe_connect_account_id = mock_acct
+            payouts.charges_enabled = True
+            payouts.payouts_enabled = True
+            payouts.stripe_details_submitted = True
             await self.session.flush()
             return mock_acct
 
@@ -709,6 +774,7 @@ class StripeService:
             "country": target_country,
             "business_type": "individual",
             "capabilities": {
+                "card_payments": {"requested": True},
                 "transfers": {"requested": True},
             },
             "business_profile": {
@@ -765,6 +831,47 @@ class StripeService:
             "stripe_connect_account_id": account_id,
         }
 
+    async def create_express_dashboard_link(self, athlete: AthleteProfile) -> dict[str, str]:
+        """Portal Express o onboarding si details_submitted es false."""
+        payouts = ensure_payouts(self.session, athlete)
+        account_id = payouts.stripe_connect_account_id
+        if not account_id:
+            data = await self.generate_connect_onboarding_link(athlete)
+            return {"action": "onboarding", "redirect_url": data["account_link_url"]}
+
+        if not settings.STRIPE_SECRET_KEY or settings.STRIPE_SECRET_KEY.startswith("sk_test_placeholder"):
+            if payouts.stripe_details_submitted:
+                return {
+                    "action": "portal",
+                    "redirect_url": f"{settings.STRIPE_CONNECT_RETURN_URL}&mock_express=true",
+                }
+            data = await self.generate_connect_onboarding_link(athlete)
+            return {"action": "onboarding", "redirect_url": data["account_link_url"]}
+
+        try:
+            account = stripe.Account.retrieve(account_id)
+            details_submitted = bool(account.details_submitted)
+            payouts.stripe_details_submitted = details_submitted
+            payouts.charges_enabled = bool(account.charges_enabled)
+            payouts.payouts_enabled = bool(account.payouts_enabled)
+            await self.session.flush()
+
+            if not details_submitted:
+                link = stripe.AccountLink.create(
+                    account=account_id,
+                    refresh_url=settings.STRIPE_CONNECT_REFRESH_URL,
+                    return_url=settings.STRIPE_CONNECT_RETURN_URL,
+                    type="account_onboarding",
+                )
+                return {"action": "onboarding", "redirect_url": link.url}
+
+            login = stripe.Account.create_login_link(account_id)
+            return {"action": "portal", "redirect_url": login.url}
+        except Exception as e:
+            logger.error("Error al crear Express portal link: %s", str(e))
+            data = await self.generate_connect_onboarding_link(athlete)
+            return {"action": "onboarding", "redirect_url": data["account_link_url"]}
+
     async def get_connect_account_status(self, athlete: AthleteProfile) -> dict[str, Any]:
         """Verifica en tiempo real con Stripe si el atleta completó sus datos bancarios."""
         payouts = ensure_payouts(self.session, athlete)
@@ -782,8 +889,8 @@ class StripeService:
             return {
                 "stripe_connect_account_id": account_id,
                 "payouts_enabled": payouts.payouts_enabled,
-                "details_submitted": payouts.payouts_enabled,
-                "charges_enabled": payouts.payouts_enabled,
+                "details_submitted": payouts.stripe_details_submitted or payouts.payouts_enabled,
+                "charges_enabled": payouts.charges_enabled or payouts.payouts_enabled,
                 "requirements_due": [],
             }
 
@@ -797,10 +904,10 @@ class StripeService:
             if account.requirements and account.requirements.currently_due:
                 requirements_due = list(account.requirements.currently_due)
 
-            # Sincronizar en nuestra BD
-            if payouts.payouts_enabled != payouts_enabled:
-                payouts.payouts_enabled = payouts_enabled
-                await self.session.flush()
+            payouts.payouts_enabled = payouts_enabled
+            payouts.stripe_details_submitted = details_submitted
+            payouts.charges_enabled = charges_enabled
+            await self.session.flush()
 
             return {
                 "stripe_connect_account_id": account_id,
@@ -814,8 +921,8 @@ class StripeService:
             return {
                 "stripe_connect_account_id": account_id,
                 "payouts_enabled": payouts.payouts_enabled,
-                "details_submitted": False,
-                "charges_enabled": False,
+                "details_submitted": payouts.stripe_details_submitted,
+                "charges_enabled": payouts.charges_enabled,
                 "requirements_due": [],
             }
 
@@ -892,7 +999,17 @@ class StripeService:
 
         if session_id:
             try:
-                checkout_session = stripe.checkout.Session.retrieve(session_id)
+                connect_acct: str | None = None
+                if tx_uuid:
+                    tx_stmt = select(Transaction).where(Transaction.transaction_uuid == tx_uuid)
+                    tx_res = await self.session.execute(tx_stmt)
+                    pending_tx = tx_res.scalar_one_or_none()
+                    if pending_tx:
+                        connect_acct = await self._stripe_account_id_for_athlete(pending_tx.athlete_id)
+
+                checkout_session = await self._retrieve_checkout_session(
+                    session_id, stripe_account=connect_acct
+                )
                 checkout_mode = checkout_session.mode
                 session_dict = _stripe_obj_to_dict(checkout_session)
                 payment_intent_id = _stripe_resource_id(checkout_session.payment_intent)
@@ -984,6 +1101,12 @@ class StripeService:
         if event_type == "account.updated":
             return await self._process_account_updated(data_object)
 
+        if event_type == "charge.refunded":
+            return await self._process_charge_refunded(data_object)
+
+        if event_type == "charge.dispute.created":
+            return await self._process_charge_dispute_created(data_object)
+
         return {"handled": True, "event_type": event_type, "status": "ignored"}
 
     def _supporter_item_payload(
@@ -1074,8 +1197,8 @@ class StripeService:
         # Montos
         unit_price = get_shake_price(athlete)
         gross_amount = unit_price * Decimal(shakes_count)
-        platform_fee = (gross_amount * Decimal(str(settings.PLATFORM_FEE_PERCENTAGE))).quantize(Decimal("0.01"))
-        stripe_fee = Decimal("0.30") + (gross_amount * Decimal("0.029")).quantize(Decimal("0.01"))
+        platform_fee = compute_platform_fee_amount(gross_amount)
+        stripe_fee = Decimal("0.30") + (gross_amount * Decimal("0.029")).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
         net_athlete = gross_amount - platform_fee - stripe_fee
 
         # ----------------------------------------------------------------------
@@ -1199,9 +1322,134 @@ class StripeService:
         if athlete:
             payouts = ensure_payouts(self.session, athlete)
             payouts.payouts_enabled = bool(obj.get("payouts_enabled", False))
+            payouts.charges_enabled = bool(obj.get("charges_enabled", False))
+            payouts.stripe_details_submitted = bool(obj.get("details_submitted", False))
             await self.session.flush()
 
         return {"handled": True, "account_id": account_id}
+
+    async def _find_transaction_by_payment_intent(self, payment_intent_id: str | None) -> Transaction | None:
+        if not payment_intent_id:
+            return None
+        stmt = (
+            select(Transaction)
+            .options(selectinload(Transaction.shake_details))
+            .where(Transaction.stripe_payment_intent_id == payment_intent_id)
+        )
+        res = await self.session.execute(stmt)
+        return res.scalar_one_or_none()
+
+    async def _process_charge_refunded(self, obj: dict[str, Any]) -> dict[str, Any]:
+        """Marca tx como reembolsada (303) y revierte el aporte a la meta si aplica."""
+        payment_intent_id = _stripe_resource_id(obj.get("payment_intent")) or _stripe_resource_id(obj.get("id"))
+        tx = await self._find_transaction_by_payment_intent(payment_intent_id)
+        if not tx:
+            # Fallback: metadata en charge
+            metadata = obj.get("metadata") or {}
+            if not isinstance(metadata, dict):
+                metadata = _stripe_obj_to_dict(metadata)
+            tx_uuid = metadata.get("transaction_uuid")
+            if tx_uuid:
+                stmt = (
+                    select(Transaction)
+                    .options(selectinload(Transaction.shake_details))
+                    .where(Transaction.transaction_uuid == tx_uuid)
+                )
+                res = await self.session.execute(stmt)
+                tx = res.scalar_one_or_none()
+
+        if not tx:
+            return {"handled": True, "status": "ignored", "reason": "transaction_not_found"}
+
+        if tx.status_code == 303:
+            return {
+                "handled": True,
+                "status": "already_processed",
+                "transaction_uuid": tx.transaction_uuid,
+            }
+
+        if tx.status_code == 302:
+            goal_id = _shake_field(tx, "goal_id")
+            if goal_id:
+                goal_res = await self.session.execute(select(Goal).where(Goal.id == goal_id))
+                goal = goal_res.scalar_one_or_none()
+                if goal:
+                    goal.raised_amount = max(
+                        Decimal("0.00"),
+                        (goal.raised_amount or Decimal("0.00")) - tx.gross_amount,
+                    )
+
+            athlete_stmt = (
+                select(AthleteProfile)
+                .options(*_athlete_stripe_load_options())
+                .where(AthleteProfile.id == tx.athlete_id)
+            )
+            athlete_res = await self.session.execute(athlete_stmt)
+            athlete = athlete_res.scalar_one_or_none()
+            if athlete and athlete.user_id:
+                self.session.add(
+                    Notification(
+                        user_id=athlete.user_id,
+                        title="Reembolso procesado",
+                        message=(
+                            f"Se reembolsó un apoyo de ${tx.gross_amount} USD. "
+                            "La comisión de plataforma también se revirtió según la política vigente."
+                        ),
+                        type_code=401,
+                        action_url="/dashboard/supporters",
+                    )
+                )
+
+        tx.status_code = 303
+        await self.session.flush()
+        return {
+            "handled": True,
+            "status": "refunded",
+            "transaction_uuid": tx.transaction_uuid,
+        }
+
+    async def _process_charge_dispute_created(self, obj: dict[str, Any]) -> dict[str, Any]:
+        """Registra disputa para auditoría; alerta al atleta si se encuentra la tx."""
+        payment_intent_id = _stripe_resource_id(obj.get("payment_intent"))
+        charge_id = _stripe_resource_id(obj.get("id"))
+        logger.warning(
+            "Stripe dispute created charge=%s payment_intent=%s amount=%s",
+            charge_id,
+            payment_intent_id,
+            obj.get("amount"),
+        )
+
+        tx = await self._find_transaction_by_payment_intent(payment_intent_id)
+        athlete_id = tx.athlete_id if tx else None
+        if athlete_id:
+            athlete_stmt = (
+                select(AthleteProfile)
+                .options(*_athlete_stripe_load_options())
+                .where(AthleteProfile.id == athlete_id)
+            )
+            athlete_res = await self.session.execute(athlete_stmt)
+            athlete = athlete_res.scalar_one_or_none()
+            if athlete and athlete.user_id:
+                self.session.add(
+                    Notification(
+                        user_id=athlete.user_id,
+                        title="Disputa de pago (chargeback)",
+                        message=(
+                            "Stripe abrió una disputa sobre un pago recibido. "
+                            "Revisa tu panel Express para responder."
+                        ),
+                        type_code=401,
+                        action_url="/dashboard/payouts",
+                    )
+                )
+                await self.session.flush()
+
+        return {
+            "handled": True,
+            "status": "dispute_logged",
+            "charge_id": charge_id,
+            "transaction_uuid": tx.transaction_uuid if tx else None,
+        }
 
     async def _process_subscription_completed(self, session_obj: dict[str, Any]) -> dict[str, Any]:
         """Procesa una sesión de Stripe Checkout completada en modo subscription."""

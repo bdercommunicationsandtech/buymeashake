@@ -41,6 +41,7 @@ export class StripeCheckout {
 
   readonly canPay = computed(() => {
     if (this.processing()) return false;
+    if (this.checkout.draft()?.chargesEnabled === false) return false;
     return (
       this.email().includes('@') &&
       this.cardNumber().replace(/\D/g, '').length >= 15 &&
@@ -48,6 +49,8 @@ export class StripeCheckout {
       this.cvc().length >= 3
     );
   });
+
+  readonly chargesBlocked = computed(() => this.checkout.draft()?.chargesEnabled === false);
 
   onEmailInput(value: string): void {
     this.email.set(value);
@@ -82,6 +85,10 @@ export class StripeCheckout {
   }
 
   pay(): void {
+    if (this.chargesBlocked()) {
+      this.errorMessage.set(this.t().checkout.chargesDisabledMessage);
+      return;
+    }
     if (!this.canPay()) return;
 
     this.processing.set(true);

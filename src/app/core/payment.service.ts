@@ -33,6 +33,13 @@ export class PaymentService {
     );
   }
 
+  getExpressPortalUrl(): Observable<{ action: 'portal' | 'onboarding'; redirect_url: string }> {
+    return this.http.post<{ action: 'portal' | 'onboarding'; redirect_url: string }>(
+      `${environment.apiUrl}/dashboard/payouts/express-portal`,
+      {}
+    );
+  }
+
   getStripeConnectStatus(): Observable<{
     stripe_connect_account_id: string | null;
     payouts_enabled: boolean;
@@ -95,7 +102,7 @@ export class PaymentService {
   }
 
   // ============================================================================
-  // RETIROS (WITHDRAWALS - BDER STYLE)
+  // RETIROS (admin / residual — UI atleta usa Express)
   // ============================================================================
 
   getAthleteBalance(): Observable<{
@@ -107,22 +114,9 @@ export class PaymentService {
     destination_country: string;
     payouts_enabled: boolean;
     details_submitted: boolean;
+    charges_enabled: boolean;
   }> {
     return this.http.get<any>(`${environment.apiUrl}/athlete/withdrawals/balance`);
-  }
-
-  requestWithdrawal(amountUsd: number, destinationCountry: string = 'MX'): Observable<{
-    id: number;
-    amount_usd: number;
-    currency: string;
-    destination_country: string;
-    status: string;
-    requested_at: string;
-  }> {
-    return this.http.post<any>(`${environment.apiUrl}/athlete/withdrawals/request`, {
-      amount_usd: amountUsd,
-      destination_country: destinationCountry,
-    });
   }
 
   getWithdrawalHistory(): Observable<Array<{

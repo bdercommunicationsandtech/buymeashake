@@ -297,6 +297,12 @@ class CreatorPublicProfileResponse(BaseModel):
     total_shakes_received: int = 0
     followers_count: int = 0
     members_count: int = 0
+    charges_enabled: bool = False
+
+
+class ExpressPortalResponse(BaseModel):
+    action: str  # "portal" | "onboarding"
+    redirect_url: str
 
 
 # ==============================================================================
@@ -667,6 +673,7 @@ class AthleteBalanceResponse(BaseModel):
     destination_country: str = "MX"
     payouts_enabled: bool = False
     details_submitted: bool = False
+    charges_enabled: bool = False
 
 
 class WithdrawalRequestCreate(BaseModel):

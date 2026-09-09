@@ -315,9 +315,15 @@
               }
             </button>
 
-            <p class="test-note">
-              {{ t().checkout.testModeNote }}
-            </p>
+            @if (chargesBlocked()) {
+              <p class="test-note" style="color:#b45309">
+                {{ t().checkout.chargesDisabledMessage }}
+              </p>
+            } @else {
+              <p class="test-note">
+                {{ t().checkout.testModeNote }}
+              </p>
+            }
           </section>
         </div>
       }

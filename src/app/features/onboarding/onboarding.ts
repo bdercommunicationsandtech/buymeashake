@@ -118,7 +118,7 @@ export class Onboarding implements OnInit {
         .subscribe({
           next: () => {
             this.saving.set(false);
-            this.router.navigate(['/dashboard/home']);
+            this.router.navigate(['/dashboard/payouts']);
           },
           error: (err) => {
             this.saving.set(false);
@@ -140,7 +140,7 @@ export class Onboarding implements OnInit {
       .subscribe({
         next: () => {
           this.saving.set(false);
-          this.router.navigate(['/dashboard/home']);
+          this.router.navigate(['/dashboard/payouts']);
         },
         error: () => {
           this.saving.set(false);

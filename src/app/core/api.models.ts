@@ -133,6 +133,7 @@ export interface CreatorProfile {
   total_shakes_received?: number;
   followers_count?: number;
   members_count?: number;
+  charges_enabled?: boolean;
 }
 
 export interface DashboardMetrics {

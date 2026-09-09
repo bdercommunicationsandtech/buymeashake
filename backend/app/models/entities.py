@@ -326,6 +326,7 @@ class AthletePayouts(Base):
     stripe_connect_account_id: Mapped[str | None] = mapped_column(String(100), unique=True, nullable=True)
     stripe_details_submitted: Mapped[bool] = mapped_column(Boolean, default=False)
     payouts_enabled: Mapped[bool] = mapped_column(Boolean, default=False)
+    charges_enabled: Mapped[bool] = mapped_column(Boolean, default=False)
     updated_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now(), onupdate=func.now())
 
     athlete: Mapped[AthleteProfile] = relationship("AthleteProfile", back_populates="payouts")

@@ -355,6 +355,10 @@ export interface TranslationSchema {
       insufficientFundsError: string;
       withdrawSuccessMsg: string;
       genericError: string;
+      autoPayoutBanner: string;
+      openExpressPortalBtn: string;
+      ledgerBalanceLabel: string;
+      ledgerBalanceHelp: string;
     };
     settingsView: {
       headerSubtitle: string;
@@ -718,6 +722,7 @@ export interface TranslationSchema {
     totalPaidLabel: string;
     backToAthletePage: string;
     secureTransactionNotice: string;
+    chargesDisabledMessage: string;
   };
   followModal: {
     closeAria: string;
@@ -767,6 +772,8 @@ export interface TranslationSchema {
     skipForNow: string;
     loading: string;
     errorMessage: string;
+    connectStripeHint: string;
+    connectStripeCta: string;
   };
   supporterArea: {
     home: string;

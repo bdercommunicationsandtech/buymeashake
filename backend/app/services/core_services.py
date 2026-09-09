@@ -744,6 +744,7 @@ class AthleteService:
             total_shakes_received=engagement["total_shakes_received"],
             followers_count=engagement["followers_count"],
             members_count=engagement["members_count"],
+            charges_enabled=bool(profile.payouts.charges_enabled) if profile.payouts else False,
         )
 
     async def get_monthly_leaderboard(self, limit: int = 10) -> list[AthleteLeaderboardItemResponse]:

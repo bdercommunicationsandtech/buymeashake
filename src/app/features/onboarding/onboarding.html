@@ -104,10 +104,11 @@
       }
 
       <button type="submit" [disabled]="saving()" class="w-full flex justify-center rounded-xl bg-black dark:bg-white dark:text-black text-white py-3.5 px-4 text-sm font-bold shadow-sm border border-transparent hover:bg-gray-900 dark:hover:bg-gray-200 focus:outline-none transition active:scale-[0.99] disabled:opacity-50 cursor-pointer">
-        {{ saving() ? t().onboarding.saving : t().onboarding.goToDashboard }}
+        {{ saving() ? t().onboarding.saving : t().onboarding.connectStripeCta }}
       </button>
+      <p class="text-xs text-gray-500 dark:text-gray-400 text-center">{{ t().onboarding.connectStripeHint }}</p>
     </form>
   }
 
-  <a routerLink="/dashboard/home" class="mt-6 block text-center text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:underline transition">{{ t().onboarding.skipForNow }}</a>
+  <a routerLink="/dashboard/payouts" class="mt-6 block text-center text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:underline transition">{{ t().onboarding.skipForNow }}</a>
 </div>

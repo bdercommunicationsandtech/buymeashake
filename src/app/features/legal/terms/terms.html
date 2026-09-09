@@ -269,10 +269,10 @@
                 <strong>Cero Cuota Fija de Mantenimiento:</strong> Crear y administrar una página de atleta en Buymeashake.fit no tiene costo mensual de suscripción.
               </p>
               <p>
-                <strong>Estructura de Comisión:</strong> Buymeashake deduce automáticamente una pequeña comisión de servicio sobre cada transacción completada exitosamente, sumada a las tarifas estándar de la pasarela de procesamiento de pagos (Stripe).
+                <strong>Estructura de Comisión:</strong> Buymeashake deduce automáticamente una comisión de servicio del <strong>7%</strong> sobre cada transacción completada exitosamente (<em>application fee</em> vía Stripe Connect Direct Charges), sumada a las tarifas estándar de procesamiento de Stripe que se descuentan del saldo de la cuenta conectada del atleta.
               </p>
               <p>
-                <strong>Arquitectura de Procesamiento Directo (No Merchant of Record):</strong> Buymeashake opera como proveedor de software y plataforma tecnológica de conexión directa. Buymeashake NO actúa como Comerciante de Registro (<em>Merchant of Record</em>), institución bancaria ni fideicomiso. La dispersión de fondos (<em>payouts</em>) se efectúa directamente a la cuenta conectada del atleta a través de <strong>Stripe Connect Express</strong>, previa verificación de identidad (<em>KYC</em>) exigida por las normativas financieras internacionales.
+                <strong>Arquitectura Direct Charges (No Merchant of Record):</strong> Los cargos se procesan directamente en la cuenta Stripe Connect Express del atleta. Buymeashake NO actúa como Comerciante de Registro (<em>Merchant of Record</em>), institución bancaria ni fideicomiso. Las disputas, contracargos y cancelaciones son responsabilidad del atleta receptor bajo las reglas de Stripe. La dispersión bancaria (<em>payouts</em>) es automática hacia CLABE (México) o cuenta Checking (EE.UU.), previa verificación KYC.
               </p>
 
               <div class="p-4 rounded-xl bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 space-y-3">
@@ -551,10 +551,10 @@
                 <strong>No Fixed Monthly Subscription:</strong> Creating and managing an athlete page on Buymeashake.fit is completely free.
               </p>
               <p>
-                <strong>Platform Commission:</strong> Buymeashake retains a percentage platform service fee per successful transaction, in addition to standard payment gateway fees charged by Stripe.
+                <strong>Platform Commission:</strong> Buymeashake retains a <strong>7%</strong> platform service fee per successful transaction (<em>application fee</em> via Stripe Connect Direct Charges), in addition to standard Stripe processing fees deducted from the athlete's connected account balance.
               </p>
               <p>
-                <strong>Direct Processing Architecture (No Merchant of Record):</strong> Buymeashake operates as a software technology platform facilitating direct electronic payments between supporters and athletes. Buymeashake is NOT a Merchant of Record, bank, or escrow agent. Payouts are routed directly to the athlete's connected bank account via <strong>Stripe Connect Express</strong>, subject to mandatory identity verification (KYC) required by global banking regulations.
+                <strong>Direct Charges Architecture (No Merchant of Record):</strong> Charges are processed directly on the athlete's Stripe Connect Express account. Buymeashake is NOT a Merchant of Record, bank, or escrow agent. Disputes, chargebacks, and cancellations are the receiving athlete's responsibility under Stripe's rules. Bank payouts are automatic to CLABE (Mexico) or Checking (US), subject to KYC verification.
               </p>
 
               <div class="p-4 rounded-xl bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 space-y-3">

@@ -10,6 +10,7 @@ from app.repositories.base_repos import AthleteRepository, MembershipRepository
 from app.schemas.dtos import (
     BookingSessionCheckoutRequest,
     CustomerPortalResponse,
+    ExpressPortalResponse,
     PaymentIntentResponse,
     ShakeCheckoutCreateRequest,
     StripeCheckoutSessionResponse,
@@ -168,34 +169,72 @@ async def verify_stripe_session(
 
 
 
+def _construct_stripe_event(
+    payload: bytes,
+    stripe_signature: str | None,
+    webhook_secret: str | None,
+    *,
+    allow_placeholder: bool,
+) -> dict:
+    """Verifica firma Stripe o parsea JSON en modo placeholder (solo desarrollo)."""
+    import json
+
+    secret = webhook_secret or ""
+    is_placeholder = (not secret) or secret.startswith("whsec_placeholder")
+    if allow_placeholder and is_placeholder:
+        try:
+            return json.loads(payload)
+        except Exception as exc:
+            raise HTTPException(status_code=400, detail="Invalid JSON payload") from exc
+
+    if not stripe_signature:
+        raise HTTPException(status_code=400, detail="Missing stripe-signature header")
+    if is_placeholder:
+        raise HTTPException(status_code=400, detail="Webhook secret not configured")
+
+    try:
+        return stripe.Webhook.construct_event(payload, stripe_signature, secret)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail="Invalid payload") from exc
+    except stripe.error.SignatureVerificationError as exc:
+        raise HTTPException(status_code=400, detail="Invalid signature") from exc
+
+
 @router.post("/checkout/stripe-webhook")
 async def stripe_webhook(
     request: Request,
     session: DatabaseSession,
     stripe_signature: Annotated[str | None, Header(alias="stripe-signature")] = None,
 ) -> dict:
-    """Webhook oficial de Stripe para confirmar pagos y actualizar la Meta (Goal) del atleta."""
+    """Webhook de la cuenta plataforma."""
     payload = await request.body()
+    event = _construct_stripe_event(
+        payload,
+        stripe_signature,
+        settings.STRIPE_WEBHOOK_SECRET,
+        allow_placeholder=True,
+    )
+    stripe_svc = StripeService(session)
+    result = await stripe_svc.handle_stripe_event(event)
+    await session.commit()
+    return result
 
-    # Si estamos en modo de desarrollo con placeholder y sin signature, procesamos el json directo
-    if not settings.STRIPE_WEBHOOK_SECRET or settings.STRIPE_WEBHOOK_SECRET.startswith("whsec_placeholder"):
-        import json
-        try:
-            event = json.loads(payload)
-        except Exception:
-            raise HTTPException(status_code=400, detail="Invalid JSON payload")
-    else:
-        if not stripe_signature:
-            raise HTTPException(status_code=400, detail="Missing stripe-signature header")
-        try:
-            event = stripe.Webhook.construct_event(
-                payload, stripe_signature, settings.STRIPE_WEBHOOK_SECRET
-            )
-        except ValueError:
-            raise HTTPException(status_code=400, detail="Invalid payload")
-        except stripe.error.SignatureVerificationError:
-            raise HTTPException(status_code=400, detail="Invalid signature")
 
+@router.post("/checkout/stripe-connect-webhook")
+async def stripe_connect_webhook(
+    request: Request,
+    session: DatabaseSession,
+    stripe_signature: Annotated[str | None, Header(alias="stripe-signature")] = None,
+) -> dict:
+    """Webhook de cuentas Connect (Direct Charges / account.updated / disputes)."""
+    payload = await request.body()
+    connect_secret = settings.STRIPE_CONNECT_WEBHOOK_SECRET or settings.STRIPE_WEBHOOK_SECRET
+    event = _construct_stripe_event(
+        payload,
+        stripe_signature,
+        connect_secret,
+        allow_placeholder=True,
+    )
     stripe_svc = StripeService(session)
     result = await stripe_svc.handle_stripe_event(event)
     await session.commit()
@@ -213,6 +252,18 @@ async def get_stripe_connect_onboarding_link(
     data = await stripe_svc.generate_connect_onboarding_link(athlete, country_code=country_code)
     await session.commit()
     return StripeConnectLinkResponse(**data)
+
+
+@router.post("/dashboard/payouts/express-portal", response_model=ExpressPortalResponse)
+async def get_express_portal_link(
+    athlete: CurrentAthlete,
+    session: DatabaseSession,
+) -> ExpressPortalResponse:
+    """Abre el panel Express o redirige a onboarding si la cuenta está incompleta."""
+    stripe_svc = StripeService(session)
+    data = await stripe_svc.create_express_dashboard_link(athlete)
+    await session.commit()
+    return ExpressPortalResponse(**data)
 
 
 @router.get("/dashboard/payouts/status", response_model=StripeConnectStatusResponse)

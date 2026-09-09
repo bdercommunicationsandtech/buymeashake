@@ -97,6 +97,7 @@ export interface CreatorView {
   tiktokUrl: string | null;
   facebookUrl: string | null;
   twitterUrl: string | null;
+  chargesEnabled: boolean;
 }
 
 @Component({
@@ -655,6 +656,7 @@ export class Creator {
       tiktokUrl: profile.tiktok_url,
       facebookUrl: profile.facebook_url,
       twitterUrl: profile.twitter_url,
+      chargesEnabled: Boolean(profile.charges_enabled),
     };
   }
 
@@ -776,6 +778,23 @@ export class Creator {
     const c = this.creatorView();
     if (!c || this.openingStripe()) return;
 
+    if (!c.chargesEnabled) {
+      this.checkout.start({
+        type: 'membership',
+        title: tier.name,
+        creatorName: c.name,
+        creatorHandle: c.handle,
+        shakes: 1,
+        unitPrice: tier.price,
+        currency: this.currency(),
+        message: `Suscripción mensual a: ${tier.name}`,
+        activity: this.activity().id,
+        tierId: tier.id,
+        chargesEnabled: false,
+      });
+      return;
+    }
+
     this.openingStripe.set(true);
     this.openingStripeTierId.set(tier.id);
 
@@ -802,11 +821,14 @@ export class Creator {
             message: `Suscripción mensual a: ${tier.name}`,
             activity: this.activity().id,
             tierId: tier.id,
+            chargesEnabled: true,
           });
         },
-        error: () => {
+        error: (err) => {
           this.openingStripe.set(false);
           this.openingStripeTierId.set(null);
+          const detail = String(err?.error?.detail || '');
+          const blocked = /stripe|connect|verific/i.test(detail);
           this.checkout.start({
             type: 'membership',
             title: tier.name,
@@ -818,6 +840,7 @@ export class Creator {
             message: `Suscripción mensual a: ${tier.name}`,
             activity: this.activity().id,
             tierId: tier.id,
+            chargesEnabled: !blocked,
           });
         },
       });
@@ -826,6 +849,23 @@ export class Creator {
   support(): void {
     const c = this.creatorView();
     if (!c || this.openingStripe()) return;
+
+    if (!c.chargesEnabled) {
+      this.checkout.start({
+        type: 'shake',
+        creatorName: c.name,
+        creatorHandle: c.handle,
+        shakes: this.shakes(),
+        unitPrice: c.shakePrice,
+        currency: this.currency(),
+        supporterName: this.supporterName() || undefined,
+        isAnonymous: this.isAnonymous(),
+        message: this.message(),
+        activity: this.activity().id,
+        chargesEnabled: false,
+      });
+      return;
+    }
 
     this.openingStripe.set(true);
 
@@ -864,10 +904,13 @@ export class Creator {
             activity: this.activity().id,
             currency: this.currency(),
             unitPrice: this.currentPrice(),
+            chargesEnabled: true,
           });
         },
-        error: () => {
+        error: (err) => {
           this.openingStripe.set(false);
+          const detail = String(err?.error?.detail || '');
+          const blocked = /stripe|connect|verific/i.test(detail);
           this.checkout.start({
             type: 'shake',
             creatorName: c.name,
@@ -879,6 +922,7 @@ export class Creator {
             activity: this.activity().id,
             currency: this.currency(),
             unitPrice: this.currentPrice(),
+            chargesEnabled: !blocked,
           });
         },
       });

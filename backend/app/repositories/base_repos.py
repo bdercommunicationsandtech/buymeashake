@@ -1052,6 +1052,7 @@ class WithdrawalRepository:
             "destination_country": payouts_row.country_code if payouts_row else "MX",
             "payouts_enabled": payouts_row.payouts_enabled if payouts_row else False,
             "details_submitted": payouts_row.stripe_details_submitted if payouts_row else False,
+            "charges_enabled": payouts_row.charges_enabled if payouts_row else False,
         }
 
     async def create_request(

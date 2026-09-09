@@ -235,6 +235,7 @@ CREATE TABLE athlete_payouts (
     stripe_connect_account_id VARCHAR(100) NULL UNIQUE,
     stripe_details_submitted BOOLEAN NOT NULL DEFAULT FALSE,
     payouts_enabled BOOLEAN NOT NULL DEFAULT FALSE,
+    charges_enabled BOOLEAN NOT NULL DEFAULT FALSE,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (athlete_id) REFERENCES athlete_profiles(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

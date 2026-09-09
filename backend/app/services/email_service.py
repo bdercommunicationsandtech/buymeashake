@@ -3,14 +3,34 @@ from email import encoders
 from email.mime.base import MIMEBase
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+import html
 import mimetypes
 import smtplib
+from typing import Any
 
 from app.core.config import settings
 
 
+def _esc(val: Any) -> str:
+    """Escapa caracteres HTML especiales para mitigar inyecciones HTML en plantillas."""
+    if val is None:
+        return ""
+    return html.escape(str(val))
+
+
+def _safe_url(url: Any) -> str:
+    """Valida y escapa URLs permitiendo únicamente esquemas HTTP y HTTPS seguros."""
+    if not url:
+        return "#"
+    clean = str(url).strip()
+    if clean.startswith("http://") or clean.startswith("https://"):
+        return html.escape(clean, quote=True)
+    return "#"
+
+
 def generate_otp_html(code: str, athlete_name: str | None = None) -> str:
-    target = f"a <strong>{athlete_name}</strong>" if athlete_name else "a tu atleta favorito"
+    esc_code = _esc(code)
+    target = f"a <strong>{_esc(athlete_name)}</strong>" if athlete_name else "a tu atleta favorito"
     return f"""
     <!DOCTYPE html>
     <html lang="es">
@@ -47,7 +67,7 @@ def generate_otp_html(code: str, athlete_name: str | None = None) -> str:
             <!-- Box del Código OTP -->
             <div style="background-color: #191c1d; border: 2px dashed #c9ff3d; border-radius: 18px; padding: 20px 10px; margin: 0 auto; max-width: 320px; text-align: center;">
               <span style="font-family: 'SF Pro Display', -apple-system, monospace; font-size: 36px; font-weight: 900; letter-spacing: 8px; color: #c9ff3d;">
-                {code}
+                {esc_code}
               </span>
             </div>
 
@@ -137,7 +157,13 @@ async def send_otp_email(to_email: str, code: str, athlete_name: str | None = No
 
 
 def generate_thank_you_html(athlete_name: str, athlete_handle: str, shakes_count: int, thank_you_message: str | None) -> str:
-    custom_msg = thank_you_message if thank_you_message else "¡Muchas gracias por tu apoyo y por ser parte de mi camino deportivo!"
+    esc_name = _esc(athlete_name)
+    clean_handle = athlete_handle.replace("@", "").strip()
+    esc_handle = _esc(clean_handle)
+    safe_handle_url = f"https://buymeashake.fit/{esc_handle}"
+    custom_msg = _esc(thank_you_message) if thank_you_message else "¡Muchas gracias por tu apoyo y por ser parte de mi camino deportivo!"
+    shakes_num = int(shakes_count) if isinstance(shakes_count, (int, float, str)) and str(shakes_count).isdigit() else 1
+
     return f"""
     <!DOCTYPE html>
     <html lang="es">
@@ -165,16 +191,16 @@ def generate_thank_you_html(athlete_name: str, athlete_handle: str, shakes_count
         <tr>
           <td align="center" style="padding: 10px 32px 30px 32px;">
             <h2 style="margin: 0 0 12px 0; font-size: 18px; font-weight: 800; color: #ffffff;">
-              ¡{athlete_name} te agradece tus {shakes_count} Shakes!
+              ¡{esc_name} te agradece tus {shakes_num} Shakes!
             </h2>
             <p style="margin: 0 0 24px 0; font-size: 14px; line-height: 1.6; color: #d4d4d8;">
-              Tu donación ha sido recibida exitosamente e impulsa directamente la carrera deportiva de @{athlete_handle}.
+              Tu donación ha sido recibida exitosamente e impulsa directamente la carrera deportiva de @{esc_handle}.
             </p>
 
             <!-- Nota Personalizada del Atleta -->
             <div style="background-color: #1a221a; border-left: 4px solid #c9ff3d; border-radius: 12px; padding: 18px 20px; margin: 0 auto 28px auto; text-align: left;">
               <p style="margin: 0 0 6px 0; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: #c9ff3d;">
-                Mensaje de {athlete_name}:
+                Mensaje de {esc_name}:
               </p>
               <p style="margin: 0; font-size: 14px; line-height: 1.6; color: #ffffff; font-style: italic;">
                 "{custom_msg}"
@@ -182,8 +208,8 @@ def generate_thank_you_html(athlete_name: str, athlete_handle: str, shakes_count
             </div>
 
             <!-- Botón Visitar Perfil -->
-            <a href="https://buymeashake.fit/{athlete_handle}" style="display: inline-block; background-color: #c9ff3d; color: #070a08; font-weight: 800; font-size: 13px; text-decoration: none; padding: 12px 28px; border-radius: 9999px;">
-              Ver perfil de @{athlete_handle}
+            <a href="{safe_handle_url}" style="display: inline-block; background-color: #c9ff3d; color: #070a08; font-weight: 800; font-size: 13px; text-decoration: none; padding: 12px 28px; border-radius: 9999px;">
+              Ver perfil de @{esc_handle}
             </a>
           </td>
         </tr>
@@ -222,10 +248,20 @@ def generate_compliance_report_html(
     reporter_email: str = "Confidencial",
     created_at: str | None = None,
 ) -> str:
+    esc_folio = _esc(folio)
+    clean_target = creator_target.replace('buymeashake.fit/@', '').replace('@', '').strip()
+    esc_target = _esc(clean_target)
+    safe_profile_url = f"https://buymeashake.fit/{esc_target}"
+    esc_reason_code = _esc(reason_code)
+    esc_reason_title = _esc(reason_title)
+    esc_reporter_email = _esc(reporter_email)
+    esc_description = _esc(description)
+    time_str = _esc(created_at) if created_at else "Fecha y hora de recepción automática"
+
     links_html = ""
     if evidence_links and any(link.strip() for link in evidence_links if link):
         clean_links = [link.strip() for link in evidence_links if link and link.strip()]
-        items = "".join(f'<li><a href="{l}" style="color: #c9ff3d; text-decoration: underline;" target="_blank">{l}</a></li>' for l in clean_links)
+        items = "".join(f'<li><a href="{_safe_url(l)}" style="color: #c9ff3d; text-decoration: underline;" target="_blank">{_esc(l)}</a></li>' for l in clean_links)
         links_html = f"""
         <div style="margin-top: 14px; text-align: left;">
           <p style="margin: 0 0 6px 0; font-size: 11px; font-weight: 800; text-transform: uppercase; color: #a1a1aa; letter-spacing: 0.5px;">Enlaces aportados:</p>
@@ -237,12 +273,13 @@ def generate_compliance_report_html(
 
     attachment_html = ""
     if attached_file:
+        esc_file = _esc(attached_file)
         is_image = any(attached_file.lower().endswith(ext) for ext in [".png", ".jpg", ".jpeg", ".webp", ".gif"])
         preview_markup = ""
         if is_image:
             preview_markup = f"""
             <div style="margin-top: 10px; border-radius: 10px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); text-align: center; background-color: #0b0e0c; padding: 10px;">
-              <img src="cid:{attached_file}" style="max-width: 100%; max-height: 420px; height: auto; border-radius: 8px; display: inline-block;" alt="{attached_file}" />
+              <img src="cid:{esc_file}" style="max-width: 100%; max-height: 420px; height: auto; border-radius: 8px; display: inline-block;" alt="{esc_file}" />
             </div>
             """
         attachment_html = f"""
@@ -250,14 +287,12 @@ def generate_compliance_report_html(
           <p style="margin: 0 0 6px 0; font-size: 11px; font-weight: 800; text-transform: uppercase; color: #a1a1aa; letter-spacing: 0.5px;">Archivo / Captura adjunta:</p>
           <div style="background-color: #191c1d; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 12px 16px; display: block;">
             <div style="font-size: 13px; font-weight: 700; color: #ffffff;">
-              [Adjunto descargable] <span style="color: #c9ff3d;">{attached_file}</span>
+              [Adjunto descargable] <span style="color: #c9ff3d;">{esc_file}</span>
             </div>
             {preview_markup}
           </div>
         </div>
         """
-
-    time_str = created_at if created_at else "Fecha y hora de recepción automática"
 
     return f"""
     <!DOCTYPE html>
@@ -265,7 +300,7 @@ def generate_compliance_report_html(
     <head>
       <meta charset="UTF-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>Nuevo Reporte de Cumplimiento {folio} - Buymeashake.fit</title>
+      <title>Nuevo Reporte de Cumplimiento {esc_folio} - Buymeashake.fit</title>
     </head>
     <body style="margin: 0; padding: 0; background-color: #090c0a; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #ffffff;">
       <table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 600px; margin: 30px auto; background-color: #121614; border-radius: 24px; border: 1px solid rgba(255,255,255,0.12); overflow: hidden; box-shadow: 0 25px 50px rgba(0,0,0,0.6);">
@@ -285,7 +320,7 @@ def generate_compliance_report_html(
                 </td>
                 <td align="right" valign="top">
                   <div style="font-family: monospace; font-size: 13px; font-weight: 800; background-color: #c9ff3d; color: #070a08; padding: 6px 12px; border-radius: 8px;">
-                    {folio}
+                    {esc_folio}
                   </div>
                 </td>
               </tr>
@@ -300,20 +335,20 @@ def generate_compliance_report_html(
               <tr>
                 <td style="padding: 6px 8px; font-size: 12px; color: #a1a1aa; width: 38%;">Atleta / Creador denunciado:</td>
                 <td style="padding: 6px 8px; font-size: 13px; font-weight: 800; color: #ffffff;">
-                  <span style="color: #c9ff3d;">@{creator_target.replace('buymeashake.fit/@', '').replace('@', '')}</span>
+                  <span style="color: #c9ff3d;">@{esc_target}</span>
                 </td>
               </tr>
               <tr>
                 <td style="padding: 6px 8px; font-size: 12px; color: #a1a1aa;">Motivo seleccionado:</td>
                 <td style="padding: 6px 8px; font-size: 13px; font-weight: 700; color: #ffffff;">
-                  <span style="display: inline-block; background-color: rgba(201,255,61,0.15); color: #c9ff3d; font-family: monospace; font-size: 11px; padding: 2px 6px; border-radius: 4px; margin-right: 4px;">[{reason_code}]</span>
-                  {reason_title}
+                  <span style="display: inline-block; background-color: rgba(201,255,61,0.15); color: #c9ff3d; font-family: monospace; font-size: 11px; padding: 2px 6px; border-radius: 4px; margin-right: 4px;">[{esc_reason_code}]</span>
+                  {esc_reason_title}
                 </td>
               </tr>
               <tr>
                 <td style="padding: 6px 8px; font-size: 12px; color: #a1a1aa;">Correo denunciante:</td>
                 <td style="padding: 6px 8px; font-size: 13px; color: #d4d4d8;">
-                  {reporter_email} <span style="font-size: 10px; color: #71717a;">(Confidencial)</span>
+                  {esc_reporter_email} <span style="font-size: 10px; color: #71717a;">(Confidencial)</span>
                 </td>
               </tr>
               <tr>
@@ -333,7 +368,7 @@ def generate_compliance_report_html(
               Descripción detallada de la denuncia:
             </p>
             <div style="background-color: #191e1b; border-left: 4px solid #c9ff3d; border-radius: 12px; padding: 16px 18px; font-size: 13px; line-height: 1.6; color: #f4f4f5; white-space: pre-wrap;">
-{description}
+{esc_description}
             </div>
 
             {links_html}
@@ -357,7 +392,7 @@ def generate_compliance_report_html(
 
             <!-- Botones de Acción -->
             <div style="margin-top: 24px; text-align: center;">
-              <a href="https://buymeashake.fit/{creator_target.replace('buymeashake.fit/@', '').replace('@', '')}" style="display: inline-block; background-color: #c9ff3d; color: #070a08; font-weight: 800; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; text-decoration: none; padding: 12px 24px; border-radius: 9999px; margin-right: 8px;">
+              <a href="{safe_profile_url}" style="display: inline-block; background-color: #c9ff3d; color: #070a08; font-weight: 800; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; text-decoration: none; padding: 12px 24px; border-radius: 9999px; margin-right: 8px;">
                 Ver Perfil del Atleta →
               </a>
             </div>
@@ -449,14 +484,18 @@ def generate_reporter_confirmation_html(
     reason_code: str,
     reason_title: str,
 ) -> str:
+    esc_folio = _esc(folio)
     clean_target = creator_target.replace('buymeashake.fit/@', '').replace('@', '').strip()
+    esc_target = _esc(clean_target)
+    esc_reason_code = _esc(reason_code)
+    esc_reason_title = _esc(reason_title)
     return f"""
     <!DOCTYPE html>
     <html lang="es">
     <head>
       <meta charset="UTF-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>Acuse de recibo de reporte {folio} - Buymeashake.fit</title>
+      <title>Acuse de recibo de reporte {esc_folio} - Buymeashake.fit</title>
     </head>
     <body style="margin: 0; padding: 0; background-color: #090c0a; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #ffffff;">
       <table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 560px; margin: 30px auto; background-color: #121614; border-radius: 24px; border: 1px solid rgba(255,255,255,0.12); overflow: hidden; box-shadow: 0 25px 50px rgba(0,0,0,0.6);">
@@ -476,7 +515,7 @@ def generate_reporter_confirmation_html(
                 </td>
                 <td align="right" valign="top">
                   <div style="font-family: monospace; font-size: 13px; font-weight: 800; background-color: #c9ff3d; color: #070a08; padding: 6px 12px; border-radius: 8px;">
-                    {folio}
+                    {esc_folio}
                   </div>
                 </td>
               </tr>
@@ -495,14 +534,14 @@ def generate_reporter_confirmation_html(
               <tr>
                 <td style="padding: 6px 8px; font-size: 12px; color: #a1a1aa; width: 40%;">Perfil reportado:</td>
                 <td style="padding: 6px 8px; font-size: 13px; font-weight: 800; color: #ffffff;">
-                  <span style="color: #c9ff3d;">@{clean_target}</span>
+                  <span style="color: #c9ff3d;">@{esc_target}</span>
                 </td>
               </tr>
               <tr>
                 <td style="padding: 6px 8px; font-size: 12px; color: #a1a1aa;">Motivo reportado:</td>
                 <td style="padding: 6px 8px; font-size: 13px; font-weight: 700; color: #ffffff;">
-                  <span style="display: inline-block; background-color: rgba(201,255,61,0.15); color: #c9ff3d; font-family: monospace; font-size: 11px; padding: 2px 6px; border-radius: 4px; margin-right: 4px;">[{reason_code}]</span>
-                  {reason_title}
+                  <span style="display: inline-block; background-color: rgba(201,255,61,0.15); color: #c9ff3d; font-family: monospace; font-size: 11px; padding: 2px 6px; border-radius: 4px; margin-right: 4px;">[{esc_reason_code}]</span>
+                  {esc_reason_title}
                 </td>
               </tr>
               <tr>
@@ -594,7 +633,13 @@ def generate_report_verdict_html(
     action_details: str | None = None,
     created_at: str | None = None,
 ) -> str:
+    esc_folio = _esc(folio)
     clean_target = creator_target.replace('buymeashake.fit/@', '').replace('@', '').strip()
+    esc_target = _esc(clean_target)
+    esc_verdict_title = _esc(verdict_title)
+    esc_admin_notes = _esc(admin_notes)
+    time_str = _esc(created_at) if created_at else "Resolución oficial de moderación"
+
     is_action_taken = verdict in ("action_taken", "sanctioned", "approved")
     is_warning = verdict == "warning"
 
@@ -625,18 +670,17 @@ def generate_report_verdict_html(
 
     action_box_html = ""
     if action_details:
+        esc_action_details = _esc(action_details)
         action_box_html = f"""
         <div style="margin-top: 14px; background-color: #191e1b; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 14px 18px;">
           <p style="margin: 0 0 4px 0; font-size: 11px; font-weight: 800; text-transform: uppercase; color: #a1a1aa; letter-spacing: 0.5px;">
             Medidas disciplinarias tomadas:
           </p>
           <p style="margin: 0; font-size: 13px; font-weight: 700; color: #ffffff;">
-            {action_details}
+            {esc_action_details}
           </p>
         </div>
         """
-
-    time_str = created_at if created_at else "Resolución oficial de moderación"
 
     return f"""
     <!DOCTYPE html>
@@ -644,7 +688,7 @@ def generate_report_verdict_html(
     <head>
       <meta charset="UTF-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>Resolución del Reporte {folio} - Buymeashake.fit</title>
+      <title>Resolución del Reporte {esc_folio} - Buymeashake.fit</title>
     </head>
     <body style="margin: 0; padding: 0; background-color: #090c0a; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #ffffff;">
       <table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 580px; margin: 30px auto; background-color: #121614; border-radius: 24px; border: 1px solid rgba(255,255,255,0.12); overflow: hidden; box-shadow: 0 25px 50px rgba(0,0,0,0.6);">
@@ -659,12 +703,12 @@ def generate_report_verdict_html(
                     {badge_text}
                   </span>
                   <h1 style="margin: 10px 0 0 0; font-size: 20px; font-weight: 900; color: #ffffff; letter-spacing: -0.5px;">
-                    {verdict_title}
+                    {esc_verdict_title}
                   </h1>
                 </td>
                 <td align="right" valign="top">
                   <div style="font-family: monospace; font-size: 13px; font-weight: 800; background-color: #c9ff3d; color: #070a08; padding: 6px 12px; border-radius: 8px;">
-                    {folio}
+                    {esc_folio}
                   </div>
                 </td>
               </tr>
@@ -679,7 +723,7 @@ def generate_report_verdict_html(
               <tr>
                 <td style="padding: 6px 8px; font-size: 12px; color: #a1a1aa; width: 38%;">Perfil involucrado:</td>
                 <td style="padding: 6px 8px; font-size: 13px; font-weight: 800; color: #ffffff;">
-                  <span style="color: #c9ff3d;">@{clean_target}</span>
+                  <span style="color: #c9ff3d;">@{esc_target}</span>
                 </td>
               </tr>
               <tr>
@@ -705,7 +749,7 @@ def generate_report_verdict_html(
               Fundamento y Conclusión del Equipo de Integridad:
             </p>
             <div style="background-color: #191e1b; border-left: 4px solid {banner_border}; border-radius: 12px; padding: 16px 18px; font-size: 13px; line-height: 1.6; color: #f4f4f5; white-space: pre-wrap;">
-{admin_notes}
+{esc_admin_notes}
             </div>
 
             {action_box_html}
@@ -812,32 +856,43 @@ def generate_support_ticket_admin_html(
     attached_file: str | None = None,
     created_at: str | None = None,
 ) -> str:
+    esc_folio = _esc(folio)
+    esc_name = _esc(name)
+    esc_email = _esc(user_email)
     role_label_map = {
         "athlete": "Atleta / Coach",
         "supporter": "Supporter / Donante",
         "visitor": "Visitante general",
     }
     role_display = role_label_map.get(user_role, user_role)
-    time_str = created_at if created_at else "Fecha y hora de registro automático"
+    esc_role = _esc(role_display)
+    esc_cat = _esc(category)
+    esc_cat_title = _esc(category_title)
+    esc_subject = _esc(subject)
+    esc_desc = _esc(description)
+    time_str = _esc(created_at) if created_at else "Fecha y hora de registro automático"
+
     related_html = ""
     if related_folio_or_handle:
+        esc_ref = _esc(related_folio_or_handle)
         related_html = f"""
         <tr>
           <td style="padding: 6px 8px; font-size: 12px; color: #a1a1aa;">Referencia / Handle:</td>
           <td style="padding: 6px 8px; font-size: 13px; font-weight: 700; color: #c9ff3d;">
-            {related_folio_or_handle}
+            {esc_ref}
           </td>
         </tr>
         """
 
     attachment_html = ""
     if attached_file:
+        esc_file = _esc(attached_file)
         is_image = any(attached_file.lower().endswith(ext) for ext in [".png", ".jpg", ".jpeg", ".webp", ".gif"])
         preview_markup = ""
         if is_image:
             preview_markup = f"""
             <div style="margin-top: 10px; border-radius: 10px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); text-align: center; background-color: #0b0e0c; padding: 10px;">
-              <img src="cid:{attached_file}" style="max-width: 100%; max-height: 420px; height: auto; border-radius: 8px; display: inline-block;" alt="{attached_file}" />
+              <img src="cid:{esc_file}" style="max-width: 100%; max-height: 420px; height: auto; border-radius: 8px; display: inline-block;" alt="{esc_file}" />
             </div>
             """
         attachment_html = f"""
@@ -845,7 +900,7 @@ def generate_support_ticket_admin_html(
           <p style="margin: 0 0 6px 0; font-size: 11px; font-weight: 800; text-transform: uppercase; color: #a1a1aa; letter-spacing: 0.5px;">Archivo adjunto de evidencia:</p>
           <div style="background-color: #191c1d; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 12px 16px; display: block;">
             <div style="font-size: 13px; font-weight: 700; color: #ffffff;">
-              [Adjunto descargable] <span style="color: #c9ff3d;">{attached_file}</span>
+              [Adjunto descargable] <span style="color: #c9ff3d;">{esc_file}</span>
             </div>
             {preview_markup}
           </div>
@@ -858,7 +913,7 @@ def generate_support_ticket_admin_html(
     <head>
       <meta charset="UTF-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>Ticket de Soporte {folio} - Buymeashake.fit</title>
+      <title>Ticket de Soporte {esc_folio} - Buymeashake.fit</title>
     </head>
     <body style="margin: 0; padding: 0; background-color: #090c0a; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #ffffff;">
       <table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 600px; margin: 30px auto; background-color: #121614; border-radius: 24px; border: 1px solid rgba(255,255,255,0.12); overflow: hidden; box-shadow: 0 25px 50px rgba(0,0,0,0.6);">
@@ -878,7 +933,7 @@ def generate_support_ticket_admin_html(
                 </td>
                 <td align="right" valign="top">
                   <div style="font-family: monospace; font-size: 13px; font-weight: 800; background-color: #c9ff3d; color: #070a08; padding: 6px 12px; border-radius: 8px;">
-                    {folio}
+                    {esc_folio}
                   </div>
                 </td>
               </tr>
@@ -892,23 +947,23 @@ def generate_support_ticket_admin_html(
             <table width="100%" style="background-color: #161b18; border-radius: 16px; border: 1px solid rgba(255,255,255,0.06); padding: 16px;">
               <tr>
                 <td style="padding: 6px 8px; font-size: 12px; color: #a1a1aa; width: 38%;">Nombre del usuario:</td>
-                <td style="padding: 6px 8px; font-size: 13px; font-weight: 800; color: #ffffff;">{name}</td>
+                <td style="padding: 6px 8px; font-size: 13px; font-weight: 800; color: #ffffff;">{esc_name}</td>
               </tr>
               <tr>
                 <td style="padding: 6px 8px; font-size: 12px; color: #a1a1aa;">Correo electrónico:</td>
                 <td style="padding: 6px 8px; font-size: 13px; color: #c9ff3d;">
-                  <a href="mailto:{user_email}" style="color: #c9ff3d; text-decoration: none;">{user_email}</a>
+                  <a href="mailto:{esc_email}" style="color: #c9ff3d; text-decoration: none;">{esc_email}</a>
                 </td>
               </tr>
               <tr>
                 <td style="padding: 6px 8px; font-size: 12px; color: #a1a1aa;">Rol en la plataforma:</td>
-                <td style="padding: 6px 8px; font-size: 13px; font-weight: 700; color: #ffffff;">{role_display}</td>
+                <td style="padding: 6px 8px; font-size: 13px; font-weight: 700; color: #ffffff;">{esc_role}</td>
               </tr>
               <tr>
                 <td style="padding: 6px 8px; font-size: 12px; color: #a1a1aa;">Categoría:</td>
                 <td style="padding: 6px 8px; font-size: 13px; font-weight: 700; color: #ffffff;">
-                  <span style="display: inline-block; background-color: rgba(255,255,255,0.08); color: #ffffff; font-family: monospace; font-size: 11px; padding: 2px 6px; border-radius: 4px; margin-right: 4px;">[{category}]</span>
-                  {category_title}
+                  <span style="display: inline-block; background-color: rgba(255,255,255,0.08); color: #ffffff; font-family: monospace; font-size: 11px; padding: 2px 6px; border-radius: 4px; margin-right: 4px;">[{esc_cat}]</span>
+                  {esc_cat_title}
                 </td>
               </tr>
               {related_html}
@@ -927,14 +982,14 @@ def generate_support_ticket_admin_html(
               Asunto:
             </p>
             <div style="font-size: 15px; font-weight: 800; color: #ffffff; margin-bottom: 16px;">
-              {subject}
+              {esc_subject}
             </div>
 
             <p style="margin: 0 0 6px 0; font-size: 11px; font-weight: 800; text-transform: uppercase; color: #a1a1aa; letter-spacing: 0.5px;">
               Mensaje y Detalles del Ticket:
             </p>
             <div style="background-color: #191e1b; border-left: 4px solid #c9ff3d; border-radius: 12px; padding: 16px 18px; font-size: 13px; line-height: 1.6; color: #f4f4f5; white-space: pre-wrap;">
-{description}
+{esc_desc}
             </div>
 
             {attachment_html}
@@ -950,7 +1005,7 @@ def generate_support_ticket_admin_html(
               </p>
             </div>
 
-            <a href="mailto:{user_email}?subject=RE: [{folio}] {subject}" style="display: inline-block; background-color: #c9ff3d; color: #070a08; font-weight: 800; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; text-decoration: none; padding: 12px 28px; border-radius: 9999px;">
+            <a href="mailto:{esc_email}?subject=RE: [{esc_folio}] {esc_subject}" style="display: inline-block; background-color: #c9ff3d; color: #070a08; font-weight: 800; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; text-decoration: none; padding: 12px 28px; border-radius: 9999px;">
               Responder al Usuario Directamente →
             </a>
           </td>
@@ -978,13 +1033,20 @@ def generate_support_ticket_user_ack_html(
     subject: str,
     description: str,
 ) -> str:
+    esc_folio = _esc(folio)
+    esc_name = _esc(name)
+    esc_cat_title = _esc(category_title)
+    esc_subject = _esc(subject)
+    snippet = description[:350] + ('...' if len(description) > 350 else '')
+    esc_snippet = _esc(snippet)
+
     return f"""
     <!DOCTYPE html>
     <html lang="es">
     <head>
       <meta charset="UTF-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>Solicitud de Soporte Recibida {folio} - Buymeashake.fit</title>
+      <title>Solicitud de Soporte Recibida {esc_folio} - Buymeashake.fit</title>
     </head>
     <body style="margin: 0; padding: 0; background-color: #090c0a; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #ffffff;">
       <table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 580px; margin: 30px auto; background-color: #121614; border-radius: 24px; border: 1px solid rgba(255,255,255,0.12); overflow: hidden; box-shadow: 0 25px 50px rgba(0,0,0,0.6);">
@@ -1004,7 +1066,7 @@ def generate_support_ticket_user_ack_html(
                 </td>
                 <td align="right" valign="top">
                   <div style="font-family: monospace; font-size: 13px; font-weight: 800; background-color: #c9ff3d; color: #070a08; padding: 6px 12px; border-radius: 8px;">
-                    {folio}
+                    {esc_folio}
                   </div>
                 </td>
               </tr>
@@ -1016,7 +1078,7 @@ def generate_support_ticket_user_ack_html(
         <tr>
           <td style="padding: 24px 32px 16px 32px;">
             <p style="margin: 0 0 16px 0; font-size: 14px; line-height: 1.6; color: #e4e4e7;">
-              Hola <strong>{name}</strong>, gracias por contactar al Centro de Asistencia de Buymeashake.fit. Tu consulta ha sido asignada a un especialista de nuestro equipo.
+              Hola <strong>{esc_name}</strong>, gracias por contactar al Centro de Asistencia de Buymeashake.fit. Tu consulta ha sido asignada a un especialista de nuestro equipo.
             </p>
 
             <div style="background-color: rgba(201,255,61,0.08); border-left: 3px solid #c9ff3d; border-radius: 10px; padding: 14px 16px; margin-bottom: 20px;">
@@ -1031,13 +1093,13 @@ def generate_support_ticket_user_ack_html(
                 Resumen de tu Ticket:
               </p>
               <p style="margin: 0 0 8px 0; font-size: 13px; font-weight: 700; color: #ffffff;">
-                {subject}
+                {esc_subject}
               </p>
               <p style="margin: 0 0 6px 0; font-size: 11px; color: #a1a1aa;">
-                Categoría: <span style="color: #ffffff; font-weight: 600;">{category_title}</span>
+                Categoría: <span style="color: #ffffff; font-weight: 600;">{esc_cat_title}</span>
               </p>
               <div style="background-color: #111413; border-radius: 8px; padding: 12px; font-size: 12px; line-height: 1.5; color: #a1a1aa; white-space: pre-wrap; margin-top: 8px;">
-{description[:350] + ('...' if len(description) > 350 else '')}
+{esc_snippet}
               </div>
             </div>
           </td>

@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.exceptions import (
     EntityAlreadyExistsError,
     EntityNotFoundError,
+    ForbiddenError,
     NeedsRoleError,
     RateLimitExceededError,
     UnauthorizedError,
@@ -283,10 +284,15 @@ class AuthService:
 
     async def request_otp(self, dto: RequestOtpRequest) -> RequestOtpResponse:
         clean_email = dto.email.strip().lower()
-        # 0. Si el propósito es iniciar sesión, validar que el usuario exista en la base de datos
+        # 0. Validar si el usuario existe y si cuenta con rol de administrador
+        existing_user = await self.user_repo.get_by_email(clean_email)
+        if existing_user and await user_roles.is_admin(self.session, existing_user.id):
+            raise ForbiddenError(
+                "Las cuentas con privilegios de administrador deben iniciar sesión exclusivamente a través del portal de administración."
+            )
+
         if dto.purpose == "login" and not dto.athlete_handle:
-            user = await self.user_repo.get_by_email(clean_email)
-            if not user:
+            if not existing_user:
                 raise EntityNotFoundError(
                     "Usuario",
                     clean_email,
@@ -352,6 +358,14 @@ class AuthService:
                 "message": "No existe ninguna cuenta registrada con este correo electrónico. Por favor regístrate primero.",
             }
 
+        if await user_roles.is_admin(self.session, user.id):
+            return {
+                "has_active_otp": False,
+                "user_exists": True,
+                "wait_seconds": 0,
+                "message": "Las cuentas con privilegios de administrador deben iniciar sesión a través del portal de administración.",
+            }
+
         otp_repo = OtpRepository(self.session)
         active = await otp_repo.get_latest_active_otp(clean_email, purpose="supporter_follow")
         if not active:
@@ -395,6 +409,10 @@ class AuthService:
 
         # Buscar usuario o crearlo como supporter
         user = await self.user_repo.get_by_email(clean_email)
+        if user and await user_roles.is_admin(self.session, user.id):
+            raise ForbiddenError(
+                "Las cuentas con privilegios de administrador deben iniciar sesión exclusivamente a través del portal de administración."
+            )
         metadata = otp_record.metadata_ or {}
         name = metadata.get("name") or "Supporter"
 
@@ -632,6 +650,24 @@ class SupporterService:
         post = await post_repo.get_by_id(post_id)
         if not post:
             raise EntityNotFoundError("Post", post_id)
+
+        # Si el post es exclusivo para miembros, verificar que el usuario sea el autor o tenga suscripción activa
+        if post.access_type == "members_only":
+            is_author = post.athlete and post.athlete.user_id == user.id
+            if not is_author:
+                sub_query = (
+                    select(Subscription.id)
+                    .join(MembershipTier, MembershipTier.id == Subscription.tier_id)
+                    .where(
+                        MembershipTier.athlete_id == post.athlete_id,
+                        Subscription.user_id == user.id,
+                        Subscription.status == "active",
+                    )
+                    .limit(1)
+                )
+                sub_res = await self.session.execute(sub_query)
+                if not sub_res.scalar_one_or_none():
+                    raise ForbiddenError("Esta publicación es exclusiva para miembros. Necesitas una suscripción activa para comentar.")
 
         comment = await post_repo.add_comment(post_id, user.id, content)
 

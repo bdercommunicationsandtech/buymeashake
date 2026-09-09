@@ -564,7 +564,14 @@ class PostRepository:
         return list(result.scalars().all())
 
     async def get_by_id(self, post_id: int) -> Post | None:
-        query = select(Post).options(selectinload(Post.comments).selectinload(PostComment.user)).where(Post.id == post_id)
+        query = (
+            select(Post)
+            .options(
+                selectinload(Post.comments).selectinload(PostComment.user),
+                selectinload(Post.athlete),
+            )
+            .where(Post.id == post_id)
+        )
         result = await self.session.execute(query)
         return result.scalar_one_or_none()
 

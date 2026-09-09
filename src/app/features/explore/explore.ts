@@ -1,6 +1,6 @@
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import { RouterLink, ActivatedRoute } from '@angular/router';
 import { ExploreService } from '../../core/explore.service';
 import { LookupService } from '../../core/lookup.service';
 import { LanguageService } from '../../core/language.service';
@@ -40,6 +40,7 @@ function normalizeText(text: string | null | undefined): string {
 })
 export class Explore implements OnInit {
   private readonly exploreService = inject(ExploreService);
+  private readonly route = inject(ActivatedRoute);
   private readonly lookupService = inject(LookupService);
   readonly languageService = inject(LanguageService);
 
@@ -55,8 +56,14 @@ export class Explore implements OnInit {
   readonly leaderboardAthletes = signal<AthleteProfile[]>([]);
   readonly exploreAthletes = signal<AthleteProfile[]>([]);
 
+
   ngOnInit(): void {
+    this.route.queryParams.subscribe(params => {
+      if (params['cat']) this.selectedCategory.set(params['cat']);
+      if (params['q']) this.searchQuery.set(params['q']);
+    });
     this.loadDisciplines();
+
     this.fetchLeaderboard();
     this.fetchAthletes();
   }

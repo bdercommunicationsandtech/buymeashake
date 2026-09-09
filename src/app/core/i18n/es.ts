@@ -447,7 +447,7 @@ export const es: TranslationSchema = {
     oneTimeShakeDesc: 'Apoyo de una sola vez para impulsar mi preparación.',
     monthlyShakes: 'Shakes mensuales',
     monthlyShakesDesc: 'Apoya de forma continua mes con mes a su preparación deportiva.',
-    buyShakeTitle: 'Invítale un Shaker',
+    buyShakeTitle: 'Invítale un Shake',
     supportPrepDesc: 'Apoya su preparación deportiva · USD',
     otherAmount: 'Otro',
     cheerMessageLabel: 'Mensaje de aliento (opcional)',
@@ -522,7 +522,7 @@ export const es: TranslationSchema = {
   },
   home: {
     heroBadge: 'La plataforma para atletas y entrenadores de alto rendimiento',
-    heroTitlePart1: 'Financia tu esfuerzo.',
+    heroTitlePart1: 'Supera tus límites.',
     heroTitlePart2: 'Recibe el apoyo de amigos, seguidores y fans.',
     heroSubtitle: 'Acepta micro-apoyos con shakes, lanza membresías mensuales, vende programas de entrenamiento y agenda asesorías 1-a-1 por videollamada sin complicaciones.',
     startFree: 'Empezar gratis',

@@ -284,8 +284,9 @@ async def submit_report_verdict(
 async def submit_support_ticket(
     request: Request,
     background_tasks: BackgroundTasks,
+    session: DatabaseSession,
 ) -> SupportTicketResponse:
-    """Registra un ticket de soporte/asistencia con generación de folio único y notificación dual."""
+    """Registra un ticket de soporte/asistencia con persistencia en DB, generación de folio único y notificación dual."""
     client_ip = request.client.host if request.client else "unknown"
     ticket_limiter.check(f"ip:{client_ip}")
 
@@ -337,6 +338,26 @@ async def submit_support_ticket(
 
     folio_num = random.randint(10000, 99999)
     folio = f"#SHK-HELP-{folio_num}"
+
+    # Persistir ticket en la base de datos
+    from app.models.entities import SupportTicket
+    ticket_record = SupportTicket(
+        folio=folio,
+        name=name,
+        email=email,
+        user_role=user_role,
+        category=category,
+        category_title=category_title,
+        subject=subject,
+        description=description,
+        related_folio_or_handle=related_ref,
+        attached_file=attached_file,
+        is_read=False,
+        status="open",
+    )
+    session.add(ticket_record)
+    await session.commit()
+    await session.refresh(ticket_record)
 
     # 1. Notificar al equipo de soporte interno de Buymeashake
     background_tasks.add_task(

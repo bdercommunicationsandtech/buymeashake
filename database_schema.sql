@@ -639,6 +639,46 @@ CREATE TABLE support_tickets (
 
 
 -- ==============================================================================
+-- TABLA: email_blacklist (Lista Negra de Correos Vetados Permanentemente)
+-- ==============================================================================
+DROP TABLE IF EXISTS email_blacklist;
+CREATE TABLE email_blacklist (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    email VARCHAR(191) NOT NULL UNIQUE,
+    reason VARCHAR(255) NULL,
+    user_id BIGINT UNSIGNED NULL,
+    created_by BIGINT UNSIGNED NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL,
+    FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL,
+    INDEX idx_email_blacklist_email (email),
+    INDEX idx_email_blacklist_user_id (user_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+
+-- ==============================================================================
+-- TABLA: disciplinary_sanctions (Sanciones Disciplinarias, Strikes y Amonestaciones)
+-- ==============================================================================
+DROP TABLE IF EXISTS disciplinary_sanctions;
+CREATE TABLE disciplinary_sanctions (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    user_id BIGINT UNSIGNED NOT NULL,
+    action_type VARCHAR(30) NOT NULL, -- 'strike', 'suspension', 'ban'
+    points INT NOT NULL DEFAULT 1,
+    reason VARCHAR(500) NOT NULL,
+    category VARCHAR(50) NOT NULL DEFAULT 'conduct', -- 'conduct', 'fraud', 'doping', 'harassment', 'unfulfilled_rewards', 'other'
+    created_by BIGINT UNSIGNED NULL,
+    expires_at TIMESTAMP NULL,
+    is_active TINYINT(1) NOT NULL DEFAULT 1,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL,
+    INDEX idx_sanctions_user (user_id),
+    INDEX idx_sanctions_active (user_id, is_active)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+
+-- ==============================================================================
 -- VISTA: Top 10 Atletas del Mes
 -- ==============================================================================
 CREATE OR REPLACE VIEW view_monthly_athlete_leaderboard AS

@@ -40,6 +40,11 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/contact/contact-panel.component').then((m) => m.ContactPanelComponent),
       },
+      {
+        path: 'blacklist',
+        loadComponent: () =>
+          import('./features/blacklist/blacklist-panel.component').then((m) => m.BlacklistPanelComponent),
+      },
     ],
   },
   {

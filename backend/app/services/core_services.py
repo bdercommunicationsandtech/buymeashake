@@ -73,6 +73,7 @@ from app.repositories.base_repos import (
     UserRepository,
 )
 from app.services.email_service import send_otp_email, send_thank_you_email
+from app.services.enforcement_service import assert_email_not_blacklisted
 from app.services import user_roles_service as user_roles
 from app.schemas.dtos import (
     AppVersionCheckResponse,
@@ -132,6 +133,7 @@ class AuthService:
         self.athlete_repo = AthleteRepository(session)
 
     async def register(self, dto: UserRegisterRequest) -> TokenResponse:
+        await assert_email_not_blacklisted(self.session, dto.email)
         existing = await self.user_repo.get_by_email(dto.email)
         if existing:
             raise EntityAlreadyExistsError("Usuario", "email", dto.email)
@@ -189,6 +191,7 @@ class AuthService:
         )
 
     async def login(self, dto: UserLoginRequest) -> TokenResponse:
+        await assert_email_not_blacklisted(self.session, dto.email)
         user = await self.user_repo.get_by_email(dto.email)
         if not user:
             raise UnauthorizedError("Correo electrónico o contraseña incorrectos.")
@@ -212,6 +215,7 @@ class AuthService:
             raise UnauthorizedError(
                 "No pudimos obtener el correo de tu cuenta. Revisa los permisos de Google/Apple."
             )
+        await assert_email_not_blacklisted(self.session, email)
 
         full_name = (
             (claims.get("name") or "").strip()
@@ -289,6 +293,7 @@ class AuthService:
 
     async def request_otp(self, dto: RequestOtpRequest) -> RequestOtpResponse:
         clean_email = dto.email.strip().lower()
+        await assert_email_not_blacklisted(self.session, clean_email)
         # 0. Validar si el usuario existe y si cuenta con rol de administrador
         existing_user = await self.user_repo.get_by_email(clean_email)
         if existing_user and await user_roles.is_admin(self.session, existing_user.id):
@@ -393,6 +398,7 @@ class AuthService:
     async def forgot_password(self, dto: ForgotPasswordRequest) -> ForgotPasswordResponse:
         """Envía OTP de recuperación. Siempre responde genérico (anti-enumeración)."""
         clean_email = dto.email.strip().lower()
+        await assert_email_not_blacklisted(self.session, clean_email)
         generic_message = (
             "Si existe una cuenta con ese correo, enviamos un código para restablecer la contraseña."
         )
@@ -487,6 +493,7 @@ class AuthService:
 
     async def verify_otp(self, dto: VerifyOtpRequest) -> TokenResponse:
         clean_email = dto.email.strip().lower()
+        await assert_email_not_blacklisted(self.session, clean_email)
         clean_code = dto.code.strip()
         otp_repo = OtpRepository(self.session)
         otp_record = await otp_repo.get_valid_otp(clean_email, clean_code, purpose="supporter_follow")

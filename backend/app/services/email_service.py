@@ -1329,3 +1329,780 @@ def send_support_ticket_reply_sync(
         admin_name=admin_name,
     )
     return send_email_sync(user_email, email_subject, html)
+
+
+def generate_account_blacklisted_html(
+    to_email: str,
+    reason: str | None = None,
+    user_name: str | None = None,
+) -> str:
+    esc_email = _esc(to_email)
+    esc_name = _esc(user_name) if user_name else "Usuario"
+    esc_reason = (
+        _esc(reason)
+        if reason and reason.strip()
+        else "Infracción a los Términos de Servicio y Políticas de Convivencia de la Comunidad."
+    )
+    frontend_url = _safe_url(settings.FRONTEND_URL)
+    contact_url = f"{frontend_url}/contact" if frontend_url != "#" else "https://buymeashake.fit/contact"
+
+    return f"""
+    <!DOCTYPE html>
+    <html lang="es">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Aviso de Restricción de Cuenta - Buymeashake.fit</title>
+    </head>
+    <body style="margin: 0; padding: 0; background-color: #090c0a; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #ffffff;">
+      <table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 580px; margin: 30px auto; background-color: #121614; border-radius: 24px; border: 1px solid rgba(255,255,255,0.08); overflow: hidden; box-shadow: 0 20px 40px rgba(0,0,0,0.6);">
+        
+        <!-- Header con Logo -->
+        <tr>
+          <td align="center" style="padding: 32px 24px 16px 24px;">
+            <div style="display: inline-block; background-color: #c9ff3d; color: #070a08; font-weight: 900; font-size: 18px; padding: 8px 12px; border-radius: 12px; margin-bottom: 12px;">
+              ⚡
+            </div>
+            <h1 style="margin: 0; font-size: 22px; font-weight: 900; letter-spacing: -0.5px; color: #ffffff;">
+              buymeashake<span style="color: #c9ff3d;">.fit</span>
+            </h1>
+          </td>
+        </tr>
+
+        <!-- Banner de Restricción Disciplinaria -->
+        <tr>
+          <td align="center" style="padding: 10px 32px 16px 32px;">
+            <div style="display: inline-block; background-color: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.4); border-radius: 9999px; padding: 6px 16px;">
+              <span style="color: #f87171; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;">
+                ⛔ Sanción Disciplinaria · Restricción de Cuenta
+              </span>
+            </div>
+            <h2 style="margin: 16px 0 8px 0; font-size: 20px; font-weight: 800; color: #ffffff; letter-spacing: -0.3px;">
+              Tu cuenta ha sido restringida
+            </h2>
+            <p style="margin: 0; font-size: 13px; color: #a1a1aa; line-height: 1.5;">
+              Notificación oficial del equipo de Confianza y Seguridad (Trust & Safety).
+            </p>
+          </td>
+        </tr>
+
+        <!-- Mensaje Principal -->
+        <tr>
+          <td style="padding: 10px 32px 20px 32px;">
+            <p style="margin: 0 0 16px 0; font-size: 14px; line-height: 1.6; color: #e4e4e7;">
+              Hola, <strong style="color: #ffffff;">{esc_name}</strong>:
+            </p>
+            <p style="margin: 0 0 16px 0; font-size: 13px; line-height: 1.6; color: #a1a1aa;">
+              Te informamos que tu dirección de correo electrónico (<span style="color: #ffffff; font-family: monospace;">{esc_email}</span>) ha sido incorporada en la lista negra y se ha restringido de forma permanente el acceso e inicio de sesión a la plataforma Buy me a Shake.
+            </p>
+
+            <!-- Tarjeta de Detalles del Veto -->
+            <div style="background-color: #191e1b; border-left: 4px solid #ef4444; border-radius: 12px; padding: 18px 20px; margin: 16px 0;">
+              <p style="margin: 0 0 6px 0; font-size: 11px; font-weight: 800; text-transform: uppercase; color: #f87171; letter-spacing: 0.5px;">
+                Motivo del bloqueo:
+              </p>
+              <p style="margin: 0 0 12px 0; font-size: 14px; font-weight: 600; color: #ffffff; line-height: 1.5;">
+                {esc_reason}
+              </p>
+              <div style="border-top: 1px solid rgba(255,255,255,0.06); padding-top: 10px; margin-top: 10px;">
+                <span style="font-size: 11px; color: #71717a; text-transform: uppercase; font-weight: 700;">Alcance: </span>
+                <span style="font-size: 11px; color: #e4e4e7; font-weight: 600;">Bloqueo de credenciales, códigos de acceso rápido (OTP) y registro de nuevas cuentas.</span>
+              </div>
+            </div>
+
+            <!-- Información de Apelación -->
+            <div style="background-color: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 16px 18px; margin-top: 16px;">
+              <p style="margin: 0 0 6px 0; font-size: 12px; font-weight: 800; color: #ffffff;">
+                ¿Consideras que se trata de un error?
+              </p>
+              <p style="margin: 0; font-size: 12px; line-height: 1.5; color: #a1a1aa;">
+                Si consideras que esta medida se ha emitido por error o deseas presentar argumentos para la reconsideración de tu caso, puedes comunicarte con nuestro equipo de moderación a través de nuestra Mesa de Ayuda.
+              </p>
+            </div>
+
+            <!-- Botón Mesa de Ayuda -->
+            <div style="margin-top: 24px; text-align: center;">
+              <a href="{contact_url}" style="display: inline-block; background-color: #27272a; border: 1px solid rgba(255,255,255,0.15); color: #ffffff; font-weight: 700; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; text-decoration: none; padding: 12px 28px; border-radius: 9999px;">
+                Contactar a Mesa de Ayuda &rarr;
+              </a>
+            </div>
+          </td>
+        </tr>
+
+        <!-- Footer -->
+        <tr>
+          <td align="center" style="padding: 20px 24px; background-color: #0a0d0b; border-top: 1px solid rgba(255,255,255,0.06);">
+            <p style="margin: 0; font-size: 11px; color: #52525b; font-weight: 500;">
+              &copy; 2026 Buymeashake.fit &middot; Departamento de Trust &amp; Safety &middot; BDER Communications
+            </p>
+          </td>
+        </tr>
+
+      </table>
+    </body>
+    </html>
+    """
+
+
+def send_account_blacklisted_sync(
+    to_email: str,
+    reason: str | None = None,
+    user_name: str | None = None,
+) -> bool:
+    """Envía la notificación formal de suspensión de cuenta por lista negra."""
+    email_subject = "Aviso importante: Restricción de cuenta - Buymeashake.fit"
+    html = generate_account_blacklisted_html(
+        to_email=to_email,
+        reason=reason,
+        user_name=user_name,
+    )
+    return send_email_sync(to_email, email_subject, html)
+
+
+async def send_account_blacklisted_email(
+    to_email: str,
+    reason: str | None = None,
+    user_name: str | None = None,
+) -> bool:
+    """Versión asíncrona no bloqueante."""
+    return await asyncio.to_thread(
+        send_account_blacklisted_sync,
+        to_email=to_email,
+        reason=reason,
+        user_name=user_name,
+    )
+
+
+def generate_account_suspended_html(
+    to_email: str,
+    user_name: str | None = None,
+    reason: str | None = None,
+    expires_at_str: str | None = None,
+    duration_days: int | None = None,
+) -> str:
+    esc_email = _esc(to_email)
+    esc_name = _esc(user_name) if user_name else "Usuario"
+    esc_reason = _esc(reason) if reason else "Incumplimiento de las normas de convivencia o de la plataforma"
+    duration_text = f"{duration_days} días" if duration_days else "período temporal"
+    esc_expires = _esc(expires_at_str) if expires_at_str else "fecha programada"
+    contact_url = "https://buymeashake.fit/contact"
+
+    return f"""
+    <!DOCTYPE html>
+    <html lang="es">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Suspensión Temporal de Cuenta - Buymeashake.fit</title>
+    </head>
+    <body style="margin: 0; padding: 0; background-color: #090c0a; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #ffffff;">
+      <table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 580px; margin: 30px auto; background-color: #121614; border-radius: 24px; border: 1px solid rgba(255,255,255,0.12); overflow: hidden; box-shadow: 0 25px 50px rgba(0,0,0,0.6);">
+        
+        <!-- Header -->
+        <tr>
+          <td align="center" style="padding: 32px 24px 20px 24px; background: linear-gradient(180deg, #241c12 0%, #121614 100%); border-bottom: 1px solid rgba(255,255,255,0.08);">
+            <div style="display: inline-block; background-color: rgba(249,115,22,0.15); border: 1px solid rgba(249,115,22,0.35); color: #f97316; font-size: 10px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; padding: 5px 14px; border-radius: 9999px; margin-bottom: 12px;">
+              Medida Disciplinaria Temporal
+            </div>
+            <h2 style="margin: 12px 0 6px 0; font-size: 20px; font-weight: 800; color: #ffffff; letter-spacing: -0.3px;">
+              Tu cuenta ha sido suspendida temporalmente
+            </h2>
+            <p style="margin: 0; font-size: 13px; color: #a1a1aa; line-height: 1.5;">
+              Notificación oficial del equipo de Moderación y Disciplina.
+            </p>
+          </td>
+        </tr>
+
+        <!-- Mensaje Principal -->
+        <tr>
+          <td style="padding: 20px 32px;">
+            <p style="margin: 0 0 14px 0; font-size: 14px; line-height: 1.6; color: #e4e4e7;">
+              Hola, <strong style="color: #ffffff;">{esc_name}</strong>:
+            </p>
+            <p style="margin: 0 0 16px 0; font-size: 13px; line-height: 1.6; color: #a1a1aa;">
+              Te informamos que tu cuenta (<span style="color: #ffffff; font-family: monospace;">{esc_email}</span>) ha recibido una suspensión temporal por un plazo de <strong style="color: #f97316;">{duration_text}</strong>.
+            </p>
+
+            <!-- Tarjeta con Detalles -->
+            <div style="background-color: #1a1815; border-left: 4px solid #f97316; border-radius: 12px; padding: 18px 20px; margin: 16px 0;">
+              <p style="margin: 0 0 6px 0; font-size: 11px; font-weight: 800; text-transform: uppercase; color: #fb923c; letter-spacing: 0.5px;">
+                Motivo de la medida:
+              </p>
+              <p style="margin: 0 0 14px 0; font-size: 14px; font-weight: 600; color: #ffffff; line-height: 1.5;">
+                {esc_reason}
+              </p>
+              <div style="border-top: 1px solid rgba(255,255,255,0.08); padding-top: 10px; margin-top: 10px;">
+                <span style="font-size: 11px; color: #a1a1aa; text-transform: uppercase; font-weight: 700;">Fecha de reactivación automática: </span>
+                <span style="font-size: 12px; color: #c9ff3d; font-weight: 800; font-family: monospace;">{esc_expires}</span>
+              </div>
+            </div>
+
+            <!-- Explicación de reactivación -->
+            <div style="background-color: rgba(201,255,61,0.05); border: 1px dashed rgba(201,255,61,0.25); border-radius: 12px; padding: 14px 18px; margin-top: 16px;">
+              <p style="margin: 0 0 4px 0; font-size: 11px; font-weight: 800; text-transform: uppercase; color: #c9ff3d; letter-spacing: 0.5px;">
+                Reactivación Automática:
+              </p>
+              <p style="margin: 0; font-size: 12px; line-height: 1.5; color: #d4d4d8;">
+                Una vez cumplido el período indicado, tu cuenta se reactivará de forma automática al intentar iniciar sesión, sin necesidad de trámites adicionales.
+              </p>
+            </div>
+
+            <!-- Botón Contacto -->
+            <div style="margin-top: 24px; text-align: center;">
+              <a href="{contact_url}" style="display: inline-block; background-color: #27272a; border: 1px solid rgba(255,255,255,0.15); color: #ffffff; font-weight: 700; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; text-decoration: none; padding: 12px 28px; border-radius: 9999px;">
+                Mesa de Ayuda & Apelaciones &rarr;
+              </a>
+            </div>
+          </td>
+        </tr>
+
+        <!-- Footer -->
+        <tr>
+          <td align="center" style="padding: 20px 24px; background-color: #0a0d0b; border-top: 1px solid rgba(255,255,255,0.06);">
+            <p style="margin: 0; font-size: 11px; color: #52525b; font-weight: 500;">
+              &copy; 2026 Buymeashake.fit &middot; Departamento de Trust &amp; Safety &middot; BDER Communications
+            </p>
+          </td>
+        </tr>
+
+      </table>
+    </body>
+    </html>
+    """
+
+
+def send_account_suspended_sync(
+    to_email: str,
+    user_name: str | None = None,
+    reason: str | None = None,
+    expires_at_str: str | None = None,
+    duration_days: int | None = None,
+) -> bool:
+    """Envía la notificación formal de suspensión temporal de cuenta."""
+    email_subject = "Aviso disciplinario: Suspensión temporal de cuenta - Buymeashake.fit"
+    html = generate_account_suspended_html(
+        to_email=to_email,
+        user_name=user_name,
+        reason=reason,
+        expires_at_str=expires_at_str,
+        duration_days=duration_days,
+    )
+    return send_email_sync(to_email, email_subject, html)
+
+
+async def send_account_suspended_email(
+    to_email: str,
+    user_name: str | None = None,
+    reason: str | None = None,
+    expires_at_str: str | None = None,
+    duration_days: int | None = None,
+) -> bool:
+    return await asyncio.to_thread(
+        send_account_suspended_sync,
+        to_email=to_email,
+        user_name=user_name,
+        reason=reason,
+        expires_at_str=expires_at_str,
+        duration_days=duration_days,
+    )
+
+
+def generate_warning_html(
+    to_email: str,
+    user_name: str | None = None,
+    reason: str | None = None,
+    category: str | None = None,
+) -> str:
+    esc_email = _esc(to_email)
+    esc_name = _esc(user_name) if user_name else "Usuario"
+    esc_reason = _esc(reason) if reason else "Incumplimiento leve de las directrices comunitarias"
+    esc_cat = _esc(category) if category else "conducta general"
+    contact_url = "https://buymeashake.fit/contact"
+
+    return f"""
+    <!DOCTYPE html>
+    <html lang="es">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Advertencia Formal - Buymeashake.fit</title>
+    </head>
+    <body style="margin: 0; padding: 0; background-color: #090c0a; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #ffffff;">
+      <table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 580px; margin: 30px auto; background-color: #121614; border-radius: 24px; border: 1px solid rgba(255,255,255,0.12); overflow: hidden; box-shadow: 0 25px 50px rgba(0,0,0,0.6);">
+        
+        <!-- Header -->
+        <tr>
+          <td align="center" style="padding: 32px 24px 20px 24px; background: linear-gradient(180deg, #242212 0%, #121614 100%); border-bottom: 1px solid rgba(255,255,255,0.08);">
+            <div style="display: inline-block; background-color: rgba(234,179,8,0.15); border: 1px solid rgba(234,179,8,0.35); color: #eab308; font-size: 10px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; padding: 5px 14px; border-radius: 9999px; margin-bottom: 12px;">
+              Llamada de Atención Oficial
+            </div>
+            <h2 style="margin: 12px 0 6px 0; font-size: 20px; font-weight: 800; color: #ffffff; letter-spacing: -0.3px;">
+              Aviso formal de advertencia
+            </h2>
+            <p style="margin: 0; font-size: 13px; color: #a1a1aa; line-height: 1.5;">
+              Notificación preventiva sobre el uso de la plataforma.
+            </p>
+          </td>
+        </tr>
+
+        <!-- Contenido -->
+        <tr>
+          <td style="padding: 20px 32px;">
+            <p style="margin: 0 0 14px 0; font-size: 14px; line-height: 1.6; color: #e4e4e7;">
+              Hola, <strong style="color: #ffffff;">{esc_name}</strong>:
+            </p>
+            <p style="margin: 0 0 16px 0; font-size: 13px; line-height: 1.6; color: #a1a1aa;">
+              Queremos informarte que se ha emitido una <strong style="color: #eab308;">advertencia formal</strong> en tu cuenta (<span style="color: #ffffff; font-family: monospace;">{esc_email}</span>).
+            </p>
+
+            <div style="background-color: #1b1912; border-left: 4px solid #eab308; border-radius: 12px; padding: 18px 20px; margin: 16px 0;">
+              <p style="margin: 0 0 6px 0; font-size: 11px; font-weight: 800; text-transform: uppercase; color: #fde047; letter-spacing: 0.5px;">
+                Motivo de la advertencia ({esc_cat}):
+              </p>
+              <p style="margin: 0; font-size: 14px; font-weight: 600; color: #ffffff; line-height: 1.5;">
+                {esc_reason}
+              </p>
+            </div>
+
+            <div style="background-color: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 14px 18px; margin-top: 16px;">
+              <p style="margin: 0 0 4px 0; font-size: 11px; font-weight: 800; text-transform: uppercase; color: #ffffff;">
+                Alcance y consecuencias:
+              </p>
+              <p style="margin: 0; font-size: 12px; line-height: 1.5; color: #a1a1aa;">
+                Esta advertencia <strong>no restringe tu acceso ni bloquea tus funciones actuales</strong>. Sin embargo, la reincidencia en conductas contrarias a las directrices comunitarias puede derivar en la aplicación de strikes, suspensiones temporales o la cancelación definitiva de la cuenta.
+              </p>
+            </div>
+
+            <div style="margin-top: 24px; text-align: center;">
+              <a href="https://buymeashake.fit" style="display: inline-block; background-color: #c9ff3d; color: #070a08; font-weight: 800; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; text-decoration: none; padding: 12px 28px; border-radius: 9999px;">
+                Ir a Buymeashake.fit &rarr;
+              </a>
+            </div>
+          </td>
+        </tr>
+
+        <!-- Footer -->
+        <tr>
+          <td align="center" style="padding: 20px 24px; background-color: #0a0d0b; border-top: 1px solid rgba(255,255,255,0.06);">
+            <p style="margin: 0; font-size: 11px; color: #52525b; font-weight: 500;">
+              &copy; 2026 Buymeashake.fit &middot; Departamento de Trust &amp; Safety &middot; BDER Communications
+            </p>
+          </td>
+        </tr>
+
+      </table>
+    </body>
+    </html>
+    """
+
+
+def send_warning_sync(
+    to_email: str,
+    user_name: str | None = None,
+    reason: str | None = None,
+    category: str | None = None,
+) -> bool:
+    """Envía la notificación formal de advertencia (warning)."""
+    email_subject = "Aviso oficial: Advertencia de moderación - Buymeashake.fit"
+    html = generate_warning_html(
+        to_email=to_email,
+        user_name=user_name,
+        reason=reason,
+        category=category,
+    )
+    return send_email_sync(to_email, email_subject, html)
+
+
+async def send_warning_email(
+    to_email: str,
+    user_name: str | None = None,
+    reason: str | None = None,
+    category: str | None = None,
+) -> bool:
+    return await asyncio.to_thread(
+        send_warning_sync,
+        to_email=to_email,
+        user_name=user_name,
+        reason=reason,
+        category=category,
+    )
+
+
+def generate_account_reactivated_html(
+    to_email: str,
+    user_name: str | None = None,
+    reason: str | None = None,
+) -> str:
+    esc_name = _esc(user_name) if user_name else "Usuario"
+    esc_reason = f"<p style='margin: 8px 0 0 0; font-size: 12px; color: #a1a1aa;'>Nota de resolución: {_esc(reason)}</p>" if reason else ""
+    login_url = "https://buymeashake.fit/login"
+
+    return f"""
+    <!DOCTYPE html>
+    <html lang="es">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Cuenta Reactivada - Buymeashake.fit</title>
+    </head>
+    <body style="margin: 0; padding: 0; background-color: #090c0a; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #ffffff;">
+      <table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 580px; margin: 30px auto; background-color: #121614; border-radius: 24px; border: 1px solid rgba(255,255,255,0.12); overflow: hidden; box-shadow: 0 25px 50px rgba(0,0,0,0.6);">
+        
+        <!-- Header -->
+        <tr>
+          <td align="center" style="padding: 32px 24px 20px 24px; background: linear-gradient(180deg, #162419 0%, #121614 100%); border-bottom: 1px solid rgba(255,255,255,0.08);">
+            <div style="display: inline-block; background-color: rgba(201,255,61,0.15); border: 1px solid rgba(201,255,61,0.35); color: #c9ff3d; font-size: 10px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; padding: 5px 14px; border-radius: 9999px; margin-bottom: 12px;">
+              Acceso Restaurado
+            </div>
+            <h2 style="margin: 12px 0 6px 0; font-size: 20px; font-weight: 800; color: #ffffff; letter-spacing: -0.3px;">
+              ¡Tu cuenta ha sido reactivada!
+            </h2>
+            <p style="margin: 0; font-size: 13px; color: #a1a1aa; line-height: 1.5;">
+              Tu período de restricción ha finalizado con éxito.
+            </p>
+          </td>
+        </tr>
+
+        <!-- Mensaje -->
+        <tr>
+          <td style="padding: 20px 32px;">
+            <p style="margin: 0 0 14px 0; font-size: 14px; line-height: 1.6; color: #e4e4e7;">
+              Hola, <strong style="color: #ffffff;">{esc_name}</strong>:
+            </p>
+            <p style="margin: 0 0 16px 0; font-size: 13px; line-height: 1.6; color: #a1a1aa;">
+              Nos complace informarte que la suspensión de tu cuenta ha concluido satisfactoriamente. Todos tus privilegios de acceso han sido restablecidos.
+            </p>
+
+            <div style="background-color: #161e18; border-left: 4px solid #c9ff3d; border-radius: 12px; padding: 18px 20px; margin: 16px 0;">
+              <p style="margin: 0; font-size: 13px; font-weight: 600; color: #ffffff; line-height: 1.5;">
+                Ya puedes iniciar sesión con normalidad utilizando tu correo electrónico y contraseña o mediante código de verificación rápida.
+              </p>
+              {esc_reason}
+            </div>
+
+            <div style="margin-top: 24px; text-align: center;">
+              <a href="{login_url}" style="display: inline-block; background-color: #c9ff3d; color: #070a08; font-weight: 800; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; text-decoration: none; padding: 14px 32px; border-radius: 9999px;">
+                Iniciar Sesión Ahora &rarr;
+              </a>
+            </div>
+          </td>
+        </tr>
+
+        <!-- Footer -->
+        <tr>
+          <td align="center" style="padding: 20px 24px; background-color: #0a0d0b; border-top: 1px solid rgba(255,255,255,0.06);">
+            <p style="margin: 0; font-size: 11px; color: #52525b; font-weight: 500;">
+              &copy; 2026 Buymeashake.fit &middot; Departamento de Trust &amp; Safety &middot; BDER Communications
+            </p>
+          </td>
+        </tr>
+
+      </table>
+    </body>
+    </html>
+    """
+
+
+def send_account_reactivated_sync(
+    to_email: str,
+    user_name: str | None = None,
+    reason: str | None = None,
+) -> bool:
+    """Envía la notificación de reactivación de cuenta."""
+    email_subject = "¡Tu cuenta ha sido reactivada! - Buymeashake.fit"
+    html = generate_account_reactivated_html(
+        to_email=to_email,
+        user_name=user_name,
+        reason=reason,
+    )
+    return send_email_sync(to_email, email_subject, html)
+
+
+async def send_account_reactivated_email(
+    to_email: str,
+    user_name: str | None = None,
+    reason: str | None = None,
+) -> bool:
+    return await asyncio.to_thread(
+        send_account_reactivated_sync,
+        to_email=to_email,
+        user_name=user_name,
+        reason=reason,
+    )
+
+
+def generate_appeal_approved_html(
+    to_email: str,
+    user_name: str | None = None,
+    resolution_reason: str | None = None,
+) -> str:
+    esc_email = _esc(to_email)
+    esc_name = _esc(user_name) if user_name else "Usuario"
+    esc_resolution = (
+        _esc(resolution_reason)
+        if resolution_reason
+        else "Apelación aprobada tras evaluación favorable del caso por el equipo de moderación."
+    )
+    login_url = "https://buymeashake.fit/login"
+
+    return f"""
+    <!DOCTYPE html>
+    <html lang="es">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Apelación Aprobada - Buymeashake.fit</title>
+    </head>
+    <body style="margin: 0; padding: 0; background-color: #090c0a; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #ffffff;">
+      <table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 580px; margin: 30px auto; background-color: #121614; border-radius: 24px; border: 1px solid rgba(255,255,255,0.12); overflow: hidden; box-shadow: 0 25px 50px rgba(0,0,0,0.6);">
+        
+        <!-- Header -->
+        <tr>
+          <td align="center" style="padding: 32px 24px 20px 24px; background: linear-gradient(180deg, #0e291c 0%, #121614 100%); border-bottom: 1px solid rgba(255,255,255,0.08);">
+            <div style="display: inline-block; background-color: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.35); color: #10b981; font-size: 10px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; padding: 5px 14px; border-radius: 9999px; margin-bottom: 12px;">
+              Resolución Oficial de Apelación
+            </div>
+            <h2 style="margin: 12px 0 6px 0; font-size: 20px; font-weight: 800; color: #ffffff; letter-spacing: -0.3px;">
+              ¡Tu apelación ha sido aprobada!
+            </h2>
+            <p style="margin: 0; font-size: 13px; color: #a1a1aa; line-height: 1.5;">
+              Notificación oficial del Comité de Confianza y Seguridad (Trust & Safety).
+            </p>
+          </td>
+        </tr>
+
+        <!-- Mensaje Principal -->
+        <tr>
+          <td style="padding: 20px 32px;">
+            <p style="margin: 0 0 14px 0; font-size: 14px; line-height: 1.6; color: #e4e4e7;">
+              Estimado/a, <strong style="color: #ffffff;">{esc_name}</strong>:
+            </p>
+            <p style="margin: 0 0 16px 0; font-size: 13px; line-height: 1.6; color: #a1a1aa;">
+              Te informamos que la solicitud de apelación respecto al veto de tu cuenta (<span style="color: #ffffff; font-family: monospace;">{esc_email}</span>) ha sido revisada minuciosamente y resuelta de manera <strong style="color: #10b981;">favorable</strong>.
+            </p>
+
+            <!-- Tarjeta de Dictamen -->
+            <div style="background-color: #142019; border-left: 4px solid #10b981; border-radius: 12px; padding: 18px 20px; margin: 16px 0;">
+              <p style="margin: 0 0 6px 0; font-size: 11px; font-weight: 800; text-transform: uppercase; color: #34d399; letter-spacing: 0.5px;">
+                Dictamen del Comité:
+              </p>
+              <p style="margin: 0 0 12px 0; font-size: 14px; font-weight: 600; color: #ffffff; line-height: 1.5;">
+                {esc_resolution}
+              </p>
+              <div style="border-top: 1px solid rgba(255,255,255,0.06); padding-top: 10px; margin-top: 10px;">
+                <span style="font-size: 11px; color: #71717a; text-transform: uppercase; font-weight: 700;">Estado de cuenta: </span>
+                <span style="font-size: 12px; color: #10b981; font-weight: 800;">Activa / Restricciones removidas</span>
+              </div>
+            </div>
+
+            <!-- Explicación de acceso -->
+            <div style="background-color: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 14px 18px; margin-top: 16px;">
+              <p style="margin: 0 0 4px 0; font-size: 11px; font-weight: 800; text-transform: uppercase; color: #ffffff;">
+                Acceso Habilitado:
+              </p>
+              <p style="margin: 0; font-size: 12px; line-height: 1.5; color: #a1a1aa;">
+                Tu correo ha sido retirado de la lista negra y tus credenciales de inicio de sesión, así como los códigos de verificación rápida (OTP), se encuentran plenamente operativas nuevamente.
+              </p>
+            </div>
+
+            <!-- Botón Login -->
+            <div style="margin-top: 24px; text-align: center;">
+              <a href="{login_url}" style="display: inline-block; background-color: #c9ff3d; color: #070a08; font-weight: 800; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; text-decoration: none; padding: 14px 32px; border-radius: 9999px;">
+                Iniciar Sesión en Buymeashake.fit &rarr;
+              </a>
+            </div>
+          </td>
+        </tr>
+
+        <!-- Footer -->
+        <tr>
+          <td align="center" style="padding: 20px 24px; background-color: #0a0d0b; border-top: 1px solid rgba(255,255,255,0.06);">
+            <p style="margin: 0; font-size: 11px; color: #52525b; font-weight: 500;">
+              &copy; 2026 Buymeashake.fit &middot; Departamento de Trust &amp; Safety &middot; BDER Communications
+            </p>
+          </td>
+        </tr>
+
+      </table>
+    </body>
+    </html>
+    """
+
+
+def send_appeal_approved_sync(
+    to_email: str,
+    user_name: str | None = None,
+    resolution_reason: str | None = None,
+) -> bool:
+    """Envía la notificación formal de apelación aprobada y cuenta rehabilitada."""
+    email_subject = "Resolución favorable de apelación: Cuenta rehabilitada - Buymeashake.fit"
+    html = generate_appeal_approved_html(
+        to_email=to_email,
+        user_name=user_name,
+        resolution_reason=resolution_reason,
+    )
+    return send_email_sync(to_email, email_subject, html)
+
+
+async def send_appeal_approved_email(
+    to_email: str,
+    user_name: str | None = None,
+    resolution_reason: str | None = None,
+) -> bool:
+    return await asyncio.to_thread(
+        send_appeal_approved_sync,
+        to_email=to_email,
+        user_name=user_name,
+        resolution_reason=resolution_reason,
+    )
+
+
+def generate_strike_appeal_approved_html(
+    to_email: str,
+    user_name: str | None = None,
+    strike_points: int = 1,
+    strike_reason: str | None = None,
+    resolution_reason: str | None = None,
+) -> str:
+    esc_email = _esc(to_email)
+    esc_name = _esc(user_name or "Usuario")
+    esc_strike_reason = _esc(strike_reason or "Conducta inapropiada")
+    esc_resolution = _esc(resolution_reason or "Apelación aceptada tras revisión formal.")
+    login_url = f"{settings.FRONTEND_URL}/login"
+
+    return f"""
+    <!DOCTYPE html>
+    <html lang="es">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Apelación Aprobada: Strike Revocado - Buymeashake.fit</title>
+    </head>
+    <body style="margin: 0; padding: 0; background-color: #090c0a; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #ffffff;">
+      <table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 580px; margin: 30px auto; background-color: #121614; border-radius: 24px; border: 1px solid rgba(255,255,255,0.12); overflow: hidden; box-shadow: 0 25px 50px rgba(0,0,0,0.6);">
+        
+        <!-- Header -->
+        <tr>
+          <td align="center" style="padding: 32px 24px 20px 24px; background: linear-gradient(180deg, #1f2711 0%, #121614 100%); border-bottom: 1px solid rgba(255,255,255,0.08);">
+            <div style="display: inline-block; background-color: rgba(201,255,61,0.15); border: 1px solid rgba(201,255,61,0.35); color: #c9ff3d; font-size: 10px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; padding: 5px 14px; border-radius: 9999px; margin-bottom: 12px;">
+              Resolución Oficial · Strike Anulado
+            </div>
+            <h2 style="margin: 12px 0 6px 0; font-size: 20px; font-weight: 800; color: #ffffff; letter-spacing: -0.3px;">
+              ¡Apelación aprobada: Strike revocado!
+            </h2>
+            <p style="margin: 0; font-size: 13px; color: #a1a1aa; line-height: 1.5;">
+              La amonestación ha sido eliminada y los puntos fueron descontados de tu expediente.
+            </p>
+          </td>
+        </tr>
+
+        <!-- Mensaje Principal -->
+        <tr>
+          <td style="padding: 20px 32px;">
+            <p style="margin: 0 0 14px 0; font-size: 14px; line-height: 1.6; color: #e4e4e7;">
+              Estimado/a, <strong style="color: #ffffff;">{esc_name}</strong>:
+            </p>
+            <p style="margin: 0 0 16px 0; font-size: 13px; line-height: 1.6; color: #a1a1aa;">
+              Te informamos que la solicitud de apelación respecto a la sanción aplicada a tu cuenta (<span style="color: #ffffff; font-family: monospace;">{esc_email}</span>) ha sido revisada por nuestro Comité y resuelta de forma <strong style="color: #c9ff3d;">favorable</strong>.
+            </p>
+
+            <!-- Tarjeta de Detalles del Strike -->
+            <div style="background-color: #171c19; border: 1px solid rgba(201,255,61,0.2); border-radius: 14px; padding: 16px 20px; margin: 16px 0;">
+              <table width="100%">
+                <tr>
+                  <td style="font-size: 12px; color: #a1a1aa;">Medida revocada:</td>
+                  <td align="right">
+                    <span style="display: inline-block; background-color: rgba(201,255,61,0.2); color: #c9ff3d; font-size: 11px; font-weight: 800; padding: 3px 8px; border-radius: 6px;">
+                      -{strike_points} pt (Strike Anulado)
+                    </span>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding-top: 8px; font-size: 12px; color: #a1a1aa;">Motivo original:</td>
+                  <td align="right" style="padding-top: 8px; font-size: 12px; font-weight: 600; color: #ffffff;">
+                    {esc_strike_reason}
+                  </td>
+                </tr>
+              </table>
+
+              <div style="border-top: 1px solid rgba(255,255,255,0.06); padding-top: 12px; margin-top: 12px;">
+                <p style="margin: 0 0 4px 0; font-size: 11px; font-weight: 800; text-transform: uppercase; color: #34d399; letter-spacing: 0.5px;">
+                  Justificación de la Resolución:
+                </p>
+                <p style="margin: 0; font-size: 13px; font-weight: 600; color: #ffffff; line-height: 1.5;">
+                  {esc_resolution}
+                </p>
+              </div>
+            </div>
+
+            <!-- Recordatorio -->
+            <div style="background-color: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 14px 18px; margin-top: 16px;">
+              <p style="margin: 0 0 4px 0; font-size: 11px; font-weight: 800; text-transform: uppercase; color: #ffffff;">
+                Expediente Actualizado:
+              </p>
+              <p style="margin: 0; font-size: 12px; line-height: 1.5; color: #a1a1aa;">
+                Los puntos de este strike han dejado de estar activos, reduciendo tu conteo acumulado y preservando el buen estado de tu cuenta dentro de la plataforma.
+              </p>
+            </div>
+
+            <!-- Botón Mi Cuenta -->
+            <div style="margin-top: 24px; text-align: center;">
+              <a href="{login_url}" style="display: inline-block; background-color: #c9ff3d; color: #070a08; font-weight: 800; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; text-decoration: none; padding: 14px 32px; border-radius: 9999px;">
+                Ir a Mi Cuenta &rarr;
+              </a>
+            </div>
+          </td>
+        </tr>
+
+        <!-- Footer -->
+        <tr>
+          <td align="center" style="padding: 20px 24px; background-color: #0a0d0b; border-top: 1px solid rgba(255,255,255,0.06);">
+            <p style="margin: 0; font-size: 11px; color: #52525b; font-weight: 500;">
+              &copy; 2026 Buymeashake.fit &middot; Departamento de Trust &amp; Safety &middot; BDER Communications
+            </p>
+          </td>
+        </tr>
+
+      </table>
+    </body>
+    </html>
+    """
+
+
+def send_strike_appeal_approved_sync(
+    to_email: str,
+    user_name: str | None = None,
+    strike_points: int = 1,
+    strike_reason: str | None = None,
+    resolution_reason: str | None = None,
+) -> bool:
+    """Envía la notificación formal de strike anulado por apelación."""
+    email_subject = "Resolución favorable de apelación: Strike anulado - Buymeashake.fit"
+    html = generate_strike_appeal_approved_html(
+        to_email=to_email,
+        user_name=user_name,
+        strike_points=strike_points,
+        strike_reason=strike_reason,
+        resolution_reason=resolution_reason,
+    )
+    return send_email_sync(to_email, email_subject, html)
+
+
+async def send_strike_appeal_approved_email(
+    to_email: str,
+    user_name: str | None = None,
+    strike_points: int = 1,
+    strike_reason: str | None = None,
+    resolution_reason: str | None = None,
+) -> bool:
+    return await asyncio.to_thread(
+        send_strike_appeal_approved_sync,
+        to_email=to_email,
+        user_name=user_name,
+        strike_points=strike_points,
+        strike_reason=strike_reason,
+        resolution_reason=resolution_reason,
+    )
+
+
+

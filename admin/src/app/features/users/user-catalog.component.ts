@@ -6,7 +6,13 @@ import {
   AdminGoalSummary,
   AdminUserCatalogItem,
   AdminUserCatalogResponse,
+  AppealBanPayload,
+  AppealStrikePayload,
   BMS_ROLES,
+  DisciplinarySanctionItem,
+  IssueWarningPayload,
+  SuspendUserPayload,
+  UserSanctionsSummary,
 } from '../../core/models/user.model';
 
 @Component({
@@ -115,7 +121,7 @@ import {
 
             @if (selectedStatus() !== 'all') {
               <span class="inline-flex items-center gap-1 rounded-lg border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[11px] font-medium text-emerald-700">
-                Estado: {{ selectedStatus() === 'active' ? 'Solo Activos' : 'Solo Inactivos' }}
+                Estado: {{ getStatusLabel(selectedStatus()) }}
                 <button type="button" (click)="setStatus('all')" class="text-emerald-500 hover:text-emerald-800 cursor-pointer font-bold">×</button>
               </span>
             }
@@ -201,7 +207,7 @@ import {
 
                   <!-- Status Dropdown Menu -->
                   @if (activeMenu() === 'status') {
-                    <div class="absolute left-3 top-11 z-30 w-40 rounded-xl border border-slate-200 bg-white p-1 shadow-lg ring-1 ring-slate-900/5">
+                    <div class="absolute left-3 top-11 z-30 w-44 rounded-xl border border-slate-200 bg-white p-1 shadow-lg ring-1 ring-slate-900/5">
                       <button
                         type="button"
                         (click)="setStatus('all')"
@@ -224,6 +230,32 @@ import {
                           Solo Activos
                         </span>
                         @if (selectedStatus() === 'active') { <span class="text-blue-600 font-bold">✓</span> }
+                      </button>
+                      <button
+                        type="button"
+                        (click)="setStatus('suspended')"
+                        class="w-full text-left rounded-lg px-2.5 py-1.5 text-xs transition cursor-pointer flex items-center justify-between"
+                        [class.bg-blue-50]="selectedStatus() === 'suspended'"
+                        [class.font-semibold]="selectedStatus() === 'suspended'"
+                      >
+                        <span class="flex items-center gap-1.5">
+                          <span class="h-1.5 w-1.5 rounded-full bg-amber-500"></span>
+                          Solo Suspendidos
+                        </span>
+                        @if (selectedStatus() === 'suspended') { <span class="text-blue-600 font-bold">✓</span> }
+                      </button>
+                      <button
+                        type="button"
+                        (click)="setStatus('banned')"
+                        class="w-full text-left rounded-lg px-2.5 py-1.5 text-xs transition cursor-pointer flex items-center justify-between"
+                        [class.bg-blue-50]="selectedStatus() === 'banned'"
+                        [class.font-semibold]="selectedStatus() === 'banned'"
+                      >
+                        <span class="flex items-center gap-1.5">
+                          <span class="h-1.5 w-1.5 rounded-full bg-rose-500"></span>
+                          Solo Vetados
+                        </span>
+                        @if (selectedStatus() === 'banned') { <span class="text-blue-600 font-bold">✓</span> }
                       </button>
                       <button
                         type="button"
@@ -519,7 +551,17 @@ import {
                   <tr class="transition-colors hover:bg-slate-50/80">
                     <!-- Columna ESTADO (a la izquierda de Usuario) -->
                     <td class="px-4 py-4 whitespace-nowrap">
-                      @if (user.is_active) {
+                      @if (user.is_banned) {
+                        <span class="inline-flex items-center gap-1.5 rounded-full border border-rose-200 bg-rose-50 px-2.5 py-0.5 text-xs font-semibold text-rose-700">
+                          <span class="h-1.5 w-1.5 rounded-full bg-rose-500"></span>
+                          Vetado
+                        </span>
+                      } @else if (user.is_suspended) {
+                        <span class="inline-flex items-center gap-1.5 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-0.5 text-xs font-semibold text-amber-700">
+                          <span class="h-1.5 w-1.5 rounded-full bg-amber-500"></span>
+                          Suspendido
+                        </span>
+                      } @else if (user.is_active) {
                         <span class="inline-flex items-center gap-1.5 rounded-full border border-emerald-200/70 bg-emerald-50 px-2.5 py-0.5 text-xs font-semibold text-emerald-700">
                           <span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
                           Activo
@@ -774,7 +816,15 @@ import {
                       </svg>
                     </span>
                   }
-                  @if (user.is_active) {
+                  @if (userSanctionsSummary()?.is_banned || userSanctionsSummary()?.is_blacklisted || user.is_banned) {
+                    <span class="inline-flex items-center gap-1 rounded-full bg-rose-50 border border-rose-200 px-2 py-0.5 text-[10px] font-bold text-rose-700">
+                      <span class="h-1.5 w-1.5 rounded-full bg-rose-500"></span> Vetado / Lista Negra
+                    </span>
+                  } @else if (userSanctionsSummary()?.is_suspended || user.is_suspended) {
+                    <span class="inline-flex items-center gap-1 rounded-full bg-amber-50 border border-amber-200 px-2 py-0.5 text-[10px] font-bold text-amber-700">
+                      <span class="h-1.5 w-1.5 rounded-full bg-amber-500"></span> Suspendido Temporalmente
+                    </span>
+                  } @else if (user.is_active) {
                     <span class="inline-flex items-center gap-1 rounded-full bg-emerald-50 border border-emerald-200 px-2 py-0.5 text-[10px] font-bold text-emerald-700">
                       <span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span> Activo
                     </span>
@@ -909,6 +959,256 @@ import {
                 </div>
               }
             </div>
+
+            <!-- Disciplinary Sanctions & Trust Section -->
+            <div class="rounded-2xl border border-slate-200 bg-slate-50/60 p-5 space-y-4">
+              <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div class="flex items-center gap-2">
+                  <span class="h-2 w-2 rounded-full bg-amber-500"></span>
+                  <h4 class="text-sm font-bold uppercase tracking-wider text-slate-800">
+                    Sanciones & Estado Disciplinario
+                  </h4>
+                </div>
+
+                <!-- Action buttons -->
+                <div class="flex flex-wrap items-center gap-2">
+                  @if (user.is_banned || userSanctionsSummary()?.is_banned || userSanctionsSummary()?.is_blacklisted) {
+                    <button
+                      type="button"
+                      (click)="openAppealModal(user)"
+                      class="inline-flex items-center gap-1.5 rounded-xl border border-emerald-300 bg-emerald-50 px-3 py-1.5 text-xs font-bold text-emerald-800 shadow-sm transition hover:bg-emerald-100 cursor-pointer"
+                      title="Tramitar apelación y rehabilitar usuario"
+                    >
+                      <svg class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                      </svg>
+                      <span>Apelar / Rehabilitar</span>
+                    </button>
+                  } @else if (user.is_suspended || userSanctionsSummary()?.is_suspended) {
+                    <!-- USUARIO SUSPENDIDO: Solo Levantar Suspensión y Vetar / Banear -->
+                    <button
+                      type="button"
+                      (click)="openUnsuspendModal(user)"
+                      class="inline-flex items-center gap-1.5 rounded-xl border border-emerald-300 bg-emerald-50 px-3 py-1.5 text-xs font-bold text-emerald-800 shadow-sm transition hover:bg-emerald-100 cursor-pointer"
+                      title="Levantar suspensión anticipadamente y reactivar cuenta"
+                    >
+                      <svg class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                      </svg>
+                      <span>Levantar Suspensión</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      (click)="openBanModal(user)"
+                      class="inline-flex items-center gap-1.5 rounded-xl border border-rose-300 bg-rose-50 px-3 py-1.5 text-xs font-bold text-rose-800 shadow-sm transition hover:bg-rose-100 cursor-pointer"
+                      title="Escalar suspensión a veto permanente"
+                    >
+                      <svg class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M13.477 14.89A6 6 0 015.11 6.524l8.367 8.368zm1.414-1.414L6.524 5.11a6 6 0 018.367 8.367zM18 10a8 8 0 11-16 0 8 8 0 0116 0z" clip-rule="evenodd" />
+                      </svg>
+                      <span>Vetar / Banear</span>
+                    </button>
+                  } @else {
+                    <button
+                      type="button"
+                      (click)="openWarningModal(user)"
+                      class="inline-flex items-center gap-1.5 rounded-xl border border-slate-300 bg-slate-100 px-3 py-1.5 text-xs font-bold text-slate-700 shadow-sm transition hover:bg-slate-200 cursor-pointer"
+                      title="Emitir advertencia formal por correo sin corte de acceso"
+                    >
+                      <svg class="h-3.5 w-3.5 text-slate-500" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                      </svg>
+                      <span>+ Advertencia</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      (click)="openStrikeModal(user)"
+                      class="inline-flex items-center gap-1.5 rounded-xl border border-amber-300 bg-amber-50 px-3 py-1.5 text-xs font-bold text-amber-800 shadow-sm transition hover:bg-amber-100 cursor-pointer"
+                    >
+                      <svg class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                      </svg>
+                      <span>+ Aplicar Strike</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      (click)="openSuspendModal(user)"
+                      class="inline-flex items-center gap-1.5 rounded-xl border border-amber-300 bg-amber-50 px-3 py-1.5 text-xs font-bold text-amber-800 shadow-sm transition hover:bg-amber-100 cursor-pointer"
+                      title="Suspender temporalmente por X días"
+                    >
+                      <svg class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8 7a1 1 0 00-1 1v4a1 1 0 002 0V8a1 1 0 00-1-1zm4 0a1 1 0 00-1 1v4a1 1 0 002 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
+                      </svg>
+                      <span>Suspender</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      (click)="openBanModal(user)"
+                      class="inline-flex items-center gap-1.5 rounded-xl border border-rose-300 bg-rose-50 px-3 py-1.5 text-xs font-bold text-rose-800 shadow-sm transition hover:bg-rose-100 cursor-pointer"
+                    >
+                      <svg class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M13.477 14.89A6 6 0 015.11 6.524l8.367 8.368zm1.414-1.414L6.524 5.11a6 6 0 018.367 8.367zM18 10a8 8 0 11-16 0 8 8 0 0116 0z" clip-rule="evenodd" />
+                      </svg>
+                      <span>Vetar / Banear</span>
+                    </button>
+                  }
+                </div>
+              </div>
+
+              <!-- Strike status bar -->
+              @if (userSanctionsSummary(); as summary) {
+                @if (summary.is_suspended && summary.active_suspension) {
+                  <div class="rounded-xl border border-amber-300 bg-amber-50/90 p-3.5 text-xs text-amber-950 flex items-start gap-3 shadow-xs">
+                    <div class="h-8 w-8 rounded-xl bg-amber-100 border border-amber-200 flex items-center justify-center shrink-0 text-amber-700">
+                      <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8 7a1 1 0 00-1 1v4a1 1 0 002 0V8a1 1 0 00-1-1zm4 0a1 1 0 00-1 1v4a1 1 0 002 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
+                      </svg>
+                    </div>
+                    <div class="flex-1 space-y-1">
+                      <div class="flex items-center justify-between gap-2">
+                        <span class="font-extrabold text-amber-900 text-xs">Cuenta Suspendida Temporalmente</span>
+                        <span class="rounded-full bg-amber-200/80 border border-amber-300 px-2 py-0.5 text-[10px] font-extrabold text-amber-900">
+                          {{ summary.active_suspension.days_remaining }} día(s) restante(s)
+                        </span>
+                      </div>
+                      <p class="text-amber-800 text-[11px]">
+                        <strong>Motivo:</strong> {{ summary.active_suspension.reason || 'Violación de directrices de la plataforma' }}
+                      </p>
+                      <div class="flex items-center justify-between text-[10px] text-amber-700 pt-0.5">
+                        <span>Desde: {{ summary.active_suspension.starts_at ? (summary.active_suspension.starts_at | date: 'dd/MM/yyyy HH:mm') : '—' }}</span>
+                        <span>Hasta: {{ summary.active_suspension.expires_at ? (summary.active_suspension.expires_at | date: 'dd/MM/yyyy HH:mm') : '—' }}</span>
+                      </div>
+                    </div>
+                  </div>
+                }
+
+                <div class="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-white p-3.5 border border-slate-100 shadow-xs">
+                  <div class="flex items-center gap-3">
+                    <!-- Strike Pips indicator (1, 2, 3) -->
+                    <div class="flex items-center gap-1.5">
+                      <span class="text-xs font-semibold text-slate-500 mr-1">Strikes:</span>
+                      <span
+                        class="h-4 w-4 rounded-full border flex items-center justify-center text-[10px] font-bold"
+                        [class.bg-amber-400]="summary.total_strike_points >= 1"
+                        [class.border-amber-500]="summary.total_strike_points >= 1"
+                        [class.text-white]="summary.total_strike_points >= 1"
+                        [class.bg-slate-100]="summary.total_strike_points < 1"
+                        [class.border-slate-300]="summary.total_strike_points < 1"
+                      >1</span>
+                      <span
+                        class="h-4 w-4 rounded-full border flex items-center justify-center text-[10px] font-bold"
+                        [class.bg-amber-500]="summary.total_strike_points >= 2"
+                        [class.border-amber-600]="summary.total_strike_points >= 2"
+                        [class.text-white]="summary.total_strike_points >= 2"
+                        [class.bg-slate-100]="summary.total_strike_points < 2"
+                        [class.border-slate-300]="summary.total_strike_points < 2"
+                      >2</span>
+                      <span
+                        class="h-4 w-4 rounded-full border flex items-center justify-center text-[10px] font-bold"
+                        [class.bg-rose-600]="summary.total_strike_points >= 3"
+                        [class.border-rose-700]="summary.total_strike_points >= 3"
+                        [class.text-white]="summary.total_strike_points >= 3"
+                        [class.bg-slate-100]="summary.total_strike_points < 3"
+                        [class.border-slate-300]="summary.total_strike_points < 3"
+                      >3</span>
+                    </div>
+
+                    <span class="text-xs font-bold" [class.text-rose-600]="summary.is_banned" [class.text-amber-700]="!summary.is_banned && summary.total_strike_points > 0" [class.text-emerald-700]="!summary.is_banned && summary.total_strike_points === 0">
+                      @if (summary.is_banned) {
+                        Baneado permanentemente
+                      } @else if (summary.total_strike_points === 0) {
+                        Cuenta limpia (0 strikes)
+                      } @else {
+                        {{ summary.total_strike_points }} strike(s) acumulados
+                      }
+                    </span>
+                  </div>
+
+                  @if (summary.is_blacklisted) {
+                    <span class="inline-flex items-center gap-1 rounded-md bg-rose-100 px-2 py-0.5 text-[10px] font-bold text-rose-800">
+                      En Lista Negra
+                    </span>
+                  }
+                </div>
+              }
+
+              <!-- Sanction Feedback message -->
+              @if (sanctionFeedback()) {
+                <div class="rounded-xl border border-emerald-200 bg-emerald-50 p-2.5 text-xs text-emerald-800 font-medium">
+                  {{ sanctionFeedback() }}
+                </div>
+              }
+
+              <!-- Sanctions history table -->
+              @if (loadingSanctions()) {
+                <p class="text-xs text-slate-400 py-2">Consultando historial disciplinario...</p>
+              } @else if (userSanctions().length === 0) {
+                <p class="text-xs text-slate-400 italic">No registra sanciones ni amonestaciones previas.</p>
+              } @else {
+                <div class="space-y-2">
+                  <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Historial de Sanciones</span>
+                  <div class="max-h-48 overflow-y-auto space-y-1.5">
+                    @for (s of userSanctions(); track s.id) {
+                      <div class="rounded-xl border border-slate-200/80 bg-white p-2.5 text-xs flex items-start justify-between gap-3">
+                        <div class="space-y-0.5">
+                          <div class="flex items-center gap-2">
+                            @if (s.action_type === 'ban') {
+                              <span class="inline-flex items-center rounded-md bg-rose-100 px-1.5 py-0.5 text-[10px] font-bold text-rose-800">
+                                BANEO
+                              </span>
+                            } @else if (s.action_type === 'suspension') {
+                              <span class="inline-flex items-center rounded-md bg-amber-100 px-1.5 py-0.5 text-[10px] font-bold text-amber-800">
+                                SUSPENSIÓN ({{ s.duration_days ?? 7 }}D)
+                              </span>
+                            } @else {
+                              <span class="inline-flex items-center rounded-md bg-yellow-100 px-1.5 py-0.5 text-[10px] font-bold text-yellow-800">
+                                STRIKE (+{{ s.points }})
+                              </span>
+                            }
+                            <span class="font-bold text-slate-800">{{ s.reason }}</span>
+                          </div>
+                          <p class="text-[11px] text-slate-400">
+                            Categoría: {{ s.category }} · {{ s.created_at ? (s.created_at | date: 'dd/MM/yyyy HH:mm') : '—' }}
+                            @if (s.action_type === 'suspension' && s.expires_at) {
+                              · Vence: {{ s.expires_at | date: 'dd/MM/yyyy HH:mm' }}
+                            }
+                          </p>
+                        </div>
+                        <div class="flex items-center gap-2 shrink-0">
+                          @if (s.action_type === 'suspension' && s.is_active) {
+                            <button
+                              type="button"
+                              (click)="openUnsuspendModal(user)"
+                              class="rounded-lg border border-amber-300 bg-amber-50 px-2 py-0.5 text-[10px] font-bold text-amber-800 hover:bg-amber-100 cursor-pointer shadow-xs transition"
+                              title="Levantar suspensión anticipadamente"
+                            >
+                              Levantar
+                            </button>
+                          }
+                          @if (s.action_type === 'strike' && s.is_active) {
+                            <button
+                              type="button"
+                              (click)="openAppealStrikeModal(s, user)"
+                              class="rounded-lg border border-yellow-300 bg-yellow-50 px-2 py-0.5 text-[10px] font-bold text-yellow-800 hover:bg-yellow-100 cursor-pointer shadow-xs transition"
+                              title="Apelar y anular este strike"
+                            >
+                              Apelar Strike
+                            </button>
+                          }
+                          <span class="text-[10px] font-bold" [class.text-emerald-600]="s.is_active" [class.text-slate-400]="!s.is_active">
+                            {{ s.is_active ? 'Activa' : 'Inactiva' }}
+                          </span>
+                        </div>
+                      </div>
+                    }
+                  </div>
+                </div>
+              }
+            </div>
           </div>
 
           <!-- Modal Footer -->
@@ -919,6 +1219,568 @@ import {
               class="rounded-xl bg-slate-900 px-5 py-2 text-xs font-semibold text-white shadow-sm hover:bg-slate-800 transition cursor-pointer"
             >
               Cerrar
+            </button>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- SUBMODAL: APLICAR STRIKE -->
+    @if (showStrikeModal() && modalUser(); as targetUser) {
+      <div class="fixed inset-0 z-60 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm">
+        <div class="relative w-full max-w-md rounded-3xl bg-white shadow-2xl overflow-hidden border border-slate-100 p-6 space-y-4">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <span class="flex h-8 w-8 items-center justify-center rounded-xl bg-amber-100 text-amber-700">
+                <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                </svg>
+              </span>
+              <h3 class="text-base font-bold text-slate-900">Aplicar Strike Disciplinario</h3>
+            </div>
+            <button type="button" (click)="showStrikeModal.set(false)" class="text-slate-400 hover:text-slate-600 cursor-pointer">✕</button>
+          </div>
+
+          <div class="rounded-xl bg-slate-50 p-3 text-xs text-slate-600">
+            Usuario sancionado: <strong class="text-slate-900">{{ targetUser.full_name }}</strong> ({{ targetUser.email }})
+          </div>
+
+          <div class="flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50 p-2.5 text-xs text-amber-800">
+            <svg class="h-4 w-4 shrink-0 text-amber-600 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+            </svg>
+            <div>
+              <strong>Regla de 3 Strikes:</strong> Si el usuario acumula 3 o más puntos activos de strike, su cuenta será desactivada y su correo enviado a la lista negra automáticamente.
+            </div>
+          </div>
+
+          <div class="space-y-3">
+            <div>
+              <div class="flex items-center justify-between mb-1">
+                <label class="block text-xs font-bold text-slate-700">Motivo de la infracción *</label>
+                <span class="text-[11px] font-semibold"
+                  [class.text-rose-500]="strikeReason.trim().length < 3 || strikeReason.trim().length > 500"
+                  [class.text-emerald-600]="strikeReason.trim().length >= 3 && strikeReason.trim().length <= 500">
+                  {{ strikeReason.trim().length }}/500
+                </span>
+              </div>
+              <textarea
+                [(ngModel)]="strikeReason"
+                rows="3"
+                maxlength="500"
+                placeholder="Ejemplo: Publicación de contenido inapropiado o violación a las normas comunitarias (mínimo 3 caracteres)."
+                class="w-full rounded-xl border border-slate-200 bg-white p-2.5 text-xs text-slate-900 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/20"
+              ></textarea>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">Puntos de Strike</label>
+                <select
+                  [(ngModel)]="strikePoints"
+                  class="w-full rounded-xl border border-slate-200 bg-white p-2 text-xs text-slate-900 focus:border-amber-500 focus:outline-none"
+                >
+                  <option [value]="1">1 Punto (Amonestación leve)</option>
+                  <option [value]="2">2 Puntos (Infracción grave)</option>
+                  <option [value]="3">3 Puntos (Ban automático)</option>
+                </select>
+              </div>
+
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">Categoría</label>
+                <select
+                  [(ngModel)]="strikeCategory"
+                  class="w-full rounded-xl border border-slate-200 bg-white p-2 text-xs text-slate-900 focus:border-amber-500 focus:outline-none"
+                >
+                  <option value="conduct">Conducta / Comportamiento</option>
+                  <option value="harassment">Acoso / Hostigamiento</option>
+                  <option value="fraud">Fraude o Estafa</option>
+                  <option value="unfulfilled_rewards">Incumplimiento de Recompensas</option>
+                  <option value="other">Otro</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex items-center justify-end gap-2 pt-2">
+            <button
+              type="button"
+              (click)="showStrikeModal.set(false)"
+              class="rounded-xl border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-50 cursor-pointer"
+            >
+              Cancelar
+            </button>
+            <button
+              type="button"
+              [disabled]="submittingSanction() || strikeReason.trim().length < 3"
+              (click)="submitStrike(targetUser)"
+              class="rounded-xl bg-amber-600 px-4 py-2 text-xs font-bold text-white shadow-sm hover:bg-amber-700 disabled:opacity-50 cursor-pointer"
+            >
+              {{ submittingSanction() ? 'Aplicando...' : 'Aplicar Strike' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- SUBMODAL: EMITIR ADVERTENCIA -->
+    @if (showWarningModal() && modalUser(); as targetUser) {
+      <div class="fixed inset-0 z-60 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm">
+        <div class="relative w-full max-w-md rounded-3xl bg-white shadow-2xl overflow-hidden border border-slate-100 p-6 space-y-4">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <span class="flex h-8 w-8 items-center justify-center rounded-xl bg-slate-100 text-slate-700">
+                <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                </svg>
+              </span>
+              <h3 class="text-base font-bold text-slate-900">Emitir Advertencia Formal</h3>
+            </div>
+            <button type="button" (click)="showWarningModal.set(false)" class="text-slate-400 hover:text-slate-600 cursor-pointer">✕</button>
+          </div>
+
+          <div class="rounded-xl bg-slate-50 p-3 text-xs text-slate-600">
+            Usuario: <strong class="text-slate-900">{{ targetUser.full_name }}</strong> ({{ targetUser.email }})
+          </div>
+
+          <div class="flex items-start gap-2 rounded-xl border border-slate-200 bg-slate-100 p-2.5 text-xs text-slate-700">
+            <svg class="h-4 w-4 shrink-0 text-slate-500 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
+            </svg>
+            <div>
+              <strong>Aviso formal:</strong> La advertencia no interrumpe el acceso del usuario ni acumula puntos de strike, pero queda asentada en su expediente y se le notifica por correo electrónico.
+            </div>
+          </div>
+
+          <div class="space-y-3">
+            <div>
+              <div class="flex items-center justify-between mb-1">
+                <label class="block text-xs font-bold text-slate-700">Motivo formal de la advertencia *</label>
+                <span class="text-[11px] font-semibold"
+                  [class.text-rose-500]="warningReason.trim().length < 3 || warningReason.trim().length > 500"
+                  [class.text-emerald-600]="warningReason.trim().length >= 3 && warningReason.trim().length <= 500">
+                  {{ warningReason.trim().length }}/500
+                </span>
+              </div>
+              <textarea
+                [(ngModel)]="warningReason"
+                rows="3"
+                maxlength="500"
+                placeholder="Indica de forma clara el comportamiento advertido (mínimo 3 caracteres)..."
+                class="w-full rounded-xl border border-slate-200 bg-white p-2.5 text-xs text-slate-900 focus:border-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-500/20"
+              ></textarea>
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">Categoría</label>
+              <select
+                [(ngModel)]="warningCategory"
+                class="w-full rounded-xl border border-slate-200 bg-white p-2 text-xs text-slate-900 focus:border-slate-500 focus:outline-none"
+              >
+                <option value="conduct">Conducta / Convivencia</option>
+                <option value="content">Contenido Inapropiado</option>
+                <option value="spam">Spam / Publicidad no deseada</option>
+                <option value="harassment">Acoso / Mensajes hostiles</option>
+                <option value="terms">Normas comunitarias</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="flex items-center justify-end gap-2 pt-2">
+            <button
+              type="button"
+              (click)="showWarningModal.set(false)"
+              class="rounded-xl border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-50 cursor-pointer"
+            >
+              Cancelar
+            </button>
+            <button
+              type="button"
+              [disabled]="submittingSanction() || warningReason.trim().length < 3"
+              (click)="submitWarning(targetUser)"
+              class="rounded-xl bg-slate-900 px-4 py-2 text-xs font-bold text-white shadow-sm hover:bg-slate-800 disabled:opacity-50 cursor-pointer"
+            >
+              {{ submittingSanction() ? 'Enviando...' : 'Emitir y Notificar' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- SUBMODAL: VETAR / BANEAR USUARIO -->
+    @if (showBanModal() && modalUser(); as targetUser) {
+      <div class="fixed inset-0 z-60 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm">
+        <div class="relative w-full max-w-md rounded-3xl bg-white shadow-2xl overflow-hidden border border-slate-100 p-6 space-y-4">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <span class="flex h-8 w-8 items-center justify-center rounded-xl bg-rose-100 text-rose-700">
+                <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M13.477 14.89A6 6 0 015.11 6.524l8.367 8.368zm1.414-1.414L6.524 5.11a6 6 0 018.367 8.367zM18 10a8 8 0 11-16 0 8 8 0 0116 0z" clip-rule="evenodd" />
+                </svg>
+              </span>
+              <h3 class="text-base font-bold text-slate-900">Vetar Usuario Permanentemente</h3>
+            </div>
+            <button type="button" (click)="showBanModal.set(false)" class="text-slate-400 hover:text-slate-600 cursor-pointer">✕</button>
+          </div>
+
+          <div class="rounded-xl bg-rose-50 p-3 text-xs text-rose-800 border border-rose-200">
+            Esta acción desactivará todos los roles de <strong class="font-bold">{{ targetUser.full_name }}</strong>, revocará su verificación de atleta e ingresará su correo (<strong>{{ targetUser.email }}</strong>) a la Lista Negra para impedirle volver a entrar o registrarse.
+          </div>
+
+          <div>
+            <div class="flex items-center justify-between mb-1">
+              <label class="block text-xs font-bold text-slate-700">Motivo del Veto / Baneo *</label>
+              <span class="text-[11px] font-semibold"
+                [class.text-rose-500]="banReason.trim().length < 3 || banReason.trim().length > 500"
+                [class.text-emerald-600]="banReason.trim().length >= 3 && banReason.trim().length <= 500">
+                {{ banReason.trim().length }}/500
+              </span>
+            </div>
+            <textarea
+              [(ngModel)]="banReason"
+              rows="3"
+              maxlength="500"
+              placeholder="Indica la razón formal del veto permanente (mínimo 3 caracteres)..."
+              class="w-full rounded-xl border border-slate-200 bg-white p-2.5 text-xs text-slate-900 focus:border-rose-500 focus:outline-none focus:ring-2 focus:ring-rose-500/20"
+            ></textarea>
+          </div>
+
+          <div class="flex items-center justify-end gap-2 pt-2">
+            <button
+              type="button"
+              (click)="showBanModal.set(false)"
+              class="rounded-xl border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-50 cursor-pointer"
+            >
+              Cancelar
+            </button>
+            <button
+              type="button"
+              [disabled]="submittingSanction() || banReason.trim().length < 3"
+              (click)="submitBan(targetUser)"
+              class="rounded-xl bg-rose-600 px-4 py-2 text-xs font-bold text-white shadow-sm hover:bg-rose-700 disabled:opacity-50 cursor-pointer"
+            >
+              {{ submittingSanction() ? 'Baneando...' : 'Confirmar Veto y Bloqueo' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- SUBMODAL: APROBAR APELACIÓN Y REHABILITAR -->
+    @if (showAppealModal() && modalUser(); as targetUser) {
+      <div class="fixed inset-0 z-60 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm">
+        <div class="relative w-full max-w-md rounded-3xl bg-white shadow-2xl overflow-hidden border border-slate-100 p-6 space-y-4">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <span class="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700">
+                <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                </svg>
+              </span>
+              <h3 class="text-base font-bold text-slate-900">Aprobar Apelación y Rehabilitar</h3>
+            </div>
+            <button type="button" (click)="showAppealModal.set(false)" class="text-slate-400 hover:text-slate-600 cursor-pointer">✕</button>
+          </div>
+
+          <div class="rounded-xl bg-slate-50 p-3 text-xs text-slate-600">
+            Usuario: <strong class="text-slate-900">{{ targetUser.full_name }}</strong> ({{ targetUser.email }})
+          </div>
+
+          <p class="text-xs text-slate-600">
+            Esta acción revocará el veto sobre la cuenta, la removerá de la lista negra, restaurará su rol y le enviará la notificación oficial de reactivación.
+          </p>
+
+          <div class="space-y-3">
+            <div>
+              <div class="flex items-center justify-between mb-1">
+                <label class="block text-xs font-bold text-slate-700">Justificación de la Resolución *</label>
+                <span class="text-[11px] font-semibold"
+                  [class.text-rose-500]="appealReason.trim().length < 3 || appealReason.trim().length > 500"
+                  [class.text-emerald-600]="appealReason.trim().length >= 3 && appealReason.trim().length <= 500">
+                  {{ appealReason.trim().length }}/500
+                </span>
+              </div>
+              <textarea
+                [(ngModel)]="appealReason"
+                rows="3"
+                maxlength="500"
+                placeholder="Indica el motivo por el cual se acepta la apelación (mínimo 3 caracteres)..."
+                class="w-full rounded-xl border border-slate-200 bg-white p-2.5 text-xs text-slate-900 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+              ></textarea>
+            </div>
+
+            <div class="rounded-xl border border-emerald-100 bg-emerald-50/50 p-3 flex items-start gap-2.5">
+              <input
+                type="checkbox"
+                id="modalAppealResetStrikes"
+                [(ngModel)]="appealResetStrikes"
+                class="mt-0.5 h-4 w-4 rounded text-emerald-600 focus:ring-emerald-500 border-slate-300 cursor-pointer"
+              />
+              <label for="modalAppealResetStrikes" class="text-xs text-slate-700 cursor-pointer">
+                <span class="font-bold text-slate-900">Reiniciar strikes acumulados</span>
+                <p class="text-[11px] text-slate-500 mt-0.5">Perdona infracciones pasadas para que empiece de nuevo con 0 strikes.</p>
+              </label>
+            </div>
+          </div>
+
+          <div class="flex items-center justify-end gap-2 pt-2">
+            <button
+              type="button"
+              (click)="showAppealModal.set(false)"
+              class="rounded-xl border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-50 cursor-pointer"
+            >
+              Cancelar
+            </button>
+            <button
+              type="button"
+              [disabled]="submittingSanction() || appealReason.trim().length < 3"
+              (click)="submitAppeal(targetUser)"
+              class="rounded-xl bg-emerald-600 px-4 py-2 text-xs font-bold text-white shadow-sm hover:bg-emerald-700 disabled:opacity-50 cursor-pointer"
+            >
+              {{ submittingSanction() ? 'Procesando...' : 'Aprobar y Rehabilitar' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- SUBMODAL: APROBAR APELACIÓN Y ANULAR STRIKE -->
+    @if (showAppealStrikeModal() && selectedStrikeForAppeal(); as targetStrike) {
+      <div class="fixed inset-0 z-60 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm">
+        <div class="relative w-full max-w-md rounded-3xl bg-white shadow-2xl overflow-hidden border border-slate-100 p-6 space-y-4">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <span class="flex h-8 w-8 items-center justify-center rounded-xl bg-amber-100 text-amber-700">
+                <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                </svg>
+              </span>
+              <h3 class="text-base font-bold text-slate-900">Aprobar Apelación y Anular Strike</h3>
+            </div>
+            <button type="button" (click)="showAppealStrikeModal.set(false)" class="text-slate-400 hover:text-slate-600 cursor-pointer">✕</button>
+          </div>
+
+          <div class="rounded-xl bg-slate-50 p-3 text-xs space-y-1.5 border border-slate-200/60">
+            <div class="flex justify-between">
+              <span class="text-slate-500">Puntos a descontar:</span>
+              <strong class="text-amber-700 font-bold">-{{ targetStrike.points }} pt</strong>
+            </div>
+            <div>
+              <span class="text-slate-500">Motivo:</span> <span class="text-slate-900 font-medium">{{ targetStrike.reason }}</span>
+            </div>
+          </div>
+
+          <p class="text-xs text-slate-600">
+            Esta acción revocará la amonestación, descontará los puntos del historial del usuario y le enviará la notificación oficial de strike revocado.
+          </p>
+
+          <div>
+            <div class="flex items-center justify-between mb-1">
+              <label class="block text-xs font-bold text-slate-700">Justificación de la Resolución *</label>
+              <span class="text-[11px] font-semibold"
+                [class.text-rose-500]="appealStrikeReason.trim().length < 3 || appealStrikeReason.trim().length > 500"
+                [class.text-emerald-600]="appealStrikeReason.trim().length >= 3 && appealStrikeReason.trim().length <= 500">
+                {{ appealStrikeReason.trim().length }}/500
+              </span>
+            </div>
+            <textarea
+              [(ngModel)]="appealStrikeReason"
+              rows="3"
+              maxlength="500"
+              placeholder="Indica el motivo por el cual se acepta la apelación de este strike (mínimo 3 caracteres)..."
+              class="w-full rounded-xl border border-slate-200 bg-white p-2.5 text-xs text-slate-900 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/20"
+            ></textarea>
+          </div>
+
+          <div class="flex items-center justify-end gap-2 pt-2">
+            <button
+              type="button"
+              (click)="showAppealStrikeModal.set(false)"
+              class="rounded-xl border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-50 cursor-pointer"
+            >
+              Cancelar
+            </button>
+            <button
+              type="button"
+              [disabled]="submittingSanction() || appealStrikeReason.trim().length < 3"
+              (click)="submitAppealStrike(targetStrike)"
+              class="rounded-xl bg-amber-600 px-4 py-2 text-xs font-bold text-white shadow-sm hover:bg-amber-700 disabled:opacity-50 cursor-pointer"
+            >
+              {{ submittingSanction() ? 'Procesando...' : 'Aprobar y Anular Strike' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- SUBMODAL: SUSPENDER USUARIO -->
+    @if (showSuspendModal() && modalUser(); as targetUser) {
+      <div class="fixed inset-0 z-60 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm">
+        <div class="relative w-full max-w-md rounded-3xl bg-white shadow-2xl overflow-hidden border border-slate-100 p-6 space-y-4">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <span class="flex h-8 w-8 items-center justify-center rounded-xl bg-amber-100 text-amber-700">
+                <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8 7a1 1 0 00-1 1v4a1 1 0 002 0V8a1 1 0 00-1-1zm4 0a1 1 0 00-1 1v4a1 1 0 002 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
+                </svg>
+              </span>
+              <h3 class="text-base font-bold text-slate-900">Suspender Usuario Temporalmente</h3>
+            </div>
+            <button type="button" (click)="showSuspendModal.set(false)" class="text-slate-400 hover:text-slate-600 cursor-pointer">✕</button>
+          </div>
+
+          <div class="rounded-xl bg-amber-50 p-3 text-xs text-amber-900 border border-amber-200">
+            La suspensión impedirá el acceso a la cuenta de <strong class="font-bold">{{ targetUser.full_name }}</strong> (<strong>{{ targetUser.email }}</strong>) durante el plazo especificado. Al expirar el período, el sistema reactivará automáticamente el acceso.
+          </div>
+
+          <!-- Duración -->
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1.5">Duración de la Suspensión</label>
+            <div class="grid grid-cols-4 gap-2">
+              <button
+                type="button"
+                (click)="suspendDays = 3"
+                class="rounded-xl border py-2 text-xs font-bold transition cursor-pointer text-center"
+                [class.border-amber-500]="suspendDays === 3"
+                [class.bg-amber-50]="suspendDays === 3"
+                [class.text-amber-800]="suspendDays === 3"
+                [class.border-slate-200]="suspendDays !== 3"
+                [class.text-slate-600]="suspendDays !== 3"
+              >
+                3 días
+              </button>
+              <button
+                type="button"
+                (click)="suspendDays = 7"
+                class="rounded-xl border py-2 text-xs font-bold transition cursor-pointer text-center"
+                [class.border-amber-500]="suspendDays === 7"
+                [class.bg-amber-50]="suspendDays === 7"
+                [class.text-amber-800]="suspendDays === 7"
+                [class.border-slate-200]="suspendDays !== 7"
+                [class.text-slate-600]="suspendDays !== 7"
+              >
+                7 días
+              </button>
+              <button
+                type="button"
+                (click)="suspendDays = 15"
+                class="rounded-xl border py-2 text-xs font-bold transition cursor-pointer text-center"
+                [class.border-amber-500]="suspendDays === 15"
+                [class.bg-amber-50]="suspendDays === 15"
+                [class.text-amber-800]="suspendDays === 15"
+                [class.border-slate-200]="suspendDays !== 15"
+                [class.text-slate-600]="suspendDays !== 15"
+              >
+                15 días
+              </button>
+              <button
+                type="button"
+                (click)="suspendDays = 30"
+                class="rounded-xl border py-2 text-xs font-bold transition cursor-pointer text-center"
+                [class.border-amber-500]="suspendDays === 30"
+                [class.bg-amber-50]="suspendDays === 30"
+                [class.text-amber-800]="suspendDays === 30"
+                [class.border-slate-200]="suspendDays !== 30"
+                [class.text-slate-600]="suspendDays !== 30"
+              >
+                30 días
+              </button>
+            </div>
+          </div>
+
+          <!-- Categoría -->
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Categoría de la Infracción</label>
+            <select
+              [(ngModel)]="suspendCategory"
+              class="w-full rounded-xl border border-slate-200 bg-white p-2.5 text-xs text-slate-900 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/20"
+            >
+              <option value="conduct">Conducta Antideportiva / Acoso</option>
+              <option value="content">Contenido Inapropiado</option>
+              <option value="fraud">Fraude / Suplantación</option>
+              <option value="spam">Spam / Abuso de mensajes</option>
+              <option value="terms">Violación de Términos de Servicio</option>
+            </select>
+          </div>
+
+          <!-- Motivo -->
+          <div>
+            <div class="flex items-center justify-between mb-1">
+              <label class="block text-xs font-bold text-slate-700">Motivo Formal de la Suspensión *</label>
+              <span class="text-[11px] font-semibold"
+                [class.text-rose-500]="suspendReason.trim().length < 3 || suspendReason.trim().length > 500"
+                [class.text-emerald-600]="suspendReason.trim().length >= 3 && suspendReason.trim().length <= 500">
+                {{ suspendReason.trim().length }}/500
+              </span>
+            </div>
+            <textarea
+              [(ngModel)]="suspendReason"
+              rows="3"
+              maxlength="500"
+              placeholder="Indica detalladamente el motivo de la suspensión que se enviará al usuario (mínimo 3 caracteres)..."
+              class="w-full rounded-xl border border-slate-200 bg-white p-2.5 text-xs text-slate-900 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/20"
+            ></textarea>
+          </div>
+
+          <div class="flex items-center justify-end gap-2 pt-2">
+            <button
+              type="button"
+              (click)="showSuspendModal.set(false)"
+              class="rounded-xl border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-50 cursor-pointer"
+            >
+              Cancelar
+            </button>
+            <button
+              type="button"
+              [disabled]="submittingSanction() || suspendReason.trim().length < 3"
+              (click)="submitSuspend(targetUser)"
+              class="rounded-xl bg-amber-600 px-4 py-2 text-xs font-bold text-white shadow-sm hover:bg-amber-700 disabled:opacity-50 cursor-pointer"
+            >
+              {{ submittingSanction() ? 'Suspendiendo...' : 'Confirmar Suspensión' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- SUBMODAL: LEVANTAR SUSPENSIÓN -->
+    @if (showUnsuspendModal() && modalUser(); as targetUser) {
+      <div class="fixed inset-0 z-60 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm">
+        <div class="relative w-full max-w-md rounded-3xl bg-white shadow-2xl overflow-hidden border border-slate-100 p-6 space-y-4">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <span class="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700">
+                <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                </svg>
+              </span>
+              <h3 class="text-base font-bold text-slate-900">Levantar Suspensión Temporal</h3>
+            </div>
+            <button type="button" (click)="showUnsuspendModal.set(false)" class="text-slate-400 hover:text-slate-600 cursor-pointer">✕</button>
+          </div>
+
+          <div class="rounded-xl bg-emerald-50 p-3.5 text-xs text-emerald-900 border border-emerald-200">
+            ¿Confirmas que deseas levantar anticipadamente la suspensión a <strong class="font-bold">{{ targetUser.full_name }}</strong> (<strong>{{ targetUser.email }}</strong>)?
+            <p class="mt-1 text-[11px] text-emerald-800">
+              Se reactivará de inmediato su acceso a la plataforma y se le notificará por correo electrónico que su cuenta ha sido reactivada.
+            </p>
+          </div>
+
+          <div class="flex items-center justify-end gap-2 pt-2">
+            <button
+              type="button"
+              (click)="showUnsuspendModal.set(false)"
+              class="rounded-xl border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-50 cursor-pointer"
+            >
+              Cancelar
+            </button>
+            <button
+              type="button"
+              [disabled]="submittingSanction()"
+              (click)="submitUnsuspend(targetUser)"
+              class="rounded-xl bg-emerald-600 px-4 py-2 text-xs font-bold text-white shadow-sm hover:bg-emerald-700 disabled:opacity-50 cursor-pointer"
+            >
+              {{ submittingSanction() ? 'Reactivando...' : 'Confirmar y Reactivar' }}
             </button>
           </div>
         </div>
@@ -954,6 +1816,37 @@ export class UserCatalogComponent implements OnInit {
   // Detail modal
   modalUser = signal<AdminUserCatalogItem | null>(null);
 
+  // Disciplinary Sanctions signals
+  userSanctions = signal<DisciplinarySanctionItem[]>([]);
+  userSanctionsSummary = signal<UserSanctionsSummary | null>(null);
+  loadingSanctions = signal<boolean>(false);
+  sanctionFeedback = signal<string | null>(null);
+
+  showWarningModal = signal<boolean>(false);
+  warningReason = '';
+  warningCategory = 'conduct';
+
+  showStrikeModal = signal<boolean>(false);
+  strikeReason = '';
+  strikePoints = 1;
+  strikeCategory = 'conduct';
+
+  showSuspendModal = signal<boolean>(false);
+  showUnsuspendModal = signal<boolean>(false);
+  suspendDays = 7;
+  suspendReason = '';
+  suspendCategory = 'conduct';
+
+  showBanModal = signal<boolean>(false);
+  banReason = '';
+  showAppealModal = signal<boolean>(false);
+  appealReason = '';
+  appealResetStrikes = true;
+  showAppealStrikeModal = signal<boolean>(false);
+  selectedStrikeForAppeal = signal<DisciplinarySanctionItem | null>(null);
+  appealStrikeReason = '';
+  submittingSanction = signal<boolean>(false);
+
   // Instant reactive computed filter & sort
   readonly filteredUsers = computed(() => {
     let list = [...this.rawUsers()];
@@ -972,9 +1865,13 @@ export class UserCatalogComponent implements OnInit {
     // 2. Status filter
     const st = this.selectedStatus();
     if (st === 'active') {
-      list = list.filter((u) => u.is_active);
+      list = list.filter((u) => u.is_active && !u.is_suspended && !u.is_banned);
     } else if (st === 'inactive') {
-      list = list.filter((u) => !u.is_active);
+      list = list.filter((u) => !u.is_active && !u.is_suspended && !u.is_banned);
+    } else if (st === 'suspended') {
+      list = list.filter((u) => u.is_suspended);
+    } else if (st === 'banned') {
+      list = list.filter((u) => u.is_banned);
     }
 
     // 3. Role filter
@@ -1193,10 +2090,311 @@ export class UserCatalogComponent implements OnInit {
 
   openUserGoalsModal(user: AdminUserCatalogItem): void {
     this.modalUser.set(user);
+    this.sanctionFeedback.set(null);
+    this.loadUserSanctions(user.id);
+  }
+
+  loadUserSanctions(userId: number): void {
+    this.loadingSanctions.set(true);
+    this.usersApi.getSanctions(userId).subscribe({
+      next: (res) => {
+        this.userSanctionsSummary.set(res.result?.summary || null);
+        this.userSanctions.set(res.result?.sanctions || []);
+        this.loadingSanctions.set(false);
+      },
+      error: () => {
+        this.loadingSanctions.set(false);
+      },
+    });
+  }
+
+  private extractApiErrorMessage(err: any, fallback: string): string {
+    if (err?.error?.error?.message) {
+      return err.error.error.message;
+    }
+    if (err?.error?.message) {
+      return err.error.message;
+    }
+    if (typeof err?.error?.detail === 'string') {
+      return err.error.detail;
+    }
+    if (Array.isArray(err?.error?.detail) && err.error.detail[0]?.msg) {
+      return err.error.detail[0].msg;
+    }
+    if (err?.error?.error?.details?.errors?.[0]?.msg) {
+      return err.error.error.details.errors[0].msg;
+    }
+    return fallback;
+  }
+
+  isUserBanned(user: AdminUserCatalogItem): boolean {
+    return !!(user.is_banned || this.userSanctionsSummary()?.is_banned || this.userSanctionsSummary()?.is_blacklisted);
+  }
+
+  isUserSuspended(user: AdminUserCatalogItem): boolean {
+    return !!(user.is_suspended || this.userSanctionsSummary()?.is_suspended);
+  }
+
+  openWarningModal(user: AdminUserCatalogItem): void {
+    if (this.isUserBanned(user)) {
+      this.sanctionFeedback.set('El usuario se encuentra vetado. No se pueden emitir advertencias.');
+      return;
+    }
+    if (this.isUserSuspended(user)) {
+      this.sanctionFeedback.set('El usuario se encuentra suspendido. No se pueden emitir advertencias.');
+      return;
+    }
+    this.warningReason = '';
+    this.warningCategory = 'conduct';
+    this.showWarningModal.set(true);
+  }
+
+  submitWarning(user: AdminUserCatalogItem): void {
+    if (this.warningReason.trim().length < 3) return;
+    this.submittingSanction.set(true);
+
+    const payload: IssueWarningPayload = {
+      reason: this.warningReason.trim(),
+      category: this.warningCategory,
+    };
+
+    this.usersApi.issueWarning(user.id, payload).subscribe({
+      next: (res) => {
+        this.submittingSanction.set(false);
+        this.showWarningModal.set(false);
+        this.sanctionFeedback.set(res.message || 'Advertencia formal registrada y notificada por correo.');
+        this.loadUserSanctions(user.id);
+        this.fetchData(true);
+      },
+      error: (err) => {
+        this.submittingSanction.set(false);
+        this.sanctionFeedback.set(this.extractApiErrorMessage(err, 'Error al emitir advertencia.'));
+      },
+    });
+  }
+
+  openStrikeModal(user: AdminUserCatalogItem): void {
+    if (this.isUserBanned(user)) {
+      this.sanctionFeedback.set('El usuario se encuentra vetado. No se pueden aplicar strikes.');
+      return;
+    }
+    if (this.isUserSuspended(user)) {
+      this.sanctionFeedback.set('El usuario se encuentra suspendido. No se pueden aplicar strikes.');
+      return;
+    }
+    this.strikeReason = '';
+    this.strikePoints = 1;
+    this.strikeCategory = 'conduct';
+    this.showStrikeModal.set(true);
+  }
+
+  submitStrike(user: AdminUserCatalogItem): void {
+    if (this.strikeReason.trim().length < 3) return;
+    this.submittingSanction.set(true);
+
+    this.usersApi
+      .issueStrike(user.id, {
+        reason: this.strikeReason.trim(),
+        points: Number(this.strikePoints),
+        category: this.strikeCategory,
+      })
+      .subscribe({
+        next: (res) => {
+          this.submittingSanction.set(false);
+          this.showStrikeModal.set(false);
+          this.sanctionFeedback.set(res.message || 'Strike registrado correctamente.');
+          this.loadUserSanctions(user.id);
+          this.fetchData(true);
+        },
+        error: (err) => {
+          this.submittingSanction.set(false);
+          this.sanctionFeedback.set(this.extractApiErrorMessage(err, 'Error al aplicar strike.'));
+        },
+      });
+  }
+
+  openBanModal(user: AdminUserCatalogItem): void {
+    if (this.isUserBanned(user)) {
+      this.sanctionFeedback.set('El usuario ya se encuentra vetado permanentemente.');
+      return;
+    }
+    this.banReason = '';
+    this.showBanModal.set(true);
+  }
+
+  submitBan(user: AdminUserCatalogItem): void {
+    if (this.banReason.trim().length < 3) return;
+    this.submittingSanction.set(true);
+
+    this.usersApi
+      .banUser(user.id, {
+        reason: this.banReason.trim(),
+      })
+      .subscribe({
+        next: (res) => {
+          this.submittingSanction.set(false);
+          this.showBanModal.set(false);
+          this.sanctionFeedback.set(res.message || 'Usuario baneado permanentemente.');
+          this.loadUserSanctions(user.id);
+          this.fetchData(true);
+        },
+        error: (err) => {
+          this.submittingSanction.set(false);
+          this.sanctionFeedback.set(this.extractApiErrorMessage(err, 'Error al banear usuario.'));
+        },
+      });
+  }
+
+  openSuspendModal(user: AdminUserCatalogItem): void {
+    if (this.isUserBanned(user)) {
+      this.sanctionFeedback.set('El usuario se encuentra vetado. No se puede suspender.');
+      return;
+    }
+    if (this.isUserSuspended(user)) {
+      this.sanctionFeedback.set('El usuario ya se encuentra suspendido actualmente.');
+      return;
+    }
+    this.suspendReason = '';
+    this.suspendDays = 7;
+    this.suspendCategory = 'conduct';
+    this.showSuspendModal.set(true);
+  }
+
+  submitSuspend(user: AdminUserCatalogItem): void {
+    if (this.suspendReason.trim().length < 3) return;
+    this.submittingSanction.set(true);
+
+    const payload: SuspendUserPayload = {
+      duration_days: Number(this.suspendDays) || 7,
+      reason: this.suspendReason.trim(),
+      category: this.suspendCategory,
+    };
+
+    this.usersApi.suspendUser(user.id, payload).subscribe({
+      next: (res) => {
+        this.submittingSanction.set(false);
+        this.showSuspendModal.set(false);
+        this.sanctionFeedback.set(res.message || `Usuario suspendido por ${this.suspendDays} días.`);
+        this.loadUserSanctions(user.id);
+        this.fetchData(true);
+      },
+      error: (err) => {
+        this.submittingSanction.set(false);
+        this.sanctionFeedback.set(this.extractApiErrorMessage(err, 'Error al suspender usuario.'));
+      },
+    });
+  }
+
+  openUnsuspendModal(user: AdminUserCatalogItem): void {
+    this.showUnsuspendModal.set(true);
+  }
+
+  submitUnsuspend(user: AdminUserCatalogItem): void {
+    this.submittingSanction.set(true);
+
+    this.usersApi.unsuspendUser(user.id).subscribe({
+      next: (res) => {
+        this.submittingSanction.set(false);
+        this.showUnsuspendModal.set(false);
+        this.sanctionFeedback.set(res.message || 'Suspensión levantada y cuenta reactivada con éxito.');
+        this.loadUserSanctions(user.id);
+        this.fetchData(true);
+      },
+      error: (err) => {
+        this.submittingSanction.set(false);
+        this.sanctionFeedback.set(this.extractApiErrorMessage(err, 'Error al levantar la suspensión.'));
+      },
+    });
   }
 
   closeModal(): void {
     this.modalUser.set(null);
+    this.showWarningModal.set(false);
+    this.showStrikeModal.set(false);
+    this.showBanModal.set(false);
+    this.showAppealModal.set(false);
+    this.showAppealStrikeModal.set(false);
+    this.selectedStrikeForAppeal.set(null);
+    this.showSuspendModal.set(false);
+    this.showUnsuspendModal.set(false);
+  }
+
+  getStatusLabel(st: string): string {
+    switch (st) {
+      case 'active':
+        return 'Solo Activos';
+      case 'inactive':
+        return 'Solo Inactivos';
+      case 'suspended':
+        return 'Solo Suspendidos';
+      case 'banned':
+        return 'Solo Vetados';
+      default:
+        return 'Todos';
+    }
+  }
+
+  openAppealStrikeModal(strike: DisciplinarySanctionItem, user: AdminUserCatalogItem): void {
+    this.selectedStrikeForAppeal.set(strike);
+    this.appealStrikeReason = '';
+    this.showAppealStrikeModal.set(true);
+  }
+
+  submitAppealStrike(strike: DisciplinarySanctionItem): void {
+    if (this.appealStrikeReason.trim().length < 3) return;
+    this.submittingSanction.set(true);
+
+    const payload: AppealStrikePayload = {
+      resolution_reason: this.appealStrikeReason.trim(),
+    };
+
+    this.usersApi.appealStrike(strike.id, payload).subscribe({
+      next: (res) => {
+        this.submittingSanction.set(false);
+        this.showAppealStrikeModal.set(false);
+        this.selectedStrikeForAppeal.set(null);
+        this.sanctionFeedback.set(res.message || 'Strike anulado con éxito.');
+        const u = this.modalUser();
+        if (u) {
+          this.loadUserSanctions(u.id);
+        }
+        this.fetchData(true);
+      },
+      error: (err) => {
+        this.submittingSanction.set(false);
+        this.sanctionFeedback.set(this.extractApiErrorMessage(err, 'Error al tramitar la apelación del strike.'));
+      },
+    });
+  }
+
+  openAppealModal(user: AdminUserCatalogItem): void {
+    this.appealReason = '';
+    this.appealResetStrikes = true;
+    this.showAppealModal.set(true);
+  }
+
+  submitAppeal(user: AdminUserCatalogItem): void {
+    if (this.appealReason.trim().length < 3) return;
+    this.submittingSanction.set(true);
+
+    const payload: AppealBanPayload = {
+      resolution_reason: this.appealReason.trim(),
+      reset_strikes: this.appealResetStrikes,
+    };
+
+    this.usersApi.appealBanUser(user.id, payload).subscribe({
+      next: (res) => {
+        this.submittingSanction.set(false);
+        this.showAppealModal.set(false);
+        this.sanctionFeedback.set(res.message || 'Apelación aprobada con éxito. Usuario rehabilitado.');
+        this.loadUserSanctions(user.id);
+        this.fetchData(true);
+      },
+      error: (err) => {
+        this.submittingSanction.set(false);
+        this.sanctionFeedback.set(this.extractApiErrorMessage(err, 'Error al tramitar la apelación.'));
+      },
+    });
   }
 
   mathMin(a: number, b: number): number {

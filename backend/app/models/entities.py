@@ -765,3 +765,47 @@ class SupportTicket(Base):
 
     assigned_admin: Mapped["User | None"] = relationship("User", foreign_keys=[assigned_admin_id])
 
+
+# ==============================================================================
+# MÓDULO 10: LISTA NEGRA Y SANCIONES DISCIPLINARIAS
+# ==============================================================================
+
+class EmailBlacklist(Base):
+    __tablename__ = "email_blacklist"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    email: Mapped[str] = mapped_column(String(191), unique=True, nullable=False, index=True)
+    reason: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    user_id: Mapped[int | None] = mapped_column(
+        BigInteger, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True
+    )
+    created_by: Mapped[int | None] = mapped_column(
+        BigInteger, ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+    )
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+
+    user: Mapped["User | None"] = relationship("User", foreign_keys=[user_id])
+    creator: Mapped["User | None"] = relationship("User", foreign_keys=[created_by])
+
+
+class DisciplinarySanction(Base):
+    __tablename__ = "disciplinary_sanctions"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    user_id: Mapped[int] = mapped_column(
+        BigInteger, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    action_type: Mapped[str] = mapped_column(String(30), nullable=False)  # 'strike', 'suspension', 'ban'
+    points: Mapped[int] = mapped_column(Integer, default=1, nullable=False)
+    reason: Mapped[str] = mapped_column(String(500), nullable=False)
+    category: Mapped[str] = mapped_column(String(50), default="conduct", nullable=False)
+    created_by: Mapped[int | None] = mapped_column(
+        BigInteger, ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+    )
+    expires_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+
+    user: Mapped["User"] = relationship("User", foreign_keys=[user_id])
+    creator: Mapped["User | None"] = relationship("User", foreign_keys=[created_by])
+

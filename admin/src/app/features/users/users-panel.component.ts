@@ -674,78 +674,82 @@ type UsersTab = 'users' | 'blacklist';
                         </svg>
                       </button>
                     }
-                    <button
-                      type="button"
-                      class="group flex w-full cursor-pointer items-center gap-3 px-4 py-3 text-left transition hover:bg-amber-50/60"
-                      (click)="openSanction('SUSPENDED', 30)"
-                    >
-                      <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-amber-50 text-amber-600 ring-1 ring-amber-100">
-                        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                          <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m0 3.5h.008M10.34 3.94l-7.1 12.3A1.5 1.5 0 004.54 18.5h14.92a1.5 1.5 0 001.3-2.26l-7.1-12.3a1.5 1.5 0 00-2.6 0z" />
+                    @if (enforcementStatus(u) !== 'BANNED') {
+                      @if (enforcementStatus(u) !== 'SUSPENDED') {
+                        <button
+                          type="button"
+                          class="group flex w-full cursor-pointer items-center gap-3 px-4 py-3 text-left transition hover:bg-amber-50/60"
+                          (click)="openSanction('SUSPENDED', 30)"
+                        >
+                          <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-amber-50 text-amber-600 ring-1 ring-amber-100">
+                            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                              <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m0 3.5h.008M10.34 3.94l-7.1 12.3A1.5 1.5 0 004.54 18.5h14.92a1.5 1.5 0 001.3-2.26l-7.1-12.3a1.5 1.5 0 00-2.6 0z" />
+                            </svg>
+                          </span>
+                          <span class="min-w-0 flex-1">
+                            <span class="block text-sm font-bold text-slate-800">Suspender 30 días</span>
+                            <span class="block text-xs font-medium text-slate-500">Restringe el acceso del usuario por 30 días</span>
+                          </span>
+                          <svg class="h-4 w-4 shrink-0 text-slate-300 transition group-hover:translate-x-0.5 group-hover:text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                          </svg>
+                        </button>
+                        <button
+                          type="button"
+                          class="group flex w-full cursor-pointer items-center gap-3 px-4 py-3 text-left transition hover:bg-violet-50/60"
+                          (click)="openSanction('RESTRICTED', 30)"
+                        >
+                          <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-violet-50 text-violet-600 ring-1 ring-violet-100">
+                            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                              <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V7.5a4.5 4.5 0 10-9 0v3m-1.5 0h12a1.5 1.5 0 011.5 1.5v6a1.5 1.5 0 01-1.5 1.5H6a1.5 1.5 0 01-1.5-1.5v-6A1.5 1.5 0 016 10.5z" />
+                            </svg>
+                          </span>
+                          <span class="min-w-0 flex-1">
+                            <span class="block text-sm font-bold text-slate-800">Restringir 30 días</span>
+                            <span class="block text-xs font-medium text-slate-500">Aplica restricciones parciales por 30 días</span>
+                          </span>
+                          <svg class="h-4 w-4 shrink-0 text-slate-300 transition group-hover:translate-x-0.5 group-hover:text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                          </svg>
+                        </button>
+                        <button
+                          type="button"
+                          class="group flex w-full cursor-pointer items-center gap-3 px-4 py-3 text-left transition hover:bg-violet-50/60"
+                          (click)="openSanction('RESTRICTED', null)"
+                        >
+                          <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-violet-50 text-violet-600 ring-1 ring-violet-100">
+                            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                              <path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                            </svg>
+                          </span>
+                          <span class="min-w-0 flex-1">
+                            <span class="block text-sm font-bold text-slate-800">Restringir indefinido</span>
+                            <span class="block text-xs font-medium text-slate-500">Aplica restricciones indefinidas hasta nuevo aviso</span>
+                          </span>
+                          <svg class="h-4 w-4 shrink-0 text-slate-300 transition group-hover:translate-x-0.5 group-hover:text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                          </svg>
+                        </button>
+                      }
+                      <button
+                        type="button"
+                        class="group flex w-full cursor-pointer items-center gap-3 px-4 py-3 text-left transition hover:bg-rose-50/60"
+                        (click)="openSanction('BANNED', null)"
+                      >
+                        <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-rose-50 text-rose-600 ring-1 ring-rose-100">
+                          <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9.75 9.75l4.5 4.5m0-4.5l-4.5 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                        </span>
+                        <span class="min-w-0 flex-1">
+                          <span class="block text-sm font-bold text-slate-800">Ban indefinido</span>
+                          <span class="block text-xs font-medium text-slate-500">Prohíbe el acceso permanente a la plataforma</span>
+                        </span>
+                        <svg class="h-4 w-4 shrink-0 text-slate-300 transition group-hover:translate-x-0.5 group-hover:text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2" aria-hidden="true">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
                         </svg>
-                      </span>
-                      <span class="min-w-0 flex-1">
-                        <span class="block text-sm font-bold text-slate-800">Suspender 30 días</span>
-                        <span class="block text-xs font-medium text-slate-500">Restringe el acceso del usuario por 30 días</span>
-                      </span>
-                      <svg class="h-4 w-4 shrink-0 text-slate-300 transition group-hover:translate-x-0.5 group-hover:text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2" aria-hidden="true">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
-                      </svg>
-                    </button>
-                    <button
-                      type="button"
-                      class="group flex w-full cursor-pointer items-center gap-3 px-4 py-3 text-left transition hover:bg-violet-50/60"
-                      (click)="openSanction('RESTRICTED', 30)"
-                    >
-                      <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-violet-50 text-violet-600 ring-1 ring-violet-100">
-                        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                          <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V7.5a4.5 4.5 0 10-9 0v3m-1.5 0h12a1.5 1.5 0 011.5 1.5v6a1.5 1.5 0 01-1.5 1.5H6a1.5 1.5 0 01-1.5-1.5v-6A1.5 1.5 0 016 10.5z" />
-                        </svg>
-                      </span>
-                      <span class="min-w-0 flex-1">
-                        <span class="block text-sm font-bold text-slate-800">Restringir 30 días</span>
-                        <span class="block text-xs font-medium text-slate-500">Aplica restricciones parciales por 30 días</span>
-                      </span>
-                      <svg class="h-4 w-4 shrink-0 text-slate-300 transition group-hover:translate-x-0.5 group-hover:text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2" aria-hidden="true">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
-                      </svg>
-                    </button>
-                    <button
-                      type="button"
-                      class="group flex w-full cursor-pointer items-center gap-3 px-4 py-3 text-left transition hover:bg-violet-50/60"
-                      (click)="openSanction('RESTRICTED', null)"
-                    >
-                      <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-violet-50 text-violet-600 ring-1 ring-violet-100">
-                        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                          <path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
-                        </svg>
-                      </span>
-                      <span class="min-w-0 flex-1">
-                        <span class="block text-sm font-bold text-slate-800">Restringir indefinido</span>
-                        <span class="block text-xs font-medium text-slate-500">Aplica restricciones indefinidas hasta nuevo aviso</span>
-                      </span>
-                      <svg class="h-4 w-4 shrink-0 text-slate-300 transition group-hover:translate-x-0.5 group-hover:text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2" aria-hidden="true">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
-                      </svg>
-                    </button>
-                    <button
-                      type="button"
-                      class="group flex w-full cursor-pointer items-center gap-3 px-4 py-3 text-left transition hover:bg-rose-50/60"
-                      (click)="openSanction('BANNED', null)"
-                    >
-                      <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-rose-50 text-rose-600 ring-1 ring-rose-100">
-                        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                          <path stroke-linecap="round" stroke-linejoin="round" d="M9.75 9.75l4.5 4.5m0-4.5l-4.5 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                      </span>
-                      <span class="min-w-0 flex-1">
-                        <span class="block text-sm font-bold text-slate-800">Ban indefinido</span>
-                        <span class="block text-xs font-medium text-slate-500">Prohíbe el acceso permanente a la plataforma</span>
-                      </span>
-                      <svg class="h-4 w-4 shrink-0 text-slate-300 transition group-hover:translate-x-0.5 group-hover:text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2" aria-hidden="true">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
-                      </svg>
-                    </button>
+                      </button>
+                    }
                   </div>
                 </div>
               }
@@ -922,9 +926,17 @@ type UsersTab = 'users' | 'blacklist';
               <h3 class="text-base font-bold text-slate-900">{{ sanctionTitle() }}</h3>
               <p class="text-sm text-slate-500">{{ sanctionDescription() }}</p>
               <div>
-                <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">Motivo</label>
+                <div class="flex items-center justify-between mb-1">
+                  <label class="block text-xs font-bold uppercase tracking-wider text-slate-500">Motivo</label>
+                  <span class="text-[11px] font-semibold"
+                    [class.text-rose-500]="(sanctionReason.trim().length < 3) || sanctionReason.trim().length > 500"
+                    [class.text-emerald-600]="sanctionReason.trim().length >= 3 && sanctionReason.trim().length <= 500">
+                    {{ sanctionReason.trim().length }}/500
+                  </span>
+                </div>
                 <textarea
                   rows="3"
+                  maxlength="500"
                   [(ngModel)]="sanctionReason"
                   class="w-full rounded-xl border border-slate-200 px-3.5 py-2 text-sm focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-100"
                   placeholder="Describe la infracción..."
@@ -990,9 +1002,17 @@ type UsersTab = 'users' | 'blacklist';
                 />
               </div>
               <div>
-                <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">Motivo</label>
+                <div class="flex items-center justify-between mb-1">
+                  <label class="block text-xs font-bold uppercase tracking-wider text-slate-500">Motivo</label>
+                  <span class="text-[11px] font-semibold"
+                    [class.text-rose-500]="(blacklistForm.reason.trim().length < 3) || blacklistForm.reason.trim().length > 255"
+                    [class.text-emerald-600]="blacklistForm.reason.trim().length >= 3 && blacklistForm.reason.trim().length <= 255">
+                    {{ blacklistForm.reason.trim().length }}/255
+                  </span>
+                </div>
                 <textarea
                   rows="3"
+                  maxlength="255"
                   [(ngModel)]="blacklistForm.reason"
                   name="blacklistReason"
                   class="w-full rounded-xl border border-slate-200 px-3.5 py-2 text-sm focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-100"
@@ -1612,6 +1632,10 @@ export class UsersPanelComponent implements OnInit {
 
     const status = this.sanctionStatus();
     const reason = this.sanctionReason.trim();
+    if (this.enforcementStatus(user) === 'SUSPENDED' && status !== 'ACTIVE' && status !== 'BANNED') {
+      this.sanctionError.set('Para un usuario suspendido, únicamente se permite la opción de baneo o reactivación.');
+      return;
+    }
     if (status !== 'ACTIVE' && !reason) {
       this.sanctionError.set('El motivo es obligatorio.');
       return;

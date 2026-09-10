@@ -17,6 +17,8 @@ type ErrorDescriptor =
   | { type: 'passwordMinLength' }
   | { type: 'sendCode' }
   | { type: 'resetGeneral' }
+  | { type: 'blacklisted' }
+  | { type: 'suspended' }
   | { type: 'custom'; message: string };
 
 @Component({
@@ -79,6 +81,10 @@ export class ForgotPassword implements OnDestroy {
         return auth.forgotSendCodeError;
       case 'resetGeneral':
         return auth.forgotResetError;
+      case 'blacklisted':
+        return auth.blacklistedEmailError;
+      case 'suspended':
+        return auth.accountSuspendedIndefiniteError;
       case 'custom':
         return err.message;
     }
@@ -225,6 +231,14 @@ export class ForgotPassword implements OnDestroy {
         this.errorState.set({ type: 'invalidOtp' });
         return;
       }
+    }
+
+    if ((err as { status?: number })?.status === 403 || code === 'FORBIDDEN') {
+      const isSuspended =
+        details['reason_code'] === 'ACCOUNT_SUSPENDED' ||
+        (message ? /suspend/i.test(message) : false);
+      this.errorState.set({ type: isSuspended ? 'suspended' : 'blacklisted' });
+      return;
     }
 
     if (message) {

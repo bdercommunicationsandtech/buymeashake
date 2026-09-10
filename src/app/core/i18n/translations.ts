@@ -655,6 +655,9 @@ export interface TranslationSchema {
     fillAllFieldsError: string;
     loginGeneralError: string;
     sendOtpError: string;
+    blacklistedEmailError: string;
+    accountSuspendedUntilError: string;
+    accountSuspendedIndefiniteError: string;
     invalidOtpError: string;
     socialRoleTitle: string;
     socialRoleSubtitle: string;

@@ -167,6 +167,8 @@ class AdminUserCatalogItem(BaseModel):
     avatar_url: str | None = None
     is_email_verified: bool = False
     is_active: bool = True
+    is_suspended: bool = False
+    is_banned: bool = False
     created_at: datetime | None = None
     roles: list[str] = []
     athlete_id: int | None = None
@@ -191,6 +193,8 @@ class AdminUserDetailResponse(BaseModel):
     all_goals: list[AdminGoalSummary] = []
     bio: str | None = None
     city: str | None = None
+    sanctions_summary: dict[str, Any] | None = None
+    sanctions: list[dict[str, Any]] = []
 
 
 class RequestOtpRequest(BaseModel):
@@ -1005,6 +1009,106 @@ class SupportTicketResponse(BaseModel):
     folio: str
     message: str
     status: str = "received"
+
+
+# ==============================================================================
+# 11. LISTA NEGRA Y SANCIONES DISCIPLINARIAS
+# ==============================================================================
+
+class EmailBlacklistCreateDto(BaseModel):
+    email: EmailStr
+    reason: str | None = Field(default=None, max_length=255)
+    user_id: int | None = None
+
+
+class EmailBlacklistUpdateDto(BaseModel):
+    reason: str | None = Field(default=None, max_length=255)
+
+
+class AdminIssueStrikeDto(BaseModel):
+    reason: str = Field(min_length=3, max_length=500)
+    points: int = Field(default=1, ge=1, le=5)
+    category: str = Field(default="conduct", max_length=50)
+    expires_in_days: int | None = Field(default=None, ge=1, le=365)
+
+
+class AdminBanUserDto(BaseModel):
+    reason: str = Field(min_length=3, max_length=500)
+
+
+class AdminAppealBanDto(BaseModel):
+    resolution_reason: str = Field(min_length=3, max_length=500)
+    reset_strikes: bool = Field(default=True)
+
+
+class AdminAppealStrikeDto(BaseModel):
+    resolution_reason: str = Field(min_length=3, max_length=500)
+
+
+
+class AdminSuspendUserDto(BaseModel):
+    duration_days: int = Field(default=7, ge=1, le=365)
+    reason: str = Field(min_length=3, max_length=500)
+    category: str = Field(default="conduct", max_length=50)
+
+
+class AdminIssueWarningDto(BaseModel):
+    reason: str = Field(min_length=3, max_length=500)
+    category: str = Field(default="conduct", max_length=50)
+
+
+class ActiveSuspensionItem(BaseModel):
+    id: int
+    user_id: int
+    email: str
+    full_name: str | None = None
+    handle: str | None = None
+    avatar_url: str | None = None
+    reason: str
+    category: str
+    duration_days: int | None = None
+    days_remaining: int
+    starts_at: datetime
+    expires_at: datetime | None = None
+    created_by: int | None = None
+    created_by_name: str | None = None
+
+
+class ActiveSuspensionsResponse(BaseModel):
+    items: list[ActiveSuspensionItem]
+    total: int
+    page: int
+    limit: int
+    total_pages: int
+
+
+class GlobalSanctionItem(BaseModel):
+    id: int
+    user_id: int
+    email: str
+    full_name: str | None = None
+    handle: str | None = None
+    avatar_url: str | None = None
+    action_type: str
+    points: int
+    reason: str
+    category: str
+    duration_days: int | None = None
+    days_remaining: int | None = None
+    is_active: bool
+    created_at: datetime
+    expires_at: datetime | None = None
+    created_by: int | None = None
+    created_by_name: str | None = None
+
+
+class GlobalSanctionsResponse(BaseModel):
+    items: list[GlobalSanctionItem]
+    total: int
+    page: int
+    limit: int
+    total_pages: int
+
 
 
 

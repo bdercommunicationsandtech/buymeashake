@@ -1,10 +1,23 @@
-import { Component, computed, inject, OnInit, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import {
+  Component,
+  computed,
+  inject,
+  OnInit,
+  signal,
+  PLATFORM_ID,
+  AfterViewInit,
+  OnDestroy,
+  ElementRef,
+  ViewChild,
+} from '@angular/core';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { RouterLink, ActivatedRoute } from '@angular/router';
+import { gsap } from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { ExploreService } from '../../core/explore.service';
 import { LookupService } from '../../core/lookup.service';
 import { LanguageService } from '../../core/language.service';
-import { IconShakerComponent } from '../../shared/icons';
+import { AnimatedShakerComponent } from '../../shared/icons/animated-shaker';
 import { AthleteLeaderboardItem } from '../../core/api.models';
 import { AllowedUserTextDirective } from '../../core/directives/allowed-user-text.directive';
 
@@ -15,6 +28,7 @@ export interface AthleteProfile {
   initials: string;
   avatarUrl: string | null;
   sport: string;
+  disciplines?: string[];
   bio: string;
   shakesThisMonth: number;
   totalRaised: number;
@@ -35,10 +49,11 @@ function normalizeText(text: string | null | undefined): string {
 @Component({
   selector: 'app-explore',
   standalone: true,
-  imports: [CommonModule, RouterLink, IconShakerComponent, AllowedUserTextDirective],
+  imports: [CommonModule, RouterLink, AnimatedShakerComponent, AllowedUserTextDirective],
   templateUrl: './explore.html',
 })
-export class Explore implements OnInit {
+export class Explore implements OnInit, AfterViewInit, OnDestroy {
+  private readonly platformId = inject(PLATFORM_ID);
   private readonly exploreService = inject(ExploreService);
   private readonly route = inject(ActivatedRoute);
   private readonly lookupService = inject(LookupService);
@@ -56,9 +71,16 @@ export class Explore implements OnInit {
   readonly leaderboardAthletes = signal<AthleteProfile[]>([]);
   readonly exploreAthletes = signal<AthleteProfile[]>([]);
 
+  // Fallback reactivo de avatares rotos
+  readonly avatarErrors = signal<Set<string>>(new Set());
+
+  // Referencia al contenedor horizontal de tarjetas 4-10
+  @ViewChild('carouselTrack') carouselTrack?: ElementRef<HTMLElement>;
+
+  private gsapContext?: gsap.Context;
 
   ngOnInit(): void {
-    this.route.queryParams.subscribe(params => {
+    this.route.queryParams.subscribe((params) => {
       if (params['cat']) this.selectedCategory.set(params['cat']);
       if (params['q']) this.searchQuery.set(params['q']);
     });
@@ -66,6 +88,18 @@ export class Explore implements OnInit {
 
     this.fetchLeaderboard();
     this.fetchAthletes();
+  }
+
+  ngAfterViewInit(): void {
+    if (isPlatformBrowser(this.platformId)) {
+      this.initAnimations();
+    }
+  }
+
+  ngOnDestroy(): void {
+    if (this.gsapContext) {
+      this.gsapContext.revert();
+    }
   }
 
   loadDisciplines(): void {
@@ -85,8 +119,17 @@ export class Explore implements OnInit {
         this.leaderboardLoading.set(false);
         if (!items?.length) return;
 
-        const mapped: AthleteProfile[] = items.map((it) => this.mapToProfile(it));
+        // Fix de orden: asegurar orden ascendente estricto por ranking_position
+        const sorted = [...items].sort(
+          (a, b) => (a.ranking_position ?? 0) - (b.ranking_position ?? 0)
+        );
+        const mapped: AthleteProfile[] = sorted.map((it) => this.mapToProfile(it));
         this.leaderboardAthletes.set(mapped);
+
+        // Disparar micro-animación al cargar datos en el browser
+        if (isPlatformBrowser(this.platformId)) {
+          setTimeout(() => this.initAnimations(), 50);
+        }
       },
       error: () => {
         this.leaderboardLoading.set(false);
@@ -112,9 +155,10 @@ export class Explore implements OnInit {
 
   private mapToProfile(it: AthleteLeaderboardItem): AthleteProfile {
     const names = it.athlete_name.trim().split(/\s+/);
-    const initials = names.length > 1
-      ? `${names[0][0]}${names[names.length - 1][0]}`.toUpperCase()
-      : it.athlete_name.slice(0, 2).toUpperCase();
+    const initials =
+      names.length > 1
+        ? `${names[0][0]}${names[names.length - 1][0]}`.toUpperCase()
+        : it.athlete_name.slice(0, 2).toUpperCase();
 
     return {
       id: String(it.athlete_id),
@@ -123,6 +167,7 @@ export class Explore implements OnInit {
       initials,
       avatarUrl: it.avatar_url,
       sport: it.disciplines?.join(', ') || 'Deporte General',
+      disciplines: it.disciplines && it.disciplines.length > 0 ? it.disciplines : [it.disciplines?.join(', ') || 'Deporte General'],
       bio: it.bio || 'Atleta oficial en buymeashake.fit',
       shakesThisMonth: it.total_shakes_this_month,
       totalRaised: Number(it.total_raised_this_month),
@@ -136,27 +181,46 @@ export class Explore implements OnInit {
     };
   }
 
-  readonly row1 = computed(() => this.leaderboardAthletes().slice(0, 1));
-  readonly row2 = computed(() => this.leaderboardAthletes().slice(1, 3));
-  readonly row3 = computed(() => this.leaderboardAthletes().slice(3, 6));
-  readonly row4 = computed(() => this.leaderboardAthletes().slice(6, 10));
+  // Fallback de avatar cuando la URL falla
+  onAvatarError(athleteId: string): void {
+    this.avatarErrors.update((prev) => {
+      const next = new Set(prev);
+      next.add(athleteId);
+      return next;
+    });
+  }
+
+  // Top 3 del podio defensivos
+  readonly leader1 = computed(() =>
+    this.leaderboardAthletes().find((l) => l.rank === 1) || this.leaderboardAthletes()[0]
+  );
+  readonly leader2 = computed(() =>
+    this.leaderboardAthletes().find((l) => l.rank === 2) || this.leaderboardAthletes()[1]
+  );
+  readonly leader3 = computed(() =>
+    this.leaderboardAthletes().find((l) => l.rank === 3) || this.leaderboardAthletes()[2]
+  );
 
   readonly topPodium = computed(() => this.leaderboardAthletes().slice(0, 3));
 
+  // Puestos del 4 al 10 en orden numérico estricto
   readonly topRemaining = computed(() => this.leaderboardAthletes().slice(3, 10));
 
   readonly filteredAthletes = computed(() => {
     const category = this.selectedCategory();
     const query = normalizeText(this.searchQuery());
 
-    const sourceAthletes = this.exploreAthletes().length > 0
-      ? this.exploreAthletes()
-      : this.leaderboardAthletes();
+    const sourceAthletes =
+      this.exploreAthletes().length > 0
+        ? this.exploreAthletes()
+        : this.leaderboardAthletes();
 
     return sourceAthletes.filter((athlete) => {
       const athleteSportNorm = normalizeText(athlete.sport);
       const catNorm = normalizeText(category);
-      const translatedCatNorm = normalizeText(this.languageService.translateDiscipline(category));
+      const translatedCatNorm = normalizeText(
+        this.languageService.translateDiscipline(category)
+      );
 
       const matchesCategory =
         category === 'ALL' ||
@@ -198,5 +262,89 @@ export class Explore implements OnInit {
 
   onSearchInput(value: string): void {
     this.searchQuery.set(value);
+  }
+
+  // Controles de desplazamiento del carrusel (cálculo de offset dinámico)
+  scrollCarousel(direction: 'left' | 'right'): void {
+    const track = this.carouselTrack?.nativeElement;
+    if (!track) return;
+    const firstCard = track.firstElementChild as HTMLElement | null;
+    const step = firstCard ? firstCard.offsetWidth + 16 : 256;
+    track.scrollBy({
+      left: direction === 'right' ? step : -step,
+      behavior: 'smooth',
+    });
+  }
+
+  // Obtener lista limpia de disciplinas para renderizar como píldoras
+  getDisciplinesList(athlete: AthleteProfile): string[] {
+    if (athlete.disciplines && athlete.disciplines.length > 0) {
+      return athlete.disciplines;
+    }
+    if (athlete.sport) {
+      return athlete.sport.split(',').map((s) => s.trim()).filter(Boolean);
+    }
+    return ['Deporte General'];
+  }
+
+  // Tipografía adaptativa para evitar cortes de nombres largos
+  getHandleClass(handle: string): string {
+    return handle.length > 13 ? 'text-base sm:text-lg' : 'text-lg sm:text-xl';
+  }
+
+  // Animaciones GSAP con respeto a prefers-reduced-motion
+  private initAnimations(): void {
+    if (!isPlatformBrowser(this.platformId)) return;
+
+    gsap.registerPlugin(ScrollTrigger);
+
+    const hasMatchMedia =
+      typeof window !== 'undefined' && typeof window.matchMedia === 'function';
+    const prefersReducedMotion =
+      hasMatchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (prefersReducedMotion) {
+      return;
+    }
+
+    if (this.gsapContext) {
+      this.gsapContext.revert();
+    }
+
+    this.gsapContext = gsap.context(() => {
+      // Entrada del podio Top 3
+      const podiumCards = gsap.utils.toArray<HTMLElement>('.podium-card');
+      if (podiumCards.length) {
+        gsap.fromTo(
+          podiumCards,
+          { y: 35, opacity: 0, scale: 0.96 },
+          {
+            y: 0,
+            opacity: 1,
+            scale: 1,
+            duration: 0.65,
+            stagger: 0.12,
+            ease: 'back.out(1.2)',
+            clearProps: 'opacity,transform',
+          }
+        );
+      }
+
+      // Entrada secuencial de las tarjetas 4-10
+      const carouselItems = gsap.utils.toArray<HTMLElement>('.carousel-card-item');
+      if (carouselItems.length) {
+        gsap.fromTo(
+          carouselItems,
+          { y: 25, opacity: 0 },
+          {
+            y: 0,
+            opacity: 1,
+            duration: 0.5,
+            stagger: 0.07,
+            ease: 'power2.out',
+            clearProps: 'opacity,transform',
+          }
+        );
+      }
+    });
   }
 }

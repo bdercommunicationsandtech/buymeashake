@@ -1,319 +1,491 @@
-<div class="min-h-screen bg-gray-50 dark:bg-[#080a0b] text-gray-900 dark:text-slate-100 pb-20 font-sans transition-colors duration-300 selection:bg-[#c9ff3d] selection:text-black">
-  <!-- Hero / Header -->
-  <section class="border-b border-gray-200 dark:border-[#1f2427] bg-white dark:bg-[#0c0f10]/95 backdrop-blur-md py-10 px-5 sm:px-8 transition-colors duration-300 relative overflow-hidden">
+<div class="min-h-screen bg-[#080a0b] text-slate-100 pb-20 font-sans selection:bg-[#ccff00] selection:text-black">
+  <!-- Hero / Header Section -->
+  <section class="border-b border-white/10 bg-[#0c0f10]/95 backdrop-blur-md py-10 px-5 sm:px-8 relative overflow-hidden">
     <!-- Glow background accent -->
-    <div class="absolute -top-10 left-1/2 -translate-x-1/2 w-96 h-44 bg-[#c9ff3d]/10 rounded-full blur-[90px] pointer-events-none hidden dark:block"></div>
+    <div class="absolute -top-12 left-1/2 -translate-x-1/2 w-[500px] h-48 bg-[#ccff00]/10 rounded-full blur-[100px] pointer-events-none" aria-hidden="true"></div>
     
-    <div class="mx-auto max-w-5xl flex flex-col md:flex-row md:items-end justify-between gap-6 relative z-10">
+    <div class="mx-auto max-w-6xl flex flex-col md:flex-row md:items-end justify-between gap-6 relative z-10">
       <div>
-        <h1 class="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-gray-900 dark:text-white">
-          Top 10 Atletas <span class="text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-teal-500 dark:from-[#c9ff3d] dark:to-[#7bff00]">del Mes</span>
+        <h1 class="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-white font-display">
+          Top 10 Atletas <span class="text-transparent bg-clip-text bg-gradient-to-r from-[#ccff00] via-[#e2ff66] to-[#a3e600]">del Mes</span>
         </h1>
-        <p class="mt-2 text-sm sm:text-base text-gray-600 dark:text-slate-400 max-w-2xl">
+        <p class="mt-2 text-sm sm:text-base text-slate-400 max-w-2xl">
           {{ t().explore.subtitle }}
         </p>
       </div>
 
       <!-- Barra de Búsqueda -->
-      <div class="w-full md:w-72 shrink-0">
+      <div class="w-full md:w-80 shrink-0">
         <div class="relative">
           <input
             type="text"
             appAllowedUserText
             maxlength="100"
             [placeholder]="t().explore.searchPlaceholder"
-            class="w-full rounded-xl border border-gray-300 dark:border-[#23282b] bg-white dark:bg-[#14181a] pl-10 pr-4 py-3 text-sm text-gray-900 dark:text-slate-200 placeholder:text-gray-400 dark:placeholder:text-slate-500 focus:bg-white dark:focus:bg-[#14181a] focus:border-gray-900 dark:focus:border-[#c9ff3d] focus:ring-1 focus:ring-gray-900 dark:focus:ring-[#c9ff3d] focus:outline-none shadow-xs transition-all"
+            class="w-full rounded-2xl border border-slate-800 bg-[#111613]/90 pl-11 pr-4 py-3 text-sm text-slate-200 placeholder:text-slate-500 focus:bg-[#141a16] focus:border-[#ccff00] focus:ring-2 focus:ring-[#ccff00]/20 focus:outline-none shadow-sm transition-all"
             [value]="searchQuery()"
             (input)="onSearch($any($event.target).value)"
+            aria-label="Buscar por atleta o disciplina"
           />
-          <svg class="absolute left-3.5 top-3 h-4 w-4 text-gray-400 dark:text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          <svg class="absolute left-3.5 top-3.5 h-4 w-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
           </svg>
         </div>
       </div>
     </div>
 
-    <!-- Filters & Period Bar -->
-    <div class="mx-auto max-w-5xl mt-8 pt-6 border-t border-gray-100 dark:border-[#1e2326] flex flex-col sm:flex-row sm:items-center justify-between gap-4 relative z-10">
-      <div class="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
-        <span class="text-xs text-gray-500 dark:text-slate-500 font-bold uppercase tracking-wider shrink-0 mr-1"></span>
-        @for (cat of categories(); track cat) {
-          <button
-            type="button"
-            class="shrink-0 rounded-full px-4 py-1.5 text-xs font-bold transition-colors border"
-            [class]="
-              selectedCategory() === cat
-                ? 'bg-gray-900 dark:bg-[#202629] text-white dark:text-[#c9ff3d] border-gray-900 dark:border-[#c9ff3d]/40 shadow-sm'
-                : 'bg-white dark:bg-[#121618] text-gray-600 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white border-gray-200 dark:border-[#23282b] hover:border-gray-400 dark:hover:border-slate-600'
-            "
-            (click)="setCategory(cat)"
-          >
-            {{ cat === 'ALL' || cat === 'Todos' ? t().explore.all : languageService.translateDiscipline(cat) }}
-          </button>
-        }
-      </div>
+    <!-- Filters Bar (Píldoras de Disciplinas) -->
+    <div class="mx-auto max-w-6xl mt-8 pt-6 border-t border-white/10 flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none relative z-10">
+      @for (cat of categories(); track cat) {
+        <button
+          type="button"
+          class="shrink-0 rounded-full px-4 py-2 text-xs font-bold transition-all border cursor-pointer active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#ccff00]"
+          [class]="
+            selectedCategory() === cat
+              ? 'bg-[#ccff00] text-gray-950 font-black border-[#ccff00] shadow-[0_0_15px_rgba(204,255,0,0.35)]'
+              : 'bg-[#111613] text-slate-400 hover:text-white border-slate-800 hover:border-slate-600'
+          "
+          (click)="setCategory(cat)"
+        >
+          {{ cat === 'ALL' || cat === 'Todos' ? t().explore.all : languageService.translateDiscipline(cat) }}
+        </button>
+      }
     </div>
   </section>
 
   <!-- Contenedor Principal -->
-  <div class="mx-auto max-w-5xl px-5 pt-8">
+  <div class="mx-auto max-w-6xl px-4 sm:px-6 pt-10">
     
+    <!-- VISTA DEFAULT: TOP 10 MENSUAL (Podio + Carrusel) -->
     @if (searchQuery() === '' && selectedCategory() === 'ALL') {
-    <!-- TOP 10 MENSUAL -->
-    <section class="mb-14 relative z-10 max-w-[1200px] mx-auto">
-  
-  <style>
-    .hide-scrollbar::-webkit-scrollbar { display: none; }
-    .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-  </style>
+      <section class="mb-16 relative z-10">
 
-  <!-- PODIUM (Top 3) -->
-  @if (topPodium().length > 0) {
-    <div class="flex flex-col md:flex-row items-center md:items-end justify-center gap-6 mb-12">
-      <!-- 2ND PLACE -->
-      @if (topPodium().length >= 2) {
-        <div class="w-full md:w-[280px] order-2 md:order-1 z-20">
-          <ng-container *ngTemplateOutlet="rankCard; context: { athlete: topPodium()[1], rank: 2, isGold: false }"></ng-container>
-        </div>
-      }
-      <!-- 1ST PLACE -->
-      @if (topPodium().length >= 1) {
-        <div class="w-full md:w-[320px] order-1 md:order-2 z-30 md:-translate-y-4">
-          <ng-container *ngTemplateOutlet="rankCard; context: { athlete: topPodium()[0], rank: 1, isGold: true }"></ng-container>
-        </div>
-      }
-      <!-- 3RD PLACE -->
-      @if (topPodium().length >= 3) {
-        <div class="w-full md:w-[280px] order-3 md:order-3 z-10">
-          <ng-container *ngTemplateOutlet="rankCard; context: { athlete: topPodium()[2], rank: 3, isGold: false }"></ng-container>
-        </div>
-      }
-    </div>
-  }
+        <!-- ========================================================================= -->
+        <!-- PODIO (Top 3) -->
+        <!-- ========================================================================= -->
+        @if (topPodium().length > 0) {
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8 items-end max-w-5xl mx-auto w-full mb-16">
+            
+            <!-- 2ND PLACE (Plata) - order-2 en mobile, md:order-1 en desktop -->
+            @if (leader2(); as l2) {
+              <div class="podium-card order-2 md:order-1 relative rounded-3xl bg-[#111613]/90 border border-slate-800/90 p-6 flex flex-col items-center backdrop-blur-md hover:border-slate-600 transition-all duration-300 transform hover:-translate-y-1 group shadow-xl">
+                <!-- Badge #2 -->
+                <div class="absolute -top-3.5 px-3 py-0.5 rounded-full bg-[#1c2420] border border-slate-700 text-slate-300 text-xs font-bold flex items-center gap-1.5 shadow-md">
+                  <span class="text-slate-400">★</span>
+                  <span>#2</span>
+                </div>
 
-  <!-- CARRUSEL (4 al 10) MARQUEE -->
-  @if (topRemaining().length > 0) {
-    <div class="mt-8">
-      <div class="flex items-center justify-between mb-4 px-2">
-        <h3 class="text-lg font-black tracking-tight text-gray-900 dark:text-white uppercase flex items-center gap-2 truncate w-full">
-          <span>{{ t().explore.fullRanking }}</span>
-        </h3>
-        <!-- Eliminamos el botón de deslizar según la petición del usuario -->
-      </div>
-      
-      <style>
-        @keyframes marquee {
-          0% { transform: translateX(0); }
-          100% { transform: translateX(-50%); }
-        }
-        .animate-marquee {
-          animation: marquee 30s linear infinite;
-        }
-      </style>
+                <!-- Avatar con Aro Plateado + Fallback -->
+                <div class="relative mt-2 mb-4">
+                  <div class="w-24 h-24 rounded-full border-2 border-slate-400 bg-slate-900 flex items-center justify-center text-white text-2xl font-black shadow-inner overflow-hidden">
+                    @if (l2.avatarUrl && !avatarErrors().has(l2.id)) {
+                      <img [src]="l2.avatarUrl" [alt]="l2.name" (error)="onAvatarError(l2.id)" class="w-full h-full object-cover" />
+                    } @else {
+                      <span class="text-slate-300">{{ l2.initials }}</span>
+                    }
+                  </div>
+                  <!-- Mini Badge #2 -->
+                  <div class="absolute bottom-0 right-0 w-6 h-6 rounded-full bg-slate-800 border border-slate-400 text-[10px] font-bold text-slate-200 flex items-center justify-center shadow">
+                    #2
+                  </div>
+                </div>
 
-      <!-- Marquee Container -->
-      <div class="relative overflow-hidden w-full py-2">
-        <!-- Máscaras de difuminado a los lados para un efecto más suave -->
-        <div class="absolute inset-y-0 left-0 w-8 md:w-16 bg-gradient-to-r from-white dark:from-[#0a0c0d] to-transparent z-10 pointer-events-none"></div>
-        <div class="absolute inset-y-0 right-0 w-8 md:w-16 bg-gradient-to-l from-white dark:from-[#0a0c0d] to-transparent z-10 pointer-events-none"></div>
+                <!-- Handle con tipografía responsive -->
+                <h3 class="w-full text-center">
+                  <a
+                    [routerLink]="['/' + l2.handle]"
+                    [title]="'@' + l2.handle"
+                    [class]="'font-black text-white group-hover:text-[#ccff00] transition truncate max-w-full block hover:underline ' + getHandleClass(l2.handle)"
+                  >
+                    &#64;{{ l2.handle }}
+                  </a>
+                </h3>
 
-        <div [class]="topRemaining().length >= 4 ? 'flex w-max animate-marquee hover:[animation-play-state:paused]' : 'flex w-full justify-center gap-4'">
-          
-          <!-- Primer Set -->
-          <div class="flex gap-4" [class.pr-4]="topRemaining().length >= 4">
-            @for (athlete of topRemaining(); track athlete.id; let i = $index) {
-              <div class="shrink-0 w-[220px]">
-                <ng-container *ngTemplateOutlet="carouselCard; context: { athlete: athlete, rank: i + 4 }"></ng-container>
+                <!-- Disciplina -->
+                <div class="mt-2 px-3 py-1 rounded-full bg-slate-800/70 border border-slate-700/60 text-[11px] font-medium text-slate-300 text-center truncate max-w-[210px]" [title]="l2.sport">
+                  {{ l2.sport }}
+                </div>
+
+                <!-- Shakes Count Box (Centrado con Animated Shaker) -->
+                <div class="mt-6 w-full rounded-2xl bg-[#090c0a]/80 border border-slate-800/80 p-3.5 flex flex-col items-center justify-center text-center">
+                  <span class="text-[10px] uppercase font-bold tracking-wider text-slate-400 block leading-none mb-1">SHAKES</span>
+                  <div class="mt-1 text-2xl font-black text-white flex items-center justify-center gap-2">
+                    <span>{{ l2.shakesThisMonth }}</span>
+                    <app-animated-shaker [size]="20" customClass="text-slate-400" />
+                  </div>
+                </div>
+
+                <!-- Botón CTA -->
+                <a
+                  [routerLink]="['/' + l2.handle]"
+                  class="mt-4 w-full py-3.5 px-4 rounded-xl bg-slate-800/90 hover:bg-[#ccff00] text-white hover:text-gray-950 border border-slate-700/70 text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 transition active:scale-95 cursor-pointer shadow-sm"
+                >
+                  <span>{{ t().explore.inviteShake }}</span>
+                  <app-animated-shaker [size]="18" customClass="text-slate-300 group-hover:text-gray-950" />
+                </a>
               </div>
             }
-          </div>
 
-          <!-- Segundo Set (Clon para scroll infinito) -->
-          @if (topRemaining().length >= 4) {
-            <div class="flex gap-4 pr-4" aria-hidden="true">
-              @for (athlete of topRemaining(); track athlete.id + '-dup'; let i = $index) {
-                <div class="shrink-0 w-[220px]">
-                  <ng-container *ngTemplateOutlet="carouselCard; context: { athlete: athlete, rank: i + 4 }"></ng-container>
+            <!-- 1ST PLACE (Oro / Neon Champion) - order-1 en mobile, md:order-2 en desktop (elevado) -->
+            @if (leader1(); as l1) {
+              <div class="podium-card order-1 md:order-2 relative rounded-3xl bg-[#111613] border-2 border-[#ccff00] p-7 flex flex-col items-center shadow-[0_0_40px_rgba(204,255,0,0.25)] md:-translate-y-6 transition-all duration-300 transform hover:-translate-y-7 group z-20">
+                <!-- Badge #1 Neon -->
+                <div class="absolute -top-4 px-3.5 py-1 rounded-full bg-[#ccff00] text-gray-950 text-xs font-black flex items-center gap-1 shadow-[0_0_20px_rgba(204,255,0,0.65)]">
+                  <span>★</span>
+                  <span>#1</span>
+                </div>
+
+                <!-- Avatar con Aro Neon + Fallback -->
+                <div class="relative mt-2 mb-4">
+                  <div class="w-28 h-28 rounded-full ring-4 ring-[#ccff00] shadow-[0_0_25px_rgba(204,255,0,0.45)] bg-slate-900 flex items-center justify-center text-white text-3xl font-black overflow-hidden">
+                    @if (l1.avatarUrl && !avatarErrors().has(l1.id)) {
+                      <img [src]="l1.avatarUrl" [alt]="l1.name" (error)="onAvatarError(l1.id)" class="w-full h-full object-cover" />
+                    } @else {
+                      <span class="text-[#ccff00]">{{ l1.initials }}</span>
+                    }
+                  </div>
+                  <!-- Mini Badge #1 -->
+                  <div class="absolute bottom-0 right-0 w-7 h-7 rounded-full bg-[#ccff00] text-gray-950 text-xs font-black flex items-center justify-center shadow-lg border-2 border-[#111613]">
+                    #1
+                  </div>
+                </div>
+
+                <!-- Handle con tipografía responsive -->
+                <h3 class="w-full text-center">
+                  <a
+                    [routerLink]="['/' + l1.handle]"
+                    [title]="'@' + l1.handle"
+                    [class]="'font-black text-white group-hover:text-[#ccff00] transition truncate max-w-full block hover:underline ' + getHandleClass(l1.handle)"
+                  >
+                    &#64;{{ l1.handle }}
+                  </a>
+                </h3>
+
+                <!-- Disciplina -->
+                <div class="mt-2 px-3 py-1 rounded-full bg-[#1c2420] border border-[#2b3a30] text-[#ccff00] text-[11px] font-bold text-center truncate max-w-[220px]" [title]="l1.sport">
+                  {{ l1.sport }}
+                </div>
+
+                <!-- Shakes Count Box (Centrado con Animated Shaker) -->
+                <div class="mt-6 w-full rounded-2xl bg-[#090c0a] border border-[#232c25] p-4 flex flex-col items-center justify-center text-center shadow-inner">
+                  <span class="text-[10px] uppercase font-bold tracking-wider text-slate-400 block leading-none mb-1">SHAKES ESTE MES</span>
+                  <div class="mt-1 text-3xl font-black text-white flex items-center justify-center gap-2">
+                    <span>{{ l1.shakesThisMonth }}</span>
+                    <app-animated-shaker [size]="24" customClass="text-[#ccff00]" />
+                  </div>
+                </div>
+
+                <!-- Botón CTA Primario Neon -->
+                <a
+                  [routerLink]="['/' + l1.handle]"
+                  class="mt-4 w-full py-3.5 px-4 rounded-xl bg-[#ccff00] hover:bg-[#b8e600] text-gray-950 font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition active:scale-95 cursor-pointer shadow-[0_0_20px_rgba(204,255,0,0.35)]"
+                >
+                  <span>{{ t().explore.inviteShake }}</span>
+                  <app-animated-shaker [size]="18" customClass="text-gray-950" />
+                </a>
+              </div>
+            }
+
+            <!-- 3RD PLACE (Bronce) - order-3 en mobile, md:order-3 en desktop -->
+            @if (leader3(); as l3) {
+              <div class="podium-card order-3 md:order-3 relative rounded-3xl bg-[#111613]/90 border border-slate-800/90 p-6 flex flex-col items-center backdrop-blur-md hover:border-amber-700/60 transition-all duration-300 transform hover:-translate-y-1 group shadow-xl">
+                <!-- Badge #3 -->
+                <div class="absolute -top-3.5 px-3 py-0.5 rounded-full bg-[#1c2420] border border-amber-800/60 text-amber-400 text-xs font-bold flex items-center gap-1.5 shadow-md">
+                  <span class="text-amber-500">★</span>
+                  <span>#3</span>
+                </div>
+
+                <!-- Avatar con Aro Bronce + Fallback -->
+                <div class="relative mt-2 mb-4">
+                  <div class="w-24 h-24 rounded-full border-2 border-amber-700 bg-slate-900 flex items-center justify-center text-white text-2xl font-black shadow-inner overflow-hidden">
+                    @if (l3.avatarUrl && !avatarErrors().has(l3.id)) {
+                      <img [src]="l3.avatarUrl" [alt]="l3.name" (error)="onAvatarError(l3.id)" class="w-full h-full object-cover" />
+                    } @else {
+                      <span class="text-amber-400">{{ l3.initials }}</span>
+                    }
+                  </div>
+                  <!-- Mini Badge #3 -->
+                  <div class="absolute bottom-0 right-0 w-6 h-6 rounded-full bg-slate-800 border border-amber-700 text-[10px] font-bold text-amber-400 flex items-center justify-center shadow">
+                    #3
+                  </div>
+                </div>
+
+                <!-- Handle con tipografía responsive -->
+                <h3 class="w-full text-center">
+                  <a
+                    [routerLink]="['/' + l3.handle]"
+                    [title]="'@' + l3.handle"
+                    [class]="'font-black text-white group-hover:text-[#ccff00] transition truncate max-w-full block hover:underline ' + getHandleClass(l3.handle)"
+                  >
+                    &#64;{{ l3.handle }}
+                  </a>
+                </h3>
+
+                <!-- Disciplina -->
+                <div class="mt-2 px-3 py-1 rounded-full bg-slate-800/70 border border-slate-700/60 text-[11px] font-medium text-slate-300 text-center truncate max-w-[210px]" [title]="l3.sport">
+                  {{ l3.sport }}
+                </div>
+
+                <!-- Shakes Count Box (Centrado con Animated Shaker) -->
+                <div class="mt-6 w-full rounded-2xl bg-[#090c0a]/80 border border-slate-800/80 p-3.5 flex flex-col items-center justify-center text-center">
+                  <span class="text-[10px] uppercase font-bold tracking-wider text-slate-400 block leading-none mb-1">SHAKES</span>
+                  <div class="mt-1 text-2xl font-black text-white flex items-center justify-center gap-2">
+                    <span>{{ l3.shakesThisMonth }}</span>
+                    <app-animated-shaker [size]="20" customClass="text-amber-500" />
+                  </div>
+                </div>
+
+                <!-- Botón CTA -->
+                <a
+                  [routerLink]="['/' + l3.handle]"
+                  class="mt-4 w-full py-3.5 px-4 rounded-xl bg-slate-800/90 hover:bg-[#ccff00] text-white hover:text-gray-950 border border-slate-700/70 text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 transition active:scale-95 cursor-pointer shadow-sm"
+                >
+                  <span>{{ t().explore.inviteShake }}</span>
+                  <app-animated-shaker [size]="18" customClass="text-slate-300 group-hover:text-gray-950" />
+                </a>
+              </div>
+            }
+
+          </div>
+        } @else if (!leaderboardLoading()) {
+          <!-- Empty state podio -->
+          <div class="rounded-3xl bg-[#111613] border border-white/10 p-10 text-center max-w-lg mx-auto mb-12">
+            <div class="w-14 h-14 mx-auto mb-4 rounded-2xl bg-[#090c0a] border border-[#ccff00]/30 grid place-items-center">
+              <app-animated-shaker [size]="28" customClass="text-[#ccff00]" />
+            </div>
+            <h3 class="text-lg font-black text-white font-display">Aún no hay líderes registrados</h3>
+            <p class="text-xs text-slate-400 mt-1">Sé el primer atleta en recibir apoyo de la comunidad este mes.</p>
+          </div>
+        }
+
+        <!-- ========================================================================= -->
+        <!-- CARRUSEL INFINITO EN MOVIMIENTO CONTINUO (Puestos del 4 al 10) -->
+        <!-- ========================================================================= -->
+        @if (topRemaining().length > 0) {
+          <div class="mt-12 pt-8 border-t border-white/10">
+            
+            <!-- Cabecera del Carrusel Infinito -->
+            <div class="mb-8 px-1 flex flex-col items-center justify-center">
+              <h3 class="text-xl sm:text-2xl font-black tracking-tight text-white uppercase font-display">
+                {{ t().explore.fullRanking }}
+              </h3>
+              <div class="w-12 h-1 mt-3 rounded-full bg-gradient-to-r from-[#ccff00] to-[#8fcc00]"></div>
+            </div>
+
+            <!-- Estilos de Animación Marquee Fluida -->
+            <style>
+              @keyframes infiniteMarquee {
+                0% { transform: translateX(0); }
+                100% { transform: translateX(-50%); }
+              }
+              .animate-infinite-marquee {
+                display: flex;
+                width: max-content;
+                animation: infiniteMarquee 32s linear infinite;
+                will-change: transform;
+              }
+              .animate-infinite-marquee:hover,
+              .animate-infinite-marquee:active {
+                animation-play-state: paused;
+              }
+            </style>
+
+            <!-- Contenedor con Difuminado a los Extremos (Sin Scrollbars) -->
+            <div class="relative overflow-hidden w-full py-4 select-none">
+              <!-- Máscaras de difuminado lateral -->
+              <div class="absolute inset-y-0 left-0 w-10 md:w-24 bg-gradient-to-r from-[#080a0b] via-[#080a0b]/80 to-transparent z-10 pointer-events-none"></div>
+              <div class="absolute inset-y-0 right-0 w-10 md:w-24 bg-gradient-to-l from-[#080a0b] via-[#080a0b]/80 to-transparent z-10 pointer-events-none"></div>
+
+              <!-- Pista Marquee con Pausa en Hover/Touch -->
+              <div [class]="topRemaining().length >= 4 ? 'animate-infinite-marquee' : 'flex w-full justify-center gap-4'">
+                
+                <!-- Primer Set (Estrictamente ordenado #4 al #10) -->
+                <div class="flex gap-4" [class.pr-4]="topRemaining().length >= 4">
+                  @for (athlete of topRemaining(); track athlete.id) {
+                    <div class="shrink-0 w-[240px]">
+                      <ng-container *ngTemplateOutlet="carouselCard; context: { athlete: athlete }"></ng-container>
+                    </div>
+                  }
+                </div>
+
+                <!-- Segundo Set (Clon para continuidad perfecta sin saltos) -->
+                @if (topRemaining().length >= 4) {
+                  <div class="flex gap-4 pr-4" aria-hidden="true">
+                    @for (athlete of topRemaining(); track athlete.id + '-dup') {
+                      <div class="shrink-0 w-[240px]">
+                        <ng-container *ngTemplateOutlet="carouselCard; context: { athlete: athlete }"></ng-container>
+                      </div>
+                    }
+                  </div>
+                }
+
+              </div>
+            </div>
+
+          </div>
+        }
+
+        <!-- Template Reutilizable de Tarjeta de Carrusel -->
+        <ng-template #carouselCard let-athlete="athlete">
+          <div class="carousel-card-item w-full bg-[#111613] border border-white/10 hover:border-[#ccff00]/60 rounded-3xl p-5 flex flex-col items-center text-center shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 relative group">
+            
+            <!-- Badge numérico de Ranking Exacto -->
+            <div class="absolute top-3.5 left-4 bg-[#1c2420] text-slate-300 border border-slate-700/80 px-2.5 py-0.5 rounded-md text-[11px] font-black shadow-sm tracking-wider">
+              #{{ athlete.rank }}
+            </div>
+
+            <!-- Avatar con Fallback Robusto -->
+            <div class="w-16 h-16 mt-2 mb-3">
+              @if (athlete.avatarUrl && !avatarErrors().has(athlete.id)) {
+                <img
+                  [src]="athlete.avatarUrl"
+                  [alt]="athlete.handle"
+                  (error)="onAvatarError(athlete.id)"
+                  class="w-full h-full object-cover rounded-full border-2 border-white/10 group-hover:border-[#ccff00] transition"
+                />
+              } @else {
+                <div class="w-full h-full rounded-full border-2 border-white/10 bg-[#1c2420] text-slate-300 flex items-center justify-center text-lg font-black group-hover:border-[#ccff00] transition">
+                  {{ athlete.initials }}
                 </div>
               }
             </div>
-          }
-          
-        </div>
-      </div>
-    </div>
-  }
-</section>
+
+            <!-- Nickname & Sport -->
+            <h4 class="font-black text-white group-hover:text-[#ccff00] text-base truncate w-full block transition">
+              <a [routerLink]="['/', athlete.handle]" [title]="'@' + athlete.handle" class="hover:underline">
+                &#64;{{ athlete.handle }}
+              </a>
+            </h4>
+
+            <p class="text-[10px] font-bold text-slate-400 mt-1 uppercase tracking-wider truncate w-full px-1" [title]="athlete.sport">
+              {{ languageService.translateDiscipline(athlete.sport) }}
+            </p>
+
+            <!-- Stats Box: [Número] + [Animated Shaker] -->
+            <div class="w-full mt-4 pt-3 border-t border-white/10 flex flex-col items-center justify-center text-center bg-[#090c0a]/80 rounded-2xl p-2.5 border border-slate-800/80">
+              <span class="text-[9px] uppercase font-bold tracking-wider text-slate-400 block leading-none mb-1">SHAKES</span>
+              <div class="text-lg font-black text-white flex items-center justify-center gap-1.5">
+                <span>{{ athlete.shakesThisMonth }}</span>
+                <app-animated-shaker [size]="16" customClass="text-[#ccff00]" />
+              </div>
+            </div>
+
+            <!-- Botón Apoyar / Invitar Shake -->
+            <a
+              [routerLink]="['/', athlete.handle]"
+              class="mt-3 w-full py-2.5 px-3 rounded-xl bg-slate-800/90 hover:bg-[#ccff00] text-white hover:text-gray-950 border border-slate-700/70 text-[11px] font-black uppercase tracking-wider flex items-center justify-center gap-1.5 transition active:scale-95 cursor-pointer"
+            >
+              <span>{{ t().explore.support }}</span>
+              <app-animated-shaker [size]="14" customClass="text-slate-300 group-hover:text-gray-950" />
+            </a>
+          </div>
+        </ng-template>
+
+      </section>
     }
 
-<!-- Template del Carrusel Compacto -->
-<ng-template #carouselCard let-athlete="athlete" let-rank="rank">
-  <div class="bg-white dark:bg-[#121618] border border-gray-200 dark:border-[#282f34] rounded-2xl p-5 flex flex-col items-center text-center shadow-md hover:shadow-xl transition-all hover:-translate-y-1 relative h-full">
-    
-    <!-- Compact Badge -->
-    <div class="absolute -top-3 left-4 bg-gray-900 dark:bg-[#282f34] text-white px-2.5 py-0.5 rounded-md text-[10px] font-black border border-gray-700 dark:border-[#3a444b] shadow-sm">
-      #{{ rank }}
-    </div>
-
-    <!-- Avatar -->
-    <div class="w-16 h-16 mt-1 mb-3">
-      @if (athlete.avatarUrl) {
-        <img [src]="athlete.avatarUrl" [alt]="athlete.handle" class="w-full h-full object-cover rounded-full border-2 border-gray-100 dark:border-[#282f34]" />
-      } @else {
-        <div class="w-full h-full rounded-full border-2 border-gray-100 dark:border-[#282f34] bg-gray-100 dark:bg-[#1b2226] text-gray-400 flex items-center justify-center text-xl font-black">
-          {{ athlete.initials }}
-        </div>
-      }
-    </div>
-
-    <!-- Nickname & Sport -->
-    <h4 class="font-black text-gray-900 dark:text-white text-base truncate w-full">&#64;{{ athlete.handle }}</h4>
-    <p class="text-[9px] font-bold text-gray-500 dark:text-slate-400 mt-1 uppercase tracking-wider truncate w-full px-2">
-      {{ languageService.translateDiscipline(athlete.sport) }}
-    </p>
-
-    <!-- Stats -->
-    <div class="w-full flex justify-between items-center mt-5 pt-3 border-t border-gray-100 dark:border-[#1e2327]">
-      <div class="flex items-center gap-1.5">
-        <app-icon-shaker size="14" customClass="text-gray-400 dark:text-slate-500" />
-        <span class="text-base font-black text-gray-900 dark:text-white">{{ athlete.shakesThisMonth }}</span>
-      </div>
-      <a [routerLink]="['/', athlete.handle]" class="bg-gray-100 dark:bg-[#1b2226] hover:bg-gray-900 dark:hover:bg-[#c9ff3d] hover:text-white dark:hover:text-black text-gray-700 dark:text-slate-200 text-[10px] font-black uppercase tracking-wider px-3 py-2 rounded-lg transition-colors cursor-pointer border border-transparent dark:border-[#2d363d] dark:hover:border-[#c9ff3d]">
-        {{ t().explore.support }}
-      </a>
-    </div>
-  </div>
-</ng-template>
-
-<!-- El template reutilizable de la card -->
-<ng-template #rankCard let-athlete="athlete" let-rank="rank" let-isGold="isGold">
-  <div class="h-full relative border-2 rounded-3xl p-5 sm:p-6 flex flex-col justify-between shadow-xl transition-all hover:-translate-y-1"
-       [ngClass]="isGold ? 'border-amber-400 dark:border-[#c9ff3d] bg-gradient-to-b from-white to-gray-50 dark:from-[#191e20] dark:to-[#111416]' : 'border-gray-200 dark:border-[#282f34] bg-white dark:bg-[#101416]'">
-    
-    <!-- Rank Badge -->
-    <div class="absolute -top-3.5 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full font-black text-xs uppercase tracking-wider flex items-center gap-1.5 shadow-md whitespace-nowrap"
-         [ngClass]="isGold ? 'bg-gradient-to-r from-amber-300 via-amber-400 dark:via-[#c9ff3d] to-yellow-400 text-gray-900 dark:text-black' : 'bg-gradient-to-r from-gray-200 to-gray-400 dark:from-slate-200 dark:to-slate-400 text-gray-900 dark:text-black'">
-      @if (rank === 1) {
-        <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 15.39l-3.76 2.27.99-4.28-3.32-2.88 4.38-.37L12 6.09l1.71 4.04 4.38.37-3.32 2.88.99 4.28z"/></svg>
-        #{{ rank }}
-      } @else if (rank === 2) {
-        <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 15.39l-3.76 2.27.99-4.28-3.32-2.88 4.38-.37L12 6.09l1.71 4.04 4.38.37-3.32 2.88.99 4.28z"/></svg>
-        #{{ rank }}
-      } @else if (rank === 3) {
-        <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 15.39l-3.76 2.27.99-4.28-3.32-2.88 4.38-.37L12 6.09l1.71 4.04 4.38.37-3.32 2.88.99 4.28z"/></svg>
-        #{{ rank }}
-      } @else {
-        #{{ rank }}
-      }
-    </div>
-
-    <!-- Info del Atleta -->
-    <div class="pt-3 text-center flex-1 flex flex-col justify-center">
-      <div class="relative mx-auto mb-4" [ngClass]="isGold ? 'w-28 h-28' : 'w-20 h-20'">
-        @if (isGold) {
-          <div class="absolute -inset-1 rounded-full bg-gradient-to-tr from-amber-300 dark:from-[#c9ff3d] to-yellow-400 opacity-80 blur-sm animate-pulse hidden dark:block"></div>
-        }
-        @if (athlete.avatarUrl) {
-          <img [src]="athlete.avatarUrl" [alt]="athlete.handle" class="relative w-full h-full object-cover rounded-full border-4 shadow-xl bg-white" [ngClass]="isGold ? 'border-amber-400 dark:border-[#c9ff3d]' : 'border-gray-200 dark:border-slate-300'" />
-        } @else {
-          <div class="relative w-full h-full rounded-full border-4 flex items-center justify-center font-black shadow-xl" [ngClass]="isGold ? 'border-amber-400 dark:border-[#c9ff3d] bg-gray-100 dark:bg-[#1b2226] text-amber-500 dark:text-[#c9ff3d] text-4xl' : 'border-gray-200 dark:border-slate-300 bg-gray-100 dark:bg-[#1b2226] text-gray-400 text-3xl'">
-            {{ athlete.initials }}
-          </div>
-        }
-      </div>
-      <!-- NICKNAME ONLY -->
-      <h3 class="text-xl sm:text-2xl font-black text-gray-900 dark:text-white tracking-tight truncate w-full">&#64;{{ athlete.handle }}</h3>
-      
-      <div class="mt-2.5">
-        <span class="inline-block px-3 py-1 rounded-full border text-[10px] font-bold leading-tight truncate max-w-[90%]"
-              [ngClass]="isGold ? 'bg-amber-50 dark:bg-[#20272b] border-amber-200 dark:border-[#354047] text-amber-700 dark:text-[#c9ff3d]' : 'bg-gray-50 dark:bg-[#181d20] border-gray-200 dark:border-[#2b3237] text-gray-700 dark:text-slate-300'">
-          {{ languageService.translateDiscipline(athlete.sport) }}
-        </span>
-      </div>
-    </div>
-
-    <!-- Estadísticas & CTA -->
-    <div class="mt-6 pt-4 border-t border-gray-100 dark:border-[#1e2327]">
-      <div class="grid grid-cols-2 gap-2 mb-4 text-left bg-gray-50 dark:bg-[#0c0f10] p-2.5 rounded-2xl border border-gray-200 dark:border-[#22292d]">
-        <div>
-          <span class="text-[9px] uppercase font-bold text-gray-400 dark:text-slate-500 tracking-wider leading-none block mb-1">Shakes</span>
-          <div class="text-xl font-black text-gray-900 dark:text-white flex items-center gap-1">
-            {{ athlete.shakesThisMonth }}
-            <app-icon-shaker size="14" [customClass]="isGold ? 'text-amber-500 dark:text-slate-500' : 'text-gray-400 dark:text-slate-500'" />
-          </div>
-        </div>
-      </div>
-      
-      <a [routerLink]="['/', athlete.handle]" class="w-full font-extrabold text-xs uppercase tracking-wider py-3 rounded-xl transition-all duration-200 flex items-center justify-center gap-1.5 cursor-pointer"
-         [ngClass]="isGold ? 'bg-amber-400 dark:bg-[#c9ff3d] hover:bg-amber-500 dark:hover:bg-[#bbf000] text-gray-900 dark:text-black shadow-md' : 'bg-gray-50 dark:bg-[#181d20] hover:bg-gray-900 dark:hover:bg-[#c9ff3d] hover:text-white dark:hover:text-black text-gray-900 dark:text-white border border-gray-200 dark:border-[#30383d]'">
-        <span>{{ t().explore.inviteShake }}</span>
-        <app-icon-shaker size="14" />
-      </a>
-    </div>
-    
-  </div>
-</ng-template>
-
-    <!-- Resto de explorador (búsqueda normal) -->
+    <!-- ========================================================================= -->
+    <!-- VISTA DE EXPLORACIÓN POR DISCIPLINA / BÚSQUEDA -->
+    <!-- ========================================================================= -->
     @if (searchQuery() !== '' || selectedCategory() !== 'ALL') {
-      <section>
-        <div class="flex items-center justify-between mb-4 mt-8 border-t border-gray-200 dark:border-white/10 pt-8">
-          <h3 class="text-xl font-black text-gray-900 dark:text-white truncate w-full">{{ t().explore.exploreByDiscipline }}</h3>
-          <span class="text-xs text-gray-500 dark:text-slate-400">
+      <section class="animate-fade-in">
+        <div class="flex items-center justify-between mb-6 pb-4 border-b border-white/10">
+          <h2 class="text-xl font-black text-white font-display uppercase tracking-tight">
+            {{ t().explore.exploreByDiscipline }}
+          </h2>
+          <span class="text-xs font-bold text-slate-400 bg-[#111613] px-3 py-1 rounded-full border border-white/10">
             {{ filteredAthletes().length }} {{ filteredAthletes().length === 1 ? t().explore.athleteFound : t().explore.athletesFound }}
           </span>
         </div>
 
-        <!-- Cuadrícula de Atletas filtrada -->
+        <!-- Grid de Atletas Filtrados -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-          @for (athlete of filteredAthletes(); track athlete.id) {
-            <article class="bg-white dark:bg-[#121614] rounded-3xl p-6 border border-gray-200/80 dark:border-white/10 shadow-xs transition hover:border-gray-300 dark:hover:border-white/20 hover:shadow-sm flex flex-col justify-between">
+          @for (athlete of filteredAthletes(); track athlete.id; let i = $index) {
+            <article 
+              class="relative bg-[#111613] rounded-3xl p-6 border border-white/10 hover:border-[#ccff00]/60 shadow-lg hover:shadow-[0_10px_30px_rgba(0,0,0,0.5)] transition-all duration-300 flex flex-col justify-between group overflow-hidden"
+              [style.animation-delay]="(i * 40) + 'ms'"
+            >
+              <!-- Sutil gradiente radial en hover -->
+              <div class="absolute -right-20 -top-20 w-44 h-44 bg-[#ccff00]/5 rounded-full blur-3xl group-hover:bg-[#ccff00]/10 transition-all pointer-events-none duration-500" aria-hidden="true"></div>
+
               <div>
-                <div class="flex items-start justify-between gap-4">
-                  <div class="flex items-center gap-3.5">
-                    @if (athlete.avatarUrl) {
-                      <img [src]="athlete.avatarUrl" [alt]="athlete.name" class="h-12 w-12 shrink-0 rounded-2xl object-cover border border-gray-200 dark:border-white/10" />
-                    } @else {
-                      <div class="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-gray-900 dark:bg-[#090c0a] text-sm font-black text-[#c9ff3d]">
-                        {{ athlete.initials }}
-                      </div>
-                    }
-                    <div>
-                      <h3 class="font-extrabold text-gray-900 dark:text-white text-base truncate w-full">{{ athlete.name }}</h3>
-                      <p class="text-xs text-gray-500 dark:text-slate-400 font-medium">&#64;{{ athlete.handle }}</p>
+                <!-- Encabezado: Avatar + Datos Principales -->
+                <div class="flex items-center gap-4">
+                  @if (athlete.avatarUrl && !avatarErrors().has(athlete.id)) {
+                    <img
+                      [src]="athlete.avatarUrl"
+                      [alt]="athlete.name"
+                      (error)="onAvatarError(athlete.id)"
+                      class="h-14 w-14 shrink-0 rounded-2xl object-cover border border-white/15 group-hover:border-[#ccff00] shadow-md transition duration-300"
+                    />
+                  } @else {
+                    <div class="grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-[#090c0a] text-base font-black text-[#ccff00] border border-white/10 group-hover:border-[#ccff00]/50 transition">
+                      {{ athlete.initials }}
                     </div>
+                  }
+                  
+                  <div class="min-w-0 flex-1">
+                    <h3 class="font-extrabold text-white text-base sm:text-lg truncate block group-hover:text-[#ccff00] transition">
+                      <a [routerLink]="['/', athlete.handle]" class="hover:underline">
+                        {{ athlete.name }}
+                      </a>
+                    </h3>
+                    <p class="text-xs text-slate-400 font-semibold truncate">&#64;{{ athlete.handle }}</p>
                   </div>
-                  <span class="rounded-lg bg-gray-50 dark:bg-white/5 border border-gray-200/80 dark:border-white/10 px-2.5 py-1 text-xs font-bold text-gray-700 dark:text-gray-200">
-                    {{ languageService.translateDiscipline(athlete.sport) }}
-                  </span>
                 </div>
-                <p class="mt-3.5 text-sm text-gray-600 dark:text-gray-300 leading-relaxed line-clamp-2">
+
+                <!-- Píldoras de Disciplinas (Manejo limpio de múltiples disciplinas) -->
+                <div class="mt-3.5 flex flex-wrap gap-1.5 max-h-16 overflow-hidden">
+                  @for (disc of getDisciplinesList(athlete); track disc) {
+                    <span class="inline-flex items-center rounded-md bg-[#18201a] border border-[#2b3a30] px-2.5 py-0.5 text-[10px] font-bold text-[#ccff00] uppercase tracking-wider">
+                      {{ languageService.translateDiscipline(disc) }}
+                    </span>
+                  }
+                </div>
+
+                <!-- Biografía del Atleta con acento sutil -->
+                <p class="mt-3 text-xs sm:text-sm text-slate-300/90 leading-relaxed line-clamp-2 border-l-2 border-slate-700/60 pl-3 group-hover:border-[#ccff00]/60 transition duration-300">
                   {{ athlete.bio }}
                 </p>
               </div>
 
-              <div class="mt-6 pt-4 border-t border-gray-100 dark:border-white/10 flex items-center justify-between">
+              <!-- Barra Inferior: Apoyo mensual + Botón de Acción -->
+              <div class="mt-6 pt-4 border-t border-white/10 flex items-center justify-between gap-3">
                 <div class="flex items-center gap-2">
-                  <span class="text-xs font-semibold text-gray-400 dark:text-gray-500">{{ t().explore.monthlySupport }}</span>
-                  <span class="text-xs font-extrabold text-gray-900 dark:text-white bg-gray-100 dark:bg-white/10 px-2 py-0.5 rounded-md">
-                    {{ athlete.shakesThisMonth }} shakes
-                  </span>
+                  <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400">{{ t().explore.monthlySupport }}</span>
+                  <div class="flex items-center gap-1.5 bg-[#090c0a] px-3 py-1.5 rounded-xl border border-slate-800 shadow-inner">
+                    <span class="text-xs font-black text-white">{{ athlete.shakesThisMonth }}</span>
+                    <app-animated-shaker [size]="15" customClass="text-[#ccff00]" />
+                  </div>
                 </div>
-                <a [routerLink]="['/', athlete.handle]" class="rounded-xl border border-gray-200 dark:border-white/15 hover:border-gray-900 dark:hover:border-[#c9ff3d] bg-white dark:bg-white/5 hover:bg-gray-900 dark:hover:bg-[#c9ff3d] hover:text-[#c9ff3d] dark:hover:text-[#070a08] px-4 py-2 text-xs font-bold text-gray-900 dark:text-gray-100 transition">
-                  {{ t().explore.viewProfile }}
+
+                <a
+                  [routerLink]="['/', athlete.handle]"
+                  class="inline-flex items-center gap-2 rounded-xl border border-white/10 group-hover:border-[#ccff00] bg-white/5 group-hover:bg-[#ccff00] text-slate-200 group-hover:text-gray-950 px-4 py-2 text-xs font-black uppercase tracking-wider transition-all duration-300 active:scale-95 cursor-pointer shadow-sm"
+                >
+                  <span>{{ t().explore.viewProfile }}</span>
+                  <svg class="w-3.5 h-3.5 transform group-hover:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                  </svg>
                 </a>
               </div>
             </article>
           }
         </div>
 
+        <!-- Sin resultados -->
         @if (filteredAthletes().length === 0) {
-          <div class="bg-white dark:bg-[#121614] rounded-3xl p-12 text-center border border-gray-100 dark:border-white/10 mt-4">
-            <p class="text-base font-bold text-gray-900 dark:text-white">{{ t().explore.noAthletesFound }}</p>
-            <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">{{ t().explore.noAthletesSubtitle }}</p>
+          <div class="bg-[#111613] rounded-3xl p-12 text-center border border-white/10 mt-6 max-w-lg mx-auto">
+            <div class="w-12 h-12 mx-auto mb-3 rounded-full bg-[#090c0a] border border-[#ccff00]/30 grid place-items-center">
+              <svg class="w-6 h-6 text-[#ccff00]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </div>
+            <p class="text-base font-bold text-white">{{ t().explore.noAthletesFound }}</p>
+            <p class="text-xs text-slate-400 mt-1">{{ t().explore.noAthletesSubtitle }}</p>
             <button
               type="button"
-              class="mt-4 rounded-xl bg-gray-900 dark:bg-[#c9ff3d] text-[#c9ff3d] dark:text-[#070a08] px-4 py-2 text-xs font-bold"
+              class="mt-4 rounded-xl bg-[#ccff00] text-gray-950 px-5 py-2 text-xs font-black uppercase tracking-wider transition hover:bg-[#b8e600] active:scale-95 cursor-pointer shadow-md"
               (click)="setCategory('ALL'); onSearch('')"
             >
               {{ t().explore.resetFilters }}
@@ -322,5 +494,6 @@
         }
       </section>
     }
+
   </div>
 </div>

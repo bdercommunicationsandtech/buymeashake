@@ -5,8 +5,48 @@ import { LanguageService, LANGUAGE_STORAGE_KEY } from './language.service';
 describe('LanguageService', () => {
   let service: LanguageService;
 
+  const storageStore: Record<string, string> = {};
+  const mockStorage = {
+    getItem: (key: string) => storageStore[key] ?? null,
+    setItem: (key: string, value: string) => {
+      storageStore[key] = value.toString();
+    },
+    removeItem: (key: string) => {
+      delete storageStore[key];
+    },
+    clear: () => {
+      for (const k of Object.keys(storageStore)) {
+        delete storageStore[k];
+      }
+    },
+  };
+
+  try {
+    if (typeof window !== 'undefined') {
+      Object.defineProperty(window, 'localStorage', {
+        value: mockStorage,
+        writable: true,
+        configurable: true,
+      });
+    }
+    if (typeof globalThis !== 'undefined') {
+      Object.defineProperty(globalThis, 'localStorage', {
+        value: mockStorage,
+        writable: true,
+        configurable: true,
+      });
+    }
+  } catch {
+    // Ignore definition errors if already configured
+  }
+
   beforeEach(() => {
-    localStorage.clear();
+    mockStorage.clear();
+    try {
+      localStorage.clear();
+    } catch {
+      // Ignored if local storage mock handled it
+    }
     Object.defineProperty(window.navigator, 'language', { value: 'es-ES', configurable: true });
     service = new LanguageService();
   });

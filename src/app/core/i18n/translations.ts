@@ -572,6 +572,25 @@ export interface TranslationSchema {
     ctaTitle: string;
     ctaSubtitle: string;
     createPageFree: string;
+    heroMotto: string;
+    heroPill1: string;
+    heroPill2: string;
+    heroPill3: string;
+    heroPill4: string;
+    statAthletesVal: string;
+    statAthletesLabel: string;
+    statShakesVal: string;
+    statShakesLabel: string;
+    statCommunitiesVal: string;
+    statCommunitiesLabel: string;
+    scrollText: string;
+    shareYourStory: string;
+    ctaBadge: string;
+    exploreAthletes: string;
+    trustCommunity: string;
+    trustSecure: string;
+    trustFast: string;
+    progressStartsHere: string;
   };
   explore: {
     badge: string;

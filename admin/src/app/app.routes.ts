@@ -36,6 +36,11 @@ export const routes: Routes = [
           import('./features/reports/reports-panel.component').then((m) => m.ReportsPanelComponent),
       },
       {
+        path: 'banners',
+        loadComponent: () =>
+          import('./features/banners/banners-panel.component').then((m) => m.BannersPanelComponent),
+      },
+      {
         path: 'contact',
         loadComponent: () =>
           import('./features/contact/contact-panel.component').then((m) => m.ContactPanelComponent),

@@ -1,485 +1,1054 @@
-<div class="min-h-screen bg-[#fafafb] dark:bg-[#090c0a] text-gray-900 dark:text-gray-100 font-sans transition-colors duration-300">
-  
-  <!-- ------------------------------------------------------------- 1. HERO ATHLETIC SECTION -->
-  <section class="relative min-h-[calc(100vh-152px)] sm:min-h-[calc(100vh-152px)] flex items-center px-5 sm:px-10 overflow-hidden pt-12 sm:pt-0">
+<div class="min-h-screen bg-[#090c0a] text-gray-100 font-sans selection:bg-[#ccff00] selection:text-[#090c0a] overflow-x-hidden">
+
+  <!-- ========================================================================================= -->
+  <!-- 1. HERO SECTION (Captura 4 & Captura 1 Top) -->
+  <!-- ========================================================================================= -->
+  <section class="relative min-h-[92vh] sm:min-h-screen flex flex-col justify-between px-4 sm:px-6 md:px-8 lg:px-12 pt-16 sm:pt-20 md:pt-24 pb-12 sm:pb-16 overflow-hidden">
     
-    <!-- Background Image with Gritty Athletic Mood -->
-    <div class="absolute inset-0 z-0">
-      @for (img of heroImages; track img; let i = $index) {
+    <!-- Gritty Athletic Atmosphere Dynamic Rotating Background (Sincronizado con Admin Panel) -->
+    <div class="absolute inset-0 z-0 pointer-events-none select-none overflow-hidden">
+      @for (imgUrl of heroImages(); track imgUrl; let i = $index) {
         <div
-          class="absolute inset-0 bg-cover bg-center w-full h-full scale-105 transform motion-safe:transition-opacity duration-1000"
-          [style.background-image]="'url(' + img + ')'"
-          [style.opacity]="i === currentHeroImageIndex() ? '' : '0'"
-          [class.opacity-35]="i === currentHeroImageIndex()"
-          [class.dark:opacity-45]="i === currentHeroImageIndex()"
+          class="absolute inset-0 bg-cover bg-center w-full h-full mix-blend-luminosity transition-all duration-1000 ease-in-out transform"
+          [class.opacity-35]="currentHeroIndex() === i"
+          [class.opacity-0]="currentHeroIndex() !== i"
+          [class.scale-105]="currentHeroIndex() === i"
+          [class.scale-100]="currentHeroIndex() !== i"
+          [style.background-image]="'url(' + imgUrl + ')'"
         ></div>
       }
-      <div class="absolute inset-0 bg-gradient-to-t from-[#fafafb] dark:from-[#090c0a] via-[#fafafb]/80 dark:via-[#090c0a]/85 to-transparent"></div>
+      <div class="absolute inset-0 bg-gradient-to-b from-[#090c0a]/90 via-[#090c0a]/80 to-[#090c0a]"></div>
+      <div class="absolute inset-0 bg-radial-at-t from-[#ccff00]/10 via-transparent to-transparent"></div>
     </div>
 
-    <!-- Main Hero Content -->
-    <div class="relative z-10 max-w-5xl mx-auto w-full pt-16 sm:pt-20 pb-16">
+    <!-- Eslógan Diagonal Manuscrito Traducible (Caveat Bold) -->
+    <div class="hidden lg:block absolute top-20 right-14 text-right transform rotate-[-4deg] select-none pointer-events-none z-10" aria-hidden="true">
+      <p class="font-hand text-3xl xl:text-4xl font-bold text-gray-200 tracking-wide leading-tight drop-shadow-md">
+        {{ t().home.heroMotto }}
+      </p>
+      <svg class="w-36 h-3.5 ml-auto text-[#ccff00] mt-1 opacity-90" viewBox="0 0 140 14" fill="none" aria-hidden="true">
+        <path d="M3 10C45 3 95 2 137 9" stroke="currentColor" stroke-width="3.5" stroke-linecap="round"/>
+      </svg>
+    </div>
 
-      <!-- Headline & Claim -->
-      <h1 class="font-display text-3xl sm:text-4xl md:text-5xl lg:text-[44px] xl:text-[50px] font-black tracking-tight text-gray-950 dark:text-white leading-[1.1] max-w-5xl">
+    <!-- Main Hero Text & CTAs Container -->
+    <div class="relative z-10 max-w-7xl mx-auto w-full pt-4 sm:pt-6">
+
+      <!-- Main Headline con exactamente 2 líneas -->
+      <h1 class="hero-anim-item font-display text-[clamp(1.5rem,3.2vw,3rem)] xl:text-[3.25rem] font-black tracking-tight text-white leading-[1.15] max-w-none">
         <span class="block">{{ t().home.heroTitlePart1 }}</span>
-        <span class="block text-emerald-600 dark:text-[#c9ff3d] lg:whitespace-nowrap">{{ t().home.heroTitlePart2 }}</span>
+        <span class="block text-[#ccff00] drop-shadow-[0_0_30px_rgba(204,255,0,0.35)] whitespace-normal lg:whitespace-nowrap">
+          {{ t().home.heroTitlePart2 }}
+        </span>
       </h1>
 
-      <p class="mt-6 text-base sm:text-xl text-gray-600 dark:text-gray-300 max-w-2xl font-medium leading-relaxed">
+      <!-- Subtitle -->
+      <p class="hero-anim-item mt-5 sm:mt-6 text-base sm:text-lg md:text-xl text-gray-300 max-w-2xl font-medium leading-relaxed">
         {{ t().home.heroSubtitle }}
       </p>
 
-      <!-- CTA Buttons -->
-      <div class="mt-10 flex flex-col sm:flex-row items-stretch sm:items-center gap-4 max-w-md sm:max-w-none">
+      <!-- Action Buttons -->
+      <div class="hero-anim-item mt-8 sm:mt-10 flex flex-col sm:flex-row items-stretch sm:items-center gap-3.5 sm:gap-4 max-w-md sm:max-w-none">
+        <!-- CTA Primario Único con flecha -->
         <a
           routerLink="/auth/register"
-          class="inline-flex items-center justify-center rounded-2xl bg-[#c9ff3d] hover:bg-[#bbf033] text-gray-950 text-base font-black px-8 py-4 shadow-lg shadow-[#c9ff3d]/20 transition transform active:scale-95 gap-2"
+          (click)="trackEvent('cta_hero_start_free')"
+          class="inline-flex items-center justify-center rounded-full bg-[#ccff00] hover:bg-[#bbf000] text-gray-950 text-base font-black px-8 py-4 shadow-xl shadow-[#ccff00]/25 transition transform hover:scale-[1.02] active:scale-95 gap-2.5 cursor-pointer"
         >
           <span>{{ t().home.startFree }}</span>
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
-          </svg>
+          <span class="text-xl font-bold" aria-hidden="true">→</span>
         </a>
 
+        <!-- CTA Secundario Neutro sin flecha -->
         <a
           routerLink="/explore"
-          class="inline-flex items-center justify-center rounded-2xl bg-white dark:bg-white/10 hover:bg-gray-50 dark:hover:bg-white/15 text-gray-900 dark:text-white border border-gray-200 dark:border-white/15 text-base font-bold px-8 py-4 transition shadow-xs"
+          (click)="trackEvent('cta_hero_explore_athletes')"
+          class="inline-flex items-center justify-center rounded-full bg-white/10 hover:bg-white/15 text-white border border-white/15 text-base font-bold px-7 py-4 transition backdrop-blur-md hover:border-white/30"
         >
           {{ t().home.exploreAthletesTop10 }}
         </a>
       </div>
 
     </div>
-  </section>
 
-  <!-- ------------------------------------------------------------- 1.5. DISCIPLINE CAROUSEL (Cinta limpia en movimiento continuo + Pausa en hover) -->
-  <section class="w-full bg-[#fbfbfc] dark:bg-[#0c0f10] border-b border-gray-200/80 dark:border-white/5 py-4 sm:py-5 relative z-20 transition-colors duration-200">
-    <!-- Carrusel en Movimiento Continuo (Zero Scrollbar + Pausa instantánea al pasar el mouse) -->
-    <div class="marquee-group relative overflow-hidden w-full py-1">
-      <!-- Máscaras degradadas a los bordes para suavizar la entrada y salida -->
-      <div class="absolute inset-y-0 left-0 w-8 sm:w-20 bg-gradient-to-r from-[#fbfbfc] dark:from-[#0c0f10] to-transparent z-10 pointer-events-none"></div>
-      <div class="absolute inset-y-0 right-0 w-8 sm:w-20 bg-gradient-to-l from-[#fbfbfc] dark:from-[#0c0f10] to-transparent z-10 pointer-events-none"></div>
-
-      <!-- Fila en movimiento continuo que se pausa en hover -->
-      <div class="flex w-max anim-marquee-half">
-        <!-- Set 1 -->
-        <div class="flex gap-3 sm:gap-3.5 pr-3 sm:pr-3.5">
-          @for (d of featuredDisciplines; track d.name) {
-            <ng-container *ngTemplateOutlet="disciplineCard; context: { d: d }"></ng-container>
-          }
-        </div>
-        <!-- Set 2 (Clon idéntico para scroll infinito sin saltos) -->
-        <div class="flex gap-3 sm:gap-3.5 pr-3 sm:pr-3.5" aria-hidden="true">
-          @for (d of featuredDisciplines; track d.name + '-dup') {
-            <ng-container *ngTemplateOutlet="disciplineCard; context: { d: d }"></ng-container>
-          }
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Template Reutilizable de Tarjeta Deportiva -->
-  <ng-template #disciplineCard let-d="d">
-    <a
-      [routerLink]="['/explore']"
-      [queryParams]="{ cat: d.name }"
-      class="shrink-0 group flex items-center gap-3.5 px-4 py-3 sm:px-4.5 sm:py-3.5 rounded-2xl bg-white dark:bg-[#121618] hover:bg-gray-50 dark:hover:bg-[#181e21] border border-gray-200/90 dark:border-[#242c31] hover:border-gray-900 dark:hover:border-[#c9ff3d] hover:shadow-md dark:hover:shadow-[0_8px_20px_rgba(0,0,0,0.4)] transition-all duration-200 cursor-pointer min-w-[210px] sm:min-w-[240px]"
-    >
-      <!-- Contenedor del ícono deportivo -->
-      <div class="w-10 h-10 rounded-xl bg-gray-100 dark:bg-[#1c2226] group-hover:bg-amber-400 dark:group-hover:bg-[#c9ff3d] text-gray-700 dark:text-gray-300 group-hover:text-gray-950 dark:group-hover:text-black border border-gray-200/60 dark:border-white/5 flex items-center justify-center transition-all duration-200 shrink-0 shadow-xs">
-        <svg class="w-5 h-5 transition-transform group-hover:scale-110" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-          @switch (d.icon) {
-            @case ('dumbbell') {
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 5v14M18 5v14M2 8v8M22 8v8M6 12h12M4 8h2M4 16h2M18 8h2M18 16h2"/>
-            }
-            @case ('runner') {
-              <circle cx="13.5" cy="4" r="2" fill="currentColor" stroke="none"/>
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 8.5l-4.5 1.5-2-3-3 2.5 3 4-2 3.5 4 2.5"/>
-            }
-            @case ('cycling') {
-              <circle cx="6" cy="17" r="3.5" stroke-width="2"/>
-              <circle cx="18" cy="17" r="3.5" stroke-width="2"/>
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 6h-3l-3 7h6.5l2-4.5M6 17l3.5-7 3.5 7M12 10.5l-3-4.5H6"/>
-            }
-            @case ('swimmer') {
-              <circle cx="18" cy="5" r="2" fill="currentColor" stroke="none"/>
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11l4-2 3.5 2.5 4-2M2 17c1.5 1.5 3.5 1.5 5 0s3.5-1.5 5 0 3.5 1.5 5 0 3.5-1.5 5 0M2 21c1.5 1.5 3.5 1.5 5 0s3.5-1.5 5 0 3.5 1.5 5 0 3.5-1.5 5 0"/>
-            }
-            @case ('soccer') {
-              <circle cx="12" cy="12" r="9" stroke-width="2"/>
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 7l3.5 2.5-1.5 4.5h-4L8.5 9.5 12 7zM12 7V3M15.5 9.5L19 8M14 14l3 3.5M10 14l-3 3.5M8.5 9.5L5 8"/>
-            }
-            @case ('boxing') {
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14.5a4.5 4.5 0 0 0-4.5-4.5H13V7a3 3 0 0 0-6 0v5.5A4.5 4.5 0 0 0 11.5 17h3a4.5 4.5 0 0 0 4.5-4.5zM7 15v4a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2v-2"/>
-            }
-            @case ('crossfit') {
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7a3 3 0 0 1 6 0v2H9V7z"/>
-              <circle cx="12" cy="15" r="6" stroke-width="2"/>
-            }
-            @case ('basketball') {
-              <circle cx="12" cy="12" r="9" stroke-width="2"/>
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M3 12h18M12 3a13 13 0 0 1 0 18M12 3a13 13 0 0 0 0 18"/>
-            }
-            @case ('racket') {
-              <circle cx="15" cy="9" r="6" stroke-width="2"/>
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.5 13.5L4 20M3 21l2-2"/>
-            }
-            @case ('gymnastics') {
-              <circle cx="12" cy="4" r="2" fill="currentColor" stroke="none"/>
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 19l4-4 3 2 4-5 3 2M9 15l3-6 5-1"/>
-            }
-            @case ('extreme') {
-              <circle cx="7" cy="18" r="2" stroke-width="2"/>
-              <circle cx="17" cy="18" r="2" stroke-width="2"/>
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 14l3 1.5h12l3-1.5"/>
-            }
-            @case ('yoga') {
-              <circle cx="12" cy="6" r="2.5" fill="currentColor" stroke="none"/>
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 19a6 6 0 0 1 12 0M8 13l4 3 4-3M12 11v5"/>
-            }
-            @case ('motor') {
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 22V4c4-2 6 2 10 0s6 2 6 2v10c-4 2-6-2-10 0s-6-2-6-2"/>
-            }
-            @case ('gaming') {
-              <rect x="2" y="6" width="20" height="12" rx="4" stroke-width="2"/>
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 12h4M8 10v4M15 11h.01M18 13h.01"/>
-            }
-            @default {
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
-            }
-          }
-        </svg>
-      </div>
-
-      <!-- Textos de la disciplina -->
-      <div class="flex flex-col min-w-0 pr-1 text-left">
-        <span class="text-xs sm:text-sm font-black tracking-tight text-gray-900 dark:text-white group-hover:text-amber-600 dark:group-hover:text-[#c9ff3d] transition-colors truncate">
-          {{ languageService.translateDiscipline(d.name) }}
-        </span>
-        <span class="text-[10px] font-semibold text-gray-400 dark:text-slate-500 uppercase tracking-wider mt-0.5 truncate flex items-center gap-1">
-          <span>{{ d.tag }}</span>
-          <span class="group-hover:translate-x-0.5 transition-transform text-gray-300 dark:text-slate-600 group-hover:text-amber-500 dark:group-hover:text-[#c9ff3d]">→</span>
-        </span>
-      </div>
-    </a>
-  </ng-template>
-
-  <!-- ------------------------------------------------------------- 2. TOP ATHLETES SHOWCASE -->
-  <section class="relative w-full mb-20 mt-8 py-10 sm:py-14">
-    <div class="absolute inset-0 pointer-events-none select-none z-0" aria-hidden="true">
-      <img
-        src="/images/home-motivation-side-bg.png"
-        alt=""
-        class="hidden lg:block absolute inset-0 h-full w-full object-fill opacity-[0.14] dark:opacity-[0.32]"
-      />
-    </div>
-    <div class="max-w-5xl mx-auto px-5 relative z-10">
-    <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-10">
-      <div>
+    <!-- Bottom Hero Row: 4 Value Pills + Stats Counter + Scroll Indicator -->
+    <div class="relative z-10 max-w-7xl mx-auto w-full mt-10 sm:mt-12 pt-6 sm:pt-8 border-t border-white/10">
+      <div class="flex flex-col lg:flex-row items-center justify-between gap-6 lg:gap-8">
         
-        <h2 class="font-display text-3xl sm:text-4xl font-black text-gray-950 dark:text-white tracking-tight">
+        <!-- 4 Value Pills con iconos semánticos de Lucide -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3 w-full lg:w-auto">
+          
+          <!-- Pill 1: Shakes (Vaso / Shaker) -->
+          <div class="flex items-center gap-2 sm:gap-2.5 px-2.5 py-2 sm:px-3 sm:py-2.5 rounded-2xl bg-[#121614] border border-white/10 text-xs font-bold text-gray-300">
+            <span class="w-7 h-7 rounded-xl bg-[#ccff00]/10 text-[#ccff00] grid place-items-center shrink-0">
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M7 3h10l-1.5 18H8.5z"/>
+                <path d="M5 7h14"/>
+                <path d="M10 3v4"/>
+              </svg>
+            </span>
+            <span class="leading-tight text-[10px] sm:text-[11px] flex-1 break-words">{{ t().home.heroPill1 }}</span>
+          </div>
+
+          <!-- Pill 2: Memberships (Insignia / Escudo) -->
+          <div class="flex items-center gap-2 sm:gap-2.5 px-2.5 py-2 sm:px-3 sm:py-2.5 rounded-2xl bg-[#121614] border border-white/10 text-xs font-bold text-gray-300">
+            <span class="w-7 h-7 rounded-xl bg-[#ccff00]/10 text-[#ccff00] grid place-items-center shrink-0">
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                <path d="m9 12 2 2 4-4"/>
+              </svg>
+            </span>
+            <span class="leading-tight text-[10px] sm:text-[11px] flex-1 break-words">{{ t().home.heroPill2 }}</span>
+          </div>
+
+          <!-- Pill 3: Video calls 1-1 (Videollamada) -->
+          <div class="flex items-center gap-2 sm:gap-2.5 px-2.5 py-2 sm:px-3 sm:py-2.5 rounded-2xl bg-[#121614] border border-white/10 text-xs font-bold text-gray-300">
+            <span class="w-7 h-7 rounded-xl bg-[#ccff00]/10 text-[#ccff00] grid place-items-center shrink-0">
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="m22 7-7 5 7 5V7z"/>
+                <rect width="14" height="12" x="2" y="6" rx="2" ry="2"/>
+              </svg>
+            </span>
+            <span class="leading-tight text-[10px] sm:text-[11px] flex-1 break-words">{{ t().home.heroPill3 }}</span>
+          </div>
+
+          <!-- Pill 4: Community Growth (Crecimiento / Comunidad) -->
+          <div class="flex items-center gap-2 sm:gap-2.5 px-2.5 py-2 sm:px-3 sm:py-2.5 rounded-2xl bg-[#121614] border border-white/10 text-xs font-bold text-gray-300">
+            <span class="w-7 h-7 rounded-xl bg-[#ccff00]/10 text-[#ccff00] grid place-items-center shrink-0">
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M18 20V10M12 20V4M6 20v-6"/>
+              </svg>
+            </span>
+            <span class="leading-tight text-[10px] sm:text-[11px] flex-1 break-words">{{ t().home.heroPill4 }}</span>
+          </div>
+
+        </div>
+
+        <!-- Live Stats + Scroll Indicator -->
+        <div class="flex items-center justify-between sm:justify-end gap-4 sm:gap-8 w-full lg:w-auto" aria-live="polite">
+          
+          <div>
+            <span class="block text-xl sm:text-2xl font-black text-[#ccff00]">{{ t().home.statAthletesVal }}</span>
+            <span class="block text-[10px] sm:text-[11px] text-gray-400 font-medium uppercase tracking-wider">{{ t().home.statAthletesLabel }}</span>
+          </div>
+
+          <div class="w-px h-8 bg-white/15"></div>
+
+          <div>
+            <span class="block text-xl sm:text-2xl font-black text-white">{{ t().home.statShakesVal }}</span>
+            <span class="block text-[10px] sm:text-[11px] text-gray-400 font-medium uppercase tracking-wider">{{ t().home.statShakesLabel }}</span>
+          </div>
+
+          <div class="w-px h-8 bg-white/15"></div>
+
+          <div>
+            <span class="block text-xl sm:text-2xl font-black text-white">{{ t().home.statCommunitiesVal }}</span>
+            <span class="block text-[10px] sm:text-[11px] text-gray-400 font-medium uppercase tracking-wider">{{ t().home.statCommunitiesLabel }}</span>
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+
+  </section>
+
+  <!-- ========================================================================================= -->
+  <!-- 2. CARRUSEL 3D COVERFLOW DE DISCIPLINAS (Captura 1) -->
+  <!-- ========================================================================================= -->
+  <section
+    class="relative w-full py-16 sm:py-20 md:py-24 bg-[#090c0a] overflow-hidden select-none border-t border-white/5"
+    (pointerdown)="onPointerDown($event)"
+    (pointerup)="onPointerUp($event)"
+    (mouseenter)="onMouseEnterCarousel()"
+    (mouseleave)="onMouseLeaveCarousel()"
+  >
+    
+    <!-- Controls Header -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 md:px-8 mb-8 flex items-center justify-between">
+      <div>
+        <span class="text-xs font-black uppercase tracking-widest text-[#ccff00] block mb-1">
+          {{ t().home.activeDisciplines }}
+        </span>
+        <h2 class="text-2xl sm:text-3xl font-black text-white tracking-tight">
+          Entrena. Conecta. Recibe Apoyo.
+        </h2>
+      </div>
+
+      <!-- Navigation Arrows Circular Buttons (Mínimo 44x44px de área táctil accesible) -->
+      <div class="flex items-center gap-3">
+        <button
+          type="button"
+          (click)="prevDiscipline()"
+          aria-label="Disciplina anterior"
+          class="w-11 h-11 min-w-[44px] min-h-[44px] rounded-full bg-[#121614] border border-white/15 hover:border-[#ccff00] text-white hover:text-[#ccff00] flex items-center justify-center transition shadow-md active:scale-95 cursor-pointer"
+        >
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
+          </svg>
+        </button>
+
+        <button
+          type="button"
+          (click)="nextDiscipline()"
+          aria-label="Siguiente disciplina"
+          class="w-11 h-11 min-w-[44px] min-h-[44px] rounded-full bg-[#121614] border border-white/15 hover:border-[#ccff00] text-white hover:text-[#ccff00] flex items-center justify-center transition shadow-md active:scale-95 cursor-pointer"
+        >
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- 3D Perspective Coverflow Stage with 2D Mobile Fallback (Sin desborde horizontal) -->
+    <div class="relative w-full max-w-7xl mx-auto h-[380px] sm:h-[440px] flex items-center justify-center perspective-1200 overflow-hidden sm:overflow-visible">
+      
+      @for (d of coverflowDisciplines; track d.id; let i = $index) {
+        @let offset = i - activeDisciplineIndex();
+        @let absOffset = offset < 0 ? -offset : offset;
+        
+        <div
+          (click)="selectDiscipline(i)"
+          [class.glow-lime-card]="offset === 0"
+          class="absolute rounded-3xl overflow-hidden cursor-pointer preserve-3d transition-all duration-500 ease-out border shadow-2xl"
+          [style.width.px]="isFlatSlider() ? (offset === 0 ? 250 : 210) : (offset === 0 ? 280 : 230)"
+          [style.height.px]="isFlatSlider() ? (offset === 0 ? 350 : 300) : (offset === 0 ? 380 : 320)"
+          [style.z-index]="30 - absOffset * 5"
+          [style.opacity]="
+            isFlatSlider()
+              ? (offset === 0 ? 1 : absOffset === 1 ? 0.65 : 0)
+              : (offset === 0 ? 1 : absOffset === 1 ? 0.75 : absOffset === 2 ? 0.45 : 0.2)
+          "
+          [style.transform]="
+            isFlatSlider()
+              ? 'translateX(' + (offset * 160) + 'px) scale(' + (offset === 0 ? 1 : 0.86) + ')'
+              : 'translateX(' + (offset * 190) + 'px) translateZ(' + (-absOffset * 80) + 'px) rotateY(' + (offset * -16) + 'deg) ' + (offset === 0 ? 'scale(1.05)' : 'scale(0.92)')
+          "
+          [class.pointer-events-none]="isFlatSlider() && absOffset > 1"
+          [class.border-[#ccff00]]="offset === 0"
+          [class.border-white/15]="offset !== 0"
+        >
+          
+          <!-- Background Photo -->
+          <img
+            [src]="d.image"
+            [alt]="d.name"
+            class="absolute inset-0 w-full h-full object-cover"
+            loading="lazy"
+          />
+
+          <!-- Gradient Overlay -->
+          <div class="absolute inset-0 bg-gradient-to-t from-[#090c0a] via-[#090c0a]/40 to-transparent"></div>
+
+          <!-- Bottom Card Content -->
+          <div class="absolute inset-x-0 bottom-0 p-5 z-10 text-left">
+            <!-- Icono semántico específico por disciplina -->
+            <div class="w-8 h-8 rounded-xl bg-black/60 border border-white/15 text-[#ccff00] grid place-items-center mb-2">
+              @switch (d.id) {
+                @case ('fuerza') {
+                  <!-- Dumbbell / Pesa -->
+                  <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="m6.5 6.5 11 11"/>
+                    <path d="m21 21-1-1a2 2 0 0 0-2.83 0l-2.5 2.5a2 2 0 0 1-2.83 0l-1.5-1.5a2 2 0 0 1 0-2.83l2.5-2.5a2 2 0 0 0 0-2.83l-1-1"/>
+                    <path d="m3 3 1 1a2 2 0 0 0 2.83 0l2.5-2.5a2 2 0 0 1 2.83 0l1.5 1.5a2 2 0 0 1 0 2.83L8.33 8.33a2 2 0 0 0 0 2.83l1 1"/>
+                  </svg>
+                }
+                @case ('running') {
+                  <!-- Runner / Figura corriendo -->
+                  <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <circle cx="17" cy="4" r="2"/>
+                    <path d="m15 8-4 4-4-2-3 3"/>
+                    <path d="m11 12 3 3v6"/>
+                    <path d="m14 15 4-2 3 3"/>
+                  </svg>
+                }
+                @case ('ciclismo') {
+                  <!-- Bicicleta -->
+                  <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <circle cx="18.5" cy="17.5" r="3.5"/>
+                    <circle cx="5.5" cy="17.5" r="3.5"/>
+                    <circle cx="15" cy="5" r="1"/>
+                    <path d="M12 17.5V14l-3-3 4-3 2 3h2"/>
+                  </svg>
+                }
+                @case ('cross') {
+                  <!-- Kettlebell / Pesa rusa -->
+                  <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M8 8a4 4 0 0 1 8 0v2H8V8z"/>
+                    <circle cx="12" cy="16" r="6"/>
+                  </svg>
+                }
+                @case ('bienestar') {
+                  <!-- Lotus / Meditación -->
+                  <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M12 3v18"/>
+                    <path d="M12 3c-3 3-6 7.5-6 11a6 6 0 0 0 12 0c0-3.5-3-8-6-11z"/>
+                    <path d="M12 14c-2.5-2.5-6-3-6-3s.5 3.5 3 6c2 2 3 2 3 2z"/>
+                    <path d="M12 14c2.5-2.5 6-3 6-3s-.5 3.5-3 6c-2 2-3 2-3 2z"/>
+                  </svg>
+                }
+                @case ('acuaticos') {
+                  <!-- Olas / Acuáticos -->
+                  <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M2 6c.6.5 1.2 1 2.5 1C7 7 7 5 9.5 5c2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/>
+                    <path d="M2 12c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/>
+                    <path d="M2 18c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/>
+                  </svg>
+                }
+                @case ('gaming') {
+                  <!-- Gamepad / Control -->
+                  <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <line x1="6" x2="10" y1="12" y2="12"/>
+                    <line x1="8" x2="8" y1="10" y2="14"/>
+                    <line x1="15" x2="15.01" y1="13" y2="13"/>
+                    <line x1="18" x2="18.01" y1="11" y2="11"/>
+                    <rect width="20" height="12" x="2" y="6" rx="6"/>
+                  </svg>
+                }
+              }
+            </div>
+            
+            <h3 class="text-lg sm:text-xl font-black text-white leading-snug truncate">
+              {{ d.name }}
+            </h3>
+
+            <p class="text-[10px] sm:text-xs font-black uppercase tracking-wider text-gray-400 mt-0.5 flex items-center justify-between">
+              <span>{{ d.tag }}</span>
+              <span class="text-[#ccff00] text-sm" aria-hidden="true">↗</span>
+            </p>
+          </div>
+
+          <!-- Active Card Glow Accent Line -->
+          @if (offset === 0) {
+            <div class="absolute top-0 inset-x-0 h-1 bg-[#ccff00] shadow-[0_0_12px_#ccff00]"></div>
+          }
+        </div>
+      }
+
+    </div>
+
+    <!-- Dash Pagination Indicator -->
+    <div class="flex items-center justify-center gap-2 mt-8">
+      @for (d of coverflowDisciplines; track d.id; let i = $index) {
+        <button
+          type="button"
+          (click)="selectDiscipline(i)"
+          [attr.aria-label]="'Ir a disciplina ' + d.name"
+          class="h-1.5 rounded-full transition-all duration-300 cursor-pointer"
+          [class.w-8]="i === activeDisciplineIndex()"
+          [class.bg-[#ccff00]]="i === activeDisciplineIndex()"
+          [class.w-2.5]="i !== activeDisciplineIndex()"
+          [class.bg-white/20]="i !== activeDisciplineIndex()"
+        ></button>
+      }
+    </div>
+
+  </section>
+
+  <!-- ========================================================================================= -->
+  <!-- 2.5. RANKING SECTION: LÍDERES DE LA COMUNIDAD ESTE MES (Podio Top 3 - Image 2) -->
+  <!-- ========================================================================================= -->
+  <section id="ranking-section" class="relative py-16 sm:py-20 md:py-28 px-4 sm:px-6 md:px-8 lg:px-12 bg-[#070a08] overflow-hidden border-t border-white/10 select-none">
+
+    <!-- Ambient Distressed Typography (Athletic Wall Stencils - Matches Mockup Reference) -->
+    <div class="absolute inset-0 pointer-events-none select-none z-0 overflow-hidden" aria-hidden="true">
+      <!-- Left Stencil Words -->
+      <div class="hidden lg:flex flex-col gap-10 absolute left-6 xl:left-12 top-1/2 -translate-y-1/2 opacity-25 transform -rotate-3">
+        <span class="font-display font-black text-4xl xl:text-6xl tracking-tighter text-gray-300 drop-shadow-[0_2px_10px_rgba(255,255,255,0.08)]">
+          BETTER
+        </span>
+        <span class="font-display font-black text-3xl xl:text-5xl tracking-tighter text-[#ccff00] drop-shadow-[0_0_15px_rgba(204,255,0,0.3)]">
+          CHALLENGE<br>YOURSELF
+        </span>
+        <span class="font-display font-black text-3xl xl:text-5xl tracking-tighter text-gray-300 drop-shadow-[0_2px_10px_rgba(255,255,255,0.08)]">
+          STAY<br>FOCUSED
+        </span>
+      </div>
+
+      <!-- Right Stencil Words -->
+      <div class="hidden lg:flex flex-col gap-10 absolute right-6 xl:right-12 top-1/2 -translate-y-1/2 text-right opacity-25 transform rotate-2">
+        <span class="font-display font-black text-4xl xl:text-6xl tracking-tighter text-[#ccff00] drop-shadow-[0_0_15px_rgba(204,255,0,0.3)]">
+          NO LIMITS
+        </span>
+        <span class="font-display font-black text-3xl xl:text-5xl tracking-tighter text-gray-300 drop-shadow-[0_2px_10px_rgba(255,255,255,0.08)]">
+          NO DAYS<br>OFF
+        </span>
+        <span class="font-display font-black text-3xl xl:text-5xl tracking-tighter text-[#ccff00] drop-shadow-[0_0_15px_rgba(204,255,0,0.3)]">
+          TEAM<br>WORK
+        </span>
+      </div>
+
+      <!-- Center Ambient Glow -->
+      <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[400px] bg-radial from-[#ccff00]/10 via-transparent to-transparent blur-3xl"></div>
+    </div>
+
+    <div class="max-w-6xl mx-auto relative z-10">
+
+      <!-- Section Header: Centered Title -->
+      <div class="text-center max-w-3xl mx-auto mb-12 sm:mb-16">
+        <h2 class="font-display font-black text-2xl sm:text-3xl md:text-4xl text-white tracking-tight">
           {{ t().home.leaderboardTitle }}
         </h2>
       </div>
-      <a routerLink="/explore" class="text-sm font-bold text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition flex items-center gap-1 group">
-        {{ t().home.viewFullTop10 }}
-        <span class="group-hover:translate-x-1 transition-transform">→</span>
-      </a>
+
+      <!-- Top 3 Podium Cards Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8 items-end max-w-5xl mx-auto w-full">
+
+        <!-- ========================================================= -->
+        <!-- CARD #2: SEGUNDO LUGAR (Plata) -->
+        <!-- ========================================================= -->
+        <div class="ranking-card order-2 md:order-1 relative rounded-3xl bg-[#111613]/90 border border-slate-800/90 p-6 flex flex-col items-center backdrop-blur-md hover:border-slate-700 transition duration-300 transform hover:-translate-y-1 group shadow-xl">
+          
+          <!-- Badge #2 -->
+          <div class="absolute -top-3.5 px-3 py-0.5 rounded-full bg-[#1c2420] border border-slate-700 text-slate-300 text-xs font-bold flex items-center gap-1.5 shadow-md">
+            <span class="text-slate-400">★</span>
+            <span>#2</span>
+          </div>
+
+          <!-- Avatar with Silver Ring -->
+          <div class="relative mt-2 mb-4">
+            <div class="w-24 h-24 rounded-full border-2 border-slate-400 bg-slate-900 flex items-center justify-center text-white text-2xl font-black shadow-inner overflow-hidden">
+              @if (leader2().avatarUrl) {
+                <img [src]="leader2().avatarUrl" [alt]="leader2().name" class="w-full h-full object-cover">
+              } @else {
+                <span>{{ leader2().initials }}</span>
+              }
+            </div>
+            <!-- Mini Badge #2 -->
+            <div class="absolute bottom-0 right-0 w-6 h-6 rounded-full bg-slate-800 border border-slate-400 text-[10px] font-bold text-slate-200 flex items-center justify-center shadow">
+              #2
+            </div>
+          </div>
+
+          <!-- Handle -->
+          <h3 class="text-base font-black text-white group-hover:text-[#ccff00] transition">
+            <a [routerLink]="['/' + leader2().handle]" class="hover:underline">
+              @{{ leader2().handle }}
+            </a>
+          </h3>
+
+          <!-- Discipline Pill -->
+          <div
+            class="mt-2 px-3 py-1 rounded-full bg-slate-800/70 border border-slate-700/60 text-[11px] font-medium text-slate-300 text-center truncate max-w-[210px]"
+            [title]="leader2().sport"
+          >
+            {{ leader2().sport }}
+          </div>
+
+          <!-- Shakes Count Box (Centrado con Animated Shaker) -->
+          <div class="mt-6 w-full rounded-2xl bg-[#090c0a]/80 border border-slate-800/80 p-3.5 flex flex-col items-center justify-center text-center">
+            <div class="text-[10px] uppercase font-bold tracking-wider text-slate-400">SHAKES</div>
+            <div class="mt-1 text-2xl font-black text-white flex items-center justify-center gap-2">
+              <span>{{ leader2().shakes }}</span>
+              <app-animated-shaker [size]="20" customClass="text-slate-400" />
+            </div>
+          </div>
+
+          <!-- CTA Button -->
+          <a
+            [routerLink]="['/' + leader2().handle]"
+            (click)="trackEvent('cta_ranking_shake', { rank: 2, handle: leader2().handle })"
+            class="mt-4 w-full py-3.5 px-4 rounded-xl bg-slate-800/90 hover:bg-slate-700 text-white border border-slate-700/70 text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 transition hover:scale-[1.02] active:scale-95 cursor-pointer"
+          >
+            <span>Invitar Shake</span>
+            <app-animated-shaker [size]="18" customClass="text-slate-300" />
+          </a>
+
+        </div>
+
+        <!-- ========================================================= -->
+        <!-- CARD #1: PRIMER LUGAR (Oro / Neon Glow Champion) -->
+        <!-- ========================================================= -->
+        <div class="ranking-card order-1 md:order-2 relative rounded-3xl bg-[#111613] border-2 border-[#ccff00] p-7 flex flex-col items-center shadow-[0_0_40px_rgba(204,255,0,0.25)] md:-translate-y-6 transition duration-300 transform hover:-translate-y-7 group z-10">
+          
+          <!-- Badge #1 Neon -->
+          <div class="absolute -top-4 px-3.5 py-1 rounded-full bg-[#ccff00] text-gray-950 text-xs font-black flex items-center gap-1 shadow-[0_0_20px_rgba(204,255,0,0.65)]">
+            <span>★</span>
+            <span>#1</span>
+          </div>
+
+          <!-- Avatar with Neon Glow Ring -->
+          <div class="relative mt-2 mb-4">
+            <div class="w-28 h-28 rounded-full ring-4 ring-[#ccff00] shadow-[0_0_25px_rgba(204,255,0,0.45)] bg-slate-900 flex items-center justify-center text-white text-3xl font-black overflow-hidden">
+              @if (leader1().avatarUrl) {
+                <img [src]="leader1().avatarUrl" [alt]="leader1().name" class="w-full h-full object-cover">
+              } @else {
+                <span>{{ leader1().initials }}</span>
+              }
+            </div>
+            <!-- Mini Badge #1 -->
+            <div class="absolute bottom-0 right-0 w-7 h-7 rounded-full bg-[#ccff00] text-gray-950 text-xs font-black flex items-center justify-center shadow-lg border-2 border-[#111613]">
+              #1
+            </div>
+          </div>
+
+          <!-- Handle -->
+          <h3 class="text-lg font-black text-white group-hover:text-[#ccff00] transition">
+            <a [routerLink]="['/' + leader1().handle]" class="hover:underline">
+              @{{ leader1().handle }}
+            </a>
+          </h3>
+
+          <!-- Discipline Pill -->
+          <div
+            class="mt-2 px-3.5 py-1 rounded-full bg-[#1e271c] border border-[#ccff00]/40 text-xs font-bold text-[#ccff00] text-center truncate max-w-[220px]"
+            [title]="leader1().sport"
+          >
+            {{ leader1().sport }}
+          </div>
+
+          <!-- Shakes Count Box (Centrado con Animated Shaker) -->
+          <div class="mt-6 w-full rounded-2xl bg-[#090c0a] border border-[#ccff00]/35 p-3.5 flex flex-col items-center justify-center text-center shadow-inner">
+            <div class="text-[10px] uppercase font-black tracking-wider text-slate-400">SHAKES ESTE MES</div>
+            <div class="mt-1 text-3xl font-black text-white flex items-center justify-center gap-2">
+              <span>{{ leader1().shakes }}</span>
+              <app-animated-shaker [size]="24" customClass="text-[#ccff00]" />
+            </div>
+          </div>
+
+          <!-- Primary Neon CTA Button -->
+          <a
+            [routerLink]="['/' + leader1().handle]"
+            (click)="trackEvent('cta_ranking_shake', { rank: 1, handle: leader1().handle })"
+            class="mt-4 w-full py-3.5 px-5 rounded-xl bg-[#ccff00] hover:bg-[#bbf000] text-gray-950 text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg shadow-[#ccff00]/25 transition hover:scale-[1.03] active:scale-95 cursor-pointer"
+          >
+            <span>Invitar Shake</span>
+            <app-animated-shaker [size]="18" customClass="text-gray-950" />
+          </a>
+
+        </div>
+
+        <!-- ========================================================= -->
+        <!-- CARD #3: TERCER LUGAR (Bronce) -->
+        <!-- ========================================================= -->
+        <div class="ranking-card order-3 relative rounded-3xl bg-[#111613]/90 border border-slate-800/90 p-6 flex flex-col items-center backdrop-blur-md hover:border-slate-700 transition duration-300 transform hover:-translate-y-1 group shadow-xl">
+          
+          <!-- Badge #3 -->
+          <div class="absolute -top-3.5 px-3 py-0.5 rounded-full bg-amber-950/70 border border-amber-700/60 text-amber-400 text-xs font-bold flex items-center gap-1.5 shadow-md">
+            <span class="text-amber-500">★</span>
+            <span>#3</span>
+          </div>
+
+          <!-- Avatar with Bronze Ring -->
+          <div class="relative mt-2 mb-4">
+            <div class="w-24 h-24 rounded-full border-2 border-amber-600/80 bg-slate-900 flex items-center justify-center text-white text-2xl font-black shadow-inner overflow-hidden">
+              @if (leader3().avatarUrl) {
+                <img [src]="leader3().avatarUrl" [alt]="leader3().name" class="w-full h-full object-cover">
+              } @else {
+                <span>{{ leader3().initials }}</span>
+              }
+            </div>
+            <!-- Mini Badge #3 -->
+            <div class="absolute bottom-0 right-0 w-6 h-6 rounded-full bg-amber-950 border border-amber-600 text-[10px] font-bold text-amber-400 flex items-center justify-center shadow">
+              #3
+            </div>
+          </div>
+
+          <!-- Handle -->
+          <h3 class="text-base font-black text-white group-hover:text-[#ccff00] transition">
+            <a [routerLink]="['/' + leader3().handle]" class="hover:underline">
+              @{{ leader3().handle }}
+            </a>
+          </h3>
+
+          <!-- Discipline Pill -->
+          <div
+            class="mt-2 px-3 py-1 rounded-full bg-slate-800/70 border border-slate-700/60 text-[11px] font-medium text-slate-300 text-center truncate max-w-[210px]"
+            [title]="leader3().sport"
+          >
+            {{ leader3().sport }}
+          </div>
+
+          <!-- Shakes Count Box (Centrado con Animated Shaker) -->
+          <div class="mt-6 w-full rounded-2xl bg-[#090c0a]/80 border border-slate-800/80 p-3.5 flex flex-col items-center justify-center text-center">
+            <div class="text-[10px] uppercase font-bold tracking-wider text-slate-400">SHAKES</div>
+            <div class="mt-1 text-2xl font-black text-white flex items-center justify-center gap-2">
+              <span>{{ leader3().shakes }}</span>
+              <app-animated-shaker [size]="20" customClass="text-slate-400" />
+            </div>
+          </div>
+
+          <!-- CTA Button -->
+          <a
+            [routerLink]="['/' + leader3().handle]"
+            (click)="trackEvent('cta_ranking_shake', { rank: 3, handle: leader3().handle })"
+            class="mt-4 w-full py-3.5 px-4 rounded-xl bg-slate-800/90 hover:bg-slate-700 text-white border border-slate-700/70 text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 transition hover:scale-[1.02] active:scale-95 cursor-pointer"
+          >
+            <span>Invitar Shake</span>
+            <app-animated-shaker [size]="18" customClass="text-slate-300" />
+          </a>
+
+        </div>
+
+      </div>
+
+      <!-- Bottom Centered Action: Ver Top 10 completo -->
+      <div class="mt-12 sm:mt-16 flex justify-center">
+        <a
+          routerLink="/explore"
+          [queryParams]="{ tab: 'top10' }"
+          (click)="trackEvent('cta_ranking_view_top10')"
+          class="inline-flex items-center gap-2.5 px-8 py-3.5 rounded-full bg-white/5 hover:bg-white/10 border border-white/15 hover:border-[#ccff00]/60 text-sm font-bold text-gray-200 hover:text-[#ccff00] transition group shadow-lg backdrop-blur-md cursor-pointer"
+        >
+          <span>{{ t().home.viewFullTop10 }}</span>
+          <span class="text-base font-black transition-transform group-hover:translate-x-1.5" aria-hidden="true">→</span>
+        </a>
+      </div>
+
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-end mb-12">
-          
-          <!-- 2ND PLACE (SILVER) -->
-          @if (topLeaders()[1]; as second) {
-            <div class="order-2 md:order-1 bg-white dark:bg-[#101416] border border-gray-200 dark:border-[#282f34] rounded-3xl p-6 relative flex flex-col justify-between hover:border-gray-300 dark:hover:border-slate-400 transition-all duration-300 hover:shadow-lg dark:hover:shadow-[0_10px_30px_rgba(0,0,0,0.5)]">
-              <!-- Rank Badge -->
-              <div class="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-gradient-to-r from-gray-200 to-gray-400 dark:from-slate-200 dark:to-slate-400 text-gray-900 dark:text-black px-4 py-1 rounded-full font-black text-xs uppercase tracking-wider flex items-center gap-1.5 shadow-md">
-                <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 15.39l-3.76 2.27.99-4.28-3.32-2.88 4.38-.37L12 6.09l1.71 4.04 4.38.37-3.32 2.88.99 4.28z"/></svg>
-                #2
-              </div>
-              <div class="pt-3 text-center">
-                <div class="relative w-28 h-28 mx-auto mb-4">
-                  @if (second.avatarUrl) {
-                    <img [src]="second.avatarUrl" [alt]="second.name" class="w-full h-full object-cover rounded-full border-4 border-gray-200 dark:border-slate-300 shadow-xl" />
-                  } @else {
-                    <div class="w-full h-full rounded-full border-4 border-gray-200 dark:border-slate-300 bg-gray-100 dark:bg-[#1b2226] text-gray-400 flex items-center justify-center text-3xl font-black shadow-xl">
-                      {{ second.initials }}
-                    </div>
-                  }
-                  <div class="absolute bottom-0 right-1 bg-white dark:bg-[#101416] border-2 border-gray-200 dark:border-slate-300 w-8 h-8 rounded-full flex items-center justify-center text-xs font-black text-gray-900 dark:text-white">
-                    {{ second.initials }}
-                  </div>
-                </div>
-                <h3 class="text-xl font-extrabold text-gray-900 dark:text-white truncate w-full">&#64;{{second.handle}}</h3>
-                <span class="inline-block mt-2.5 px-3 py-1 rounded-full bg-gray-50 dark:bg-[#181d20] border border-gray-200 dark:border-[#2b3237] text-[11px] font-bold text-gray-700 dark:text-slate-300 truncate max-w-[90%]">
-                  {{ languageService.translateDiscipline(second.sport) }}
-                </span>
-              </div>
-              <div class="mt-6 pt-5 border-t border-gray-100 dark:border-[#1e2327]">
-                <div class="flex items-center justify-between mb-4">
-                  <div>
-                    <span class="text-[10px] uppercase font-bold text-gray-400 dark:text-slate-500 tracking-wider">Shakes</span>
-                    <div class="text-2xl font-black text-gray-900 dark:text-white flex items-center gap-1.5">
-                      {{ second.shakes }} 
-                      <app-icon-shaker size="16" customClass="text-gray-400 dark:text-slate-500" />
-                    </div>
-                  </div>
-                </div>
-                <a [routerLink]="['/', second.handle]" class="w-full bg-gray-50 dark:bg-[#181d20] hover:bg-gray-900 dark:hover:bg-[#c9ff3d] hover:text-white dark:hover:text-black text-gray-900 dark:text-white border border-gray-200 dark:border-[#30383d] dark:hover:border-[#c9ff3d] font-extrabold text-xs uppercase tracking-wider py-3 rounded-xl transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer">
-                  <span>{{ t().explore.inviteShake }}</span>
-                  <app-icon-shaker size="16" />
-                </a>
-              </div>
-            </div>
-          }
-
-          <!-- 1ST PLACE (CHAMPION - GOLD) -->
-          @if (topLeaders()[0]; as first) {
-            <div class="order-1 md:order-2 bg-gradient-to-b from-white to-gray-50 dark:from-[#191e20] dark:to-[#111416] border-2 border-amber-400 dark:border-[#c9ff3d] rounded-3xl p-6 sm:p-7 relative flex flex-col justify-between shadow-xl dark:shadow-[0_0_35px_rgba(204,255,0,0.18)] transform md:-translate-y-3 z-20">
-              <div class="absolute -top-4 left-1/2 -translate-x-1/2 bg-gradient-to-r from-amber-300 via-amber-400 dark:via-[#c9ff3d] to-yellow-400 text-gray-900 dark:text-black px-5 py-1.5 rounded-full font-black text-xs uppercase tracking-wider flex items-center gap-1.5 shadow-lg dark:shadow-[0_0_20px_rgba(204,255,0,0.6)]">
-                <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 15.39l-3.76 2.27.99-4.28-3.32-2.88 4.38-.37L12 6.09l1.71 4.04 4.38.37-3.32 2.88.99 4.28z"/></svg>
-                #1
-              </div>
-              <div class="pt-3 text-center">
-                <div class="relative w-32 h-32 mx-auto mb-4">
-                  <div class="absolute -inset-1 rounded-full bg-gradient-to-tr from-amber-300 dark:from-[#c9ff3d] to-yellow-400 opacity-80 blur-sm animate-pulse hidden dark:block"></div>
-                  @if (first.avatarUrl) {
-                    <img [src]="first.avatarUrl" [alt]="first.name" class="relative w-full h-full object-cover rounded-full border-4 border-amber-400 dark:border-[#c9ff3d] shadow-2xl bg-white" />
-                  } @else {
-                    <div class="relative w-full h-full rounded-full border-4 border-amber-400 dark:border-[#c9ff3d] bg-gray-100 dark:bg-[#1b2226] flex items-center justify-center text-4xl font-black shadow-2xl text-amber-500 dark:text-[#c9ff3d]">
-                      {{ first.initials }}
-                    </div>
-                  }
-                  <div class="absolute bottom-1 right-1 bg-white dark:bg-black border-2 border-amber-400 dark:border-[#c9ff3d] w-8 h-8 rounded-full flex items-center justify-center text-xs font-black text-amber-600 dark:text-[#c9ff3d]">
-                    #1
-                  </div>
-                </div>
-                <h3 class="text-2xl font-black text-gray-900 dark:text-white tracking-tight truncate w-full">&#64;{{first.handle}}</h3>
-                <span class="inline-block mt-2.5 px-3 py-1 rounded-full bg-amber-50 dark:bg-[#20272b] border border-amber-200 dark:border-[#354047] text-xs font-bold text-amber-700 dark:text-[#c9ff3d] truncate max-w-[90%]">
-                  {{ languageService.translateDiscipline(first.sport) }}
-                </span>
-              </div>
-              <div class="mt-7 pt-5 border-t border-gray-100 dark:border-[#2a3237]">
-                <div class="grid grid-cols-2 gap-3 mb-5 text-left bg-gray-50 dark:bg-[#0c0f10] p-3 rounded-2xl border border-gray-200 dark:border-[#22292d]">
-                  <div>
-                    <span class="text-[10px] uppercase font-bold text-gray-500 dark:text-slate-400 tracking-wider">Shakes Este Mes</span>
-                    <div class="text-3xl font-black text-gray-900 dark:text-white flex items-center gap-1.5">
-                      {{ first.shakes }}
-                      <app-icon-shaker size="20" customClass="text-amber-500 dark:text-[#c9ff3d]" />
-                    </div>
-                  </div>
-                </div>
-                <a [routerLink]="['/', first.handle]" class="w-full bg-amber-400 dark:bg-[#c9ff3d] hover:bg-amber-500 dark:hover:bg-[#bbf000] text-gray-900 dark:text-black font-black text-sm uppercase tracking-wider py-3.5 rounded-xl shadow-md dark:shadow-[0_0_25px_rgba(204,255,0,0.4)] transform hover:scale-[1.02] active:scale-100 transition-all flex items-center justify-center gap-2 cursor-pointer">
-                  <span>{{ t().explore.inviteShake }}</span>
-                  <app-icon-shaker size="18" />
-                </a>
-              </div>
-            </div>
-          }
-
-          <!-- 3RD PLACE (BRONZE) -->
-          @if (topLeaders()[2]; as third) {
-            <div class="order-3 md:order-3 bg-white dark:bg-[#101416] border border-gray-200 dark:border-[#282f34] rounded-3xl p-6 relative flex flex-col justify-between hover:border-amber-700/80 transition-all duration-300 hover:shadow-lg dark:hover:shadow-[0_10px_30px_rgba(0,0,0,0.5)]">
-              <div class="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-gradient-to-r from-amber-600 to-amber-800 text-amber-50 dark:text-amber-100 px-4 py-1 rounded-full font-black text-xs uppercase tracking-wider flex items-center gap-1.5 shadow-md">
-                <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 15.39l-3.76 2.27.99-4.28-3.32-2.88 4.38-.37L12 6.09l1.71 4.04 4.38.37-3.32 2.88.99 4.28z"/></svg>
-                #3
-              </div>
-              <div class="pt-3 text-center">
-                <div class="relative w-28 h-28 mx-auto mb-4">
-                  @if (third.avatarUrl) {
-                    <img [src]="third.avatarUrl" [alt]="third.name" class="w-full h-full object-cover rounded-full border-4 border-amber-600/80 shadow-xl" />
-                  } @else {
-                    <div class="w-full h-full rounded-full border-4 border-amber-600/80 bg-gray-100 dark:bg-[#1b2226] text-amber-700 flex items-center justify-center text-3xl font-black shadow-xl">
-                      {{ third.initials }}
-                    </div>
-                  }
-                  <div class="absolute bottom-0 right-1 bg-white dark:bg-[#101416] border-2 border-amber-600/80 w-8 h-8 rounded-full flex items-center justify-center text-sm font-black text-amber-700 dark:text-amber-400">
-                    {{ third.initials }}
-                  </div>
-                </div>
-                <h3 class="text-xl font-extrabold text-gray-900 dark:text-white truncate w-full">&#64;{{third.handle}}</h3>
-                <span class="inline-block mt-2.5 px-3 py-1 rounded-full bg-gray-50 dark:bg-[#181d20] border border-gray-200 dark:border-[#2b3237] text-[11px] font-bold text-gray-700 dark:text-slate-300 truncate max-w-[90%]">
-                  {{ languageService.translateDiscipline(third.sport) }}
-                </span>
-              </div>
-              <div class="mt-6 pt-5 border-t border-gray-100 dark:border-[#1e2327]">
-                <div class="flex items-center justify-between mb-4">
-                  <div>
-                    <span class="text-[10px] uppercase font-bold text-gray-400 dark:text-slate-500 tracking-wider">Shakes</span>
-                    <div class="text-2xl font-black text-gray-900 dark:text-white flex items-center gap-1.5">
-                      {{ third.shakes }}
-                      <app-icon-shaker size="16" customClass="text-gray-400 dark:text-slate-500" />
-                    </div>
-                  </div>
-                </div>
-                <a [routerLink]="['/', third.handle]" class="w-full bg-gray-50 dark:bg-[#181d20] hover:bg-gray-900 dark:hover:bg-[#c9ff3d] hover:text-white dark:hover:text-black text-gray-900 dark:text-white border border-gray-200 dark:border-[#30383d] dark:hover:border-[#c9ff3d] font-extrabold text-xs uppercase tracking-wider py-3 rounded-xl transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer">
-                  <span>{{ t().explore.inviteShake }}</span>
-                  <app-icon-shaker size="16" />
-                </a>
-              </div>
-            </div>
-          }
-        </div>
-      </div>
   </section>
 
-  <!-- Motivation band: path + monetization share one continuous background -->
-  <div class="relative overflow-hidden mb-24 bg-white dark:bg-[#0c0f10] border-t border-gray-200/60 dark:border-white/5 transition-colors duration-300">
+  <!-- ========================================================================================= -->
+  <!-- 3. EMBUDO CRONOLÓGICO DE 3 PASOS: POTENCIA TUS METAS (Captura 2) -->
+  <!-- ========================================================================================= -->
+  <section id="steps-section" class="relative py-16 sm:py-20 md:py-24 px-4 sm:px-6 md:px-8 lg:px-12 bg-[#090c0a] overflow-hidden border-t border-white/10">
+    
+    <!-- Ambient Graffiti Vector Art (aria-hidden) -->
     <div class="absolute inset-0 pointer-events-none select-none z-0 overflow-hidden" aria-hidden="true">
-      <div
-        class="hidden lg:block absolute inset-0 bg-[length:100%_auto] bg-repeat-y bg-top opacity-[0.12] dark:opacity-[0.28]"
-        style="background-image: url('/images/1.png')"
-      ></div>
+      <span class="absolute -top-10 -left-10 text-8xl sm:text-[140px] font-black text-white/[0.03] uppercase tracking-tighter leading-none select-none">
+        CHALLENGE
+      </span>
+      <span class="absolute top-1/2 -right-16 text-8xl sm:text-[150px] font-black text-white/[0.03] uppercase tracking-tighter leading-none select-none">
+        NEVER GIVE UP
+      </span>
+      <span class="absolute -bottom-12 left-1/4 text-8xl sm:text-[140px] font-black text-white/[0.03] uppercase tracking-tighter leading-none select-none">
+        NO LIMITS
+      </span>
     </div>
 
-  <!-- ------------------------------------------------------------- 3. EL CAMINO AL PATROCINIO (BENTO GRID) -->
-  <section class="relative z-10 py-24 px-5 sm:px-10">
-    <div class="max-w-5xl mx-auto">
+    <div class="max-w-7xl mx-auto relative z-10">
       
-      <div class="text-center max-w-2xl mx-auto mb-16">
-        <h2 class="font-display text-3xl sm:text-4xl font-black text-gray-950 dark:text-white tracking-tight">
-          {{ t().home.pathTitle }}
+      <!-- Section Title -->
+      <div class="text-center max-w-3xl mx-auto mb-12 sm:mb-16">
+        <h2 class="font-display text-3xl sm:text-4xl md:text-5xl font-black text-white tracking-tight leading-tight">
+          <span>Potencia tus metas,</span><br/>
+          <span class="text-[#ccff00] drop-shadow-[0_0_20px_rgba(204,255,0,0.3)]">alcanza tus sueños.</span>
         </h2>
-        <p class="mt-3 text-sm sm:text-base text-gray-500 dark:text-gray-400 font-medium">
+        <p class="mt-4 text-sm sm:text-base md:text-lg text-gray-400 font-medium max-w-2xl mx-auto">
           {{ t().home.pathSubtitle }}
         </p>
       </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <!-- 3 Step Cards Grid: Todas las 3 tarjetas al mismo nivel -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8 items-stretch">
         
-        <!-- Step 1 -->
-        <div class="bg-[#f7f7f8] dark:bg-[#121614] border border-gray-200/80 dark:border-white/10 rounded-3xl p-8 relative overflow-hidden group hover:border-[#c9ff3d] transition duration-200">
-          <div class="absolute top-4 right-4 text-3xl font-black text-gray-200 dark:text-white/5 group-hover:text-[#c9ff3d]/20 transition">
-            01
+        <!-- STEP 01: Crea tu perfil -->
+        <div class="step-card h-full bg-[#121614] border border-white/10 hover:border-[#ccff00]/60 rounded-[32px] p-6 sm:p-7 relative flex flex-col justify-between overflow-hidden group transition duration-300 shadow-xl hover:shadow-[0_10px_35px_rgba(0,0,0,0.8)]">
+          
+          <div>
+            <div class="flex items-center justify-between mb-5">
+              <span class="text-4xl font-black text-white/20 group-hover:text-[#ccff00]/40 transition">
+                01
+              </span>
+              <div class="w-11 h-11 rounded-2xl bg-[#ccff00]/10 border border-[#ccff00]/30 text-[#ccff00] grid place-items-center">
+                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/>
+                  <circle cx="12" cy="7" r="4"/>
+                </svg>
+              </div>
+            </div>
+
+            <h3 class="text-xl sm:text-2xl font-black text-white mb-2">
+              {{ t().home.step1Title }}
+            </h3>
+            <p class="text-xs sm:text-sm text-gray-400 leading-relaxed min-h-[42px]">
+              {{ t().home.step1Desc }}
+            </p>
           </div>
-          <div class="h-12 w-12 rounded-2xl bg-emerald-50 dark:bg-white/5 border border-emerald-200/50 dark:border-white/10 grid place-items-center text-emerald-600 dark:text-[#c9ff3d] mb-6">
-            <app-icon-dumbbell size="22" />
+
+          <!-- Realistic Mockup Graphic -->
+          <div class="mt-6 rounded-2xl overflow-hidden border border-white/10 relative aspect-[4/3] bg-[#0c0f10]">
+            <img
+              src="/images/step1-profile.jpg"
+              alt="Mockup de pantalla de perfil atlético"
+              class="w-full h-full object-cover group-hover:scale-105 transition duration-500"
+              loading="lazy"
+            />
           </div>
-          <h3 class="font-display text-lg font-black text-gray-950 dark:text-white mb-2 truncate w-full">{{ t().home.step1Title }}</h3>
-          <p class="text-xs sm:text-sm text-gray-600 dark:text-gray-400 leading-relaxed font-medium">
-            {{ t().home.step1Desc }}
-          </p>
+
+          <!-- Action Button (44x44px accessible touch target) -->
+          <div class="mt-6 flex items-center justify-between pt-4 border-t border-white/5">
+            <span class="text-xs font-bold text-gray-400">Paso Inicial</span>
+            <a
+              routerLink="/auth/register"
+              aria-label="Comenzar a crear perfil"
+              class="w-11 h-11 min-w-[44px] min-h-[44px] rounded-full bg-[#ccff00] text-gray-950 flex items-center justify-center font-bold text-lg hover:scale-110 active:scale-95 transition shadow-md"
+            >
+              <span aria-hidden="true">→</span>
+            </a>
+          </div>
+
         </div>
 
-        <!-- Step 2 -->
-        <div class="bg-[#f7f7f8] dark:bg-[#121614] border border-gray-200/80 dark:border-white/10 rounded-3xl p-8 relative overflow-hidden group hover:border-[#c9ff3d] transition duration-200 md:-translate-y-2">
-          <div class="absolute top-4 right-4 text-3xl font-black text-gray-200 dark:text-white/5 group-hover:text-[#c9ff3d]/20 transition">
-            02
+        <!-- STEP 02: Comparte tu enlace (Alineada al mismo nivel) -->
+        <div class="step-card h-full bg-[#121614] border border-white/10 hover:border-[#ccff00]/60 rounded-[32px] p-6 sm:p-7 relative flex flex-col justify-between overflow-hidden group transition duration-300 shadow-xl hover:shadow-[0_10px_35px_rgba(0,0,0,0.8)]">
+          
+          <div>
+            <div class="flex items-center justify-between mb-5">
+              <span class="text-4xl font-black text-white/20 group-hover:text-[#ccff00]/40 transition">
+                02
+              </span>
+              <div class="w-11 h-11 rounded-2xl bg-[#ccff00]/10 border border-[#ccff00]/30 text-[#ccff00] grid place-items-center">
+                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <circle cx="18" cy="5" r="3"/>
+                  <circle cx="6" cy="12" r="3"/>
+                  <circle cx="18" cy="19" r="3"/>
+                  <line x1="8.59" x2="15.42" y1="13.51" y2="17.49"/>
+                  <line x1="15.41" x2="8.59" y1="6.51" y2="10.49"/>
+                </svg>
+              </div>
+            </div>
+
+            <h3 class="text-xl sm:text-2xl font-black text-white mb-2">
+              {{ t().home.step2Title }}
+            </h3>
+            <p class="text-xs sm:text-sm text-gray-400 leading-relaxed min-h-[42px]">
+              {{ t().home.step2Desc }}
+            </p>
           </div>
-          <div class="h-12 w-12 rounded-2xl bg-emerald-50 dark:bg-white/5 border border-emerald-200/50 dark:border-white/10 grid place-items-center text-emerald-600 dark:text-[#c9ff3d] mb-6">
-            <app-icon-button-share size="22" />
+
+          <!-- Realistic Mockup Graphic with Social Share -->
+          <div class="mt-6 rounded-2xl overflow-hidden border border-white/10 relative aspect-[4/3] bg-[#0c0f10]">
+            <img
+              src="/images/step2-share.jpg"
+              alt="Mano sosteniendo teléfono con opciones de compartir"
+              class="w-full h-full object-cover group-hover:scale-105 transition duration-500"
+              loading="lazy"
+            />
           </div>
-          <h3 class="font-display text-lg font-black text-gray-950 dark:text-white mb-2 truncate w-full">{{ t().home.step2Title }}</h3>
-          <p class="text-xs sm:text-sm text-gray-600 dark:text-gray-400 leading-relaxed font-medium">
-            {{ t().home.step2Desc }}
-          </p>
+
+          <!-- Action Button (44x44px accessible touch target) -->
+          <div class="mt-6 flex items-center justify-between pt-4 border-t border-white/5">
+            <span class="text-xs font-bold text-gray-400">En tus redes</span>
+            <a
+              routerLink="/auth/register"
+              aria-label="Compartir enlace de atleta"
+              class="w-11 h-11 min-w-[44px] min-h-[44px] rounded-full bg-[#ccff00] text-gray-950 flex items-center justify-center font-bold text-lg hover:scale-110 active:scale-95 transition shadow-md"
+            >
+              <span aria-hidden="true">→</span>
+            </a>
+          </div>
+
         </div>
 
-        <!-- Step 3 -->
-        <div class="bg-[#f7f7f8] dark:bg-[#121614] border border-gray-200/80 dark:border-white/10 rounded-3xl p-8 relative overflow-hidden group hover:border-[#c9ff3d] transition duration-200">
-          <div class="absolute top-4 right-4 text-3xl font-black text-gray-200 dark:text-white/5 group-hover:text-[#c9ff3d]/20 transition">
-            03
+        <!-- STEP 03: Recibe Shakes (Alineada al mismo nivel con Shaker Animado) -->
+        <div class="step-card h-full md:col-span-2 lg:col-span-1 bg-[#121614] border border-white/10 hover:border-[#ccff00]/60 rounded-[32px] p-6 sm:p-7 relative flex flex-col justify-between overflow-hidden group transition duration-300 shadow-xl hover:shadow-[0_10px_35px_rgba(0,0,0,0.8)]">
+          
+          <div>
+            <div class="flex items-center justify-between mb-5">
+              <span class="text-4xl font-black text-white/20 group-hover:text-[#ccff00]/40 transition">
+                03
+              </span>
+              <!-- Shaker Animado en el badge superior derecho -->
+              <div class="w-11 h-11 rounded-2xl bg-[#ccff00]/10 border border-[#ccff00]/30 text-[#ccff00] grid place-items-center">
+                <app-animated-shaker [size]="24" customClass="text-[#ccff00]" />
+              </div>
+            </div>
+
+            <h3 class="text-xl sm:text-2xl font-black text-white mb-2">
+              {{ t().home.step3Title }}
+            </h3>
+            <p class="text-xs sm:text-sm text-gray-400 leading-relaxed min-h-[42px]">
+              {{ t().home.step3Desc }}
+            </p>
           </div>
-          <div class="h-12 w-12 rounded-2xl bg-emerald-50 dark:bg-white/5 border border-emerald-200/50 dark:border-white/10 grid place-items-center text-emerald-600 dark:text-[#c9ff3d] mb-6">
-            <app-animated-shaker [size]="24" customClass="text-emerald-600 dark:text-[#c9ff3d]" />
+
+          <!-- Realistic Mockup Graphic: Official Shaker "FUEL YOUR GOALS" -->
+          <div class="mt-6 rounded-2xl overflow-hidden border border-white/10 relative aspect-[4/3] bg-[#0c0f10]">
+            <img
+              src="/images/step3-shaker.jpg"
+              alt="Shaker deportivo oficial FUEL YOUR GOALS"
+              class="w-full h-full object-cover group-hover:scale-105 transition duration-500"
+              loading="lazy"
+            />
           </div>
-          <h3 class="font-display text-lg font-black text-gray-950 dark:text-white mb-2 truncate w-full">{{ t().home.step3Title }}</h3>
-          <p class="text-xs sm:text-sm text-gray-600 dark:text-gray-400 leading-relaxed font-medium">
-            {{ t().home.step3Desc }}
-          </p>
+
+          <!-- Action Button (44x44px accessible touch target) -->
+          <div class="mt-6 flex items-center justify-between pt-4 border-t border-white/5">
+            <span class="text-xs font-bold text-gray-400">Meta Financiera</span>
+            <a
+              routerLink="/auth/register"
+              aria-label="Empezar a recibir shakes"
+              class="w-11 h-11 min-w-[44px] min-h-[44px] rounded-full bg-[#ccff00] text-gray-950 flex items-center justify-center font-bold text-lg hover:scale-110 active:scale-95 transition shadow-md"
+            >
+              <span aria-hidden="true">→</span>
+            </a>
+          </div>
+
         </div>
 
       </div>
+
     </div>
+
   </section>
 
-  
-
-  <!-- ------------------------------------------------------------- 4. CÓMO FUNCIONA / 3 FORMAS DE GANAR -->
-  <section class="relative z-10 w-full pb-24">
-  <div class="max-w-5xl mx-auto px-5">
-
-    <div class="text-center max-w-xl mx-auto mb-12">
-      <span class="text-[11px] font-black uppercase tracking-widest text-gray-400 dark:text-gray-500">{{ t().home.monetizationBadge }}</span>
-      <h2 class="text-2xl sm:text-4xl font-black text-gray-950 dark:text-white mt-2 tracking-tight">
-        {{ t().home.monetizationTitle }}
-      </h2>
-    </div>
-
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+  <!-- ========================================================================================= -->
+  <!-- 4. PILARES INDEPENDIENTES DE MONETIZACIÓN (Captura 3) -->
+  <!-- ========================================================================================= -->
+  <section id="bento-section" class="relative py-16 sm:py-20 md:py-24 px-4 sm:px-6 md:px-8 lg:px-12 bg-[#0c0f10] border-t border-white/10">
+    
+    <div class="max-w-7xl mx-auto">
       
-      <!-- Card 1 -->
-      <div class="bg-white dark:bg-[#121614] rounded-3xl p-7 border border-gray-200/80 dark:border-white/10 shadow-xs flex flex-col justify-between transition">
-        <div>
-          <div class="h-10 w-10 rounded-2xl bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 border border-transparent dark:border-amber-500/20 grid place-items-center mb-4">
-            <app-icon-shaker size="22" />
-          </div>
-          <h3 class="font-black text-gray-900 dark:text-white text-base truncate w-full">{{ t().home.card1Title }}</h3>
-          <p class="mt-2 text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
-            {{ t().home.card1Desc }}
-          </p>
-        </div>
-      </div>
-
-      <!-- Card 2 -->
-      <div class="bg-white dark:bg-[#121614] rounded-3xl p-7 border border-gray-200/80 dark:border-white/10 shadow-xs flex flex-col justify-between transition">
-        <div>
-          <div class="h-10 w-10 rounded-2xl bg-emerald-50 dark:bg-[#c9ff3d]/10 text-emerald-600 dark:text-[#c9ff3d] border border-transparent dark:border-[#c9ff3d]/20 grid place-items-center mb-4">
-            <app-icon-dumbbell size="22" />
-          </div>
-          <h3 class="font-black text-gray-900 dark:text-white text-base truncate w-full">{{ t().home.card2Title }}</h3>
-          <p class="mt-2 text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
-            {{ t().home.card2Desc }}
-          </p>
-        </div>
-      </div>
-
-      <!-- Card 3 -->
-      <div class="bg-white dark:bg-[#121614] rounded-3xl p-7 border border-gray-200/80 dark:border-white/10 shadow-xs flex flex-col justify-between transition">
-        <div>
-          <div class="h-10 w-10 rounded-2xl bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 border border-transparent dark:border-indigo-500/20 grid place-items-center mb-4">
-            <app-icon-calendar size="22" />
-          </div>
-          <h3 class="font-black text-gray-900 dark:text-white text-base truncate w-full">{{ t().home.card3Title }}</h3>
-          <p class="mt-2 text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
-            {{ t().home.card3Desc }}
-          </p>
-        </div>
-      </div>
-
-    </div>
-  </div>
-  </section>
-  </div>
-
-  <!-- ------------------------------------------------------------- 5. CTA FINAL -->
-  <section class="max-w-5xl mx-auto px-5 pb-24">
-    <div class="bg-gradient-to-br from-gray-950 via-gray-900 to-[#12181a] rounded-[36px] p-8 sm:p-14 text-center text-white relative overflow-hidden shadow-md">
-      <div class="relative z-10 max-w-xl mx-auto">
-        <h2 class="text-3xl sm:text-4xl font-black tracking-tight text-white">
-          {{ t().home.ctaTitle }}
+      <!-- Section Header -->
+      <div class="text-center max-w-2xl mx-auto mb-12 sm:mb-16">
+        <span class="text-xs font-black uppercase tracking-widest text-[#ccff00] block mb-2">
+          {{ t().home.monetizationBadge }}
+        </span>
+        <h2 class="font-display text-3xl sm:text-4xl lg:text-5xl font-black text-white tracking-tight leading-tight">
+          <span>Tres formas de recibir</span><br/>
+          <span class="text-[#ccff00]">apoyo de tus seguidores.</span>
         </h2>
-        <p class="mt-3 text-xs sm:text-sm text-gray-300 leading-relaxed">
-          {{ t().home.ctaSubtitle }}
-        </p>
-
-        <div class="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
-          <a
-            routerLink="/auth/register"
-            class="w-full sm:w-auto rounded-full bg-[#f5b300] hover:bg-[#e0a400] text-gray-950 font-black px-8 py-3.5 text-sm transition shadow-sm"
-          >
-            {{ t().home.createPageFree }}
-          </a>
-          <a
-            routerLink="/explore"
-            class="w-full sm:w-auto rounded-full bg-white/10 hover:bg-white/15 text-white font-bold px-7 py-3.5 text-sm transition"
-          >
-            {{ t().nav.exploreAthletes }}
-          </a>
-        </div>
       </div>
+
+      <!-- 3 Independent Bento Cards Grid: 3 cols (desktop) -> 2 cols (tablet) -> 1 col (mobile) -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
+        
+        <!-- Pillar 1: Shakes Únicos (Vaso / Shaker) -->
+        <div class="bento-card bg-[#121614] border border-white/10 hover:border-[#ccff00]/70 rounded-[32px] overflow-hidden flex flex-col justify-between transition-all duration-300 group shadow-lg hover:shadow-[0_12px_35px_rgba(0,0,0,0.6)]">
+          
+          <div class="relative aspect-[16/10] overflow-hidden">
+            <img
+              src="/images/bento-shoes.jpg"
+              alt="Atleta atándose las zapatillas deportivas en el gimnasio"
+              class="w-full h-full object-cover group-hover:scale-105 transition duration-500"
+              loading="lazy"
+            />
+            <div class="absolute inset-0 bg-gradient-to-t from-[#121614] via-transparent to-transparent"></div>
+            
+            <!-- Category Badge / Icon with Lime Ring -->
+            <div class="absolute top-4 left-4 w-11 h-11 rounded-2xl bg-[#090c0a]/90 backdrop-blur-md border border-[#ccff00] text-[#ccff00] grid place-items-center shadow-md">
+              <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M7 3h10l-1.5 18H8.5z"/>
+                <path d="M5 7h14"/>
+                <path d="M10 3v4"/>
+              </svg>
+            </div>
+          </div>
+
+          <div class="p-6 pt-2">
+            <h3 class="text-xl font-black text-white group-hover:text-[#ccff00] transition">
+              {{ t().home.card1Title }}
+            </h3>
+            <p class="mt-2 text-xs sm:text-sm text-gray-400 leading-relaxed">
+              {{ t().home.card1Desc }}
+            </p>
+
+            <!-- Bottom Lime Line Indicator -->
+            <div class="w-10 h-1 rounded-full bg-[#ccff00] mt-6 group-hover:w-20 transition-all duration-300"></div>
+          </div>
+
+        </div>
+
+        <!-- Pillar 2: Membresías Recurrentes (Insignia / Escudo) -->
+        <div class="bento-card bg-[#121614] border border-white/10 hover:border-[#ccff00]/70 rounded-[32px] overflow-hidden flex flex-col justify-between transition-all duration-300 group shadow-lg hover:shadow-[0_12px_35px_rgba(0,0,0,0.6)]">
+          
+          <div class="relative aspect-[16/10] overflow-hidden">
+            <img
+              src="/images/bento-phone-app.jpg"
+              alt="Mano sosteniendo smartphone con app atlética en gimnasio"
+              class="w-full h-full object-cover group-hover:scale-105 transition duration-500"
+              loading="lazy"
+            />
+            <div class="absolute inset-0 bg-gradient-to-t from-[#121614] via-transparent to-transparent"></div>
+
+            <!-- Category Badge / Icon with Lime Ring -->
+            <div class="absolute top-4 left-4 w-11 h-11 rounded-2xl bg-[#090c0a]/90 backdrop-blur-md border border-[#ccff00] text-[#ccff00] grid place-items-center shadow-md">
+              <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                <path d="m9 12 2 2 4-4"/>
+              </svg>
+            </div>
+          </div>
+
+          <div class="p-6 pt-2">
+            <h3 class="text-xl font-black text-white group-hover:text-[#ccff00] transition">
+              {{ t().home.card2Title }}
+            </h3>
+            <p class="mt-2 text-xs sm:text-sm text-gray-400 leading-relaxed">
+              {{ t().home.card2Desc }}
+            </p>
+
+            <!-- Bottom Lime Line Indicator -->
+            <div class="w-10 h-1 rounded-full bg-[#ccff00] mt-6 group-hover:w-20 transition-all duration-300"></div>
+          </div>
+
+        </div>
+
+        <!-- Pillar 3: Tienda & Asesorías 1-a-1 (En tablet md:col-span-2) -->
+        <div class="bento-card md:col-span-2 lg:col-span-1 bg-[#121614] border border-white/10 hover:border-[#ccff00]/70 rounded-[32px] overflow-hidden flex flex-col justify-between transition-all duration-300 group shadow-lg hover:shadow-[0_12px_35px_rgba(0,0,0,0.6)]">
+          
+          <div class="relative aspect-[16/10] overflow-hidden">
+            <img
+              src="/images/bento-shaker-towel.jpg"
+              alt="Shaker negro con tapa lima y toalla en banco de entrenamiento"
+              class="w-full h-full object-cover group-hover:scale-105 transition duration-500"
+              loading="lazy"
+            />
+            <div class="absolute inset-0 bg-gradient-to-t from-[#121614] via-transparent to-transparent"></div>
+
+            <!-- Category Badge / Icon with Lime Ring -->
+            <div class="absolute top-4 left-4 w-11 h-11 rounded-2xl bg-[#090c0a]/90 backdrop-blur-md border border-[#ccff00] text-[#ccff00] grid place-items-center shadow-md">
+              <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <rect width="18" height="18" x="3" y="4" rx="2"/>
+                <line x1="16" y1="2" x2="16" y2="6"/>
+                <line x1="8" x2="8" y1="2" y2="6"/>
+                <line x1="3" x2="21" y1="10" y2="10"/>
+                <path d="m9 16 2 2 4-4"/>
+              </svg>
+            </div>
+          </div>
+
+          <div class="p-6 pt-2">
+            <h3 class="text-xl font-black text-white group-hover:text-[#ccff00] transition">
+              {{ t().home.card3Title }}
+            </h3>
+            <p class="mt-2 text-xs sm:text-sm text-gray-400 leading-relaxed">
+              {{ t().home.card3Desc }}
+            </p>
+
+            <!-- Bottom Lime Line Indicator -->
+            <div class="w-10 h-1 rounded-full bg-[#ccff00] mt-6 group-hover:w-20 transition-all duration-300"></div>
+          </div>
+
+        </div>
+
+      </div>
+
     </div>
+
+  </section>
+
+  <!-- ========================================================================================= -->
+  <!-- 5. BANNER FINAL CTA DE ALTO IMPACTO (Captura 5) -->
+  <!-- ========================================================================================= -->
+  <section class="relative py-16 sm:py-20 md:py-24 px-4 sm:px-6 md:px-8 lg:px-12 bg-[#090c0a] overflow-hidden">
+    
+    <!-- Background Ambient Graffiti -->
+    <div class="absolute inset-0 pointer-events-none select-none z-0 overflow-hidden" aria-hidden="true">
+      <span class="absolute -top-12 -left-12 text-8xl sm:text-[180px] font-black text-white/[0.025] uppercase tracking-tighter leading-none select-none">
+        NO LIMITS
+      </span>
+      <span class="absolute -bottom-16 -right-16 text-8xl sm:text-[180px] font-black text-white/[0.025] uppercase tracking-tighter leading-none select-none">
+        JUST PROGRESS
+      </span>
+    </div>
+
+    <!-- Main Container Card with Glowing Neon Lime Border -->
+    <div class="cta-banner-container relative z-10 max-w-7xl mx-auto rounded-[36px] bg-[#121614] border border-[#ccff00]/30 shadow-[0_0_40px_rgba(204,255,0,0.12)] p-6 sm:p-10 lg:p-14 overflow-hidden">
+      
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-center">
+        
+        <!-- Left Column: Copy & Actions -->
+        <div class="lg:col-span-7 text-left">
+          
+          <!-- Badge -->
+          <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/5 border border-white/10 text-xs font-black tracking-widest text-[#ccff00] uppercase mb-6">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M18 20V10M12 20V4M6 20v-6"/>
+            </svg>
+            <span>{{ t().home.ctaBadge }}</span>
+          </div>
+
+          <!-- Headline con fluid typography clamp() -->
+          <h2 class="font-display text-[clamp(1.85rem,4.5vw,3rem)] font-black text-white tracking-tight leading-tight">
+            <span>¿Listo para empezar</span><br/>
+            <span class="text-[#ccff00]">{{ t().home.ctaTitle.split(' ').slice(3).join(' ') || 'tu página?' }}</span>
+          </h2>
+
+          <p class="mt-4 text-sm sm:text-base text-gray-300 max-w-lg leading-relaxed">
+            {{ t().home.ctaSubtitle }}
+          </p>
+
+          <!-- CTAs -->
+          <div class="mt-8 flex flex-col sm:flex-row items-stretch sm:items-center gap-3.5 sm:gap-4">
+            <a
+              routerLink="/auth/register"
+              (click)="trackEvent('cta_final_create_page')"
+              class="inline-flex items-center justify-center rounded-full bg-[#ccff00] hover:bg-[#bbf000] text-gray-950 text-base font-black px-8 py-4 shadow-xl shadow-[#ccff00]/25 transition transform hover:scale-[1.02] active:scale-95 gap-2 cursor-pointer"
+            >
+              <span>{{ t().home.createPageFree }}</span>
+              <span class="text-xl font-bold" aria-hidden="true">→</span>
+            </a>
+
+            <a
+              routerLink="/explore"
+              class="inline-flex items-center justify-center rounded-full bg-white/10 hover:bg-white/15 text-white border border-white/15 text-base font-bold px-7 py-4 transition backdrop-blur-md"
+            >
+              {{ t().home.exploreAthletes }}
+            </a>
+          </div>
+
+          <!-- Trust Badges Row (1 col en mobile, 3 cols en sm+) -->
+          <div class="mt-8 pt-6 sm:mt-10 sm:pt-8 border-t border-white/10 grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+            
+            <div class="flex items-center gap-2.5 text-gray-400">
+              <span class="w-7 h-7 rounded-xl bg-white/5 grid place-items-center text-[#ccff00] shrink-0">
+                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+                  <circle cx="9" cy="7" r="4"/>
+                  <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                </svg>
+              </span>
+              <span class="text-[11px] font-bold text-gray-300 leading-tight">{{ t().home.trustCommunity }}</span>
+            </div>
+
+            <div class="flex items-center gap-2.5 text-gray-400">
+              <span class="w-7 h-7 rounded-xl bg-white/5 grid place-items-center text-[#ccff00] shrink-0">
+                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                  <path d="m9 12 2 2 4-4"/>
+                </svg>
+              </span>
+              <span class="text-[11px] font-bold text-gray-300 leading-tight">{{ t().home.trustSecure }}</span>
+            </div>
+
+            <div class="flex items-center gap-2.5 text-gray-400">
+              <span class="w-7 h-7 rounded-xl bg-white/5 grid place-items-center text-[#ccff00] shrink-0">
+                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+                </svg>
+              </span>
+              <span class="text-[11px] font-bold text-gray-300 leading-tight">{{ t().home.trustFast }}</span>
+            </div>
+
+          </div>
+
+        </div>
+
+        <!-- Right Column: Hero Shaker Photo ("GOOD PEOPLE BETTER ATHLETES") + Handwritten Arrow -->
+        <div class="lg:col-span-5 relative flex flex-col items-center justify-center pt-2 sm:pt-6">
+          
+          <!-- Handwritten Arrow & Text in Caveat Font pointing down to shaker (Sin overflow lateral en mobile) -->
+          <div class="relative sm:absolute sm:top-0 sm:right-4 z-20 transform -rotate-2 sm:rotate-[-6deg] select-none pointer-events-none text-center sm:text-right mb-3 sm:mb-0" aria-hidden="true">
+            <span class="font-hand text-2xl sm:text-3xl font-bold text-white tracking-wide block drop-shadow-md">
+              {{ t().home.progressStartsHere }}
+            </span>
+            <svg class="w-14 h-7 text-[#ccff00] mx-auto sm:ml-auto sm:mr-0 -mt-1" viewBox="0 0 64 32" fill="none" aria-hidden="true">
+              <path d="M6 6C20 10 38 18 52 28M52 28L42 24M52 28L48 18" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+
+          <!-- Shaker Image proporcional y no cortada -->
+          <div class="relative w-full max-w-[260px] sm:max-w-[320px] md:max-w-[360px] aspect-square rounded-3xl overflow-hidden border border-white/15 shadow-2xl bg-[#090c0a]">
+            <img
+              src="/images/cta-shaker.jpg"
+              alt="Shaker negro GOOD PEOPLE BETTER ATHLETES con tapa verde lima sobre piso de gimnasio"
+              class="w-full h-full object-cover"
+              loading="lazy"
+            />
+            <div class="absolute inset-0 bg-gradient-to-t from-[#121614]/80 via-transparent to-transparent"></div>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
   </section>
 
 </div>

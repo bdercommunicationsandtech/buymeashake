@@ -48,12 +48,17 @@ export interface PostItem {
           <img
             [src]="post().coverImageUrl"
             [alt]="post().title"
-            class="w-full h-full object-cover transition-transform duration-700"
-            [class.blur-[2px]]="isLocked()"
-            [class.scale-105]="isLocked()"
+            class="w-full h-full object-cover transition-[filter,transform] duration-700"
+            [class.blur-md]="isLocked()"
+            [class.scale-110]="isLocked()"
+            [class.brightness-75]="isLocked()"
           />
           
-          <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
+          <div
+            class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"
+            [class.via-black/45]="isLocked()"
+            [class.to-black/25]="isLocked()"
+          ></div>
 
           <!-- Tipo de post -->
           <div class="absolute top-4 left-4">
@@ -75,7 +80,7 @@ export interface PostItem {
           </div>
 
           @if (isLocked()) {
-            <div class="absolute inset-0 flex flex-col items-center justify-center p-6 text-center z-10 bg-black/35">
+            <div class="absolute inset-0 flex flex-col items-center justify-center p-6 text-center z-10 bg-black/50 backdrop-blur-[1px]">
               <div class="h-14 w-14 rounded-2xl bg-black/80 backdrop-blur-md border border-white/20 flex items-center justify-center text-amber-400 dark:text-[#c9ff3d] mb-3 shadow-xl">
                 <app-icon-lock size="24" />
               </div>

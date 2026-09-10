@@ -23,9 +23,17 @@
             <img
               [src]="coverImageUrl()!"
               [alt]="p.title"
-              class="h-full w-full object-cover"
+              class="h-full w-full object-cover transition-[filter,transform]"
+              [class.blur-md]="isLocked()"
+              [class.scale-110]="isLocked()"
+              [class.brightness-75]="isLocked()"
             />
-            <div class="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent"></div>
+            <div
+              class="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent"
+              [class.from-black/70]="isLocked()"
+              [class.via-black/30]="isLocked()"
+              [class.to-black/20]="isLocked()"
+            ></div>
           </div>
         }
 

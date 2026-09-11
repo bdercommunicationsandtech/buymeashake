@@ -10,7 +10,7 @@ import {
 } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import { RouterLink, Router } from '@angular/router';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { CheckoutService } from '../../core/checkout.service';
@@ -23,6 +23,7 @@ import { BannerService } from '../../core/banner.service';
 import { resolveMediaUrl } from '../../core/utils/media-url.util';
 
 import { IconShakerComponent } from '../../shared/icons/icon-shaker';
+import { DisciplineIconComponent } from '../../shared/icons/discipline-icon';
 import { MediaUrlPipe } from '../../shared/pipes/media-url.pipe';
 
 export interface DisciplineCarouselItem {
@@ -41,12 +42,14 @@ export interface DisciplineCarouselItem {
     CommonModule,
     RouterLink,
     IconShakerComponent,
+    DisciplineIconComponent,
     MediaUrlPipe,
   ],
   templateUrl: './home.html',
 })
 export class Home implements OnInit, AfterViewInit, OnDestroy {
   private platformId = inject(PLATFORM_ID);
+  private readonly router = inject(Router);
   private readonly checkout = inject(CheckoutService);
   readonly languageService = inject(LanguageService);
   private readonly lookupService = inject(LookupService);
@@ -151,16 +154,16 @@ export class Home implements OnInit, AfterViewInit, OnDestroy {
 
     this.lookupService.getDisciplines(true).subscribe({
       next: (items) => {
-        const mapped: DisciplineCarouselItem[] = items
-          .filter((d) => !!d.image_url)
-          .map((d) => ({
-            id: String(d.id),
-            name: d.name,
-            tag: d.description || '',
-            iconUrl: d.icon_url,
-            image: resolveMediaUrl(d.image_url) || d.image_url || '',
-            exploreCat: d.name,
-          }));
+        const fallbackImage =
+          'https://images.unsplash.com/photo-1517838277536-f5f99be501cd?q=80&w=800&auto=format&fit=crop';
+        const mapped: DisciplineCarouselItem[] = items.slice(0, 10).map((d) => ({
+          id: String(d.id),
+          name: d.name,
+          tag: d.description || '',
+          iconUrl: d.icon_url,
+          image: resolveMediaUrl(d.image_url) || d.image_url || fallbackImage,
+          exploreCat: d.name,
+        }));
         this.coverflowDisciplines.set(mapped);
         const crossIdx = mapped.findIndex((d) => /cross/i.test(d.name));
         this.activeDisciplineIndex.set(crossIdx >= 0 ? crossIdx : 0);
@@ -232,6 +235,30 @@ export class Home implements OnInit, AfterViewInit, OnDestroy {
     this.trackEvent('carousel_discipline_select', {
       discipline: list[index]?.name,
       index,
+    });
+  }
+
+  /** Click en una tarjeta del carrusel → Explore filtrado por esa disciplina. */
+  onDisciplineCardClick(index: number): void {
+    const list = this.coverflowDisciplines();
+    const d = list[index];
+    if (!d) return;
+
+    this.selectDiscipline(index);
+    this.trackEvent('carousel_discipline_explore', {
+      discipline: d.name,
+      index,
+    });
+    void this.router.navigate(['/explore'], {
+      queryParams: { cat: d.exploreCat },
+    });
+  }
+
+  openDisciplineExplore(d: DisciplineCarouselItem, event?: Event): void {
+    event?.stopPropagation();
+    this.trackEvent('carousel_discipline_explore', { discipline: d.name });
+    void this.router.navigate(['/explore'], {
+      queryParams: { cat: d.exploreCat },
     });
   }
 

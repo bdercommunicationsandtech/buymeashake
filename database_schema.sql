@@ -756,12 +756,13 @@ INSERT INTO disciplines (name, description, image_url, sort_order, show_in_home,
 ('Cross Training', 'DISCIPLINA & RESULTADOS', 'https://images.unsplash.com/photo-1517838277536-f5f99be501cd?q=80&w=800&auto=format&fit=crop', 2, 1, 1),
 ('Running', 'PISTA & MARATÓN', 'https://images.unsplash.com/photo-1552674605-db6ffd4facb5?q=80&w=800&auto=format&fit=crop', 3, 1, 1),
 ('Ciclismo', 'RUTA & GRAVEL', '/images/carousel-cycling.jpg', 4, 1, 1),
-('Artes Marciales & Boxeo', NULL, NULL, 8, 0, 1),
-('Deportes Acuáticos', 'NATACIÓN & SURF', 'https://images.unsplash.com/photo-1530549387789-4c1017266635?q=80&w=800&auto=format&fit=crop', 5, 1, 1),
-('Fútbol & Colectivos', NULL, NULL, 9, 0, 1),
-('Bienestar', 'MENTE & CUERPO', 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?q=80&w=800&auto=format&fit=crop', 6, 1, 1),
-('Calistenia & Freestyle', NULL, NULL, 10, 0, 1),
-('Esports & Gaming', 'COMPETITIVO & SIM', 'https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=800&auto=format&fit=crop', 7, 1, 1);
+('Artes Marciales & Boxeo', 'COMBATE', 'https://images.unsplash.com/photo-1549719386-74dfcbf7dbed?q=80&w=800&auto=format&fit=crop', 5, 1, 1),
+('Deportes Acuáticos', 'NATACIÓN & SURF', 'https://images.unsplash.com/photo-1530549387789-4c1017266635?q=80&w=800&auto=format&fit=crop', 6, 1, 1),
+('Bienestar', 'MENTE & CUERPO', 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?q=80&w=800&auto=format&fit=crop', 7, 1, 1),
+('Fútbol & Colectivos', 'EQUIPO', 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?q=80&w=800&auto=format&fit=crop', 8, 1, 1),
+('Baloncesto', 'CANCHA', 'https://images.unsplash.com/photo-1546519638-68e109498ffc?q=80&w=800&auto=format&fit=crop', 9, 1, 1),
+('Calistenia & Freestyle', 'CALISTENIA', 'https://images.unsplash.com/photo-1599058945522-28d584b6f14f?q=80&w=800&auto=format&fit=crop', 10, 1, 1),
+('Esports & Gaming', 'COMPETITIVO & SIM', 'https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=800&auto=format&fit=crop', 11, 0, 1);
 
 INSERT INTO lookup_items (lookup_group_id, code, label, icon, sort_order) VALUES
 (@trans_group_id, 201, 'Shake Único', 'shake', 1),

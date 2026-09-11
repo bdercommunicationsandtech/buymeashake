@@ -11,7 +11,7 @@ import {
   ViewChild,
 } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
-import { RouterLink, ActivatedRoute } from '@angular/router';
+import { RouterLink, ActivatedRoute, Router } from '@angular/router';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { ExploreService } from '../../core/explore.service';
@@ -57,6 +57,7 @@ export class Explore implements OnInit, AfterViewInit, OnDestroy {
   private readonly platformId = inject(PLATFORM_ID);
   private readonly exploreService = inject(ExploreService);
   private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
   private readonly lookupService = inject(LookupService);
   readonly languageService = inject(LanguageService);
 
@@ -82,7 +83,12 @@ export class Explore implements OnInit, AfterViewInit, OnDestroy {
 
   ngOnInit(): void {
     this.route.queryParams.subscribe((params) => {
-      if (params['cat']) this.selectedCategory.set(params['cat']);
+      if (params['cat']) {
+        this.selectedCategory.set(params['cat']);
+        if (isPlatformBrowser(this.platformId)) {
+          setTimeout(() => this.scrollToFilteredAthletes(), 120);
+        }
+      }
       if (params['q']) this.searchQuery.set(params['q']);
     });
     this.loadDisciplines();
@@ -235,8 +241,15 @@ export class Explore implements OnInit, AfterViewInit, OnDestroy {
         athleteSportNorm.includes(translatedCatNorm) ||
         translatedCatNorm.includes(athleteSportNorm) ||
         disciplineNorms.some(
-          (d) => d.includes(catNorm) || catNorm.includes(d) || d.includes(translatedCatNorm),
-        );
+          (d) =>
+            d.includes(catNorm) ||
+            catNorm.includes(d) ||
+            d.includes(translatedCatNorm) ||
+            this.disciplineTokensOverlap(d, catNorm) ||
+            this.disciplineTokensOverlap(d, translatedCatNorm),
+        ) ||
+        this.disciplineTokensOverlap(athleteSportNorm, catNorm) ||
+        this.disciplineTokensOverlap(athleteSportNorm, translatedCatNorm);
 
       if (!matchesCategory) {
         return false;
@@ -261,6 +274,37 @@ export class Explore implements OnInit, AfterViewInit, OnDestroy {
 
   setCategory(category: string): void {
     this.selectedCategory.set(category);
+    void this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: {
+        cat: category === 'ALL' || category === 'Todos' || category === 'All' ? null : category,
+      },
+      queryParamsHandling: 'merge',
+      replaceUrl: true,
+    });
+    if (category !== 'ALL' && category !== 'Todos' && category !== 'All') {
+      setTimeout(() => this.scrollToFilteredAthletes(), 80);
+    }
+  }
+
+  /** Match "Fuerza & Gym" ↔ "Fuerza & Levantamiento" via shared meaningful tokens. */
+  private disciplineTokensOverlap(a: string, b: string): boolean {
+    const stop = new Set(['y', 'and', 'de', 'del', 'la', 'el', 'los', 'las', 'the']);
+    const tokens = (s: string) =>
+      s
+        .split(/[^a-z0-9]+/)
+        .map((t) => t.trim())
+        .filter((t) => t.length >= 4 && !stop.has(t));
+    const left = tokens(a);
+    const right = tokens(b);
+    if (!left.length || !right.length) return false;
+    return left.some((t) => right.some((u) => t.includes(u) || u.includes(t)));
+  }
+
+  private scrollToFilteredAthletes(): void {
+    if (!isPlatformBrowser(this.platformId)) return;
+    const el = document.getElementById('explore-filtered-athletes');
+    el?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
   onSearch(value: string): void {

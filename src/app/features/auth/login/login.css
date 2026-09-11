@@ -7,8 +7,14 @@
 
 .login-shell {
   --login-lime: #c9ff3d;
+  --login-accent: #059669;
   --login-ink: #070a08;
   animation: login-fade-in 480ms ease-out both;
+}
+
+:host-context(html.dark) .login-shell,
+.dark .login-shell {
+  --login-accent: #c9ff3d;
 }
 
 .login-hero-panel {
@@ -43,17 +49,17 @@
 }
 
 .login-tab.is-active {
-  color: var(--login-lime);
+  color: var(--login-accent);
 }
 
 .login-tab.is-active::after {
-  background: var(--login-lime);
+  background: var(--login-accent);
   transform: scaleX(1);
 }
 
 .login-input-wrap:focus-within {
-  border-color: color-mix(in srgb, var(--login-lime) 70%, white);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--login-lime) 18%, transparent);
+  border-color: color-mix(in srgb, var(--login-accent) 70%, white);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--login-accent) 18%, transparent);
 }
 
 /* Focus ring lives on the wrap; kill the inner input outline */
@@ -63,8 +69,8 @@
 }
 
 /*
- * Chrome/Edge/Safari paint a light autofill background that breaks dark inputs.
- * box-shadow fills the field; text-fill keeps typed/autofilled text white.
+ * Chrome/Edge/Safari paint a light autofill background that breaks themed inputs.
+ * box-shadow fills the field; text-fill keeps typed/autofilled text readable.
  */
 .login-input-wrap input:-webkit-autofill,
 .login-input-wrap input:-webkit-autofill:hover,
@@ -74,9 +80,30 @@ input.login-input-wrap:-webkit-autofill,
 input.login-input-wrap:-webkit-autofill:hover,
 input.login-input-wrap:-webkit-autofill:focus,
 input.login-input-wrap:-webkit-autofill:active {
+  -webkit-text-fill-color: #111827 !important;
+  caret-color: #111827;
+  transition: background-color 99999s ease-out;
+  box-shadow: 0 0 0 1000px #f9fafb inset !important;
+}
+
+:host-context(html.dark) .login-input-wrap input:-webkit-autofill,
+:host-context(html.dark) .login-input-wrap input:-webkit-autofill:hover,
+:host-context(html.dark) .login-input-wrap input:-webkit-autofill:focus,
+:host-context(html.dark) .login-input-wrap input:-webkit-autofill:active,
+:host-context(html.dark) input.login-input-wrap:-webkit-autofill,
+:host-context(html.dark) input.login-input-wrap:-webkit-autofill:hover,
+:host-context(html.dark) input.login-input-wrap:-webkit-autofill:focus,
+:host-context(html.dark) input.login-input-wrap:-webkit-autofill:active,
+.dark .login-input-wrap input:-webkit-autofill,
+.dark .login-input-wrap input:-webkit-autofill:hover,
+.dark .login-input-wrap input:-webkit-autofill:focus,
+.dark .login-input-wrap input:-webkit-autofill:active,
+.dark input.login-input-wrap:-webkit-autofill,
+.dark input.login-input-wrap:-webkit-autofill:hover,
+.dark input.login-input-wrap:-webkit-autofill:focus,
+.dark input.login-input-wrap:-webkit-autofill:active {
   -webkit-text-fill-color: #ffffff !important;
   caret-color: #ffffff;
-  transition: background-color 99999s ease-out;
   box-shadow: 0 0 0 1000px #121614 inset !important;
 }
 

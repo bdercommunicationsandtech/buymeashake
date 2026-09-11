@@ -24,10 +24,37 @@ async def list_disciplines(
     session: DatabaseSession,
     home: bool = Query(default=False, description="Only disciplines shown on Home coverflow"),
 ) -> list[DisciplineResponse]:
-    query = select(Discipline).where(Discipline.is_active.is_(True))
+    HOME_LIMIT = 10
     if home:
-        query = query.where(Discipline.show_in_home.is_(True))
-    query = query.order_by(Discipline.sort_order.asc(), Discipline.name.asc())
+        home_result = await session.execute(
+            select(Discipline)
+            .where(
+                Discipline.is_active.is_(True),
+                Discipline.show_in_home.is_(True),
+            )
+            .order_by(Discipline.sort_order.asc(), Discipline.name.asc())
+            .limit(HOME_LIMIT)
+        )
+        rows = list(home_result.scalars().all())
+        if len(rows) < HOME_LIMIT:
+            have_ids = [r.id for r in rows]
+            pad_query = (
+                select(Discipline)
+                .where(Discipline.is_active.is_(True))
+                .order_by(Discipline.sort_order.asc(), Discipline.name.asc())
+                .limit(HOME_LIMIT - len(rows))
+            )
+            if have_ids:
+                pad_query = pad_query.where(Discipline.id.not_in(have_ids))
+            pad_result = await session.execute(pad_query)
+            rows.extend(pad_result.scalars().all())
+        return [_to_response(row) for row in rows]
+
+    query = (
+        select(Discipline)
+        .where(Discipline.is_active.is_(True))
+        .order_by(Discipline.sort_order.asc(), Discipline.name.asc())
+    )
     result = await session.execute(query)
     return [_to_response(row) for row in result.scalars().all()]
 

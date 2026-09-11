@@ -24,7 +24,8 @@ if (qrcode.stringToBytesFuncs?.['UTF-8']) {
  * Builds a QR matrix for the given text (auto version, ECC M, byte mode).
  */
 export function generateQrMatrix(text: string): boolean[][] {
-  const qr = qrcode(0, 'M');
+  // Higher ECC so the center logo does not break scanning
+  const qr = qrcode(0, 'H');
   qr.addData(text);
   qr.make();
   const n = qr.getModuleCount();
@@ -112,14 +113,15 @@ function drawImageContain(
   maxW: number,
   maxH: number,
 ): { width: number; height: number } {
-  const ratio = img.naturalWidth / img.naturalHeight;
+  const ratio = img.naturalWidth / Math.max(1, img.naturalHeight);
   let w = maxW;
   let h = w / ratio;
   if (h > maxH) {
     h = maxH;
     w = h * ratio;
   }
-  ctx.drawImage(img, x, y + (maxH - h) / 2, w, h);
+  // Center both axes (logo SVG is taller than wide → was left-biased before)
+  ctx.drawImage(img, x + (maxW - w) / 2, y + (maxH - h) / 2, w, h);
   return { width: w, height: h };
 }
 
@@ -134,8 +136,35 @@ function drawLogoBadge(
   roundRect(ctx, x, y, size, size, size * 0.22);
   ctx.fill();
 
-  const inset = size * 0.14;
+  const inset = size * 0.18;
   drawImageContain(ctx, img, x + inset, y + inset, size - inset * 2, size - inset * 2);
+}
+
+/** White pad + shaker mark, pixel-perfect centered on the QR. */
+function drawQrCenterLogo(
+  ctx: CanvasRenderingContext2D,
+  img: HTMLImageElement,
+  qrX: number,
+  qrY: number,
+  qrSize: number,
+): void {
+  const padSize = qrSize * 0.22;
+  const logoSize = padSize * 0.72;
+  const cx = qrX + qrSize / 2;
+  const cy = qrY + qrSize / 2;
+
+  ctx.fillStyle = '#ffffff';
+  // Snap to whole pixels to avoid half-pixel drift looking "off-center"
+  const padX = Math.round(cx - padSize / 2);
+  const padY = Math.round(cy - padSize / 2);
+  const pad = Math.round(padSize);
+  roundRect(ctx, padX, padY, pad, pad, Math.max(4, pad * 0.12));
+  ctx.fill();
+
+  const logoBox = Math.round(logoSize);
+  const logoX = Math.round(cx - logoBox / 2);
+  const logoY = Math.round(cy - logoBox / 2);
+  drawImageContain(ctx, img, logoX, logoY, logoBox, logoBox);
 }
 
 function drawPhoneIcon(
@@ -265,7 +294,7 @@ export async function renderShareCardPng(params: {
     const qrImgSize = qrOuter * 0.88;
     const qrImgX = qrX + (qrOuter - qrImgSize) / 2;
     const qrImgY = qrY + (qrOuter - qrImgSize) / 2;
-    drawQrOnCanvas(ctx, matrix, qrImgX, qrImgY, qrImgSize);
+    drawQrOnCanvas(ctx, matrix, qrImgX, qrImgY, qrImgSize, logoImg);
     drawCornerBrackets(ctx, qrX, qrY, qrOuter, lime);
   } else {
     // white square behind QR
@@ -273,7 +302,7 @@ export async function renderShareCardPng(params: {
     ctx.fillStyle = '#ffffff';
     roundRect(ctx, qrX, qrY, qrOuter, qrOuter, width * 0.02);
     ctx.fill();
-    drawQrOnCanvas(ctx, matrix, qrX + boxPad, qrY + boxPad, qrOuter - boxPad * 2);
+    drawQrOnCanvas(ctx, matrix, qrX + boxPad, qrY + boxPad, qrOuter - boxPad * 2, logoImg);
   }
 
   // CTA
@@ -324,6 +353,7 @@ function drawQrOnCanvas(
   x: number,
   y: number,
   size: number,
+  logoImg?: HTMLImageElement,
 ): void {
   const n = matrix.length;
   const cell = size / n;
@@ -336,6 +366,9 @@ function drawQrOnCanvas(
         ctx.fillRect(x + c * cell, y + r * cell, cell + 0.5, cell + 0.5);
       }
     }
+  }
+  if (logoImg) {
+    drawQrCenterLogo(ctx, logoImg, x, y, size);
   }
 }
 

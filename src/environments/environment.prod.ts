@@ -1,6 +1,6 @@
 export const environment = {
   production: true,
-  apiUrl: 'http://207.38.88.6/api/v1',
+  apiUrl: 'https://buymeashake.fit/api/v1',
   /**
    * Firebase web config (Console → Project settings → Your apps).
    * Same project as development unless you use a separate Firebase app for prod.

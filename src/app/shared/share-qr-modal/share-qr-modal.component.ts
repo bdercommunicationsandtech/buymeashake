@@ -6,6 +6,7 @@ import {
   signal,
   computed,
   inject,
+  effect,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
@@ -102,7 +103,7 @@ import { LanguageService } from '../../core/language.service';
               <div
                 class="w-full max-w-[280px] aspect-[100/128] rounded-[1.75rem] bg-gray-100 dark:bg-white/5 grid place-items-center text-xs font-bold text-gray-400"
               >
-                {{ t().shareModal.generateError }}
+                {{ previewLoading() ? '…' : t().shareModal.generateError }}
               </div>
             }
           </div>
@@ -151,34 +152,63 @@ export class ShareQrModalComponent {
   readonly variant = signal<QrVariant>('light');
   readonly downloading = signal(false);
   readonly linkCopied = signal(false);
+  readonly previewUrl = signal<string | null>(null);
+  readonly previewLoading = signal(false);
 
   readonly profileUrl = computed(() => `https://buymeashake.fit/${this.handle()}`);
   readonly displayPath = computed(() => `buymeashake.fit/${this.handle()}`);
 
-  readonly previewUrl = computed(() => {
-    if (!this.open()) return null;
-    try {
-      return renderShareCardPng({
-        profileUrl: this.profileUrl(),
-        displayPath: this.displayPath(),
-        variant: this.variant(),
+  constructor() {
+    effect((onCleanup) => {
+      if (!this.open()) {
+        this.previewUrl.set(null);
+        this.previewLoading.set(false);
+        return;
+      }
+
+      const profileUrl = this.profileUrl();
+      const displayPath = this.displayPath();
+      const variant = this.variant();
+      const scanMeText = this.t().shareModal.scanMe;
+      let cancelled = false;
+
+      this.previewUrl.set(null);
+      this.previewLoading.set(true);
+      renderShareCardPng({
+        profileUrl,
+        displayPath,
+        variant,
         width: 720,
-        scanMeText: this.t().shareModal.scanMe,
+        scanMeText,
+      })
+        .then((url) => {
+          if (!cancelled) {
+            this.previewUrl.set(url);
+            this.previewLoading.set(false);
+          }
+        })
+        .catch(() => {
+          if (!cancelled) {
+            this.previewUrl.set(null);
+            this.previewLoading.set(false);
+          }
+        });
+
+      onCleanup(() => {
+        cancelled = true;
       });
-    } catch {
-      return null;
-    }
-  });
+    });
+  }
 
   onBackdrop(event: MouseEvent): void {
     if (event.target === event.currentTarget) this.close.emit();
   }
 
-  download(): void {
+  async download(): Promise<void> {
     if (!this.previewUrl()) return;
     this.downloading.set(true);
     try {
-      const hiRes = renderShareCardPng({
+      const hiRes = await renderShareCardPng({
         profileUrl: this.profileUrl(),
         displayPath: this.displayPath(),
         variant: this.variant(),

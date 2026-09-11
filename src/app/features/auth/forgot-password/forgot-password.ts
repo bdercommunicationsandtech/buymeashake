@@ -5,6 +5,8 @@ import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/auth.service';
 import { LanguageService } from '../../../core/language.service';
 import { ThemeService } from '../../../core/theme.service';
+import { BrandLogoComponent } from '../../../shared/brand-logo/brand-logo.component';
+import { ChromeControlsComponent } from '../../../shared/chrome-controls/chrome-controls.component';
 
 type ErrorDescriptor =
   | { type: 'rateLimit'; seconds: number }
@@ -17,12 +19,14 @@ type ErrorDescriptor =
   | { type: 'passwordMinLength' }
   | { type: 'sendCode' }
   | { type: 'resetGeneral' }
+  | { type: 'blacklisted' }
+  | { type: 'suspended' }
   | { type: 'custom'; message: string };
 
 @Component({
   selector: 'app-forgot-password',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink, BrandLogoComponent, ChromeControlsComponent],
   templateUrl: './forgot-password.html',
   styleUrl: './forgot-password.css',
 })
@@ -79,6 +83,10 @@ export class ForgotPassword implements OnDestroy {
         return auth.forgotSendCodeError;
       case 'resetGeneral':
         return auth.forgotResetError;
+      case 'blacklisted':
+        return auth.blacklistedEmailError;
+      case 'suspended':
+        return auth.accountSuspendedIndefiniteError;
       case 'custom':
         return err.message;
     }
@@ -225,6 +233,14 @@ export class ForgotPassword implements OnDestroy {
         this.errorState.set({ type: 'invalidOtp' });
         return;
       }
+    }
+
+    if ((err as { status?: number })?.status === 403 || code === 'FORBIDDEN') {
+      const isSuspended =
+        details['reason_code'] === 'ACCOUNT_SUSPENDED' ||
+        (message ? /suspend/i.test(message) : false);
+      this.errorState.set({ type: isSuspended ? 'suspended' : 'blacklisted' });
+      return;
     }
 
     if (message) {

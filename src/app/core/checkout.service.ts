@@ -25,6 +25,7 @@ export interface CheckoutDraft {
     platform: string;
     meetingLink?: string;
   };
+  readonly chargesEnabled?: boolean;
 }
 
 export interface CheckoutRequest {
@@ -49,6 +50,7 @@ export interface CheckoutRequest {
     platform: string;
     meetingLink?: string;
   };
+  readonly chargesEnabled?: boolean;
 }
 
 /**
@@ -93,6 +95,7 @@ export class CheckoutService {
       paymentClientSecret: request.paymentClientSecret,
       transactionUuid: request.transactionUuid,
       bookingDetails: request.bookingDetails,
+      chargesEnabled: request.chargesEnabled !== false,
     });
     this._paid.set(false);
     this._confirming.set(false);

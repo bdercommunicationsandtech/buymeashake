@@ -17,10 +17,11 @@ export const API_ENDPOINTS = {
   admin: {
     users: '/admin/users',
     banners: '/admin/banners',
+    disciplines: '/admin/disciplines',
     listingsSell: '/admin/listings/seller',
     listingsBuy: '/admin/listings/buyer',
     stats: '/admin/stats',
-    trustReports: '/admin/trust/reports',
+    trustReports: '/admin/compliance/reports',
     contact: '/contact',
   },
 } as const;

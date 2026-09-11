@@ -50,6 +50,7 @@ def create_application() -> FastAPI:
     static_root = os.path.join(os.path.dirname(os.path.dirname(__file__)), "static")
     os.makedirs(os.path.join(static_root, "uploads", "images"), exist_ok=True)
     os.makedirs(os.path.join(static_root, "uploads", "products"), exist_ok=True)
+    os.makedirs(os.path.join(static_root, "uploads", "disciplines_svgs"), exist_ok=True)
     app.mount("/static", StaticFiles(directory=static_root), name="static")
 
     app.include_router(api_router, prefix=settings.API_V1_STR)

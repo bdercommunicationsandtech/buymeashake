@@ -1,757 +1,687 @@
-import { Component, HostListener, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { HttpClient } from '@angular/common/http';
-import { Router } from '@angular/router';
 import { TrustReportsApiService } from '../../core/services/trust-reports-api.service';
-import { UsersApiService } from '../../core/services/users-api.service';
-import { extractApiErrorMessage } from '../../shared/utils/api-error.util';
-import { API_CONFIG } from '../../core/config/api.config';
-import { AdminUser } from '../../core/models/user.model';
 import {
-  ALLOWED_STATUS_TRANSITIONS,
-  REASON_CATEGORY_LABELS,
+  AdminReportVerdictPayload,
+  REASON_CODE_LABELS,
   REPORT_PRIORITY_OPTIONS,
   REPORT_STATUS_OPTIONS,
-  RESOLUTION_ACTION_OPTIONS,
-  ReportPriority,
-  ReportStatus,
-  TARGET_TYPE_LABELS,
-  TargetEntityType,
   TrustReport,
+  VERDICT_OPTIONS,
 } from '../../core/models/trust-report.model';
-
-interface TargetPreview {
-  id: number;
-  name: string;
-  imageUrls: string[];
-}
-
-interface QuickAction {
-  id: string;
-  label: string;
-  status: ReportStatus;
-  action: string;
-  /** SVG path for heroicon-style outline icon */
-  iconPath: string;
-  tone: 'amber' | 'rose' | 'orange' | 'slate' | 'emerald';
-}
 
 @Component({
   selector: 'app-reports-panel',
   standalone: true,
   imports: [CommonModule, FormsModule, DatePipe],
   template: `
-    <div class="min-h-screen bg-gradient-to-br from-slate-50 via-indigo-50/30 to-violet-50/20 px-4 py-8 sm:px-6 lg:px-8">
+    <div class="rounded-3xl border border-slate-200/80 bg-white p-6 shadow-sm sm:p-8">
 
-      <header class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <!-- Header Section -->
+      <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 class="text-3xl font-extrabold tracking-tight text-slate-900">Reportes</h1>
-          <p class="mt-1 text-sm font-medium text-slate-500">
-            Catálogo de moderación desde trust_reports
+          <div class="mb-1 flex items-center gap-2">
+            <span class="h-2 w-2 rounded-full bg-rose-500"></span>
+            <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Trust & Safety</span>
+          </div>
+          <h2 class="text-2xl font-bold tracking-tight text-slate-900">Reportes de Cumplimiento</h2>
+          <p class="mt-1 text-sm text-slate-500">
+            Cola de moderación y denuncias de la comunidad BuyMeAShake para atletas y contenidos.
           </p>
         </div>
-        <div class="flex flex-wrap items-center gap-3">
-          @if (pendingCount() > 0) {
-            <span class="inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-bold text-amber-700">
-              {{ pendingCount() }} pendientes (página)
+
+        <div class="flex flex-wrap items-center gap-2.5">
+          @if (!loading()) {
+            @if (pendingCount() > 0) {
+              <span class="inline-flex items-center gap-1.5 rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-bold text-amber-700">
+                <span class="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse"></span>
+                {{ pendingCount() }} pendientes
+              </span>
+            }
+            <span class="inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-600">
+              @if (hasActiveFilters()) {
+                {{ reports().length }} de {{ total() }} reportes
+              } @else {
+                {{ total() }} reportes
+              }
             </span>
           }
-          @if (total() > 0) {
-            <span class="inline-flex items-center rounded-full border border-indigo-200 bg-indigo-50 px-3 py-1 text-xs font-bold text-indigo-700">
-              {{ total() }} total
-            </span>
-          }
-          <button
-            type="button"
-            class="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 cursor-pointer disabled:opacity-60"
-            [disabled]="loading()"
-            (click)="loadReports()"
-          >
-            Actualizar
-          </button>
-        </div>
-      </header>
 
-      <div class="mb-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-        <select
-          [(ngModel)]="statusFilter"
-          (ngModelChange)="onFilterChange()"
-          class="rounded-xl border border-slate-200 bg-white/80 px-3.5 py-2.5 text-sm font-semibold text-slate-700 shadow-sm focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-200"
-          aria-label="Filtrar por estado"
-        >
-          <option [ngValue]="''">Todos los estados</option>
-          @for (opt of statusOptions; track opt.value) {
-            <option [ngValue]="opt.value">{{ opt.label }}</option>
-          }
-        </select>
-
-        <select
-          [(ngModel)]="priorityFilter"
-          (ngModelChange)="onFilterChange()"
-          class="rounded-xl border border-slate-200 bg-white/80 px-3.5 py-2.5 text-sm font-semibold text-slate-700 shadow-sm focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-200"
-          aria-label="Filtrar por prioridad"
-        >
-          <option [ngValue]="''">Todas las prioridades</option>
-          @for (opt of priorityOptions; track opt.value) {
-            <option [ngValue]="opt.value">{{ opt.label }}</option>
-          }
-        </select>
-
-        <select
-          [ngModel]="pageSize()"
-          (ngModelChange)="onPageSizeChange($event)"
-          class="rounded-xl border border-slate-200 bg-white/80 px-3.5 py-2.5 text-sm font-semibold text-slate-700 shadow-sm focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-200"
-          aria-label="Tamaño de página"
-        >
-          <option [ngValue]="20">20 por página</option>
-          <option [ngValue]="50">50 por página</option>
-          <option [ngValue]="100">100 por página</option>
-        </select>
-      </div>
-
-      @if (success()) {
-        <div class="mb-4 flex items-center gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800 shadow-sm">
-          {{ success() }}
-        </div>
-      }
-
-      @if (error()) {
-        <div class="mb-4 flex items-center gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700" role="alert">
-          {{ error() }}
-        </div>
-      }
-
-      @if (loading()) {
-        <div class="flex min-h-[300px] items-center justify-center rounded-2xl border border-slate-100 bg-white/70 shadow-sm backdrop-blur-md">
-          <div class="flex flex-col items-center gap-3">
-            <div class="h-8 w-8 animate-spin rounded-full border-4 border-indigo-600 border-t-transparent"></div>
-            <span class="text-sm font-medium text-slate-500">Cargando reportes...</span>
-          </div>
-        </div>
-      } @else if (reports().length === 0) {
-        <div class="flex min-h-[240px] flex-col items-center justify-center rounded-2xl border border-dashed border-slate-200 bg-white/60 px-6 text-center">
-          <p class="text-base font-semibold text-slate-700">No hay reportes</p>
-          <p class="mt-1 text-sm text-slate-500">Prueba cambiando los filtros o espera nuevos envíos desde la app.</p>
-        </div>
-      } @else {
-        <div class="overflow-hidden rounded-2xl border border-slate-100 bg-white/70 shadow-sm backdrop-blur-md">
-          <div class="overflow-x-auto">
-            <table class="w-full text-sm" aria-label="Catálogo de reportes">
-              <thead>
-                <tr class="border-b border-slate-100 bg-slate-50/80">
-                  <th scope="col" class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">Folio</th>
-                  <th scope="col" class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">Asunto</th>
-                  <th scope="col" class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">Objetivo</th>
-                  <th scope="col" class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">Motivo</th>
-                  <th scope="col" class="px-4 py-3 text-center text-xs font-bold uppercase tracking-wider text-slate-500">Prioridad</th>
-                  <th scope="col" class="px-4 py-3 text-center text-xs font-bold uppercase tracking-wider text-slate-500">Estado</th>
-                  <th scope="col" class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">Creado</th>
-                  <th scope="col" class="px-4 py-3 text-center text-xs font-bold uppercase tracking-wider text-slate-500">Acciones</th>
-                </tr>
-              </thead>
-              <tbody>
-                @for (r of reports(); track r.id) {
-                  <tr class="border-b border-slate-50 transition-colors hover:bg-indigo-50/40">
-                    <td class="px-4 py-3 text-xs font-mono text-slate-400">#{{ r.id }}</td>
-                    <td class="px-4 py-3">
-                      <div class="font-semibold text-slate-800 max-w-xs truncate">{{ r.subject }}</div>
-                      <div class="text-xs text-slate-500 mt-0.5">Reportante #{{ r.reporter_user_id }}</div>
-                    </td>
-                    <td class="px-4 py-3">
-                      <div class="text-xs font-semibold text-slate-700">{{ targetLabel(r.target_type) }}</div>
-                      <div class="text-xs font-mono text-slate-400">#{{ r.target_id }}</div>
-                    </td>
-                    <td class="px-4 py-3 text-xs font-medium text-slate-600">
-                      {{ reasonLabel(r.reason_category) }}
-                    </td>
-                    <td class="px-4 py-3 text-center">
-                      <span
-                        class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold ring-1"
-                        [ngClass]="priorityBadgeClass(r.priority)"
-                      >
-                        {{ priorityLabel(r.priority) }}
-                      </span>
-                    </td>
-                    <td class="px-4 py-3 text-center">
-                      <span
-                        class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold ring-1"
-                        [ngClass]="statusBadgeClass(r.status)"
-                      >
-                        {{ statusLabel(r.status) }}
-                      </span>
-                    </td>
-                    <td class="px-4 py-3 text-xs text-slate-500 whitespace-nowrap">
-                      {{ r.created_at | date: 'dd/MM/yyyy HH:mm' }}
-                    </td>
-                    <td class="px-4 py-3 text-center">
-                      <button
-                        type="button"
-                        class="rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-indigo-700 cursor-pointer"
-                        (click)="openDetail(r)"
-                      >
-                        Revisar
-                      </button>
-                    </td>
-                  </tr>
-                }
-              </tbody>
-            </table>
-          </div>
-
-          <div class="flex flex-col gap-3 border-t border-slate-100 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
-            <p class="text-xs font-medium text-slate-500">
-              Mostrando {{ fromRecord() }}–{{ toRecord() }} de {{ total() }}
-            </p>
-            <div class="flex items-center gap-2">
-              <button
-                type="button"
-                class="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 cursor-pointer disabled:opacity-40"
-                [disabled]="page() <= 1 || loading()"
-                (click)="goPrev()"
-              >
-                Anterior
-              </button>
-              <span class="text-xs font-semibold text-slate-600">Pág. {{ page() }} / {{ totalPages() }}</span>
-              <button
-                type="button"
-                class="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 cursor-pointer disabled:opacity-40"
-                [disabled]="page() >= totalPages() || loading()"
-                (click)="goNext()"
-              >
-                Siguiente
-              </button>
-            </div>
-          </div>
-        </div>
-      }
-
-      <!-- Detail slide-over -->
-      @if (selected(); as report) {
-        <div
-          class="fixed inset-0 z-40 bg-slate-900/40 backdrop-blur-sm"
-          (click)="closeDetail()"
-        ></div>
-
-        <aside
-          class="fixed inset-y-0 right-0 z-50 flex w-full max-w-5xl flex-col overflow-hidden rounded-l-2xl border-l border-white/20 bg-white/90 shadow-2xl backdrop-blur-xl transition-all duration-300 animate-slide-in"
-          role="dialog"
-          aria-label="Detalle del reporte"
-        >
-          <div class="flex items-start justify-between gap-4 border-b border-slate-100/80 bg-white/70 px-5 py-4 backdrop-blur-md">
-            <div class="min-w-0">
-              <div class="flex flex-wrap items-center gap-2">
-                <span class="flex h-8 w-8 items-center justify-center rounded-xl bg-rose-50 text-rose-600 ring-1 ring-rose-100">
-                  <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 21v-4a4 4 0 014-4h10a4 4 0 014 4v4M7 13V7a5 5 0 0110 0v6"/>
-                  </svg>
-                </span>
-                <h2 class="text-lg font-extrabold text-slate-900">Reporte #{{ report.id }}</h2>
-                <span
-                  class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-bold ring-1"
-                  [ngClass]="statusBadgeClass(report.status)"
-                >
-                  {{ statusLabel(report.status) }}
-                </span>
-              </div>
-              <p class="mt-1 text-xs font-medium text-slate-500">
-                {{ targetLabel(report.target_type) }} #{{ report.target_id }}
-                · Prioridad {{ priorityLabel(report.priority) }}
-                · Reportante #{{ report.reporter_user_id }}
-              </p>
-            </div>
+          <!-- Clear Filters -->
+          @if (hasActiveFilters()) {
             <button
               type="button"
-              class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-slate-400 transition hover:bg-slate-100 hover:text-slate-600 cursor-pointer"
-              (click)="closeDetail()"
-              aria-label="Cerrar"
+              (click)="resetFilters()"
+              class="inline-flex items-center gap-1.5 rounded-xl border border-rose-200 bg-rose-50 px-3.5 py-1.5 text-xs font-semibold text-rose-700 shadow-sm transition-all hover:bg-rose-100 hover:text-rose-800 focus:outline-none cursor-pointer"
+              title="Restablecer filtros"
             >
-              <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+              <svg class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+              </svg>
+              <span>Limpiar filtros</span>
+            </button>
+          }
+
+          <!-- Reload button -->
+          <button
+            type="button"
+            (click)="reload()"
+            [disabled]="refreshing()"
+            class="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-sm transition-all hover:bg-slate-50 hover:text-slate-900 focus:outline-none disabled:opacity-50 cursor-pointer"
+            title="Sincronizar denuncias"
+          >
+            <svg class="h-3.5 w-3.5" [class.animate-spin]="refreshing()" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            <span>Actualizar</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Search & Status Selectors -->
+      <div class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <!-- Search input -->
+        <div class="relative w-full max-w-sm">
+          <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400">
+            <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
+            </svg>
+          </div>
+          <input
+            type="text"
+            [ngModel]="search()"
+            (ngModelChange)="onSearchInput($event)"
+            placeholder="Buscar por folio, creador o correo..."
+            class="w-full rounded-xl border border-slate-200 bg-slate-50/60 py-2 pl-10 pr-9 text-xs text-slate-900 transition-colors placeholder:text-slate-400 focus:border-rose-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-rose-500/20"
+          />
+          @if (search()) {
+            <button
+              type="button"
+              (click)="clearSearch()"
+              class="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400 hover:text-slate-600 cursor-pointer"
+            >
+              <svg class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
               </svg>
             </button>
+          }
+        </div>
+
+        <!-- Filters group -->
+        <div class="flex flex-wrap items-center gap-2">
+          <!-- Status select -->
+          <select
+            [ngModel]="statusFilter()"
+            (ngModelChange)="onStatusChange($event)"
+            class="rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-sm transition-colors focus:border-rose-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-rose-500/20"
+          >
+            @for (opt of statusOptions; track opt.value) {
+              <option [value]="opt.value">{{ opt.label }}</option>
+            }
+          </select>
+
+          <!-- Priority select -->
+          <select
+            [ngModel]="priorityFilter()"
+            (ngModelChange)="onPriorityChange($event)"
+            class="rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-sm transition-colors focus:border-rose-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-rose-500/20"
+          >
+            @for (opt of priorityOptions; track opt.value) {
+              <option [value]="opt.value">{{ opt.label }}</option>
+            }
+          </select>
+        </div>
+      </div>
+
+      <!-- Active Filters Chips -->
+      @if (hasActiveFilters()) {
+        <div class="mb-4 flex flex-wrap items-center gap-1.5 text-xs">
+          <span class="text-[11px] font-semibold text-slate-400">Filtros activos:</span>
+          @if (search()) {
+            <span class="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-700">
+              Texto: "{{ search() }}"
+              <button type="button" (click)="clearSearch()" class="font-bold text-slate-400 hover:text-slate-700">×</button>
+            </span>
+          }
+          @if (statusFilter() !== 'all') {
+            <span class="inline-flex items-center gap-1 rounded-lg border border-rose-200 bg-rose-50 px-2 py-0.5 text-[11px] font-medium text-rose-700">
+              Estado: {{ getStatusLabel(statusFilter()) }}
+              <button type="button" (click)="onStatusChange('all')" class="font-bold text-rose-500 hover:text-rose-800">×</button>
+            </span>
+          }
+          @if (priorityFilter() !== 'all') {
+            <span class="inline-flex items-center gap-1 rounded-lg border border-indigo-200 bg-indigo-50 px-2 py-0.5 text-[11px] font-medium text-indigo-700">
+              Prioridad: {{ getPriorityLabel(priorityFilter()) }}
+              <button type="button" (click)="onPriorityChange('all')" class="font-bold text-indigo-500 hover:text-indigo-800">×</button>
+            </span>
+          }
+        </div>
+      }
+
+      <!-- Main Content Table / Loading / Empty -->
+      @if (loading()) {
+        <div class="flex flex-col items-center justify-center py-20">
+          <div class="h-10 w-10 animate-spin rounded-full border-4 border-rose-200 border-t-rose-600"></div>
+          <p class="mt-3 text-xs font-medium text-slate-400">Cargando cola de moderación...</p>
+        </div>
+      } @else if (reports().length === 0) {
+        <div class="flex flex-col items-center justify-center rounded-2xl border border-dashed border-slate-200 py-16 text-center">
+          <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100 text-slate-400 mb-3">
+            <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+            </svg>
           </div>
-
-          <div class="flex-1 overflow-y-auto px-5 py-5">
-            <div class="grid gap-5 lg:grid-cols-[1.35fr_1fr]">
-              <!-- Left: report context -->
-              <div class="space-y-4">
-                <section class="overflow-hidden rounded-2xl border border-amber-100 bg-amber-50/70 p-4">
-                  <div class="flex items-start gap-3">
-                    <span class="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-amber-100 text-amber-700">
-                      <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m0 3.5h.008M10.34 3.94l-7.1 12.3A1.5 1.5 0 004.54 18.5h14.92a1.5 1.5 0 001.3-2.26l-7.1-12.3a1.5 1.5 0 00-2.6 0z"/>
-                      </svg>
-                    </span>
-                    <div class="min-w-0">
-                      <p class="text-[10px] font-bold uppercase tracking-wider text-amber-700">Motivo del reporte</p>
-                      <p class="mt-1 text-sm font-semibold text-slate-800">{{ report.subject }}</p>
-                      <p class="mt-0.5 text-xs font-medium text-amber-800/80">{{ reasonLabel(report.reason_category) }}</p>
+          <h3 class="text-sm font-semibold text-slate-900">No se encontraron denuncias</h3>
+          <p class="mt-1 max-w-sm text-xs text-slate-500">
+            @if (hasActiveFilters()) {
+              No hay reportes que coincidan con los filtros aplicados.
+            } @else {
+              No hay denuncias activas en la plataforma. ¡Excelente trabajo de cumplimiento!
+            }
+          </p>
+          @if (hasActiveFilters()) {
+            <button
+              type="button"
+              (click)="resetFilters()"
+              class="mt-4 inline-flex items-center gap-1.5 rounded-xl bg-slate-900 px-3.5 py-1.5 text-xs font-medium text-white hover:bg-slate-800"
+            >
+              Restablecer filtros
+            </button>
+          }
+        </div>
+      } @else {
+        <div class="overflow-x-auto rounded-2xl border border-slate-200">
+          <table class="w-full text-left text-xs">
+            <thead class="border-b border-slate-200 bg-slate-50 text-[11px] font-bold uppercase tracking-wider text-slate-500">
+              <tr>
+                <th scope="col" class="py-3 pl-4 pr-3">Folio</th>
+                <th scope="col" class="px-3 py-3">Atleta / Creador</th>
+                <th scope="col" class="px-3 py-3">Motivo / Título</th>
+                <th scope="col" class="px-3 py-3">Denunciante</th>
+                <th scope="col" class="px-3 py-3">Estado</th>
+                <th scope="col" class="px-3 py-3">Fecha</th>
+                <th scope="col" class="py-3 pl-3 pr-4 text-right">Acciones</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100 bg-white">
+              @for (report of reports(); track report.id) {
+                <tr class="transition-colors hover:bg-slate-50/70">
+                  <!-- Folio & Priority -->
+                  <td class="py-3.5 pl-4 pr-3 font-semibold text-slate-900">
+                    <div class="flex items-center gap-1.5">
+                      <span class="font-mono text-xs font-bold text-slate-900">{{ report.folio }}</span>
                     </div>
-                  </div>
-                </section>
-
-                <section class="rounded-2xl border border-slate-100 bg-white/80 p-4 shadow-sm">
-                  <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Descripción del reportante</p>
-                  <p class="mt-2 text-sm text-slate-700 whitespace-pre-wrap">{{ report.message || '—' }}</p>
-                </section>
-
-                <section class="rounded-2xl border border-slate-100 bg-white/80 p-4 shadow-sm">
-                  <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-3">
-                    {{ isProductTarget(report.target_type) ? 'Producto reportado' : 'Objetivo reportado' }}
-                  </p>
-                  <div class="flex items-center gap-3">
-                    <button
-                      type="button"
-                      class="h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-slate-100 ring-1 ring-slate-200 p-0 cursor-pointer disabled:cursor-default"
-                      [disabled]="!(targetPreview()?.imageUrls?.length)"
-                      (click)="openProductLightbox(0)"
-                      [attr.aria-label]="'Ver imagen del producto'"
-                    >
-                      @if (targetPreview()?.imageUrls?.length) {
-                        <img
-                          [src]="targetPreview()!.imageUrls[0]"
-                          alt=""
-                          class="h-full w-full object-cover"
-                          (error)="$any($event.target).style.opacity='0.3'"
-                        />
-                      } @else {
-                        <div class="flex h-full w-full items-center justify-center text-slate-400">
-                          <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0022.5 18.75V5.25A2.25 2.25 0 0020.25 3H3.75A2.25 2.25 0 001.5 5.25v13.5A2.25 2.25 0 003.75 21z"/>
-                          </svg>
-                        </div>
-                      }
-                    </button>
-                    <div class="min-w-0 flex-1">
-                      <p class="truncate text-sm font-bold text-slate-900">
-                        {{ targetPreview()?.name || (targetLabel(report.target_type) + ' #' + report.target_id) }}
-                      </p>
-                      <p class="mt-0.5 text-xs font-mono text-slate-400">#{{ report.target_id }}</p>
-                      @if (isProductTarget(report.target_type)) {
-                        <button
-                          type="button"
-                          class="mt-1 inline-flex items-center gap-1 text-xs font-semibold text-indigo-600 hover:text-indigo-700 cursor-pointer"
-                          (click)="openTargetListing(report)"
-                        >
-                          Ver publicación
-                          <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25"/>
-                          </svg>
-                        </button>
-                      }
+                    <div class="mt-1">
+                      <span class="inline-flex items-center rounded-md px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide" [ngClass]="getPriorityBadgeClass(report.priority)">
+                        {{ getPriorityLabel(report.priority) }}
+                      </span>
                     </div>
-                  </div>
+                  </td>
 
-                  @if (targetPreview()?.imageUrls?.length) {
-                    <div class="mt-3">
-                      <p class="mb-2 text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                        Imágenes del producto ({{ targetPreview()!.imageUrls.length }})
-                      </p>
-                      <div class="flex flex-wrap gap-2">
-                        @for (img of targetPreview()!.imageUrls; track img; let i = $index) {
-                          <button
-                            type="button"
-                            (click)="openProductLightbox(i)"
-                            class="h-20 w-20 overflow-hidden rounded-xl ring-1 ring-slate-200 hover:ring-indigo-300 transition cursor-pointer p-0"
-                            [attr.aria-label]="'Ver imagen del producto ' + (i + 1)"
-                          >
-                            <img
-                              [src]="img"
-                              alt="Producto {{ i + 1 }}"
-                              class="h-full w-full object-cover"
-                              (error)="$any($event.target).style.opacity='0.3'"
-                            />
-                          </button>
-                        }
-                      </div>
-                      <p class="mt-2 text-[11px] font-medium text-slate-400">
-                        Haz clic en una imagen para ampliarla
-                      </p>
-                    </div>
-                  }
-                </section>
-
-                @if (report.evidence_images?.length) {
-                  <section class="rounded-2xl border border-slate-100 bg-white/80 p-4 shadow-sm">
-                    <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-3">
-                      Evidencia ({{ report.evidence_images!.length }}
-                      {{ report.evidence_images!.length === 1 ? 'imagen' : 'imágenes' }})
-                    </p>
-                    <div class="flex flex-wrap gap-2">
-                      @for (img of report.evidence_images!; track img; let i = $index) {
-                        <button
-                          type="button"
-                          (click)="openEvidenceLightbox(report.evidence_images!, i)"
-                          class="h-20 w-20 overflow-hidden rounded-xl ring-1 ring-slate-200 hover:ring-indigo-300 transition cursor-pointer p-0"
-                          [attr.aria-label]="'Ver evidencia ' + (i + 1)"
-                        >
-                          <img
-                            [src]="evidenceImageSrc(img)"
-                            alt="Evidencia {{ i + 1 }}"
-                            class="h-full w-full object-cover"
-                            (error)="$any($event.target).style.opacity='0.3'"
-                          />
-                        </button>
-                      }
-                    </div>
-                    <p class="mt-2 text-[11px] font-medium text-slate-400">
-                      Haz clic en una imagen para ampliarla
-                    </p>
-                  </section>
-                }
-
-                @if (report.resolution_action || report.resolution_notes) {
-                  <section class="rounded-2xl border border-emerald-100 bg-emerald-50/70 p-4">
-                    <p class="text-[10px] font-bold uppercase tracking-wider text-emerald-700">Resolución previa</p>
-                    @if (report.resolution_action) {
-                      <p class="mt-1 text-sm font-semibold text-emerald-900">
-                        {{ resolutionLabel(report.resolution_action) }}
-                      </p>
-                    }
-                    @if (report.resolution_notes) {
-                      <p class="mt-1 text-sm text-emerald-800 whitespace-pre-wrap">{{ report.resolution_notes }}</p>
-                    }
-                  </section>
-                }
-
-                <p class="text-xs text-slate-400">
-                  Creado: {{ report.created_at | date: 'dd/MM/yyyy HH:mm' }}
-                  @if (report.resolved_at) {
-                    · Resuelto: {{ report.resolved_at | date: 'dd/MM/yyyy HH:mm' }}
-                  }
-                </p>
-              </div>
-
-              <!-- Right: reporter + moderation -->
-              <div class="space-y-4">
-                <section class="rounded-2xl border border-slate-100 bg-white/80 p-4 shadow-sm">
-                  <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-3">Reportante</p>
-                  <div class="flex items-center gap-3">
-                    <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-indigo-50 text-sm font-extrabold text-indigo-700 ring-1 ring-indigo-100">
-                      {{ reporterInitials() }}
-                    </div>
-                    <div class="min-w-0 flex-1">
-                      <p class="truncate text-sm font-bold text-slate-900">
-                        {{ reporterDisplayName() }}
-                      </p>
-                      <p class="text-xs font-medium text-slate-500">
-                        @if (reporter()?.registration_date) {
-                          Miembro desde {{ reporter()!.registration_date | date: 'dd/MM/yyyy' }}
+                  <!-- Athlete info -->
+                  <td class="px-3 py-3.5">
+                    <div class="flex items-center gap-2.5">
+                      <div class="relative flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-slate-900 text-xs font-bold text-white shadow-inner ring-1 ring-slate-200">
+                        @if (report.athlete_avatar) {
+                          <img [src]="report.athlete_avatar" [alt]="report.creator_target" class="h-full w-full object-cover" />
                         } @else {
-                          Usuario #{{ report.reporter_user_id }}
+                          <span>{{ (report.athlete_handle?.[0] || report.creator_target[1] || 'A') | uppercase }}</span>
                         }
-                      </p>
-                    </div>
-                  </div>
-                  <button
-                    type="button"
-                    class="mt-3 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 cursor-pointer"
-                    (click)="openReporterProfile(report.reporter_user_id)"
-                  >
-                    Ver perfil
-                  </button>
-                </section>
-
-                <section class="rounded-2xl border border-slate-100 bg-white/80 p-4 shadow-sm">
-                  <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-3">Historial del usuario</p>
-                  <div class="grid grid-cols-2 gap-2">
-                    <div class="rounded-xl bg-slate-50 px-3 py-2.5">
-                      <p class="text-lg font-extrabold text-slate-800">{{ reporter()?.enforcement?.active_strikes_count || 0 }}</p>
-                      <p class="text-[11px] font-semibold text-slate-500">Strikes activos</p>
-                    </div>
-                    <div class="rounded-xl bg-slate-50 px-3 py-2.5">
-                      <p class="text-sm font-bold text-slate-800">
-                        {{ reporter()?.enforcement?.status || 'ACTIVE' }}
-                      </p>
-                      <p class="text-[11px] font-semibold text-slate-500">Estado</p>
-                    </div>
-                  </div>
-                </section>
-
-                @if (availableTransitions().length > 0) {
-                  <section class="rounded-2xl border border-indigo-100 bg-indigo-50/40 p-4 space-y-4">
-                    <h3 class="text-sm font-extrabold text-slate-900">Moderación</h3>
-
-                    <div>
-                      <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">
-                        Estado
-                      </label>
-                      <select
-                        [(ngModel)]="nextStatus"
-                        (ngModelChange)="onStatusSelect()"
-                        class="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm font-semibold text-slate-700 focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-200"
-                      >
-                        @for (s of availableTransitions(); track s) {
-                          <option [ngValue]="s">{{ statusLabel(s) }}</option>
-                        }
-                      </select>
-                    </div>
-
-                    <div>
-                      <p class="mb-2 text-xs font-bold uppercase tracking-wider text-slate-500">Acción rápida</p>
-                      <div class="grid grid-cols-2 gap-2">
-                        @for (qa of quickActions; track qa.id) {
-                          <button
-                            type="button"
-                            class="group flex items-center gap-2.5 rounded-xl border px-3 py-2.5 text-left transition cursor-pointer"
-                            [ngClass]="selectedQuickAction() === qa.id
-                              ? 'border-indigo-300 bg-indigo-600 text-white shadow-sm'
-                              : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'"
-                            (click)="applyQuickAction(qa)"
+                      </div>
+                      <div class="min-w-0 flex-1">
+                        <p class="truncate font-semibold text-slate-900">{{ report.athlete_name || report.creator_target }}</p>
+                        @if (report.athlete_handle) {
+                          <a
+                            [href]="'https://buymeashake.fit/@' + report.athlete_handle"
+                            target="_blank"
+                            class="inline-flex items-center gap-1 font-mono text-[11px] text-blue-600 hover:underline"
                           >
-                            <span
-                              class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ring-1"
-                              [ngClass]="selectedQuickAction() === qa.id
-                                ? 'bg-white/15 text-white ring-white/25'
-                                : quickActionIconClass(qa.tone)"
-                            >
-                              <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
-                                <path stroke-linecap="round" stroke-linejoin="round" [attr.d]="qa.iconPath"/>
-                              </svg>
-                            </span>
-                            <span class="min-w-0 flex-1 text-xs font-semibold leading-snug">{{ qa.label }}</span>
-                          </button>
+                            <span>&#64;{{ report.athlete_handle }}</span>
+                            <svg class="h-2.5 w-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                            </svg>
+                          </a>
+                        } @else {
+                          <span class="text-[11px] text-slate-400">{{ report.creator_target }}</span>
                         }
                       </div>
                     </div>
+                  </td>
 
-                    @if (requiresResolution()) {
-                      <div>
-                        <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">
-                          Acción de resolución
-                        </label>
-                        <select
-                          [(ngModel)]="resolutionAction"
-                          class="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm font-semibold text-slate-700 focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-200"
-                        >
-                          <option [ngValue]="''">Seleccionar...</option>
-                          @for (opt of resolutionOptions; track opt.value) {
-                            <option [ngValue]="opt.value">{{ opt.label }}</option>
-                          }
-                        </select>
+                  <!-- Reason -->
+                  <td class="max-w-[220px] px-3 py-3.5">
+                    <span class="inline-block rounded bg-slate-100 px-1.5 py-0.5 text-[10px] font-medium text-slate-600">
+                      {{ getReasonLabel(report.reason_code) }}
+                    </span>
+                    <p class="mt-1 truncate font-medium text-slate-800" [title]="report.reason_title">{{ report.reason_title }}</p>
+                    <p class="truncate text-[11px] text-slate-400" [title]="report.description">{{ report.description }}</p>
+                  </td>
+
+                  <!-- Reporter -->
+                  <td class="px-3 py-3.5">
+                    <span class="font-mono text-[11px] text-slate-600">{{ report.reporter_email }}</span>
+                    @if (report.evidence_links && report.evidence_links.length > 0) {
+                      <div class="mt-0.5 flex items-center gap-1 text-[10px] text-indigo-600">
+                        <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101" />
+                        </svg>
+                        <span>{{ report.evidence_links.length }} enlace(s)</span>
                       </div>
+                    }
+                  </td>
 
-                      @if (resolutionAction === 'DUPLICATE') {
-                        <div>
-                          <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">
-                            Folio del reporte principal
-                          </label>
-                          <input
-                            type="number"
-                            [(ngModel)]="duplicateOf"
-                            min="1"
-                            class="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-800 focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-200"
-                            placeholder="ID del reporte original"
-                          />
-                        </div>
+                  <!-- Status -->
+                  <td class="px-3 py-3.5">
+                    <span class="inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-bold" [ngClass]="getStatusBadgeClass(report.status)">
+                      <span class="h-1.5 w-1.5 rounded-full" [ngClass]="getStatusDotClass(report.status)"></span>
+                      {{ getStatusLabel(report.status) }}
+                    </span>
+                    @if (report.verdict) {
+                      <div class="mt-1 text-[10px] font-medium text-slate-500">
+                        Veredicto: <strong class="capitalize">{{ report.verdict.replace('_', ' ') }}</strong>
+                      </div>
+                    }
+                  </td>
+
+                  <!-- Date -->
+                  <td class="whitespace-nowrap px-3 py-3.5 text-slate-500">
+                    <p>{{ report.created_at | date:'dd/MM/yyyy' }}</p>
+                    <p class="text-[10px] text-slate-400">{{ report.created_at | date:'HH:mm' }}</p>
+                  </td>
+
+                  <!-- Actions -->
+                  <td class="whitespace-nowrap py-3.5 pl-3 pr-4 text-right">
+                    <div class="flex items-center justify-end gap-1.5">
+                      @if (report.status === 'pending') {
+                        <button
+                          type="button"
+                          (click)="markUnderReview(report)"
+                          class="inline-flex items-center gap-1 rounded-lg border border-indigo-200 bg-indigo-50 px-2.5 py-1 text-[11px] font-semibold text-indigo-700 hover:bg-indigo-100 cursor-pointer"
+                          title="Iniciar revisión"
+                        >
+                          Revisar
+                        </button>
                       }
-                    }
 
-                    <div>
-                      <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">
-                        Notas del moderador
-                      </label>
-                      <textarea
-                        [(ngModel)]="resolutionNotes"
-                        rows="3"
-                        placeholder="Escribe una nota (opcional)..."
-                        class="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-800 focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-200 resize-none"
-                      ></textarea>
+                      <button
+                        type="button"
+                        (click)="openDetail(report)"
+                        class="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-semibold text-slate-700 hover:bg-slate-50 cursor-pointer"
+                        title="Ver detalle completo"
+                      >
+                        <span>Detalles</span>
+                      </button>
+
+                      @if (report.status !== 'resolved' && report.status !== 'dismissed') {
+                        <button
+                          type="button"
+                          (click)="openVerdictModal(report)"
+                          class="inline-flex items-center gap-1 rounded-lg bg-rose-600 px-2.5 py-1 text-[11px] font-semibold text-white hover:bg-rose-700 shadow-sm cursor-pointer"
+                          title="Emitir dictamen oficial"
+                        >
+                          <span>Dictaminar</span>
+                        </button>
+                      }
                     </div>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
 
-                    @if (actionError()) {
-                      <p class="text-xs font-medium text-red-600">{{ actionError() }}</p>
-                    }
-                  </section>
-                } @else {
-                  <section class="rounded-2xl border border-slate-100 bg-slate-50/80 p-4 text-center">
-                    <p class="text-sm text-slate-500">
-                      Este reporte ya está cerrado; no admite más transiciones.
-                    </p>
-                  </section>
-                }
+      <!-- Drawer / Modal de Detalle Completo -->
+      @if (selectedReport(); as r) {
+        <div class="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-slate-900/60 p-4 backdrop-blur-sm animate-fade-in">
+          <div class="relative w-full max-w-2xl rounded-3xl border border-slate-200 bg-white p-6 shadow-2xl sm:p-8">
+
+            <!-- Modal Header -->
+            <div class="mb-5 flex items-start justify-between border-b border-slate-100 pb-4">
+              <div>
+                <div class="flex items-center gap-2">
+                  <span class="font-mono text-lg font-extrabold text-slate-900">{{ r.folio }}</span>
+                  <span class="inline-flex items-center rounded-md px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide" [ngClass]="getPriorityBadgeClass(r.priority)">
+                    {{ getPriorityLabel(r.priority) }}
+                  </span>
+                  <span class="inline-flex items-center rounded-full border px-2.5 py-0.5 text-[10px] font-bold" [ngClass]="getStatusBadgeClass(r.status)">
+                    {{ getStatusLabel(r.status) }}
+                  </span>
+                </div>
+                <p class="mt-1 text-xs text-slate-400">Registrado el {{ r.created_at | date:'medium' }}</p>
               </div>
-            </div>
-          </div>
 
-          @if (availableTransitions().length > 0) {
-            <div class="flex items-center justify-end gap-2 border-t border-slate-100 bg-white/80 px-5 py-4 backdrop-blur-md">
               <button
                 type="button"
-                class="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-50 cursor-pointer"
-                [disabled]="saving()"
                 (click)="closeDetail()"
+                class="rounded-xl p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600 cursor-pointer"
+              >
+                <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                </svg>
+              </button>
+            </div>
+
+            <!-- Modal Body Details -->
+            <div class="space-y-4 text-xs">
+
+              <!-- Target info card -->
+              <div class="rounded-2xl border border-slate-100 bg-slate-50 p-4">
+                <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Atleta denunciado</span>
+                <div class="mt-2 flex items-center justify-between">
+                  <div class="flex items-center gap-3">
+                    <div class="flex h-10 w-10 items-center justify-center rounded-full bg-slate-900 font-bold text-white">
+                      {{ (r.athlete_handle?.[0] || 'A') | uppercase }}
+                    </div>
+                    <div>
+                      <p class="font-bold text-slate-900">{{ r.athlete_name || r.creator_target }}</p>
+                      <p class="font-mono text-[11px] text-slate-500">{{ r.creator_target }}</p>
+                    </div>
+                  </div>
+                  @if (r.athlete_handle) {
+                    <a
+                      [href]="'https://buymeashake.fit/@' + r.athlete_handle"
+                      target="_blank"
+                      class="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-sm hover:bg-slate-50"
+                    >
+                      <span>Ver Perfil Público</span>
+                      <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                      </svg>
+                    </a>
+                  }
+                </div>
+              </div>
+
+              <!-- Report content -->
+              <div class="space-y-2">
+                <div>
+                  <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Motivo del reporte</span>
+                  <div class="mt-1 flex items-center gap-2">
+                    <span class="rounded bg-rose-50 px-2 py-0.5 text-xs font-semibold text-rose-700 border border-rose-100">
+                      {{ getReasonLabel(r.reason_code) }}
+                    </span>
+                    <span class="font-semibold text-slate-800">{{ r.reason_title }}</span>
+                  </div>
+                </div>
+
+                <div>
+                  <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Descripción detallada</span>
+                  <div class="mt-1 max-h-36 overflow-y-auto rounded-xl border border-slate-100 bg-slate-50/60 p-3 text-slate-700 leading-relaxed">
+                    {{ r.description }}
+                  </div>
+                </div>
+
+                <div>
+                  <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Correo denunciante</span>
+                  <p class="mt-1 font-mono text-xs text-slate-600">{{ r.reporter_email }}</p>
+                </div>
+
+                <!-- Evidence Links -->
+                @if (r.evidence_links && r.evidence_links.length > 0) {
+                  <div>
+                    <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Enlaces de evidencia</span>
+                    <ul class="mt-1 space-y-1">
+                      @for (link of r.evidence_links; track link) {
+                        <li>
+                          <a [href]="link" target="_blank" class="inline-flex items-center gap-1.5 font-mono text-xs text-blue-600 hover:underline">
+                            <svg class="h-3.5 w-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                            </svg>
+                            <span class="truncate">{{ link }}</span>
+                          </a>
+                        </li>
+                      }
+                    </ul>
+                  </div>
+                }
+
+                <!-- Evidence File -->
+                @if (r.attached_file) {
+                  <div>
+                    <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Archivo de evidencia</span>
+                    <p class="mt-1 inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs text-slate-700">
+                      <svg class="h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+                      </svg>
+                      <span>{{ r.attached_file }}</span>
+                    </p>
+                  </div>
+                }
+              </div>
+
+              <!-- Verdict resolution status if resolved -->
+              @if (r.verdict) {
+                <div class="rounded-2xl border border-emerald-200 bg-emerald-50/50 p-4">
+                  <div class="flex items-center gap-2 text-emerald-800 font-bold text-xs">
+                    <svg class="h-4 w-4 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span>Veredicto Dictaminado: {{ r.verdict_title || r.verdict }}</span>
+                  </div>
+                  @if (r.admin_notes) {
+                    <p class="mt-2 text-xs text-slate-600"><strong class="text-slate-800">Notas de resolución:</strong> {{ r.admin_notes }}</p>
+                  }
+                  @if (r.action_details) {
+                    <p class="mt-1 text-xs text-slate-600"><strong class="text-slate-800">Acción ejecutada:</strong> {{ r.action_details }}</p>
+                  }
+                  <p class="mt-2 text-[10px] text-slate-400">
+                    Resuelto por {{ r.assigned_moderator_name || 'Admin' }} el {{ r.resolved_at | date:'medium' }}
+                  </p>
+                </div>
+              }
+            </div>
+
+            <!-- Modal Footer Buttons -->
+            <div class="mt-6 flex flex-wrap items-center justify-end gap-2.5 border-t border-slate-100 pt-4">
+              <button
+                type="button"
+                (click)="closeDetail()"
+                class="rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 cursor-pointer"
+              >
+                Cerrar
+              </button>
+
+              @if (r.status === 'pending') {
+                <button
+                  type="button"
+                  (click)="markUnderReview(r); closeDetail()"
+                  class="rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-2 text-xs font-semibold text-indigo-700 hover:bg-indigo-100 cursor-pointer"
+                >
+                  Pasar a En Revisión
+                </button>
+              }
+
+              @if (r.status !== 'resolved' && r.status !== 'dismissed') {
+                <button
+                  type="button"
+                  (click)="openVerdictModal(r)"
+                  class="rounded-xl bg-rose-600 px-4 py-2 text-xs font-semibold text-white shadow-sm hover:bg-rose-700 cursor-pointer"
+                >
+                  Emitir Dictamen Oficial
+                </button>
+              }
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- Modal de Dictamen / Veredicto Formal -->
+      @if (isVerdictModalOpen() && targetVerdictReport(); as target) {
+        <div class="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-slate-900/60 p-4 backdrop-blur-sm animate-fade-in">
+          <div class="relative w-full max-w-xl rounded-3xl border border-slate-200 bg-white p-6 shadow-2xl sm:p-8">
+
+            <div class="mb-5 flex items-start justify-between border-b border-slate-100 pb-3">
+              <div>
+                <h3 class="text-lg font-bold text-slate-900">Emitir Dictamen Oficial</h3>
+                <p class="text-xs text-slate-500">Folio: <strong class="font-mono text-slate-700">{{ target.folio }}</strong> · Contra: <strong>{{ target.creator_target }}</strong></p>
+              </div>
+              <button
+                type="button"
+                (click)="closeVerdictModal()"
+                class="rounded-xl p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600 cursor-pointer"
+              >
+                <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                </svg>
+              </button>
+            </div>
+
+            <!-- Form -->
+            <div class="space-y-4 text-xs">
+
+              <!-- Verdict Option Cards -->
+              <div>
+                <label class="mb-1.5 block font-bold text-slate-700">Selecciona el tipo de resolución:</label>
+                <div class="grid grid-cols-1 gap-2 sm:grid-cols-3">
+                  @for (opt of verdictOptions; track opt.value) {
+                    <div
+                      (click)="verdictType.set(opt.value)"
+                      class="cursor-pointer rounded-2xl border p-3 transition-all"
+                      [class.border-rose-500]="verdictType() === opt.value && opt.tone === 'rose'"
+                      [class.bg-rose-50]="verdictType() === opt.value && opt.tone === 'rose'"
+                      [class.border-amber-500]="verdictType() === opt.value && opt.tone === 'amber'"
+                      [class.bg-amber-50]="verdictType() === opt.value && opt.tone === 'amber'"
+                      [class.border-slate-800]="verdictType() === opt.value && opt.tone === 'slate'"
+                      [class.bg-slate-100]="verdictType() === opt.value && opt.tone === 'slate'"
+                      [class.border-slate-200]="verdictType() !== opt.value"
+                      [class.bg-white]="verdictType() !== opt.value"
+                    >
+                      <div class="flex items-center justify-between mb-1">
+                        <span class="font-bold" [class.text-rose-700]="opt.tone === 'rose'" [class.text-amber-700]="opt.tone === 'amber'" [class.text-slate-800]="opt.tone === 'slate'">
+                          {{ opt.label }}
+                        </span>
+                        <input type="radio" [checked]="verdictType() === opt.value" class="h-3 w-3" />
+                      </div>
+                      <p class="text-[10px] text-slate-500 leading-tight">{{ opt.description }}</p>
+                    </div>
+                  }
+                </div>
+              </div>
+
+              <!-- Title -->
+              <div>
+                <label class="mb-1 block font-semibold text-slate-700">Título del dictamen:</label>
+                <input
+                  type="text"
+                  [ngModel]="verdictTitle()"
+                  (ngModelChange)="verdictTitle.set($event)"
+                  placeholder="Ej. Infracción confirmada de normas deportivas"
+                  class="w-full rounded-xl border border-slate-200 bg-slate-50/70 p-2.5 text-xs text-slate-900 focus:border-rose-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-rose-500/20"
+                />
+              </div>
+
+              <!-- Admin Notes -->
+              <div>
+                <label class="mb-1 block font-semibold text-slate-700">Fundamentación / Notas de la resolución:</label>
+                <textarea
+                  rows="3"
+                  [ngModel]="verdictNotes()"
+                  (ngModelChange)="verdictNotes.set($event)"
+                  placeholder="Explica las razones del dictamen técnico para conocimiento del denunciante y registro interno..."
+                  class="w-full rounded-xl border border-slate-200 bg-slate-50/70 p-2.5 text-xs text-slate-900 focus:border-rose-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-rose-500/20"
+                ></textarea>
+              </div>
+
+              <!-- Action Details -->
+              <div>
+                <label class="mb-1 block font-semibold text-slate-700">Detalles de la medida aplicada (opcional):</label>
+                <input
+                  type="text"
+                  [ngModel]="verdictActionDetails()"
+                  (ngModelChange)="verdictActionDetails.set($event)"
+                  placeholder="Ej. Cuenta suspendida por 14 días y post eliminado"
+                  class="w-full rounded-xl border border-slate-200 bg-slate-50/70 p-2.5 text-xs text-slate-900 focus:border-rose-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-rose-500/20"
+                />
+              </div>
+
+              <!-- Notice info -->
+              <div class="rounded-xl border border-blue-100 bg-blue-50/70 p-3 text-[11px] text-blue-800 flex items-start gap-2">
+                <svg class="h-4 w-4 text-blue-600 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span>
+                  Al emitir este veredicto, el reporte pasará automáticamente a estado <strong>Resuelto</strong> y se despachará un correo electrónico de confirmación formal al denunciante (<strong>{{ target.reporter_email }}</strong>).
+                </span>
+              </div>
+
+              @if (verdictError()) {
+                <div class="rounded-xl border border-red-200 bg-red-50 p-2.5 text-[11px] text-red-600">
+                  {{ verdictError() }}
+                </div>
+              }
+            </div>
+
+            <!-- Modal Action Buttons -->
+            <div class="mt-6 flex items-center justify-end gap-2.5 border-t border-slate-100 pt-4">
+              <button
+                type="button"
+                (click)="closeVerdictModal()"
+                [disabled]="verdictSubmitting()"
+                class="rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50 cursor-pointer"
               >
                 Cancelar
               </button>
               <button
                 type="button"
-                class="rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700 cursor-pointer disabled:opacity-50"
-                [disabled]="saving() || !canSubmitTransition()"
-                (click)="submitTransition()"
+                (click)="submitVerdict()"
+                [disabled]="verdictSubmitting() || !verdictTitle() || !verdictNotes()"
+                class="inline-flex items-center gap-1.5 rounded-xl bg-rose-600 px-4 py-2 text-xs font-semibold text-white shadow-sm hover:bg-rose-700 disabled:opacity-50 cursor-pointer"
               >
-                @if (saving()) {
-                  Guardando...
+                @if (verdictSubmitting()) {
+                  <svg class="h-3.5 w-3.5 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10" stroke-opacity="0.25"></circle>
+                    <path fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                  </svg>
+                  <span>Procesando...</span>
                 } @else {
-                  Guardar cambios
+                  <span>Confirmar y Notificar Dictamen</span>
                 }
               </button>
             </div>
-          }
-        </aside>
-      }
-
-
-      @if (evidenceLightbox(); as lb) {
-        <div
-          class="fixed inset-0 z-[80] flex items-center justify-center bg-slate-950/85 p-4"
-          role="dialog"
-          aria-modal="true"
-          aria-label="Vista de imagen"
-          (click)="closeEvidenceLightbox()"
-        >
-          <button
-            type="button"
-            class="absolute top-4 right-4 rounded-full bg-white/10 p-2 text-white hover:bg-white/20 cursor-pointer"
-            (click)="closeEvidenceLightbox()"
-            aria-label="Cerrar"
-          >
-            <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
-              <path fill="currentColor" d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
-            </svg>
-          </button>
-
-          @if (lb.urls.length > 1) {
-            <button
-              type="button"
-              class="absolute left-3 sm:left-6 rounded-full bg-white/10 p-3 text-white hover:bg-white/20 cursor-pointer disabled:opacity-30"
-              (click)="$event.stopPropagation(); prevEvidence()"
-              [disabled]="lb.index <= 0"
-              aria-label="Anterior"
-            >
-              <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
-                <path fill="currentColor" d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/>
-              </svg>
-            </button>
-            <button
-              type="button"
-              class="absolute right-3 sm:right-6 rounded-full bg-white/10 p-3 text-white hover:bg-white/20 cursor-pointer disabled:opacity-30"
-              (click)="$event.stopPropagation(); nextEvidence()"
-              [disabled]="lb.index >= lb.urls.length - 1"
-              aria-label="Siguiente"
-            >
-              <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
-                <path fill="currentColor" d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/>
-              </svg>
-            </button>
-          }
-
-          <div class="flex max-h-[90vh] max-w-[95vw] flex-col items-center gap-3" (click)="$event.stopPropagation()">
-            <img
-              [src]="evidenceImageSrc(lb.urls[lb.index])"
-              alt="Evidencia {{ lb.index + 1 }}"
-              class="max-h-[80vh] max-w-full rounded-lg object-contain shadow-2xl"
-            />
-            <p class="text-sm font-medium text-white/80">
-              {{ lb.index + 1 }} / {{ lb.urls.length }}
-            </p>
           </div>
         </div>
       }
+
     </div>
   `,
 })
 export class ReportsPanelComponent implements OnInit {
   private api = inject(TrustReportsApiService);
-  private usersApi = inject(UsersApiService);
-  private http = inject(HttpClient);
-  private router = inject(Router);
 
-  readonly statusOptions = REPORT_STATUS_OPTIONS;
-  readonly priorityOptions = REPORT_PRIORITY_OPTIONS;
-  readonly resolutionOptions = RESOLUTION_ACTION_OPTIONS;
-  readonly quickActions: QuickAction[] = [
-    {
-      id: 'warning',
-      label: 'Advertencia',
-      status: 'RESOLVED',
-      action: 'WARNING',
-      tone: 'amber',
-      iconPath: 'M12 9v3.75m0 3.5h.008M10.34 3.94l-7.1 12.3A1.5 1.5 0 004.54 18.5h14.92a1.5 1.5 0 001.3-2.26l-7.1-12.3a1.5 1.5 0 00-2.6 0z',
-    },
-    {
-      id: 'remove',
-      label: 'Eliminar publicación',
-      status: 'RESOLVED',
-      action: 'LISTING_REMOVED',
-      tone: 'rose',
-      iconPath: 'M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673A2.25 2.25 0 0115.916 21H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0',
-    },
-    {
-      id: 'suspend',
-      label: 'Suspender',
-      status: 'RESOLVED',
-      action: 'TEMP_SUSPENSION',
-      tone: 'orange',
-      iconPath: 'M15.75 5.25v13.5m-7.5-13.5v13.5',
-    },
-    {
-      id: 'ban',
-      label: 'Ban',
-      status: 'RESOLVED',
-      action: 'PERMANENT_BAN',
-      tone: 'rose',
-      iconPath: 'M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636',
-    },
-    {
-      id: 'dismiss',
-      label: 'Ignorar reporte',
-      status: 'DISMISSED',
-      action: 'NO_VIOLATION',
-      tone: 'emerald',
-      iconPath: 'M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z',
-    },
-  ];
-
+  // Lists & Counters
   reports = signal<TrustReport[]>([]);
-  total = signal(0);
-  page = signal(1);
-  pageSize = signal(50);
-  loading = signal(false);
-  saving = signal(false);
-  error = signal<string | null>(null);
-  success = signal<string | null>(null);
-  actionError = signal<string | null>(null);
-  evidenceLightbox = signal<{ urls: string[]; index: number } | null>(null);
-  reporter = signal<AdminUser | null>(null);
-  targetPreview = signal<TargetPreview | null>(null);
-  selectedQuickAction = signal<string | null>(null);
+  loading = signal<boolean>(true);
+  refreshing = signal<boolean>(false);
+  total = signal<number>(0);
+  pendingCount = signal<number>(0);
 
-  statusFilter: ReportStatus | '' = '';
-  priorityFilter: ReportPriority | '' = '';
+  // Filters
+  search = signal<string>('');
+  statusFilter = signal<string>('all');
+  priorityFilter = signal<string>('all');
 
-  selected = signal<TrustReport | null>(null);
-  nextStatus: ReportStatus = 'UNDER_REVIEW';
-  resolutionAction = '';
-  resolutionNotes = '';
-  duplicateOf: number | null = null;
+  // Filter Options
+  statusOptions = REPORT_STATUS_OPTIONS;
+  priorityOptions = REPORT_PRIORITY_OPTIONS;
+  verdictOptions = VERDICT_OPTIONS;
 
-  pendingCount = computed(() => this.reports().filter((r) => r.status === 'PENDING').length);
+  // Modals state
+  selectedReport = signal<TrustReport | null>(null);
+  targetVerdictReport = signal<TrustReport | null>(null);
+  isVerdictModalOpen = signal<boolean>(false);
+  verdictSubmitting = signal<boolean>(false);
+  verdictError = signal<string | null>(null);
 
-  totalPages = computed(() => Math.max(1, Math.ceil(this.total() / this.pageSize()) || 1));
+  // Verdict form fields
+  verdictType = signal<'action_taken' | 'warning' | 'dismissed'>('action_taken');
+  verdictTitle = signal<string>('');
+  verdictNotes = signal<string>('');
+  verdictActionDetails = signal<string>('');
 
-  fromRecord = computed(() => {
-    if (this.total() === 0) return 0;
-    return (this.page() - 1) * this.pageSize() + 1;
-  });
-
-  toRecord = computed(() => Math.min(this.page() * this.pageSize(), this.total()));
-
-  availableTransitions = computed(() => {
-    const report = this.selected();
-    if (!report) return [] as ReportStatus[];
-    return ALLOWED_STATUS_TRANSITIONS[report.status] ?? [];
+  hasActiveFilters = computed(() => {
+    return Boolean(this.search() || this.statusFilter() !== 'all' || this.priorityFilter() !== 'all');
   });
 
   ngOnInit(): void {
@@ -760,427 +690,210 @@ export class ReportsPanelComponent implements OnInit {
 
   loadReports(): void {
     this.loading.set(true);
-    this.error.set(null);
-    const offset = (this.page() - 1) * this.pageSize();
-
     this.api
       .getList({
-        status_filter: this.statusFilter || undefined,
-        priority_filter: this.priorityFilter || undefined,
-        limit: this.pageSize(),
-        offset,
+        status_filter: this.statusFilter(),
+        priority_filter: this.priorityFilter(),
+        search: this.search(),
+        limit: 50,
       })
       .subscribe({
         next: (res) => {
-          const list = Array.isArray(res.result) ? res.result : [];
-          this.reports.set(list);
-          this.total.set(res.total ?? list.length);
+          this.reports.set(res.result || []);
+          this.total.set(res.total ?? (res.result ? res.result.length : 0));
+          if (res.pending_count !== undefined) {
+            this.pendingCount.set(res.pending_count);
+          }
           this.loading.set(false);
+          this.refreshing.set(false);
         },
-        error: (err) => {
-          this.error.set(extractApiErrorMessage(err, 'No se pudieron cargar los reportes.'));
-          this.reports.set([]);
-          this.total.set(0);
+        error: () => {
           this.loading.set(false);
+          this.refreshing.set(false);
         },
       });
   }
 
-  onFilterChange(): void {
-    this.page.set(1);
+  reload(): void {
+    this.refreshing.set(true);
     this.loadReports();
   }
 
-  onPageSizeChange(size: number): void {
-    this.pageSize.set(Number(size) || 50);
-    this.page.set(1);
+  onSearchInput(value: string): void {
+    this.search.set(value);
     this.loadReports();
   }
 
-  goPrev(): void {
-    if (this.page() <= 1) return;
-    this.page.update((p) => p - 1);
+  clearSearch(): void {
+    this.search.set('');
     this.loadReports();
   }
 
-  goNext(): void {
-    if (this.page() >= this.totalPages()) return;
-    this.page.update((p) => p + 1);
+  onStatusChange(status: string): void {
+    this.statusFilter.set(status);
+    this.loadReports();
+  }
+
+  onPriorityChange(priority: string): void {
+    this.priorityFilter.set(priority);
+    this.loadReports();
+  }
+
+  resetFilters(): void {
+    this.search.set('');
+    this.statusFilter.set('all');
+    this.priorityFilter.set('all');
     this.loadReports();
   }
 
   openDetail(report: TrustReport): void {
-    this.selected.set(report);
-    this.actionError.set(null);
-    this.success.set(null);
-    this.selectedQuickAction.set(null);
-    this.reporter.set(null);
-    this.targetPreview.set(null);
-    const next = ALLOWED_STATUS_TRANSITIONS[report.status]?.[0];
-    this.nextStatus = next ?? report.status;
-    this.resolutionAction = '';
-    this.resolutionNotes = '';
-    this.duplicateOf = null;
-    this.loadReporter(report.reporter_user_id);
-    this.loadTargetPreview(report);
+    this.selectedReport.set(report);
   }
 
   closeDetail(): void {
-    if (this.saving()) return;
-    this.closeEvidenceLightbox();
-    this.selected.set(null);
-    this.actionError.set(null);
-    this.reporter.set(null);
-    this.targetPreview.set(null);
-    this.selectedQuickAction.set(null);
+    this.selectedReport.set(null);
   }
 
-  private loadReporter(userId: number): void {
-    this.usersApi.getById(userId).subscribe({
-      next: (res) => this.reporter.set(res.result ?? null),
-      error: () => this.reporter.set(null),
-    });
-  }
-
-  private loadTargetPreview(report: TrustReport): void {
-    if (report.target_type === 'USER') {
-      this.usersApi.getById(report.target_id).subscribe({
-        next: (res) => {
-          const u = res.result;
-          if (!u) return;
-          this.targetPreview.set({
-            id: u.id,
-            name: `${u.first_name || ''} ${u.last_name || ''}`.trim() || u.username || `Usuario #${u.id}`,
-            imageUrls: [],
-          });
-        },
-        error: () => {
-          this.targetPreview.set({
-            id: report.target_id,
-            name: `Usuario #${report.target_id}`,
-            imageUrls: [],
-          });
-        },
-      });
-      return;
-    }
-
-    if (!this.isProductTarget(report.target_type)) {
-      this.targetPreview.set({
-        id: report.target_id,
-        name: `${this.targetLabel(report.target_type)} #${report.target_id}`,
-        imageUrls: [],
-      });
-      return;
-    }
-
-    const kind = report.target_type === 'SELLER_PRODUCT' ? 'seller' : 'buyer';
-    this.http.get<any>(`${API_CONFIG.baseUrl}/products/${kind}/${report.target_id}`).subscribe({
-      next: (res) => {
-        const product = Array.isArray(res?.result) ? res.result[0] : res?.result;
-        if (!product) {
-          this.targetPreview.set({
-            id: report.target_id,
-            name: `Producto #${report.target_id}`,
-            imageUrls: [],
-          });
-          return;
+  markUnderReview(report: TrustReport): void {
+    this.api.updateStatus(report.folio || report.id, { status: 'under_review' }).subscribe({
+      next: (updated) => {
+        this.reports.update((list) => list.map((r) => (r.id === report.id ? { ...r, status: 'under_review' } : r)));
+        if (this.selectedReport()?.id === report.id) {
+          this.selectedReport.set({ ...this.selectedReport()!, status: 'under_review' });
         }
-        this.targetPreview.set({
-          id: product.id ?? report.target_id,
-          name: product.name || `Producto #${report.target_id}`,
-          imageUrls: this.extractProductImages(product),
-        });
-      },
-      error: () => {
-        this.targetPreview.set({
-          id: report.target_id,
-          name: `Producto #${report.target_id}`,
-          imageUrls: [],
-        });
+        this.reload();
       },
     });
   }
 
-  private extractProductImages(product: any): string[] {
-    const urls: string[] = [];
-    const pushRaw = (raw: unknown) => {
-      if (raw == null) return;
-      const src = this.evidenceImageSrc(String(raw));
-      if (src && !urls.includes(src)) urls.push(src);
+  openVerdictModal(report: TrustReport): void {
+    this.targetVerdictReport.set(report);
+    this.verdictType.set('action_taken');
+    this.verdictTitle.set(`Resolución oficial para folio ${report.folio}`);
+    this.verdictNotes.set('');
+    this.verdictActionDetails.set('');
+    this.verdictError.set(null);
+    this.isVerdictModalOpen.set(true);
+  }
+
+  closeVerdictModal(): void {
+    this.isVerdictModalOpen.set(false);
+    this.targetVerdictReport.set(null);
+    this.verdictSubmitting.set(false);
+  }
+
+  submitVerdict(): void {
+    const report = this.targetVerdictReport();
+    if (!report) return;
+
+    this.verdictSubmitting.set(true);
+    this.verdictError.set(null);
+
+    const payload: AdminReportVerdictPayload = {
+      reporter_email: report.reporter_email,
+      creator_target: report.creator_target,
+      verdict: this.verdictType(),
+      verdict_title: this.verdictTitle(),
+      admin_notes: this.verdictNotes(),
+      action_details: this.verdictActionDetails() || undefined,
     };
 
-    const list = product?.images_list || product?.relational_images;
-    if (Array.isArray(list)) {
-      for (const item of list) {
-        if (typeof item === 'string') {
-          pushRaw(item);
-          continue;
-        }
-        pushRaw(item?.url || item?.file_name || item?.fileName);
-      }
-    }
-
-    if (urls.length === 0) {
-      const images = product?.images;
-      if (typeof images === 'string' && images.trim()) {
-        try {
-          const parsed = JSON.parse(images);
-          if (Array.isArray(parsed)) {
-            for (const item of parsed) {
-              if (typeof item === 'string') pushRaw(item);
-              else pushRaw(item?.url || item?.file_name || item?.fileName);
-            }
-          } else {
-            pushRaw(images);
-          }
-        } catch {
-          // Comma/space separated paths or single path
-          const parts = images.split(/[\s,]+/).filter(Boolean);
-          for (const part of parts) pushRaw(part);
-        }
-      } else if (Array.isArray(images)) {
-        for (const item of images) {
-          if (typeof item === 'string') pushRaw(item);
-          else pushRaw(item?.url || item?.file_name || item?.fileName);
-        }
-      }
-    }
-
-    return urls;
-  }
-
-  openProductLightbox(index: number): void {
-    const urls = this.targetPreview()?.imageUrls;
-    if (!urls?.length) return;
-    this.openEvidenceLightbox(urls, index);
-  }
-
-  isProductTarget(type: TargetEntityType): boolean {
-    return type === 'BUYER_PRODUCT' || type === 'SELLER_PRODUCT';
-  }
-
-  reporterDisplayName(): string {
-    const u = this.reporter();
-    const report = this.selected();
-    if (!u) return report ? `Usuario #${report.reporter_user_id}` : 'Usuario';
-    const full = `${u.first_name || ''} ${u.last_name || ''}`.trim();
-    return full || u.username || `Usuario #${u.id}`;
-  }
-
-  reporterInitials(): string {
-    const u = this.reporter();
-    if (!u) return '?';
-    const a = (u.first_name?.[0] || u.username?.[0] || u.email?.[0] || '?').toUpperCase();
-    const b = (u.last_name?.[0] || '').toUpperCase();
-    return `${a}${b}`.trim() || '?';
-  }
-
-  openReporterProfile(userId: number): void {
-    void this.router.navigate(['/users'], { queryParams: { id: userId } });
-  }
-
-  openTargetListing(report: TrustReport): void {
-    const path = report.target_type === 'SELLER_PRODUCT' ? '/listings/sell' : '/listings/buy';
-    void this.router.navigate([path], { queryParams: { id: report.target_id } });
-  }
-
-  applyQuickAction(qa: QuickAction): void {
-    const allowed = this.availableTransitions();
-    if (allowed.includes(qa.status)) {
-      this.nextStatus = qa.status;
-    }
-    this.selectedQuickAction.set(qa.id);
-    this.resolutionAction = qa.action;
-    if (!this.resolutionNotes.trim()) {
-      this.resolutionNotes = qa.label;
-    }
-  }
-
-  quickActionIconClass(tone: QuickAction['tone']): string {
-    switch (tone) {
-      case 'amber':
-        return 'bg-amber-50 text-amber-600 ring-amber-100';
-      case 'rose':
-        return 'bg-rose-50 text-rose-600 ring-rose-100';
-      case 'orange':
-        return 'bg-orange-50 text-orange-600 ring-orange-100';
-      case 'emerald':
-        return 'bg-emerald-50 text-emerald-600 ring-emerald-100';
-      default:
-        return 'bg-slate-50 text-slate-600 ring-slate-200';
-    }
-  }
-
-  onStatusSelect(): void {
-    if (!this.requiresResolution()) {
-      this.selectedQuickAction.set(null);
-      this.resolutionAction = '';
-    }
-  }
-
-  openEvidenceLightbox(urls: string[], index: number): void {
-    this.evidenceLightbox.set({ urls: [...urls], index });
-  }
-
-  closeEvidenceLightbox(): void {
-    this.evidenceLightbox.set(null);
-  }
-
-  @HostListener('document:keydown', ['$event'])
-  onDocumentKeydown(event: KeyboardEvent): void {
-    if (this.evidenceLightbox()) {
-      if (event.key === 'Escape') {
-        event.preventDefault();
-        this.closeEvidenceLightbox();
-        return;
-      }
-      if (event.key === 'ArrowLeft') {
-        event.preventDefault();
-        this.prevEvidence();
-        return;
-      }
-      if (event.key === 'ArrowRight') {
-        event.preventDefault();
-        this.nextEvidence();
-      }
-      return;
-    }
-    if (this.selected() && event.key === 'Escape' && !this.saving()) {
-      event.preventDefault();
-      this.closeDetail();
-    }
-  }
-
-  prevEvidence(): void {
-    this.evidenceLightbox.update((lb) => {
-      if (!lb || lb.index <= 0) return lb;
-      return { ...lb, index: lb.index - 1 };
+    this.api.submitVerdict(report.folio || report.id, payload).subscribe({
+      next: () => {
+        this.verdictSubmitting.set(false);
+        this.closeVerdictModal();
+        this.closeDetail();
+        this.reload();
+      },
+      error: (err) => {
+        this.verdictSubmitting.set(false);
+        this.verdictError.set(err?.error?.detail || 'Error al procesar el dictamen.');
+      },
     });
   }
 
-  nextEvidence(): void {
-    this.evidenceLightbox.update((lb) => {
-      if (!lb || lb.index >= lb.urls.length - 1) return lb;
-      return { ...lb, index: lb.index + 1 };
-    });
+  // Label and Styling Helpers
+  getReasonLabel(code: string): string {
+    return REASON_CODE_LABELS[code?.toLowerCase()] || code || 'Infracción';
   }
 
-  requiresResolution(): boolean {
-    return this.nextStatus === 'RESOLVED' || this.nextStatus === 'DISMISSED';
-  }
-
-  canSubmitTransition(): boolean {
-    if (!this.nextStatus) return false;
-    if (!this.requiresResolution()) return true;
-    if (!this.resolutionAction.trim()) return false;
-    if (this.resolutionAction === 'DUPLICATE' && (!this.duplicateOf || this.duplicateOf < 1)) {
-      return false;
-    }
-    return true;
-  }
-
-  submitTransition(): void {
-    const report = this.selected();
-    if (!report || !this.canSubmitTransition()) return;
-
-    const notes = this.resolutionNotes.trim()
-      || (this.requiresResolution()
-        ? (this.resolutionOptions.find((o) => o.value === this.resolutionAction)?.label
-          || this.resolutionAction)
-        : '');
-
-    this.saving.set(true);
-    this.actionError.set(null);
-
-    this.api
-      .updateStatus(report.id, {
-        status: this.nextStatus,
-        resolution_action: this.requiresResolution() ? this.resolutionAction.trim() : undefined,
-        resolution_notes: this.requiresResolution() ? notes : undefined,
-        duplicate_of:
-          this.requiresResolution() && this.resolutionAction === 'DUPLICATE' && this.duplicateOf
-            ? this.duplicateOf
-            : undefined,
-      })
-      .subscribe({
-        next: (res) => {
-          const updated = res.result?.[0];
-          this.saving.set(false);
-          this.success.set(res.message || `Reporte #${report.id} actualizado.`);
-          this.selected.set(null);
-          this.reporter.set(null);
-          this.targetPreview.set(null);
-          if (updated) {
-            this.reports.update((list) =>
-              list.map((r) => (r.id === updated.id ? updated : r)),
-            );
-          }
-          this.loadReports();
-        },
-        error: (err) => {
-          this.saving.set(false);
-          this.actionError.set(extractApiErrorMessage(err, 'No se pudo actualizar el reporte.'));
-        },
-      });
-  }
-
-  statusLabel(status: ReportStatus): string {
-    return this.statusOptions.find((o) => o.value === status)?.label ?? status;
-  }
-
-  priorityLabel(priority: ReportPriority): string {
-    return this.priorityOptions.find((o) => o.value === priority)?.label ?? priority;
-  }
-
-  targetLabel(type: TargetEntityType): string {
-    return TARGET_TYPE_LABELS[type] ?? type;
-  }
-
-  reasonLabel(code: string): string {
-    return REASON_CATEGORY_LABELS[code] ?? code;
-  }
-
-  resolutionLabel(code: string): string {
-    return this.resolutionOptions.find((o) => o.value === code)?.label ?? code;
-  }
-
-  evidenceImageSrc(url: string | null | undefined): string {
-    if (!url) return '';
-    const trimmed = url.trim();
-    if (trimmed.startsWith('http') || trimmed.startsWith('data:')) return trimmed;
-    const origin = API_CONFIG.baseUrl.replace(/\/api\/v1\/?$/, '');
-    const path = trimmed.startsWith('/') ? trimmed : `/${trimmed}`;
-    return `${origin}${path}`;
-  }
-
-  statusBadgeClass(status: ReportStatus): string {
-    switch (status) {
-      case 'PENDING':
-        return 'bg-amber-50 text-amber-700 ring-amber-200';
-      case 'UNDER_REVIEW':
-        return 'bg-sky-50 text-sky-700 ring-sky-200';
-      case 'RESOLVED':
-        return 'bg-emerald-50 text-emerald-700 ring-emerald-200';
-      case 'DISMISSED':
-        return 'bg-slate-100 text-slate-600 ring-slate-200';
+  getStatusLabel(status: string): string {
+    const s = (status || '').toLowerCase();
+    switch (s) {
+      case 'pending':
+        return 'Pendiente';
+      case 'under_review':
+        return 'En revisión';
+      case 'resolved':
+        return 'Resuelto';
+      case 'dismissed':
+        return 'Descartado';
       default:
-        return 'bg-slate-50 text-slate-600 ring-slate-200';
+        return status;
     }
   }
 
-  priorityBadgeClass(priority: ReportPriority): string {
-    switch (priority) {
-      case 'CRITICAL':
-        return 'bg-rose-50 text-rose-700 ring-rose-200';
-      case 'HIGH':
-        return 'bg-orange-50 text-orange-700 ring-orange-200';
-      case 'MEDIUM':
-        return 'bg-amber-50 text-amber-700 ring-amber-200';
-      case 'LOW':
-        return 'bg-slate-50 text-slate-600 ring-slate-200';
+  getStatusBadgeClass(status: string): string {
+    const s = (status || '').toLowerCase();
+    switch (s) {
+      case 'pending':
+        return 'bg-amber-50 border-amber-200 text-amber-700';
+      case 'under_review':
+        return 'bg-indigo-50 border-indigo-200 text-indigo-700';
+      case 'resolved':
+        return 'bg-emerald-50 border-emerald-200 text-emerald-700';
+      case 'dismissed':
+        return 'bg-slate-100 border-slate-200 text-slate-600';
       default:
-        return 'bg-slate-50 text-slate-600 ring-slate-200';
+        return 'bg-slate-50 border-slate-200 text-slate-700';
+    }
+  }
+
+  getStatusDotClass(status: string): string {
+    const s = (status || '').toLowerCase();
+    switch (s) {
+      case 'pending':
+        return 'bg-amber-500 animate-pulse';
+      case 'under_review':
+        return 'bg-indigo-500';
+      case 'resolved':
+        return 'bg-emerald-500';
+      case 'dismissed':
+        return 'bg-slate-400';
+      default:
+        return 'bg-slate-400';
+    }
+  }
+
+  getPriorityLabel(priority: string): string {
+    const p = (priority || '').toLowerCase();
+    switch (p) {
+      case 'critical':
+        return 'Crítica';
+      case 'high':
+        return 'Alta';
+      case 'medium':
+        return 'Media';
+      case 'low':
+        return 'Baja';
+      default:
+        return priority || 'Media';
+    }
+  }
+
+  getPriorityBadgeClass(priority: string): string {
+    const p = (priority || '').toLowerCase();
+    switch (p) {
+      case 'critical':
+        return 'bg-rose-100 text-rose-800 border border-rose-200';
+      case 'high':
+        return 'bg-orange-100 text-orange-800 border border-orange-200';
+      case 'medium':
+        return 'bg-sky-100 text-sky-800 border border-sky-200';
+      case 'low':
+        return 'bg-slate-100 text-slate-700 border border-slate-200';
+      default:
+        return 'bg-slate-100 text-slate-700 border border-slate-200';
     }
   }
 }

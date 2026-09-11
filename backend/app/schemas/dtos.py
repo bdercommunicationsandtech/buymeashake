@@ -69,7 +69,7 @@ class UserRegisterRequest(BaseModel):
     full_name: str = Field(min_length=2, max_length=150)
     role: str = Field(default="supporter", pattern="^(supporter|athlete)$")
     handle: str | None = Field(default=None, pattern="^[a-z0-9_]{3,30}$")
-    discipline_codes: list[int] = Field(default_factory=list)
+    discipline_ids: list[int] = Field(default_factory=list)
     referral_code: str | None = Field(default=None, max_length=50)
 
     @field_validator("full_name", mode="before")
@@ -137,6 +137,64 @@ class AdminPlatformStatsResponse(BaseModel):
     gmv: AdminGmvStats
     recent_supporters: list[AdminRecentUserItem] = []
     recent_athletes: list[AdminRecentUserItem] = []
+
+
+class AdminGoalSummary(BaseModel):
+    id: int
+    title: str
+    cover_image_url: str | None = None
+    target_amount: Decimal
+    raised_amount: Decimal
+    currency: str = "USD"
+    is_active: bool = True
+    progress_pct: float = 0.0
+    achieved_at: datetime | None = None
+    created_at: datetime | None = None
+
+
+class AdminUserFinancialSummary(BaseModel):
+    total_raised: Decimal = Decimal("0.00")
+    currency: str = "USD"
+    successful_tx_count: int = 0
+    total_shakes_count: int = 0
+    total_contributed: Decimal = Decimal("0.00")
+
+
+class AdminUserCatalogItem(BaseModel):
+    id: int
+    email: str
+    full_name: str
+    avatar_url: str | None = None
+    is_email_verified: bool = False
+    is_active: bool = True
+    is_suspended: bool = False
+    is_banned: bool = False
+    created_at: datetime | None = None
+    roles: list[str] = []
+    athlete_id: int | None = None
+    athlete_handle: str | None = None
+    is_verified_athlete: bool = False
+    active_goals: list[AdminGoalSummary] = []
+    active_goals_count: int = 0
+    total_goals_count: int = 0
+    financials: AdminUserFinancialSummary
+
+
+class AdminUserCatalogResponse(BaseModel):
+    items: list[AdminUserCatalogItem]
+    total: int
+    page: int
+    limit: int
+    total_pages: int
+
+
+class AdminUserDetailResponse(BaseModel):
+    user: AdminUserCatalogItem
+    all_goals: list[AdminGoalSummary] = []
+    bio: str | None = None
+    city: str | None = None
+    sanctions_summary: dict[str, Any] | None = None
+    sanctions: list[dict[str, Any]] = []
 
 
 class RequestOtpRequest(BaseModel):
@@ -236,7 +294,7 @@ class UserMeResponse(BaseModel):
 class UpgradeToAthleteRequest(BaseModel):
     handle: str = Field(min_length=3, max_length=30, pattern="^[a-z0-9_]{3,30}$")
     full_name: str | None = Field(default=None, min_length=2, max_length=150)
-    discipline_codes: list[int] = Field(default_factory=list)
+    discipline_ids: list[int] = Field(default_factory=list)
     bio: str | None = Field(default=None, max_length=600)
     city: str | None = Field(default=None, max_length=255)
     shake_price: Decimal | None = Field(default=None, ge=1)
@@ -268,6 +326,39 @@ class LookupGroupResponse(BaseModel):
     name: str
     description: str | None
     items: list[LookupItemResponse]
+
+
+class DisciplineResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    name: str
+    description: str | None = None
+    image_url: str | None = None
+    icon_url: str | None = None
+    sort_order: int = 0
+    show_in_home: bool = False
+    is_active: bool = True
+
+
+class DisciplineCreateRequest(BaseModel):
+    name: str = Field(min_length=1, max_length=100)
+    description: str | None = Field(default=None, max_length=150)
+    image_url: str | None = Field(default=None, max_length=512)
+    icon_url: str | None = Field(default=None, max_length=512)
+    sort_order: int = 0
+    show_in_home: bool = False
+    is_active: bool = True
+
+
+class DisciplineUpdateRequest(BaseModel):
+    name: str | None = Field(default=None, min_length=1, max_length=100)
+    description: str | None = Field(default=None, max_length=150)
+    image_url: str | None = Field(default=None, max_length=512)
+    icon_url: str | None = Field(default=None, max_length=512)
+    sort_order: int | None = None
+    show_in_home: bool | None = None
+    is_active: bool | None = None
 
 
 class AppVersionCheckResponse(BaseModel):
@@ -353,6 +444,12 @@ class CreatorPublicProfileResponse(BaseModel):
     total_shakes_received: int = 0
     followers_count: int = 0
     members_count: int = 0
+    charges_enabled: bool = False
+
+
+class ExpressPortalResponse(BaseModel):
+    action: str  # "portal" | "onboarding"
+    redirect_url: str
 
 
 # ==============================================================================
@@ -616,7 +713,7 @@ class AthleteProfileUpdateRequest(BaseModel):
     agenda_image_url: str | None = Field(default=None, max_length=255)
     city: str | None = Field(default=None, max_length=255)
     city_id: int | None = None
-    discipline_codes: list[int] | None = None
+    discipline_ids: list[int] | None = None
     shake_price: Decimal | None = Field(default=None, gt=0)
     currency: str | None = Field(default=None, pattern="^USD$")
     avatar_url: str | None = Field(default=None, max_length=255)
@@ -666,7 +763,7 @@ class AthleteProfileFullResponse(BaseModel):
     agenda_image_url: str | None = None
     city: str | None
     city_id: int | None = None
-    discipline_codes: list[int] = Field(default_factory=list)
+    discipline_ids: list[int] = Field(default_factory=list)
     shake_price: Decimal
     currency: str
     avatar_url: str | None
@@ -872,6 +969,7 @@ class AthleteBalanceResponse(BaseModel):
     destination_country: str = "MX"
     payouts_enabled: bool = False
     details_submitted: bool = False
+    charges_enabled: bool = False
 
 
 class WithdrawalRequestCreate(BaseModel):
@@ -955,7 +1053,7 @@ class AdminReportVerdictResponse(BaseModel):
 class SupportTicketRequest(BaseModel):
     name: str = Field(min_length=2, max_length=150)
     email: EmailStr
-    user_role: str = Field(default="athlete", pattern="^(athlete|supporter|visitor)$")
+    user_role: str = Field(default="athlete", pattern="^(athlete|supporter|brand|visitor)$")
     category: str = Field(default="general", max_length=50)
     category_title: str = Field(min_length=2, max_length=150)
     subject: str = Field(min_length=3, max_length=200)
@@ -968,6 +1066,106 @@ class SupportTicketResponse(BaseModel):
     folio: str
     message: str
     status: str = "received"
+
+
+# ==============================================================================
+# 11. LISTA NEGRA Y SANCIONES DISCIPLINARIAS
+# ==============================================================================
+
+class EmailBlacklistCreateDto(BaseModel):
+    email: EmailStr
+    reason: str | None = Field(default=None, max_length=255)
+    user_id: int | None = None
+
+
+class EmailBlacklistUpdateDto(BaseModel):
+    reason: str | None = Field(default=None, max_length=255)
+
+
+class AdminIssueStrikeDto(BaseModel):
+    reason: str = Field(min_length=3, max_length=500)
+    points: int = Field(default=1, ge=1, le=5)
+    category: str = Field(default="conduct", max_length=50)
+    expires_in_days: int | None = Field(default=None, ge=1, le=365)
+
+
+class AdminBanUserDto(BaseModel):
+    reason: str = Field(min_length=3, max_length=500)
+
+
+class AdminAppealBanDto(BaseModel):
+    resolution_reason: str = Field(min_length=3, max_length=500)
+    reset_strikes: bool = Field(default=True)
+
+
+class AdminAppealStrikeDto(BaseModel):
+    resolution_reason: str = Field(min_length=3, max_length=500)
+
+
+
+class AdminSuspendUserDto(BaseModel):
+    duration_days: int = Field(default=7, ge=1, le=365)
+    reason: str = Field(min_length=3, max_length=500)
+    category: str = Field(default="conduct", max_length=50)
+
+
+class AdminIssueWarningDto(BaseModel):
+    reason: str = Field(min_length=3, max_length=500)
+    category: str = Field(default="conduct", max_length=50)
+
+
+class ActiveSuspensionItem(BaseModel):
+    id: int
+    user_id: int
+    email: str
+    full_name: str | None = None
+    handle: str | None = None
+    avatar_url: str | None = None
+    reason: str
+    category: str
+    duration_days: int | None = None
+    days_remaining: int
+    starts_at: datetime
+    expires_at: datetime | None = None
+    created_by: int | None = None
+    created_by_name: str | None = None
+
+
+class ActiveSuspensionsResponse(BaseModel):
+    items: list[ActiveSuspensionItem]
+    total: int
+    page: int
+    limit: int
+    total_pages: int
+
+
+class GlobalSanctionItem(BaseModel):
+    id: int
+    user_id: int
+    email: str
+    full_name: str | None = None
+    handle: str | None = None
+    avatar_url: str | None = None
+    action_type: str
+    points: int
+    reason: str
+    category: str
+    duration_days: int | None = None
+    days_remaining: int | None = None
+    is_active: bool
+    created_at: datetime
+    expires_at: datetime | None = None
+    created_by: int | None = None
+    created_by_name: str | None = None
+
+
+class GlobalSanctionsResponse(BaseModel):
+    items: list[GlobalSanctionItem]
+    total: int
+    page: int
+    limit: int
+    total_pages: int
+
 
 
 

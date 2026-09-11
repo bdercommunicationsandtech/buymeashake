@@ -10,6 +10,7 @@ import {
   IconShakerComponent,
 } from '../../../shared/icons';
 import { AllowedUserTextDirective } from '../../../core/directives/allowed-user-text.directive';
+import { MediaUrlPipe } from '../../../shared/pipes/media-url.pipe';
 
 export type GoalCategory = 'equipment' | 'travel' | 'nutrition' | 'camp';
 
@@ -32,6 +33,7 @@ export type GoalNotificationKey =
     IconShakerComponent,
     IconDumbbellComponent,
     AllowedUserTextDirective,
+    MediaUrlPipe,
   ],
   templateUrl: './goals.html',
 })
@@ -66,7 +68,7 @@ export class DashboardGoals implements OnInit {
   readonly goalCoverUrl = signal<string | null>(null);
   readonly hasReward = signal(true);
   readonly rewardText = signal(
-    'Mención en el muro de honor y sesión de Q&A en directo exclusiva para todos los que donen 3 o más Shakers a esta meta.'
+    'Mención en el muro de honor y sesión de Q&A en directo exclusiva para todos los que donen 3 o más Shakes a esta meta.'
   );
 
   // Datos del Atleta para la Vista Previa en Vivo
@@ -80,8 +82,8 @@ export class DashboardGoals implements OnInit {
   // Metas guardadas inactivas (historial / borradores listos para reutilizar)
   readonly inactiveGoals = computed(() => this.goals().filter((g) => !g.is_active));
 
-  // Cálculos reactivos de Shakers
-  readonly shakersEquivalent = computed(() => {
+  // Cálculos reactivos de Shakes
+  readonly shakesEquivalent = computed(() => {
     const target = this.goalTarget();
     const price = this.unitShakePrice();
     return Math.max(1, Math.ceil(target / price));
@@ -96,7 +98,7 @@ export class DashboardGoals implements OnInit {
     return 0;
   });
 
-  readonly currentShakersRaised = computed(() => {
+  readonly currentShakesRaised = computed(() => {
     const raised = this.currentRaised();
     const price = this.unitShakePrice();
     return Math.floor(raised / price);

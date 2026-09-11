@@ -9,9 +9,20 @@ import { PostCommentDto, PostItemDto } from '../../../core/api.models';
 import { LanguageService } from '../../../core/language.service';
 import { AuthService } from '../../../core/auth.service';
 import { SupporterService } from '../../../core/supporter.service';
-import { isSafeMediaUrl, resolveMediaUrl, resolveMediaUrlsInContent } from '../../../core/media-url';
+import { resolveMediaUrl, resolveMediaUrlsInHtml } from '../../../core/utils/media-url.util';
 import { IconLockComponent } from '../../../shared/icons';
 import { AllowedUserTextDirective } from '../../../core/directives/allowed-user-text.directive';
+
+function isSafeMediaUrl(url: string): boolean {
+  try {
+    const resolved = resolveMediaUrl(url) ?? url;
+    if (resolved.startsWith('data:') || resolved.startsWith('blob:')) return false;
+    const parsed = new URL(resolved);
+    return parsed.protocol === 'http:' || parsed.protocol === 'https:';
+  } catch {
+    return false;
+  }
+}
 
 function extractFirstImageUrl(content: string): string | null {
   const htmlMatch = content.match(/<img[^>]+src=["']([^"']+)["']/i);
@@ -46,8 +57,6 @@ function toRenderableHtml(content: string, stripLeadingImage = false): string {
   let htmlBody = (stripLeadingImage ? stripFirstImage(content) : content).trim();
   if (!htmlBody) return '';
 
-  htmlBody = resolveMediaUrlsInContent(htmlBody);
-
   htmlBody = htmlBody.replace(/!\[([^\]]*)]\(([^)\s]+)\)/g, (_m, alt: string, src: string) => {
     if (!isSafeMediaUrl(src)) return '';
     const safeAlt = escapeHtmlAttr(String(alt || 'Imagen'));
@@ -62,7 +71,7 @@ function toRenderableHtml(content: string, stripLeadingImage = false): string {
       .join('');
   }
 
-  return htmlBody;
+  return resolveMediaUrlsInHtml(htmlBody);
 }
 
 @Component({

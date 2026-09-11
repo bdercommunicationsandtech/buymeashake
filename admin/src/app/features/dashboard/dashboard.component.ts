@@ -3,6 +3,7 @@ import { CommonModule, DatePipe, DecimalPipe } from '@angular/common';
 import { StatsService } from '../../core/services/stats.service';
 import { PlatformStats } from '../../core/models/stats.model';
 import { AuthService } from '../../core/services/auth.service';
+import { UserCatalogComponent } from '../users/user-catalog.component';
 
 function asNumber(value: number | string | null | undefined): number {
   if (value == null) return 0;
@@ -16,7 +17,7 @@ const DONUT_C = 2 * Math.PI * 15.9;
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, DecimalPipe, DatePipe],
+  imports: [CommonModule, DecimalPipe, DatePipe, UserCatalogComponent],
   providers: [DatePipe],
   template: `
     <div class="mx-auto max-w-7xl px-4 py-8">
@@ -319,6 +320,11 @@ const DONUT_C = 2 * Math.PI * 15.9;
               </div>
             }
           </div>
+        </div>
+
+        <!-- Catálogo de Usuarios -->
+        <div class="mt-10">
+          <app-user-catalog />
         </div>
       }
     </div>

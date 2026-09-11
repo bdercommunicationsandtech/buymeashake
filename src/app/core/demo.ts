@@ -18,7 +18,7 @@ export interface Activity {
 export const ACTIVITIES: readonly Activity[] = [
   {
     id: 'shaker',
-    name: 'Shaker clásico',
+    name: 'Shake clásico',
     short: 'Shaker',
     tagline: 'Batido de proteína recién agitado',
     kcal: 24,
@@ -189,7 +189,7 @@ export const HOW_IT_WORKS: readonly Step[] = [
 
 export const TICKER_ITEMS: readonly string[] = [
   'Sin mensualidad',
-  'Shaker interactivo',
+  'Shake interactivo',
   'Pagos con Stripe',
   'Widget incrustable',
   'Metas de recaudación',

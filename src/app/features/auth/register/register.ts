@@ -7,11 +7,21 @@ import { LookupService } from '../../../core/lookup.service';
 import { LookupItemDto } from '../../../core/api.models';
 import { AllowedUserTextDirective } from '../../../core/directives/allowed-user-text.directive';
 import { LanguageService } from '../../../core/language.service';
+import { BrandLogoComponent } from '../../../shared/brand-logo/brand-logo.component';
+import { ChromeControlsComponent } from '../../../shared/chrome-controls/chrome-controls.component';
+
+type RegisterError =
+  | { type: 'fillAllFields' }
+  | { type: 'passwordMinLength' }
+  | { type: 'blacklisted' }
+  | { type: 'suspended' }
+  | { type: 'general' }
+  | { type: 'custom'; message: string };
 
 @Component({
   selector: 'app-register',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, AllowedUserTextDirective],
+  imports: [CommonModule, FormsModule, RouterLink, AllowedUserTextDirective, BrandLogoComponent, ChromeControlsComponent],
   templateUrl: './register.html',
 })
 export class Register implements OnInit {
@@ -35,7 +45,7 @@ export class Register implements OnInit {
   readonly name = signal('');
   readonly email = signal('');
   readonly password = signal('');
-  readonly disciplineCodes = signal<number[]>([]);
+  readonly disciplineIds = signal<number[]>([]);
   readonly dropdownOpen = signal<boolean>(false);
   readonly searchSport = signal('');
   readonly filteredSports = computed(() => {
@@ -48,7 +58,26 @@ export class Register implements OnInit {
   });
 
   readonly loading = signal(false);
-  readonly errorMessage = signal<string | null>(null);
+  readonly errorState = signal<RegisterError | null>(null);
+  readonly errorMessage = computed<string | null>(() => {
+    const err = this.errorState();
+    if (!err) return null;
+    const auth = this.t().auth;
+    switch (err.type) {
+      case 'fillAllFields':
+        return auth.fillAllFieldsError;
+      case 'passwordMinLength':
+        return auth.passwordMinLengthError;
+      case 'blacklisted':
+        return auth.blacklistedEmailError;
+      case 'suspended':
+        return auth.accountSuspendedIndefiniteError;
+      case 'general':
+        return auth.registerGeneralError;
+      case 'custom':
+        return err.message;
+    }
+  });
 
   readonly sports = signal<LookupItemDto[]>([]);
 
@@ -57,7 +86,7 @@ export class Register implements OnInit {
       next: (items) => {
         this.sports.set(items);
         if (items.length > 0) {
-          this.disciplineCodes.set([items[0].code]);
+          this.disciplineIds.set([items[0].id]);
         }
       },
       error: () => {},
@@ -69,33 +98,33 @@ export class Register implements OnInit {
   }
 
 
-  toggleSport(code: number): void {
-    const current = this.disciplineCodes();
-    if (current.includes(code)) {
-      this.disciplineCodes.set(current.filter((c) => c !== code));
+  toggleSport(id: number): void {
+    const current = this.disciplineIds();
+    if (current.includes(id)) {
+      this.disciplineIds.set(current.filter((c) => c !== id));
     } else {
-      this.disciplineCodes.set([...current, code]);
+      this.disciplineIds.set([...current, id]);
     }
   }
 
-  getDisciplineLabel(code: number): string {
-    const sport = this.sports().find((s) => s.code === code);
+  getDisciplineLabel(id: number): string {
+    const sport = this.sports().find((s) => s.id === id);
     return sport ? this.i18n.translateDiscipline(sport.label) : '';
   }
 
   submit(): void {
     if (!this.email() || !this.password() || !this.name() || !this.handle()) {
-      this.errorMessage.set(this.t().auth.fillAllFieldsError);
+      this.errorState.set({ type: 'fillAllFields' });
       return;
     }
 
     if (this.password().length < 8) {
-      this.errorMessage.set(this.t().auth.passwordMinLengthError);
+      this.errorState.set({ type: 'passwordMinLength' });
       return;
     }
 
     this.loading.set(true);
-    this.errorMessage.set(null);
+    this.errorState.set(null);
 
     this.auth
       .register({
@@ -104,7 +133,7 @@ export class Register implements OnInit {
         full_name: this.name(),
         role: 'athlete',
         handle: this.handle(),
-        discipline_codes: this.disciplineCodes(),
+        discipline_ids: this.disciplineIds(),
       })
       .subscribe({
         next: () => {
@@ -113,10 +142,29 @@ export class Register implements OnInit {
         },
         error: (err) => {
           this.loading.set(false);
-          const msg =
-            err.error?.error?.message ||
-            this.t().auth.registerGeneralError;
-          this.errorMessage.set(msg);
+          const errorObj = err?.error?.error || err?.error;
+          const code = errorObj?.code;
+          const details = errorObj?.details || {};
+          const msg = String(errorObj?.message || '');
+
+          if (err?.status === 403 || code === 'FORBIDDEN') {
+            if (
+              details?.reason_code === 'ACCOUNT_SUSPENDED' ||
+              msg.toLowerCase().includes('suspendida') ||
+              msg.toLowerCase().includes('suspended')
+            ) {
+              this.errorState.set({ type: 'suspended' });
+              return;
+            }
+            this.errorState.set({ type: 'blacklisted' });
+            return;
+          }
+
+          if (msg) {
+            this.errorState.set({ type: 'custom', message: msg });
+          } else {
+            this.errorState.set({ type: 'general' });
+          }
         },
       });
   }

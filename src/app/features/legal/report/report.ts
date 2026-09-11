@@ -6,6 +6,7 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { LanguageService } from '../../../core/language.service';
 import { environment } from '../../../../environments/environment';
+import { resolveMediaUrl } from '../../../core/utils/media-url.util';
 
 export interface ReportReason {
   code: string;
@@ -205,7 +206,7 @@ export class Report implements OnInit {
         this.verifiedAthlete.set({
           handle: profile.handle,
           name: profile.full_name || profile.handle,
-          avatarUrl: profile.avatar_url,
+          avatarUrl: resolveMediaUrl(profile.avatar_url) ?? undefined,
           sport: profile.primary_sport,
         });
         return true;

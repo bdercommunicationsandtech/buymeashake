@@ -129,7 +129,7 @@
             (click)="scrollToSupport('once')"
             class="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-[#c9ff3d] px-4 py-3.5 text-sm font-black text-[#070a08] shadow-lg shadow-[#c9ff3d]/20 transition hover:bg-[#bbf033] active:scale-[0.98]"
           >
-            <app-icon-shaker size="16" />
+            <app-icon-shaker size="16" customClass="text-[#070a08]" />
             {{ t().athlete.buyMeShake }}
           </button>
           <button
@@ -269,7 +269,10 @@
             class="grid h-11 w-11 shrink-0 place-items-center rounded-2xl"
             [class]="supportMode() === 'once' ? 'bg-[#c9ff3d] text-[#070a08]' : 'bg-gray-100 dark:bg-white/10 text-gray-600 dark:text-gray-300'"
           >
-            <app-icon-shaker size="20" />
+            <app-icon-shaker
+              size="20"
+              [customClass]="supportMode() === 'once' ? 'text-[#070a08]' : 'dark:invert dark:opacity-70'"
+            />
           </span>
           <span>
             <span class="block font-display text-base font-black text-gray-950 dark:text-white">{{ t().athlete.oneTimeShake }}</span>
@@ -822,7 +825,7 @@
     <section class="grid gap-4 rounded-3xl border border-gray-200/80 dark:border-white/10 bg-white dark:bg-[#121614] p-5 sm:grid-cols-2 sm:p-8 lg:grid-cols-4">
       <div class="flex items-start gap-3">
         <span class="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-[#c9ff3d]/15 text-[#c9ff3d]">
-          <app-icon-shaker size="18" />
+          <app-icon-shaker size="18" customClass="text-[#c9ff3d]" />
         </span>
         <div>
           <p class="text-sm font-black text-gray-950 dark:text-white">{{ t().athlete.valueCard1Title }}</p>

@@ -10,11 +10,12 @@ import { AllowedUserTextDirective } from '../../core/directives/allowed-user-tex
 import { extractApiErrorMessage } from '../../core/utils/api-error.util';
 import { filterAllowedUserText } from '../../core/utils/allowed-user-text.util';
 import { firstInvalidSocialUrlMessage } from '../../core/utils/social-url.util';
+import { MediaUrlPipe } from '../pipes/media-url.pipe';
 
 @Component({
   selector: 'app-athlete-profile-modal',
   standalone: true,
-  imports: [CommonModule, AllowedUserTextDirective, LocationPickerComponent],
+  imports: [CommonModule, AllowedUserTextDirective, LocationPickerComponent, MediaUrlPipe],
   template: `
     @if (open()) {
       <div
@@ -48,7 +49,7 @@ import { firstInvalidSocialUrlMessage } from '../../core/utils/social-url.util';
             <div class="flex items-center gap-4">
               <div class="relative group shrink-0">
                 @if (avatarUrl()) {
-                  <img [src]="avatarUrl()" alt="Avatar" class="h-20 w-20 rounded-full object-cover border-2 border-gray-200 dark:border-white/10" />
+                  <img [src]="avatarUrl() | mediaUrl" alt="Avatar" class="h-20 w-20 rounded-full object-cover border-2 border-gray-200 dark:border-white/10" />
                 } @else {
                   <div class="h-20 w-20 rounded-full bg-gray-900 text-[#c9ff3d] grid place-items-center text-2xl font-black">
                     {{ (fullName() || 'A').slice(0, 2).toUpperCase() }}
@@ -68,7 +69,7 @@ import { firstInvalidSocialUrlMessage } from '../../core/utils/social-url.util';
             <div class="flex items-center gap-4">
               <div class="relative group shrink-0 h-20 w-28 rounded-2xl overflow-hidden border border-gray-200 dark:border-white/10 bg-gray-100 dark:bg-white/5">
                 @if (coverImageUrl()) {
-                  <img [src]="coverImageUrl()" alt="Portada" class="h-full w-full object-cover" />
+                  <img [src]="coverImageUrl() | mediaUrl" alt="Portada" class="h-full w-full object-cover" />
                 } @else {
                   <div class="h-full w-full grid place-items-center text-gray-400">
                     <svg class="w-6 h-6 opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -130,14 +131,14 @@ import { firstInvalidSocialUrlMessage } from '../../core/utils/social-url.util';
                   (click)="dropdownOpen.set(!dropdownOpen()); searchSport.set('')"
                   class="relative w-full rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#191c1d] px-4 py-3 text-left text-sm font-semibold text-gray-900 dark:text-white focus:border-[#c9ff3d] focus:outline-none cursor-pointer"
                 >
-                  @if (disciplineCodes().length === 0) {
+                  @if (disciplineIds().length === 0) {
                     <span class="text-gray-400">Selecciona disciplinas...</span>
                   } @else {
                     <div class="flex flex-wrap gap-1.5">
-                      @for (code of disciplineCodes(); track code) {
+                      @for (id of disciplineIds(); track id) {
                         <span class="inline-flex items-center gap-1 bg-gray-100 dark:bg-white/10 text-gray-800 dark:text-gray-200 px-2 py-0.5 rounded-md text-xs font-bold">
-                          {{ getDisciplineLabel(code) }}
-                          <span class="text-gray-400 hover:text-gray-900 dark:hover:text-white ml-1" (click)="$event.stopPropagation(); toggleSport(code)">&times;</span>
+                          {{ getDisciplineLabel(id) }}
+                          <span class="text-gray-400 hover:text-gray-900 dark:hover:text-white ml-1" (click)="$event.stopPropagation(); toggleSport(id)">&times;</span>
                         </span>
                       }
                     </div>
@@ -158,13 +159,13 @@ import { firstInvalidSocialUrlMessage } from '../../core/utils/social-url.util';
                   />
                 </div>
                 <ul class="py-1 overflow-y-auto text-sm font-semibold text-gray-900 dark:text-white flex-1">
-                  @for (sport of filteredSports(); track sport.code) {
+                  @for (sport of filteredSports(); track sport.id) {
                         <li
-                          (click)="toggleSport(sport.code)"
+                          (click)="toggleSport(sport.id)"
                           class="px-4 py-2.5 hover:bg-gray-100 dark:hover:bg-white/5 cursor-pointer flex justify-between items-center transition-colors"
                         >
                           <span>{{ languageService.translateDiscipline(sport.label) }}</span>
-                          @if (disciplineCodes().includes(sport.code)) {
+                          @if (disciplineIds().includes(sport.id)) {
                             <span class="text-black dark:text-[#c9ff3d] text-lg leading-none">✓</span>
                           }
                         </li>
@@ -229,7 +230,7 @@ export class AthleteProfileModalComponent {
   readonly bio = signal('');
   readonly city = signal('');
   readonly cityId = signal<number | null>(null);
-  readonly disciplineCodes = signal<number[]>([]);
+  readonly disciplineIds = signal<number[]>([]);
   readonly dropdownOpen = signal(false);
   readonly searchSport = signal('');
   readonly filteredSports = computed(() => {
@@ -266,7 +267,7 @@ export class AthleteProfileModalComponent {
           this.bio.set(p.bio || '');
           this.city.set(p.city || '');
           this.cityId.set(p.city_id ?? null);
-          this.disciplineCodes.set(p.discipline_codes || []);
+          this.disciplineIds.set(p.discipline_ids || []);
           this.avatarUrl.set(p.avatar_url);
           this.coverImageUrl.set(p.cover_image_url);
           this.instagramUrl.set(p.instagram_url || '');
@@ -320,17 +321,17 @@ export class AthleteProfileModalComponent {
   }
 
 
-  toggleSport(code: number): void {
-    const current = this.disciplineCodes();
-    if (current.includes(code)) {
-      this.disciplineCodes.set(current.filter((c: number) => c !== code));
+  toggleSport(id: number): void {
+    const current = this.disciplineIds();
+    if (current.includes(id)) {
+      this.disciplineIds.set(current.filter((c: number) => c !== id));
     } else {
-      this.disciplineCodes.set([...current, code]);
+      this.disciplineIds.set([...current, id]);
     }
   }
 
-  getDisciplineLabel(code: number): string {
-    const sport = this.sports().find((s) => s.code === code);
+  getDisciplineLabel(id: number): string {
+    const sport = this.sports().find((s) => s.id === id);
     return sport ? this.languageService.translateDiscipline(sport.label) : '';
   }
 
@@ -353,7 +354,7 @@ export class AthleteProfileModalComponent {
         full_name: this.fullName(),
         bio: this.bio(),
         city_id: this.cityId(),
-        discipline_codes: this.disciplineCodes(),
+        discipline_ids: this.disciplineIds(),
         avatar_url: this.avatarUrl() || undefined,
         cover_image_url: this.coverImageUrl() || undefined,
         instagram_url: this.instagramUrl().trim() || null,

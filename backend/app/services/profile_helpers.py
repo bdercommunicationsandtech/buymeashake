@@ -16,8 +16,7 @@ from app.models.entities import (
     AthleteReferrals,
     AthleteSocialLink,
     City,
-    LookupGroup,
-    LookupItem,
+    Discipline,
 )
 
 SOCIAL_PLATFORMS = ("instagram", "tiktok", "facebook", "twitter")
@@ -26,7 +25,7 @@ SOCIAL_PLATFORMS = ("instagram", "tiktok", "facebook", "twitter")
 def athlete_load_options():
     return (
         selectinload(AthleteProfile.user),
-        selectinload(AthleteProfile.disciplines_association).selectinload(AthleteDiscipline.discipline_item),
+        selectinload(AthleteProfile.disciplines_association).selectinload(AthleteDiscipline.discipline),
         selectinload(AthleteProfile.page_settings),
         selectinload(AthleteProfile.social_links),
         selectinload(AthleteProfile.monetization),
@@ -116,26 +115,22 @@ def resolve_city_display(profile: AthleteProfile) -> str | None:
     return profile.city
 
 
-def discipline_codes(profile: AthleteProfile) -> list[int]:
+def discipline_ids(profile: AthleteProfile) -> list[int]:
     if not profile.disciplines_association:
         return []
-    return [assoc.discipline_item.code for assoc in profile.disciplines_association if assoc.discipline_item]
+    return [assoc.discipline.id for assoc in profile.disciplines_association if assoc.discipline]
 
 
 def discipline_labels(profile: AthleteProfile) -> list[str]:
     if not profile.disciplines_association:
         return []
-    return [assoc.discipline_item.label for assoc in profile.disciplines_association if assoc.discipline_item]
+    return [assoc.discipline.name for assoc in profile.disciplines_association if assoc.discipline]
 
 
-async def resolve_sport_item_ids(session: AsyncSession, sport_codes: list[int] | None) -> list[int]:
-    if not sport_codes:
+async def resolve_discipline_ids(session: AsyncSession, ids: list[int] | None) -> list[int]:
+    if not ids:
         return []
-    query = (
-        select(LookupItem.id)
-        .join(LookupGroup, LookupItem.lookup_group_id == LookupGroup.id)
-        .where(LookupGroup.code == 100, LookupItem.code.in_(sport_codes))
-    )
+    query = select(Discipline.id).where(Discipline.id.in_(ids), Discipline.is_active.is_(True))
     result = await session.execute(query)
     return list(result.scalars().all())
 

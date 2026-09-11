@@ -7,6 +7,8 @@ import { FirebaseAuthService, SocialProvider } from '../../../core/firebase-auth
 import { LanguageService } from '../../../core/language.service';
 import { ThemeService } from '../../../core/theme.service';
 import { FirebaseNeedsRoleDetails } from '../../../core/api.models';
+import { BrandLogoComponent } from '../../../shared/brand-logo/brand-logo.component';
+import { ChromeControlsComponent } from '../../../shared/chrome-controls/chrome-controls.component';
 
 type ErrorDescriptor =
   | { type: 'userNotFound' }
@@ -19,6 +21,8 @@ type ErrorDescriptor =
   | { type: 'fillAllFields' }
   | { type: 'loginGeneral' }
   | { type: 'sendOtp' }
+  | { type: 'blacklisted' }
+  | { type: 'suspended'; expiresAt?: string | null; formattedUtc?: string | null }
   | { type: 'custom'; message: string };
 
 type InfoKey = 'activeOtpNotice' | 'codeResentSuccess' | 'activeSessionRedirect';
@@ -26,7 +30,7 @@ type InfoKey = 'activeOtpNotice' | 'codeResentSuccess' | 'activeSessionRedirect'
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink, BrandLogoComponent, ChromeControlsComponent],
   templateUrl: './login.html',
   styleUrl: './login.css',
 })
@@ -80,6 +84,21 @@ export class Login implements OnInit, OnDestroy {
         return auth.loginGeneralError;
       case 'sendOtp':
         return auth.sendOtpError;
+      case 'blacklisted':
+        return auth.blacklistedEmailError;
+      case 'suspended': {
+        if (err.expiresAt) {
+          const formatted = this.formatSuspensionDateTime(err.expiresAt);
+          return auth.accountSuspendedUntilError.replace('{datetime}', formatted);
+        }
+        if (err.formattedUtc) {
+          const isEn = this.i18n.lang() === 'en';
+          const atWord = isEn ? ' at ' : ' a las ';
+          const normalized = err.formattedUtc.replace(/\s+(?:a las|at)\s+/i, atWord);
+          return auth.accountSuspendedUntilError.replace('{datetime}', normalized);
+        }
+        return auth.accountSuspendedIndefiniteError;
+      }
       case 'custom':
         return err.message;
     }
@@ -399,10 +418,7 @@ export class Login implements OnInit, OnDestroy {
         }
 
         this.socialLoading.set(null);
-        this.errorState.set({
-          type: 'custom',
-          message: err.error?.error?.message || this.t().auth.socialLoginError,
-        });
+        this.setBackendError(err, 'loginGeneral');
       },
     });
   }
@@ -410,6 +426,20 @@ export class Login implements OnInit, OnDestroy {
   private clearRolePrompt(): void {
     this.pendingIdToken.set(null);
     this.needsRoleInfo.set(null);
+  }
+
+  private formatSuspensionDateTime(isoOrDate: string): string {
+    const normalizedStr = isoOrDate.endsWith('Z') || isoOrDate.includes('+') ? isoOrDate : `${isoOrDate}Z`;
+    const d = new Date(normalizedStr);
+    if (isNaN(d.getTime())) return isoOrDate;
+    const day = String(d.getUTCDate()).padStart(2, '0');
+    const month = String(d.getUTCMonth() + 1).padStart(2, '0');
+    const year = d.getUTCFullYear();
+    const hours = String(d.getUTCHours()).padStart(2, '0');
+    const minutes = String(d.getUTCMinutes()).padStart(2, '0');
+    const isEn = this.i18n.lang() === 'en';
+    const atWord = isEn ? 'at' : 'a las';
+    return `${day}/${month}/${year} ${atWord} ${hours}:${minutes} UTC`;
   }
 
   private mapSocialError(err: unknown): string {
@@ -435,6 +465,43 @@ export class Login implements OnInit, OnDestroy {
     const code = errorObj?.code;
     const details = errorObj?.details || {};
 
+    if (err?.status === 403 || code === 'FORBIDDEN') {
+      const message = String(errorObj?.message || '');
+      const reasonCode = details?.reason_code;
+
+      if (
+        reasonCode === 'ACCOUNT_SUSPENDED' ||
+        message.toLowerCase().includes('suspendida') ||
+        message.toLowerCase().includes('suspended')
+      ) {
+        let expiresAt = details?.expires_at || null;
+        let formattedUtc: string | null = null;
+
+        if (!expiresAt) {
+          const match = message.match(/(?:hasta el|until)\s+([0-9]{2}\/[0-9]{2}\/[0-9]{4}\s+(?:a las|at)\s+[0-9]{2}:[0-9]{2}\s+UTC)/i);
+          if (match) {
+            formattedUtc = match[1];
+          }
+        }
+
+        this.errorState.set({ type: 'suspended', expiresAt, formattedUtc });
+        return;
+      }
+
+      if (
+        reasonCode === 'ACCOUNT_BANNED' ||
+        reasonCode === 'EMAIL_BLACKLISTED' ||
+        message.toLowerCase().includes('lista negra') ||
+        message.toLowerCase().includes('blacklisted')
+      ) {
+        this.errorState.set({ type: 'blacklisted' });
+        return;
+      }
+
+      this.errorState.set({ type: 'blacklisted' });
+      return;
+    }
+
     if (err?.status === 404 || code === 'ENTITY_NOT_FOUND' || details?.entity === 'Usuario') {
       this.errorState.set({ type: 'userNotFound' });
       return;
@@ -447,6 +514,11 @@ export class Login implements OnInit, OnDestroy {
     }
 
     if (code === 'UNAUTHORIZED' || err?.status === 401) {
+      if (this.loginMode() === 'password' || fallback === 'loginGeneral') {
+        const message = errorObj?.message || this.t().auth.loginGeneralError;
+        this.errorState.set({ type: 'custom', message });
+        return;
+      }
       if (details?.max_attempts_exceeded) {
         this.errorState.set({ type: 'maxAttempts' });
         return;

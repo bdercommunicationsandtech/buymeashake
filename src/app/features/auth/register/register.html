@@ -1,33 +1,16 @@
 <div class="min-h-screen bg-[#fafafb] dark:bg-[#090c0a] text-gray-900 dark:text-gray-100 flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8 font-sans transition-colors duration-200 relative">
-  <!-- Selector de idioma -->
+  <!-- Controles idioma + tema -->
   <div class="absolute top-4 right-4 sm:top-6 sm:right-8 z-10">
-    <button
-      type="button"
-      (click)="i18n.toggleLanguage()"
-      class="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-gray-200 dark:border-white/10 bg-white/80 dark:bg-[#121614]/80 backdrop-blur-md text-xs font-bold text-gray-700 dark:text-gray-200 hover:border-gray-400 dark:hover:border-white/30 transition shadow-xs cursor-pointer"
-      [attr.aria-label]="t().nav.switchLanguage"
-    >
-      <svg class="w-3.5 h-3.5 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a8.96 8.96 0 01-5.657-2M12 21a8.96 8.96 0 005.657-2M12 3a8.96 8.96 0 015.657 2M12 3a8.96 8.96 0 00-5.657 2" />
-      </svg>
-      <span>{{ i18n.lang() === 'es' ? 'EN' : 'ES' }}</span>
-    </button>
+    <app-chrome-controls size="sm" />
   </div>
 
   <div class="sm:mx-auto sm:w-full sm:max-w-md">
     <!-- Logo -->
-    <a routerLink="/" class="flex justify-center items-center gap-2 mb-6">
-      <span class="grid h-10 w-10 place-items-center rounded-xl bg-[#c9ff3d] text-[#070a08] font-bold shadow-sm">
-        <svg viewBox="0 0 32 32" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linejoin="round">
-          <rect x="12" y="4" width="8" height="4" rx="2" fill="currentColor" stroke="none" />
-          <path d="M10 10h12l-1.4 16a4 4 0 0 1-4 3.6h-1.2a4 4 0 0 1-4-3.6z" />
-          <path d="M11 20h10" stroke-linecap="round" />
-        </svg>
-      </span>
-      <span class="text-2xl font-black tracking-tight text-gray-950 dark:text-white">
-        buymeashake
-      </span>
-    </a>
+    <app-brand-logo
+      link="/"
+      size="lg"
+      linkClass="justify-center mb-6"
+    />
 
     <h2 class="text-center text-3xl font-black text-gray-950 dark:text-white tracking-tight">
       {{ t().auth.registerTitle }}
@@ -96,14 +79,14 @@
               (click)="dropdownOpen.set(!dropdownOpen()); searchSport.set('')"
               class="relative w-full px-4 py-3 text-left border border-gray-300 dark:border-white/15 rounded-xl shadow-xs bg-white dark:bg-[#191c1d] text-sm font-semibold text-gray-900 dark:text-white focus:outline-none focus:border-gray-900 dark:focus:border-[#c9ff3d] cursor-pointer"
             >
-              @if (disciplineCodes().length === 0) {
+              @if (disciplineIds().length === 0) {
                 <span class="text-gray-400">Selecciona disciplinas...</span>
               } @else {
                 <div class="flex flex-wrap gap-1.5">
-                  @for (code of disciplineCodes(); track code) {
+                  @for (id of disciplineIds(); track id) {
                     <span class="inline-flex items-center gap-1 bg-[#c9ff3d]/20 text-[#a3d61b] px-2 py-0.5 rounded-md text-xs font-bold border border-[#c9ff3d]/30">
-                      {{ getDisciplineLabel(code) }}
-                      <span class="text-[#c9ff3d] hover:text-[#bbf033] ml-1" (click)="$event.stopPropagation(); toggleSport(code)">&times;</span>
+                      {{ getDisciplineLabel(id) }}
+                      <span class="text-[#c9ff3d] hover:text-[#bbf033] ml-1" (click)="$event.stopPropagation(); toggleSport(id)">&times;</span>
                     </span>
                   }
                 </div>
@@ -124,13 +107,13 @@
                   />
                 </div>
                 <ul class="py-1 overflow-y-auto text-sm font-semibold text-gray-900 dark:text-white flex-1">
-                  @for (sport of filteredSports(); track sport.code) {
+                  @for (sport of filteredSports(); track sport.id) {
                     <li
-                      (click)="toggleSport(sport.code)"
+                      (click)="toggleSport(sport.id)"
                       class="px-4 py-2.5 hover:bg-gray-100 dark:hover:bg-white/5 cursor-pointer flex justify-between items-center transition-colors"
                     >
                       <span>{{ i18n.translateDiscipline(sport.label) }}</span>
-                      @if (disciplineCodes().includes(sport.code)) {
+                      @if (disciplineIds().includes(sport.id)) {
                         <span class="text-[#c9ff3d] text-lg leading-none">✓</span>
                       }
                     </li>

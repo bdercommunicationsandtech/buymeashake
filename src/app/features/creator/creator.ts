@@ -1,4 +1,4 @@
-import { Component, computed, effect, inject, input, signal } from '@angular/core';
+import { Component, computed, DestroyRef, effect, inject, input, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { CheckoutService } from '../../core/checkout.service';
@@ -35,7 +35,7 @@ import { PricesModalComponent } from '../../shared/page-editor-modals/prices-mod
 import { EditorSavePatch } from '../../shared/page-editor-modals/editor-save-patch';
 import { CreatorProfile } from '../../core/api.models';
 import { AllowedUserTextDirective } from '../../core/directives/allowed-user-text.directive';
-import { resolveMediaUrl } from '../../core/media-url';
+import { resolveMediaUrl } from '../../core/utils/media-url.util';
 
 export interface CreatorProduct {
   title: string;
@@ -99,6 +99,7 @@ export interface CreatorView {
   tiktokUrl: string | null;
   facebookUrl: string | null;
   twitterUrl: string | null;
+  chargesEnabled: boolean;
 }
 
 @Component({
@@ -136,6 +137,7 @@ export class Creator {
   private readonly paymentService = inject(PaymentService);
   private readonly authService = inject(AuthService);
   private readonly supporterService = inject(SupporterService);
+  private readonly destroyRef = inject(DestroyRef);
   readonly languageService = inject(LanguageService);
   readonly i18n = this.languageService;
   readonly t = this.languageService.t;
@@ -243,13 +245,13 @@ export class Creator {
   readonly hasActiveGoal = computed(() => Boolean(this.creatorView()?.hasActiveGoal));
 
   readonly agendaImageStyle = computed(() => {
-    const url = this.creatorView()?.agendaImageUrl;
+    const url = resolveMediaUrl(this.creatorView()?.agendaImageUrl);
     if (url) return `url('${url}')`;
     return "url('https://images.unsplash.com/photo-1576678927484-cc907957088c?q=80&w=1200&auto=format&fit=crop')";
   });
 
   readonly coverStyle = computed(() => {
-    const url = this.creatorView()?.coverImageUrl;
+    const url = resolveMediaUrl(this.creatorView()?.coverImageUrl);
     if (url) {
       return `url('${url}')`;
     }
@@ -347,6 +349,23 @@ export class Creator {
   }
 
   constructor() {
+    // Al volver de Stripe con "atrás", el bfcache restaura openingStripe=true.
+    const resetOpeningStripe = () => {
+      if (!this.openingStripe()) return;
+      this.openingStripe.set(false);
+      this.openingStripeTierId.set(null);
+    };
+    const onPageShow = () => resetOpeningStripe();
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') resetOpeningStripe();
+    };
+    window.addEventListener('pageshow', onPageShow);
+    document.addEventListener('visibilitychange', onVisible);
+    this.destroyRef.onDestroy(() => {
+      window.removeEventListener('pageshow', onPageShow);
+      document.removeEventListener('visibilitychange', onVisible);
+    });
+
     effect(() => {
       const handle = this.username();
       if (handle) {
@@ -455,12 +474,16 @@ export class Creator {
         agendaDescription:
           patch.agendaDescription !== undefined ? patch.agendaDescription : current.agendaDescription,
         agendaImageUrl:
-          patch.agendaImageUrl !== undefined ? patch.agendaImageUrl : current.agendaImageUrl,
+          patch.agendaImageUrl !== undefined
+            ? resolveMediaUrl(patch.agendaImageUrl)
+            : current.agendaImageUrl,
         goalTitle: patch.goalTitle ?? current.goalTitle,
         goalTarget: patch.goalTarget ?? current.goalTarget,
         goalRaised: patch.goalRaised ?? current.goalRaised,
         goalCoverImageUrl:
-          patch.goalCoverImageUrl !== undefined ? patch.goalCoverImageUrl : current.goalCoverImageUrl,
+          patch.goalCoverImageUrl !== undefined
+            ? resolveMediaUrl(patch.goalCoverImageUrl)
+            : current.goalCoverImageUrl,
         hasActiveGoal:
           patch.goalTitle !== undefined
             ? Boolean(patch.goalTitle?.trim())
@@ -472,8 +495,11 @@ export class Creator {
         bio: patch.bio ?? current.bio,
         city: patch.city ?? current.city,
         coverImageUrl:
-          patch.coverImageUrl !== undefined ? patch.coverImageUrl : current.coverImageUrl,
-        avatarUrl: patch.avatarUrl !== undefined ? patch.avatarUrl : current.avatarUrl,
+          patch.coverImageUrl !== undefined
+            ? resolveMediaUrl(patch.coverImageUrl)
+            : current.coverImageUrl,
+        avatarUrl:
+          patch.avatarUrl !== undefined ? resolveMediaUrl(patch.avatarUrl) : current.avatarUrl,
         instagramUrl:
           patch.instagramUrl !== undefined ? patch.instagramUrl : current.instagramUrl,
         tiktokUrl: patch.tiktokUrl !== undefined ? patch.tiktokUrl : current.tiktokUrl,
@@ -669,7 +695,7 @@ export class Creator {
       pageDescription: profile.page_description ?? null,
       agendaTitle: profile.agenda_title ?? null,
       agendaDescription: profile.agenda_description ?? null,
-      agendaImageUrl: profile.agenda_image_url ?? null,
+      agendaImageUrl: resolveMediaUrl(profile.agenda_image_url ?? null),
       initials: profile.name
         .split(' ')
         .map((n) => n[0])
@@ -679,20 +705,21 @@ export class Creator {
       goalTitle: profile.active_goal_title?.trim() || '',
       goalTarget: goalTarget,
       goalRaised: goalRaised,
-      goalCoverImageUrl: profile.active_goal_cover_image_url ?? null,
+      goalCoverImageUrl: resolveMediaUrl(profile.active_goal_cover_image_url ?? null),
       hasActiveGoal: Boolean(profile.active_goal_title?.trim()),
       supporters: followersCount,
       shakesReceived,
       disciplines: profile.disciplines || [],
       shakePrice: Number(profile.shake_price) || SHAKE_PRICE,
       currency: 'USD',
-      coverImageUrl: profile.cover_image_url,
-      avatarUrl: profile.avatar_url,
+      coverImageUrl: resolveMediaUrl(profile.cover_image_url),
+      avatarUrl: resolveMediaUrl(profile.avatar_url),
       isVerified: profile.is_verified,
       instagramUrl: profile.instagram_url,
       tiktokUrl: profile.tiktok_url,
       facebookUrl: profile.facebook_url,
       twitterUrl: profile.twitter_url,
+      chargesEnabled: Boolean(profile.charges_enabled),
     };
   }
 
@@ -763,7 +790,7 @@ export class Creator {
                     {
                       id: comment.id,
                       userName: comment.user_name,
-                      userAvatar: comment.user_avatar,
+                      userAvatar: resolveMediaUrl(comment.user_avatar),
                       content: comment.content,
                       createdAt: 'Justo ahora',
                     },
@@ -846,6 +873,23 @@ export class Creator {
     const c = this.creatorView();
     if (!c || this.openingStripe()) return;
 
+    if (!c.chargesEnabled) {
+      this.checkout.start({
+        type: 'membership',
+        title: tier.name,
+        creatorName: c.name,
+        creatorHandle: c.handle,
+        shakes: 1,
+        unitPrice: tier.price,
+        currency: this.currency(),
+        message: `Suscripción mensual a: ${tier.name}`,
+        activity: this.activity().id,
+        tierId: tier.id,
+        chargesEnabled: false,
+      });
+      return;
+    }
+
     this.openingStripe.set(true);
     this.openingStripeTierId.set(tier.id);
 
@@ -872,11 +916,14 @@ export class Creator {
             message: `Suscripción mensual a: ${tier.name}`,
             activity: this.activity().id,
             tierId: tier.id,
+            chargesEnabled: true,
           });
         },
-        error: () => {
+        error: (err) => {
           this.openingStripe.set(false);
           this.openingStripeTierId.set(null);
+          const detail = String(err?.error?.detail || '');
+          const blocked = /stripe|connect|verific/i.test(detail);
           this.checkout.start({
             type: 'membership',
             title: tier.name,
@@ -888,6 +935,7 @@ export class Creator {
             message: `Suscripción mensual a: ${tier.name}`,
             activity: this.activity().id,
             tierId: tier.id,
+            chargesEnabled: !blocked,
           });
         },
       });
@@ -896,6 +944,23 @@ export class Creator {
   support(): void {
     const c = this.creatorView();
     if (!c || this.openingStripe()) return;
+
+    if (!c.chargesEnabled) {
+      this.checkout.start({
+        type: 'shake',
+        creatorName: c.name,
+        creatorHandle: c.handle,
+        shakes: this.shakes(),
+        unitPrice: c.shakePrice,
+        currency: this.currency(),
+        supporterName: this.supporterName() || undefined,
+        isAnonymous: this.isAnonymous(),
+        message: this.message(),
+        activity: this.activity().id,
+        chargesEnabled: false,
+      });
+      return;
+    }
 
     this.openingStripe.set(true);
 
@@ -934,10 +999,13 @@ export class Creator {
             activity: this.activity().id,
             currency: this.currency(),
             unitPrice: this.currentPrice(),
+            chargesEnabled: true,
           });
         },
-        error: () => {
+        error: (err) => {
           this.openingStripe.set(false);
+          const detail = String(err?.error?.detail || '');
+          const blocked = /stripe|connect|verific/i.test(detail);
           this.checkout.start({
             type: 'shake',
             creatorName: c.name,
@@ -949,6 +1017,7 @@ export class Creator {
             activity: this.activity().id,
             currency: this.currency(),
             unitPrice: this.currentPrice(),
+            chargesEnabled: !blocked,
           });
         },
       });

@@ -370,6 +370,10 @@ export interface TranslationSchema {
       insufficientFundsError: string;
       withdrawSuccessMsg: string;
       genericError: string;
+      autoPayoutBanner: string;
+      openExpressPortalBtn: string;
+      ledgerBalanceLabel: string;
+      ledgerBalanceHelp: string;
     };
     settingsView: {
       headerSubtitle: string;
@@ -582,6 +586,25 @@ export interface TranslationSchema {
     ctaTitle: string;
     ctaSubtitle: string;
     createPageFree: string;
+    heroMotto: string;
+    heroPill1: string;
+    heroPill2: string;
+    heroPill3: string;
+    heroPill4: string;
+    statAthletesVal: string;
+    statAthletesLabel: string;
+    statShakesVal: string;
+    statShakesLabel: string;
+    statCommunitiesVal: string;
+    statCommunitiesLabel: string;
+    scrollText: string;
+    shareYourStory: string;
+    ctaBadge: string;
+    exploreAthletes: string;
+    trustCommunity: string;
+    trustSecure: string;
+    trustFast: string;
+    progressStartsHere: string;
   };
   explore: {
     badge: string;
@@ -646,6 +669,9 @@ export interface TranslationSchema {
     fillAllFieldsError: string;
     loginGeneralError: string;
     sendOtpError: string;
+    blacklistedEmailError: string;
+    accountSuspendedUntilError: string;
+    accountSuspendedIndefiniteError: string;
     invalidOtpError: string;
     socialRoleTitle: string;
     socialRoleSubtitle: string;
@@ -758,6 +784,10 @@ export interface TranslationSchema {
     totalPaidLabel: string;
     backToAthletePage: string;
     secureTransactionNotice: string;
+    chargesDisabledTitle: string;
+    chargesDisabledMessage: string;
+    chargesDisabledHint: string;
+    chargesDisabledClose: string;
   };
   followModal: {
     closeAria: string;
@@ -807,6 +837,8 @@ export interface TranslationSchema {
     skipForNow: string;
     loading: string;
     errorMessage: string;
+    connectStripeHint: string;
+    connectStripeCta: string;
   };
   supporterArea: {
     home: string;

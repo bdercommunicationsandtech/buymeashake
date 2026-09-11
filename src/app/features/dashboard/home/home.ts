@@ -6,6 +6,7 @@ import { DashboardService } from '../../../core/dashboard.service';
 import { AthleteProfileFull, DashboardMetrics } from '../../../core/api.models';
 import { ShareQrModalComponent } from '../../../shared/share-qr-modal/share-qr-modal.component';
 import { LanguageService } from '../../../core/language.service';
+import { MediaUrlPipe } from '../../../shared/pipes/media-url.pipe';
 
 @Component({
   selector: 'app-dashboard-home',
@@ -14,6 +15,7 @@ import { LanguageService } from '../../../core/language.service';
     CommonModule,
     RouterLink,
     ShareQrModalComponent,
+    MediaUrlPipe,
   ],
   templateUrl: './home.html',
 })

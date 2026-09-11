@@ -6,11 +6,12 @@ import { EditorSavePatch } from './editor-save-patch';
 import { AllowedUserTextDirective } from '../../core/directives/allowed-user-text.directive';
 import { extractApiErrorMessage } from '../../core/utils/api-error.util';
 import { filterAllowedUserText } from '../../core/utils/allowed-user-text.util';
+import { MediaUrlPipe } from '../pipes/media-url.pipe';
 
 @Component({
   selector: 'app-goal-editor-modal',
   standalone: true,
-  imports: [CommonModule, AllowedUserTextDirective],
+  imports: [CommonModule, AllowedUserTextDirective, MediaUrlPipe],
   template: `
     @if (open()) {
       <div
@@ -48,7 +49,7 @@ import { filterAllowedUserText } from '../../core/utils/allowed-user-text.util';
             <div class="flex items-center gap-4">
               <div class="h-20 w-28 rounded-2xl overflow-hidden border border-gray-200 dark:border-white/10 bg-gray-100 dark:bg-white/5 shrink-0">
                 @if (coverUrl()) {
-                  <img [src]="coverUrl()" alt="Meta" class="h-full w-full object-cover" />
+                  <img [src]="coverUrl() | mediaUrl" alt="Meta" class="h-full w-full object-cover" />
                 } @else {
                   <div class="h-full w-full grid place-items-center text-gray-400 text-[10px] font-bold">{{ t().pageEditorModals.noImage }}</div>
                 }

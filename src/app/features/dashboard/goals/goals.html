@@ -74,7 +74,7 @@
 
           @if (goalCoverUrl(); as cover) {
             <div class="relative h-36 w-full overflow-hidden border-b border-gray-100 dark:border-white/10">
-              <img [src]="cover" [alt]="active.title" class="w-full h-full object-cover" />
+              <img [src]="cover | mediaUrl" [alt]="active.title" class="w-full h-full object-cover" />
               <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent"></div>
             </div>
           }
@@ -291,7 +291,7 @@
                   class="flex items-center justify-center gap-1.5 py-2 px-2.5 rounded-xl border text-xs font-bold transition cursor-pointer"
                   [class]="selectedCategory() === 'nutrition' ? 'bg-[#c9ff3d]/15 border-[#c9ff3d] text-[#c9ff3d]' : 'bg-white/5 border-white/10 text-gray-300 hover:bg-white/10'"
                 >
-                  <app-icon-shaker [size]="14" />
+                  <app-icon-shaker [size]="14" [customClass]="selectedCategory() === 'nutrition' ? 'text-[#c9ff3d]' : 'text-gray-300'" />
                   <span class="truncate">{{ t().dashboard.goalsView.categorySupplements }}</span>
                 </button>
 
@@ -336,7 +336,7 @@
               <div class="rounded-xl border border-dashed border-white/20 bg-white/[0.02] p-3 relative group overflow-hidden">
                 @if (goalCoverUrl(); as cover) {
                   <div class="relative h-28 w-full rounded-lg overflow-hidden border border-white/10">
-                    <img [src]="cover" alt="Portada de meta" class="w-full h-full object-cover" />
+                    <img [src]="cover | mediaUrl" alt="Portada de meta" class="w-full h-full object-cover" />
                     <div class="absolute inset-0 bg-black/50 flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition">
                       <label class="px-3 py-1 rounded bg-white text-gray-950 text-[11px] font-bold cursor-pointer">
                         {{ t().dashboard.goalsView.change }}
@@ -364,7 +364,7 @@
               <div class="flex items-center justify-between">
                 <span class="text-[10px] font-black uppercase tracking-wider text-gray-300">{{ t().dashboard.goalsView.financialGoal }}</span>
                 <span class="text-[10px] font-black text-gray-950 bg-[#c9ff3d] px-2 py-0.5 rounded">
-                  1 Shaker = ${{ unitShakePrice() }} USD
+                  1 Shake = ${{ unitShakePrice() }} USD
                 </span>
               </div>
               <div class="grid grid-cols-2 gap-3">
@@ -385,8 +385,8 @@
                 <div>
                   <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">{{ t().dashboard.goalsView.equivalent }}</label>
                   <div class="flex items-center rounded-lg border border-white/15 bg-black/30 px-2.5 py-2 gap-1.5 text-xs font-black text-[#c9ff3d]">
-                    <app-icon-shaker [size]="14" />
-                    <span>{{ shakersEquivalent() }} Shakers</span>
+                    <app-icon-shaker [size]="14" customClass="text-[#c9ff3d]" />
+                    <span>{{ shakesEquivalent() }} Shakes</span>
                   </div>
                 </div>
               </div>
@@ -419,7 +419,7 @@
 
               @if (goalCoverUrl(); as cover) {
                 <div class="h-24 w-full rounded-xl overflow-hidden mb-3 border border-white/10">
-                  <img [src]="cover" alt="Cover" class="w-full h-full object-cover" />
+                  <img [src]="cover | mediaUrl" alt="Cover" class="w-full h-full object-cover" />
                 </div>
               }
 
@@ -434,7 +434,7 @@
               <div class="mt-3 pt-3 border-t border-white/10">
                 <div class="flex items-baseline justify-between text-xs font-black">
                   <span class="text-white">
-                    <strong class="text-[#c9ff3d]">{{ currentShakersRaised() }}</strong> / {{ shakersEquivalent() }} Shakers
+                    <strong class="text-[#c9ff3d]">{{ currentShakesRaised() }}</strong> / {{ shakesEquivalent() }} Shakes
                   </span>
                   <span class="text-[#c9ff3d]">{{ percentAchieved() }}%</span>
                 </div>

@@ -62,7 +62,7 @@ export class Support implements OnInit {
   // Form Signals
   readonly applicantName = signal('');
   readonly applicantEmail = signal('');
-  readonly userRole = signal<'athlete' | 'supporter' | 'other'>('athlete');
+  readonly userRole = signal<'athlete' | 'supporter' | 'brand' | 'other'>('athlete');
   readonly selectedTicketCategory = signal<string>('payments');
   readonly ticketSubject = signal('');
   readonly relatedHandleOrFolio = signal('');

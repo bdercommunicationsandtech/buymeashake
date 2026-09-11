@@ -41,8 +41,12 @@ class UnauthorizedError(DomainException):
 
 
 class ForbiddenError(DomainException):
-    def __init__(self, message: str = "Forbidden: you do not have permission for this action."):
-        super().__init__(message=message, code="FORBIDDEN")
+    def __init__(
+        self,
+        message: str = "Forbidden: you do not have permission for this action.",
+        details: dict[str, Any] | None = None,
+    ):
+        super().__init__(message=message, code="FORBIDDEN", details=details)
 
 
 class RateLimitExceededError(DomainException):

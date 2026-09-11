@@ -204,16 +204,37 @@ class UserRole(Base):
     role_item: Mapped[LookupItem] = relationship("LookupItem", foreign_keys=[role_id])
     status_item: Mapped[LookupItem] = relationship("LookupItem", foreign_keys=[status_id])
 
+class Discipline(Base):
+    """Canonical sport / discipline catalog (replaces lookup group 100 for athletes)."""
+
+    __tablename__ = "disciplines"
+
+    id: Mapped[int] = mapped_column(BIGINT(unsigned=True), primary_key=True, autoincrement=True)
+    name: Mapped[str] = mapped_column(String(100), nullable=False)
+    description: Mapped[str | None] = mapped_column(String(150), nullable=True)
+    image_url: Mapped[str | None] = mapped_column(String(512), nullable=True)
+    icon_url: Mapped[str | None] = mapped_column(String(512), nullable=True)
+    sort_order: Mapped[int] = mapped_column(Integer, default=0)
+    show_in_home: Mapped[bool] = mapped_column(Boolean, default=False)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now(), onupdate=func.now())
+
+
 class AthleteDiscipline(Base):
     __tablename__ = "athlete_disciplines"
 
-    athlete_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("athlete_profiles.id", ondelete="CASCADE"), primary_key=True)
-    discipline_item_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("lookup_items.id", ondelete="CASCADE"), primary_key=True)
+    athlete_id: Mapped[int] = mapped_column(
+        BIGINT(unsigned=True), ForeignKey("athlete_profiles.id", ondelete="CASCADE"), primary_key=True
+    )
+    discipline_id: Mapped[int] = mapped_column(
+        BIGINT(unsigned=True), ForeignKey("disciplines.id", ondelete="CASCADE"), primary_key=True
+    )
     is_primary: Mapped[bool] = mapped_column(Boolean, default=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
 
     athlete: Mapped["AthleteProfile"] = relationship("AthleteProfile", back_populates="disciplines_association")
-    discipline_item: Mapped["LookupItem"] = relationship("LookupItem")
+    discipline: Mapped["Discipline"] = relationship("Discipline")
 
 
 class AthleteProfile(Base):
@@ -326,6 +347,7 @@ class AthletePayouts(Base):
     stripe_connect_account_id: Mapped[str | None] = mapped_column(String(100), unique=True, nullable=True)
     stripe_details_submitted: Mapped[bool] = mapped_column(Boolean, default=False)
     payouts_enabled: Mapped[bool] = mapped_column(Boolean, default=False)
+    charges_enabled: Mapped[bool] = mapped_column(Boolean, default=False)
     updated_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now(), onupdate=func.now())
 
     athlete: Mapped[AthleteProfile] = relationship("AthleteProfile", back_populates="payouts")
@@ -692,4 +714,121 @@ class WithdrawalRequest(Base):
 
     athlete: Mapped[AthleteProfile] = relationship("AthleteProfile", back_populates="withdrawal_requests")
     processed_by: Mapped["User | None"] = relationship("User", foreign_keys=[processed_by_admin_id])
+
+
+# ==============================================================================
+# MÓDULO 8: COMPLIANCE, DENUNCIAS & MODERACIÓN (TRUST & SAFETY)
+# ==============================================================================
+
+class ComplianceReport(Base):
+    __tablename__ = "compliance_reports"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    folio: Mapped[str] = mapped_column(String(50), unique=True, nullable=False, index=True)
+    creator_target: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    athlete_id: Mapped[int | None] = mapped_column(
+        BigInteger, ForeignKey("athlete_profiles.id", ondelete="SET NULL"), nullable=True, index=True
+    )
+    reporter_email: Mapped[str] = mapped_column(String(191), nullable=False, index=True)
+    reason_code: Mapped[str] = mapped_column(String(50), nullable=False, index=True)
+    reason_title: Mapped[str] = mapped_column(String(150), nullable=False)
+    description: Mapped[str] = mapped_column(Text, nullable=False)
+    evidence_links: Mapped[list[str] | None] = mapped_column(JSON, nullable=True)
+    attached_file: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    status: Mapped[str] = mapped_column(
+        String(30), default="pending", nullable=False, index=True
+    )  # pending, under_review, resolved, dismissed
+    priority: Mapped[str] = mapped_column(
+        String(20), default="medium", nullable=False, index=True
+    )  # low, medium, high, critical
+    assigned_moderator_id: Mapped[int | None] = mapped_column(
+        BigInteger, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True
+    )
+    verdict: Mapped[str | None] = mapped_column(String(50), nullable=True)  # action_taken, dismissed, warning
+    verdict_title: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    admin_notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+    action_details: Mapped[str | None] = mapped_column(String(1000), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now(), index=True)
+    resolved_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+
+    athlete: Mapped["AthleteProfile | None"] = relationship("AthleteProfile")
+    assigned_moderator: Mapped["User | None"] = relationship("User", foreign_keys=[assigned_moderator_id])
+
+
+# ==============================================================================
+# MÓDULO 9: MESA DE AYUDA, TICKETS & SOPORTE
+# ==============================================================================
+
+class SupportTicket(Base):
+    __tablename__ = "support_tickets"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    folio: Mapped[str] = mapped_column(String(50), unique=True, nullable=False, index=True)
+    name: Mapped[str] = mapped_column(String(150), nullable=False)
+    email: Mapped[str] = mapped_column(String(191), nullable=False, index=True)
+    user_role: Mapped[str] = mapped_column(String(50), default="athlete", nullable=False)
+    category: Mapped[str] = mapped_column(String(50), default="general", nullable=False, index=True)
+    category_title: Mapped[str] = mapped_column(String(150), default="Consulta General", nullable=False)
+    subject: Mapped[str] = mapped_column(String(255), nullable=False)
+    description: Mapped[str] = mapped_column(Text, nullable=False)
+    related_folio_or_handle: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    attached_file: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    is_read: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False, index=True)
+    status: Mapped[str] = mapped_column(
+        String(30), default="open", nullable=False, index=True
+    )  # open, in_progress, resolved, closed
+    assigned_admin_id: Mapped[int | None] = mapped_column(
+        BigInteger, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True
+    )
+    admin_notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+    reply_message: Mapped[str | None] = mapped_column(Text, nullable=True)
+    replied_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now(), index=True)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now(), onupdate=func.now())
+
+    assigned_admin: Mapped["User | None"] = relationship("User", foreign_keys=[assigned_admin_id])
+
+
+# ==============================================================================
+# MÓDULO 10: LISTA NEGRA Y SANCIONES DISCIPLINARIAS
+# ==============================================================================
+
+class EmailBlacklist(Base):
+    __tablename__ = "email_blacklist"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    email: Mapped[str] = mapped_column(String(191), unique=True, nullable=False, index=True)
+    reason: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    user_id: Mapped[int | None] = mapped_column(
+        BigInteger, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True
+    )
+    created_by: Mapped[int | None] = mapped_column(
+        BigInteger, ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+    )
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+
+    user: Mapped["User | None"] = relationship("User", foreign_keys=[user_id])
+    creator: Mapped["User | None"] = relationship("User", foreign_keys=[created_by])
+
+
+class DisciplinarySanction(Base):
+    __tablename__ = "disciplinary_sanctions"
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    user_id: Mapped[int] = mapped_column(
+        BigInteger, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    action_type: Mapped[str] = mapped_column(String(30), nullable=False)  # 'strike', 'suspension', 'ban'
+    points: Mapped[int] = mapped_column(Integer, default=1, nullable=False)
+    reason: Mapped[str] = mapped_column(String(500), nullable=False)
+    category: Mapped[str] = mapped_column(String(50), default="conduct", nullable=False)
+    created_by: Mapped[int | None] = mapped_column(
+        BigInteger, ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+    )
+    expires_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+
+    user: Mapped["User"] = relationship("User", foreign_keys=[user_id])
+    creator: Mapped["User | None"] = relationship("User", foreign_keys=[created_by])
 

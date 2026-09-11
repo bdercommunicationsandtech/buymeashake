@@ -26,13 +26,26 @@ export class AuthService {
   private readonly apiUrl = `${environment.apiUrl}/auth`;
 
   readonly currentUser = signal<UserMe | null>(null);
-  readonly isAuthenticated = signal<boolean>(!!localStorage.getItem('access_token'));
+  readonly isAuthenticated = signal<boolean>(false);
 
   private refreshInProgress = false;
   private readonly refreshTokenSubject = new BehaviorSubject<string | null>(null);
 
+  private getStorage(): Storage | null {
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        return window.localStorage;
+      }
+    } catch {
+      // Storage unavailable
+    }
+    return null;
+  }
+
   constructor() {
-    if (this.isAuthenticated()) {
+    const hasToken = !!this.getStorage()?.getItem('access_token');
+    if (hasToken) {
+      this.isAuthenticated.set(true);
       this.loadMe().subscribe({
         error: () => {
           this.isAuthenticated.set(false);
@@ -61,7 +74,7 @@ export class AuthService {
   }
 
   syncFromStorage(): void {
-    const hasToken = !!localStorage.getItem('access_token');
+    const hasToken = !!this.getStorage()?.getItem('access_token');
     if (!hasToken) {
       this.currentUser.set(null);
       this.isAuthenticated.set(false);
@@ -183,7 +196,7 @@ export class AuthService {
   }
 
   refreshAccessToken(): Observable<TokenResponse> {
-    const refreshToken = localStorage.getItem('refresh_token');
+    const refreshToken = this.getStorage()?.getItem('refresh_token');
     if (!refreshToken) {
       return throwError(() => new Error('No refresh token'));
     }
@@ -245,8 +258,8 @@ export class AuthService {
   }
 
   clearSession(navigateToLogin = true): void {
-    localStorage.removeItem('access_token');
-    localStorage.removeItem('refresh_token');
+    this.getStorage()?.removeItem('access_token');
+    this.getStorage()?.removeItem('refresh_token');
     this.currentUser.set(null);
     this.isAuthenticated.set(false);
     this.refreshInProgress = false;
@@ -258,12 +271,12 @@ export class AuthService {
   }
 
   getAccessToken(): string | null {
-    return localStorage.getItem('access_token');
+    return this.getStorage()?.getItem('access_token') ?? null;
   }
 
   private saveTokens(tokens: TokenResponse): void {
-    localStorage.setItem('access_token', tokens.access_token);
-    localStorage.setItem('refresh_token', tokens.refresh_token);
+    this.getStorage()?.setItem('access_token', tokens.access_token);
+    this.getStorage()?.setItem('refresh_token', tokens.refresh_token);
     this.isAuthenticated.set(true);
   }
 }

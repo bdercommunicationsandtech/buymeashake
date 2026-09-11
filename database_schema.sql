@@ -183,14 +183,29 @@ CREATE TABLE athlete_profiles (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 DROP TABLE IF EXISTS athlete_disciplines;
+DROP TABLE IF EXISTS disciplines;
+CREATE TABLE disciplines (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    description VARCHAR(150) NULL,
+    image_url VARCHAR(512) NULL,
+    icon_url VARCHAR(512) NULL,
+    sort_order INT NOT NULL DEFAULT 0,
+    show_in_home BOOLEAN NOT NULL DEFAULT FALSE,
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    KEY idx_disciplines_active_sort (is_active, sort_order)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 CREATE TABLE athlete_disciplines (
     athlete_id BIGINT UNSIGNED NOT NULL,
-    discipline_item_id BIGINT UNSIGNED NOT NULL,
+    discipline_id BIGINT UNSIGNED NOT NULL,
     is_primary BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (athlete_id, discipline_item_id),
+    PRIMARY KEY (athlete_id, discipline_id),
     FOREIGN KEY (athlete_id) REFERENCES athlete_profiles(id) ON DELETE CASCADE,
-    FOREIGN KEY (discipline_item_id) REFERENCES lookup_items(id) ON DELETE CASCADE
+    FOREIGN KEY (discipline_id) REFERENCES disciplines(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 DROP TABLE IF EXISTS athlete_page_settings;
@@ -235,6 +250,7 @@ CREATE TABLE athlete_payouts (
     stripe_connect_account_id VARCHAR(100) NULL UNIQUE,
     stripe_details_submitted BOOLEAN NOT NULL DEFAULT FALSE,
     payouts_enabled BOOLEAN NOT NULL DEFAULT FALSE,
+    charges_enabled BOOLEAN NOT NULL DEFAULT FALSE,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (athlete_id) REFERENCES athlete_profiles(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -573,6 +589,112 @@ CREATE TABLE withdrawal_requests (
 
 
 -- ==============================================================================
+-- TABLA: compliance_reports (Trust & Safety / Denuncias y Moderación FSM)
+-- ==============================================================================
+DROP TABLE IF EXISTS compliance_reports;
+CREATE TABLE compliance_reports (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    folio VARCHAR(50) NOT NULL UNIQUE,
+    creator_target VARCHAR(255) NOT NULL,
+    athlete_id BIGINT UNSIGNED NULL,
+    reporter_email VARCHAR(191) NOT NULL,
+    reason_code VARCHAR(50) NOT NULL,
+    reason_title VARCHAR(150) NOT NULL,
+    description TEXT NOT NULL,
+    evidence_links JSON NULL,
+    attached_file VARCHAR(255) NULL,
+    status VARCHAR(30) NOT NULL DEFAULT 'pending',
+    priority VARCHAR(20) NOT NULL DEFAULT 'medium',
+    assigned_moderator_id BIGINT UNSIGNED NULL,
+    verdict VARCHAR(50) NULL,
+    verdict_title VARCHAR(200) NULL,
+    admin_notes TEXT NULL,
+    action_details VARCHAR(1000) NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    resolved_at TIMESTAMP NULL,
+    FOREIGN KEY (athlete_id) REFERENCES athlete_profiles(id) ON DELETE SET NULL,
+    FOREIGN KEY (assigned_moderator_id) REFERENCES users(id) ON DELETE SET NULL,
+    INDEX idx_compliance_status (status),
+    INDEX idx_compliance_priority (priority),
+    INDEX idx_compliance_reporter (reporter_email),
+    INDEX idx_compliance_creator (creator_target)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+
+-- ==============================================================================
+-- TABLA: support_tickets (Mesa de Ayuda, Contacto y Soporte al Atleta)
+-- ==============================================================================
+DROP TABLE IF EXISTS support_tickets;
+CREATE TABLE support_tickets (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    folio VARCHAR(50) NOT NULL UNIQUE,
+    name VARCHAR(150) NOT NULL,
+    email VARCHAR(191) NOT NULL,
+    user_role VARCHAR(50) NOT NULL DEFAULT 'athlete',
+    category VARCHAR(50) NOT NULL DEFAULT 'general',
+    category_title VARCHAR(150) NOT NULL DEFAULT 'Consulta General',
+    subject VARCHAR(255) NOT NULL,
+    description TEXT NOT NULL,
+    related_folio_or_handle VARCHAR(100) NULL,
+    attached_file VARCHAR(255) NULL,
+    is_read TINYINT(1) NOT NULL DEFAULT 0,
+    status VARCHAR(30) NOT NULL DEFAULT 'open',
+    assigned_admin_id BIGINT UNSIGNED NULL,
+    admin_notes TEXT NULL,
+    reply_message TEXT NULL,
+    replied_at TIMESTAMP NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (assigned_admin_id) REFERENCES users(id) ON DELETE SET NULL,
+    INDEX idx_support_tickets_status (status),
+    INDEX idx_support_tickets_is_read (is_read),
+    INDEX idx_support_tickets_email (email),
+    INDEX idx_support_tickets_category (category),
+    INDEX idx_support_tickets_created (created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+
+-- ==============================================================================
+-- TABLA: email_blacklist (Lista Negra de Correos Vetados Permanentemente)
+-- ==============================================================================
+DROP TABLE IF EXISTS email_blacklist;
+CREATE TABLE email_blacklist (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    email VARCHAR(191) NOT NULL UNIQUE,
+    reason VARCHAR(255) NULL,
+    user_id BIGINT UNSIGNED NULL,
+    created_by BIGINT UNSIGNED NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL,
+    FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL,
+    INDEX idx_email_blacklist_email (email),
+    INDEX idx_email_blacklist_user_id (user_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+
+-- ==============================================================================
+-- TABLA: disciplinary_sanctions (Sanciones Disciplinarias, Strikes y Amonestaciones)
+-- ==============================================================================
+DROP TABLE IF EXISTS disciplinary_sanctions;
+CREATE TABLE disciplinary_sanctions (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    user_id BIGINT UNSIGNED NOT NULL,
+    action_type VARCHAR(30) NOT NULL, -- 'strike', 'suspension', 'ban'
+    points INT NOT NULL DEFAULT 1,
+    reason VARCHAR(500) NOT NULL,
+    category VARCHAR(50) NOT NULL DEFAULT 'conduct', -- 'conduct', 'fraud', 'doping', 'harassment', 'unfulfilled_rewards', 'other'
+    created_by BIGINT UNSIGNED NULL,
+    expires_at TIMESTAMP NULL,
+    is_active TINYINT(1) NOT NULL DEFAULT 1,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL,
+    INDEX idx_sanctions_user (user_id),
+    INDEX idx_sanctions_active (user_id, is_active)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+
+-- ==============================================================================
 -- VISTA: Top 10 Atletas del Mes
 -- ==============================================================================
 CREATE OR REPLACE VIEW view_monthly_athlete_leaderboard AS
@@ -630,6 +752,19 @@ INSERT INTO lookup_items (lookup_group_id, code, label, icon, sort_order) VALUES
 (@sports_group_id, 107, 'Fútbol & Colectivos', 'football', 7),
 (@sports_group_id, 108, 'Movilidad & Yoga', 'spa', 8),
 (@sports_group_id, 109, 'Calistenia & Freestyle', 'body', 9);
+
+-- Canonical disciplines (source of truth for athletes / home / explore)
+INSERT INTO disciplines (name, description, image_url, sort_order, show_in_home, is_active) VALUES
+('Fuerza & Gym', 'ENTRENAMIENTO', 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=800&auto=format&fit=crop', 1, 1, 1),
+('Cross Training', 'DISCIPLINA & RESULTADOS', 'https://images.unsplash.com/photo-1517838277536-f5f99be501cd?q=80&w=800&auto=format&fit=crop', 2, 1, 1),
+('Running', 'PISTA & MARATÓN', 'https://images.unsplash.com/photo-1552674605-db6ffd4facb5?q=80&w=800&auto=format&fit=crop', 3, 1, 1),
+('Ciclismo', 'RUTA & GRAVEL', '/images/carousel-cycling.jpg', 4, 1, 1),
+('Artes Marciales & Boxeo', NULL, NULL, 8, 0, 1),
+('Deportes Acuáticos', 'NATACIÓN & SURF', 'https://images.unsplash.com/photo-1530549387789-4c1017266635?q=80&w=800&auto=format&fit=crop', 5, 1, 1),
+('Fútbol & Colectivos', NULL, NULL, 9, 0, 1),
+('Bienestar', 'MENTE & CUERPO', 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?q=80&w=800&auto=format&fit=crop', 6, 1, 1),
+('Calistenia & Freestyle', NULL, NULL, 10, 0, 1),
+('Esports & Gaming', 'COMPETITIVO & SIM', 'https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=800&auto=format&fit=crop', 7, 1, 1);
 
 INSERT INTO lookup_items (lookup_group_id, code, label, icon, sort_order) VALUES
 (@trans_group_id, 201, 'Shake Único', 'shake', 1),

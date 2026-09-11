@@ -655,6 +655,7 @@ export const en: TranslationSchema = {
     continueWithGoogle: 'Continue with Google',
     continueWithApple: 'Continue with Apple',
     fillAllFieldsError: 'Please fill in all fields.',
+    captchaRequired: 'Please complete the CAPTCHA security check.',
     loginGeneralError: 'Login error. Please check your credentials.',
     sendOtpError: 'Error sending access code.',
     blacklistedEmailError: 'This email address is blacklisted and has restricted access to the platform.',

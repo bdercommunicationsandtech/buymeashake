@@ -21,6 +21,7 @@ from app.core.security import (
     get_password_hash,
     verify_password,
 )
+from app.core.turnstile import verify_turnstile_token
 from app.models.entities import (
     AthleteDiscipline,
     AthleteMonetization,
@@ -191,6 +192,7 @@ class AuthService:
         )
 
     async def login(self, dto: UserLoginRequest) -> TokenResponse:
+        await verify_turnstile_token(dto.cf_turnstile_token)
         await assert_email_not_blacklisted(self.session, dto.email)
         user = await self.user_repo.get_by_email(dto.email)
         if not user:

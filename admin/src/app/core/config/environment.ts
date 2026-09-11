@@ -3,6 +3,9 @@ export const environment = {
   production: false,
   useMock: false,
   apiBaseUrl: 'http://localhost:8000/api/v1',
-  /** Empty = Turnstile disabled. */
-  cloudflareTurnstileSiteKey: '',
+  /**
+   * Cloudflare Turnstile site key (Widget "local host" — same as Bder).
+   * Empty = widget hidden / CAPTCHA disabled.
+   */
+  cloudflareTurnstileSiteKey: '0x4AAAAAAEwu6VJZ5Ua_uUuA',
 };

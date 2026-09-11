@@ -1,4 +1,4 @@
-import { Component, computed, effect, inject, OnDestroy, OnInit, signal } from '@angular/core';
+import { Component, computed, effect, inject, AfterViewInit, OnDestroy, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
@@ -9,6 +9,7 @@ import { ThemeService } from '../../../core/theme.service';
 import { FirebaseNeedsRoleDetails } from '../../../core/api.models';
 import { BrandLogoComponent } from '../../../shared/brand-logo/brand-logo.component';
 import { ChromeControlsComponent } from '../../../shared/chrome-controls/chrome-controls.component';
+import { environment } from '../../../../environments/environment';
 
 type ErrorDescriptor =
   | { type: 'userNotFound' }
@@ -34,7 +35,7 @@ type InfoKey = 'activeOtpNotice' | 'codeResentSuccess' | 'activeSessionRedirect'
   templateUrl: './login.html',
   styleUrl: './login.css',
 })
-export class Login implements OnInit, OnDestroy {
+export class Login implements OnInit, AfterViewInit, OnDestroy {
   private readonly auth = inject(AuthService);
   private readonly firebaseAuth = inject(FirebaseAuthService);
   private readonly router = inject(Router);
@@ -55,6 +56,10 @@ export class Login implements OnInit, OnDestroy {
   readonly infoState = signal<InfoKey | null>(null);
   readonly resendCooldown = signal<number>(0);
   private cooldownInterval: ReturnType<typeof setInterval> | null = null;
+
+  private turnstileWidgetId: string | null = null;
+  private turnstileToken: string | null = null;
+  private turnstilePoll: ReturnType<typeof setInterval> | null = null;
 
   readonly pendingIdToken = signal<string | null>(null);
   readonly needsRoleInfo = signal<FirebaseNeedsRoleDetails | null>(null);
@@ -126,16 +131,30 @@ export class Login implements OnInit, OnDestroy {
         void this.router.navigateByUrl(this.auth.getDefaultRoute());
       }
     });
+
+    effect(() => {
+      this.theme.currentTheme();
+      this.loginMode();
+      queueMicrotask(() => this.renderTurnstile());
+    });
   }
 
   ngOnInit(): void {
     this.restorePendingOtpSession();
   }
 
+  ngAfterViewInit(): void {
+    this.renderTurnstile();
+  }
+
   ngOnDestroy(): void {
     if (this.cooldownInterval) {
       clearInterval(this.cooldownInterval);
     }
+    if (this.turnstilePoll) {
+      clearInterval(this.turnstilePoll);
+    }
+    this.destroyTurnstile();
     this.otpCode = '';
   }
 
@@ -158,6 +177,85 @@ export class Login implements OnInit, OnDestroy {
     this.otpCode = '';
     this.errorState.set(null);
     this.infoState.set(null);
+    if (mode !== 'password') {
+      this.destroyTurnstile();
+    }
+  }
+
+  private renderTurnstile(): void {
+    const siteKey = environment.cloudflareTurnstileSiteKey;
+    if (!siteKey || this.loginMode() !== 'password') {
+      this.destroyTurnstile();
+      return;
+    }
+
+    const container = document.getElementById('turnstile-container');
+    if (!container) return;
+
+    const checkAndRender = (): boolean => {
+      const turnstileObj = (window as any).turnstile;
+      if (!turnstileObj) return false;
+      try {
+        this.destroyTurnstile();
+        this.turnstileWidgetId = turnstileObj.render('#turnstile-container', {
+          sitekey: siteKey,
+          theme: this.theme.currentTheme() === 'dark' ? 'dark' : 'light',
+          callback: (token: string) => {
+            this.turnstileToken = token;
+            this.errorState.set(null);
+          },
+          'expired-callback': () => {
+            this.turnstileToken = null;
+          },
+          'error-callback': () => {
+            this.turnstileToken = null;
+          },
+        });
+        return true;
+      } catch {
+        return true;
+      }
+    };
+
+    if (this.turnstilePoll) {
+      clearInterval(this.turnstilePoll);
+      this.turnstilePoll = null;
+    }
+
+    if (!checkAndRender()) {
+      const start = Date.now();
+      this.turnstilePoll = setInterval(() => {
+        if (checkAndRender() || Date.now() - start > 5000) {
+          if (this.turnstilePoll) clearInterval(this.turnstilePoll);
+          this.turnstilePoll = null;
+        }
+      }, 100);
+    }
+  }
+
+  private destroyTurnstile(): void {
+    const turnstileObj = (window as any).turnstile;
+    if (turnstileObj && this.turnstileWidgetId) {
+      try {
+        turnstileObj.remove(this.turnstileWidgetId);
+      } catch {
+        /* widget already gone */
+      }
+    }
+    this.turnstileWidgetId = null;
+    this.turnstileToken = null;
+  }
+
+  private resetTurnstile(): void {
+    const turnstileObj = (window as any).turnstile;
+    if (turnstileObj && this.turnstileWidgetId) {
+      try {
+        turnstileObj.reset(this.turnstileWidgetId);
+      } catch {
+        /* ignore */
+      }
+    }
+    this.turnstileToken = null;
   }
 
   onSubmit(): void {
@@ -170,20 +268,32 @@ export class Login implements OnInit, OnDestroy {
       return;
     }
 
+    if (environment.cloudflareTurnstileSiteKey && !this.turnstileToken) {
+      this.errorState.set({ type: 'custom', message: this.t().auth.captchaRequired });
+      return;
+    }
+
     this.loading.set(true);
     this.errorState.set(null);
     this.infoState.set(null);
 
-    this.auth.login({ email: this.email, password: this.password }).subscribe({
-      next: () => {
-        this.loading.set(false);
-        this.router.navigate([this.auth.getDefaultRoute()]);
-      },
-      error: (err) => {
-        this.loading.set(false);
-        this.setBackendError(err, 'loginGeneral');
-      },
-    });
+    this.auth
+      .login({
+        email: this.email,
+        password: this.password,
+        cf_turnstile_token: this.turnstileToken || undefined,
+      })
+      .subscribe({
+        next: () => {
+          this.loading.set(false);
+          this.router.navigate([this.auth.getDefaultRoute()]);
+        },
+        error: (err) => {
+          this.loading.set(false);
+          this.resetTurnstile();
+          this.setBackendError(err, 'loginGeneral');
+        },
+      });
   }
 
   readonly EMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
@@ -504,6 +614,11 @@ export class Login implements OnInit, OnDestroy {
 
     if (err?.status === 404 || code === 'ENTITY_NOT_FOUND' || details?.entity === 'Usuario') {
       this.errorState.set({ type: 'userNotFound' });
+      return;
+    }
+
+    if (err?.status === 400 && errorObj?.message) {
+      this.errorState.set({ type: 'custom', message: String(errorObj.message) });
       return;
     }
 

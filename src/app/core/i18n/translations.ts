@@ -653,6 +653,7 @@ export interface TranslationSchema {
     continueWithGoogle: string;
     continueWithApple: string;
     fillAllFieldsError: string;
+    captchaRequired: string;
     loginGeneralError: string;
     sendOtpError: string;
     blacklistedEmailError: string;

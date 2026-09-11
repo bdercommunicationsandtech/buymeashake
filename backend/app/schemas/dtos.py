@@ -81,11 +81,13 @@ class UserRegisterRequest(BaseModel):
 class UserLoginRequest(BaseModel):
     email: EmailStr = Field(max_length=191)
     password: str = Field(max_length=128)
+    cf_turnstile_token: str | None = None
 
 
 class AdminLoginRequest(BaseModel):
     email: EmailStr
     password: str = Field(min_length=1, max_length=256)
+    cf_turnstile_token: str | None = None
 
 
 class AdminLoginResponse(BaseModel):

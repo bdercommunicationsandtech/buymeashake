@@ -655,6 +655,7 @@ export const es: TranslationSchema = {
     continueWithGoogle: 'Continuar con Google',
     continueWithApple: 'Continuar con Apple',
     fillAllFieldsError: 'Por favor completa todos los campos.',
+    captchaRequired: 'Por favor, completa la verificación de seguridad CAPTCHA.',
     loginGeneralError: 'Error al iniciar sesión. Verifica tus credenciales.',
     sendOtpError: 'Error al enviar código de acceso.',
     blacklistedEmailError: 'Este correo electrónico se encuentra en la lista negra y tiene el acceso restringido a la plataforma.',

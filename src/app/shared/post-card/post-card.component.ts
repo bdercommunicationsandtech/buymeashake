@@ -6,6 +6,7 @@ import { IconLockComponent } from '../icons';
 import { AllowedUserTextDirective } from '../../core/directives/allowed-user-text.directive';
 import { LanguageService } from '../../core/language.service';
 
+
 export interface PostCommentItem {
   id: number;
   userName: string;
@@ -25,6 +26,7 @@ export interface PostItem {
   publishedAt: string;
   likesCount: number;
   commentsCount: number;
+  isLiked?: boolean;
   isMembersOnly: boolean;
   isShakeSupporters?: boolean;
   requiredTierName?: string | null;
@@ -198,14 +200,33 @@ export interface PostItem {
           <div class="flex items-center gap-4">
             <button
               type="button"
-              (click)="onLike.emit(post().id)"
-              class="flex items-center gap-1.5 hover:text-red-500 transition py-1 px-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/30 cursor-pointer"
+              (click)="handleLikeClick()"
+              class="flex items-center gap-1.5 py-1 px-2 rounded-lg cursor-pointer select-none active:scale-95 transition-transform duration-100"
+              [class]="post().isLiked
+                ? 'text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30'
+                : 'hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30'"
               [attr.aria-label]="t().post.likeAria"
+              [attr.aria-pressed]="post().isLiked ? 'true' : 'false'"
             >
-              <svg class="w-4 h-4 text-red-500" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd" />
-              </svg>
-              <span>{{ post().likesCount }}</span>
+              <span
+                class="inline-flex relative"
+                [class.bm-like-pop]="likePulse()"
+                (animationend)="likePulse.set(false)"
+              >
+                @if (post().isLiked) {
+                  <svg class="w-4 h-4 text-red-500" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd" />
+                  </svg>
+                } @else {
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                  </svg>
+                }
+              </span>
+              <span
+                class="tabular-nums"
+                [class.bm-like-count-bump]="likePulse()"
+              >{{ post().likesCount }}</span>
             </button>
 
             <button
@@ -241,54 +262,107 @@ export interface PostItem {
         <!-- Sección Desplegable de Comentarios -->
         @if (commentsOpen()) {
           <div class="pt-3 border-t border-gray-100 dark:border-white/5 space-y-3">
-            
-            <!-- Input para agregar comentario -->
-            <div class="flex gap-2">
-              <input
-                type="text"
-                appAllowedUserText
-                maxlength="200"
-                [placeholder]="t().post.writeComment"
-                class="flex-1 text-xs p-2.5 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50/50 dark:bg-white/5 text-gray-900 dark:text-white outline-none focus:border-[#c9ff3d]"
-                [ngModel]="newCommentText()"
-                (ngModelChange)="newCommentText.set($event)"
-                (keyup.enter)="submitComment()"
-              />
-              <button
-                type="button"
-                (click)="submitComment()"
-                [disabled]="!newCommentText().trim()"
-                class="px-3 py-2 bg-gray-950 dark:bg-[#c9ff3d] text-white dark:text-gray-950 rounded-xl text-xs font-bold disabled:opacity-40 cursor-pointer"
+
+            @if (isLocked()) {
+              <div
+                class="rounded-xl border px-3 py-3 text-xs leading-relaxed"
+                [class]="post().isShakeSupporters
+                  ? 'border-sky-200 bg-sky-50/80 text-sky-900 dark:border-sky-900/50 dark:bg-sky-950/30 dark:text-sky-100'
+                  : 'border-amber-200 bg-amber-50/80 text-amber-950 dark:border-amber-900/50 dark:bg-amber-950/30 dark:text-amber-100'"
               >
-                {{ t().post.submitComment }}
-              </button>
-            </div>
+                <p class="font-bold">
+                  {{ post().isShakeSupporters ? t().post.shakeSupporters : t().post.membersOnly }}
+                </p>
+                <p class="mt-1 opacity-90">
+                  {{ post().isShakeSupporters ? t().post.commentLockedShake : t().post.commentLockedMembers }}
+                </p>
+                <button
+                  type="button"
+                  (click)="onUnlock.emit(post())"
+                  class="mt-2.5 inline-flex items-center gap-1.5 rounded-full bg-[#c9ff3d] px-3.5 py-1.5 text-[11px] font-black text-gray-950 hover:bg-[#bbf033] transition cursor-pointer"
+                >
+                  {{ t().post.commentLockedCta }}
+                </button>
+              </div>
+            } @else {
+              <!-- Input para agregar comentario -->
+              <div class="flex gap-2">
+                <input
+                  type="text"
+                  appAllowedUserText
+                  maxlength="200"
+                  [placeholder]="t().post.writeComment"
+                  [disabled]="isCommenting()"
+                  class="flex-1 text-xs p-2.5 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50/50 dark:bg-white/5 text-gray-900 dark:text-white outline-none focus:border-[#c9ff3d] disabled:opacity-60"
+                  [ngModel]="newCommentText()"
+                  (ngModelChange)="newCommentText.set($event)"
+                  (keyup.enter)="submitComment()"
+                />
+                <button
+                  type="button"
+                  (click)="submitComment()"
+                  [disabled]="isCommenting() || !newCommentText().trim()"
+                  class="min-w-[5.5rem] inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-gray-950 dark:bg-[#c9ff3d] text-white dark:text-gray-950 rounded-xl text-xs font-bold disabled:opacity-50 cursor-pointer"
+                >
+                  @if (isCommenting()) {
+                    <span
+                      class="inline-block h-3.5 w-3.5 rounded-full border-2 border-current border-t-transparent animate-spin"
+                      aria-hidden="true"
+                    ></span>
+                    <span>{{ t().post.submittingComment }}</span>
+                  } @else {
+                    {{ t().post.submitComment }}
+                  }
+                </button>
+              </div>
+            }
 
             <!-- Lista de comentarios -->
-            <div class="space-y-2 pt-1">
-              @for (c of post().comments; track c.id) {
-                <div class="flex items-start gap-2.5 p-2.5 rounded-xl bg-gray-50/60 dark:bg-white/5 text-xs">
-                  <div class="h-6 w-6 rounded-full bg-gray-900 text-[#c9ff3d] grid place-items-center font-bold text-[10px] shrink-0">
-                    {{ c.userName.slice(0, 1).toUpperCase() }}
-                  </div>
-                  <div class="flex-1 min-w-0">
-                    <div class="flex items-center justify-between">
-                      <span class="font-bold text-gray-900 dark:text-white">{{ c.userName }}</span>
-                      <span class="text-[10px] text-gray-400">{{ c.createdAt }}</span>
+            @if (!isLocked()) {
+              <div class="space-y-2 pt-1">
+                @for (c of post().comments; track c.id) {
+                  <div class="flex items-start gap-2.5 p-2.5 rounded-xl bg-gray-50/60 dark:bg-white/5 text-xs">
+                    <div class="h-6 w-6 rounded-full bg-gray-900 text-[#c9ff3d] grid place-items-center font-bold text-[10px] shrink-0">
+                      {{ c.userName.slice(0, 1).toUpperCase() }}
                     </div>
-                    <p class="text-gray-600 dark:text-gray-300 mt-0.5">{{ c.content }}</p>
+                    <div class="flex-1 min-w-0">
+                      <div class="flex items-center justify-between">
+                        <span class="font-bold text-gray-900 dark:text-white">{{ c.userName }}</span>
+                        <span class="text-[10px] text-gray-400">{{ c.createdAt }}</span>
+                      </div>
+                      <p class="text-gray-600 dark:text-gray-300 mt-0.5">{{ c.content }}</p>
+                    </div>
                   </div>
-                </div>
-              } @empty {
-                <p class="text-xs text-center text-gray-400 py-2">{{ t().post.firstToComment }}</p>
-              }
-            </div>
+                } @empty {
+                  <p class="text-xs text-center text-gray-400 py-2">{{ t().post.firstToComment }}</p>
+                }
+              </div>
+            }
 
           </div>
         }
 
       </div>
     </article>
+  `,
+  styles: `
+    @keyframes bm-like-pop {
+      0% { transform: scale(1); }
+      35% { transform: scale(1.35); }
+      65% { transform: scale(0.92); }
+      100% { transform: scale(1); }
+    }
+    @keyframes bm-like-count-bump {
+      0% { transform: translateY(0); opacity: 1; }
+      40% { transform: translateY(-3px); opacity: 0.85; }
+      100% { transform: translateY(0); opacity: 1; }
+    }
+    .bm-like-pop {
+      animation: bm-like-pop 320ms cubic-bezier(0.2, 0.9, 0.3, 1.4);
+    }
+    .bm-like-count-bump {
+      animation: bm-like-count-bump 280ms ease-out;
+    }
   `,
 })
 export class PostCardComponent {
@@ -299,10 +373,22 @@ export class PostCardComponent {
   readonly onLike = output<string>();
   readonly onUnlock = output<PostItem>();
   readonly onRead = output<PostItem>();
-  readonly onComment = output<{ postId: string; content: string }>();
+  readonly onComment = output<{
+    postId: string;
+    content: string;
+    done: (ok: boolean) => void;
+  }>();
 
   readonly commentsOpen = signal(false);
   readonly newCommentText = signal('');
+  readonly likePulse = signal(false);
+  readonly isCommenting = signal(false);
+
+  handleLikeClick(): void {
+    this.likePulse.set(false);
+    queueMicrotask(() => this.likePulse.set(true));
+    this.onLike.emit(this.post().id);
+  }
 
   isLocked(): boolean {
     return this.post().isUnlocked === false;
@@ -313,9 +399,19 @@ export class PostCardComponent {
   }
 
   submitComment(): void {
+    if (this.isLocked() || this.isCommenting()) return;
     const text = this.newCommentText().trim();
     if (!text) return;
-    this.onComment.emit({ postId: this.post().id, content: text });
+
+    this.isCommenting.set(true);
     this.newCommentText.set('');
+    this.onComment.emit({
+      postId: this.post().id,
+      content: text,
+      done: (ok) => {
+        this.isCommenting.set(false);
+        if (!ok) this.newCommentText.set(text);
+      },
+    });
   }
 }

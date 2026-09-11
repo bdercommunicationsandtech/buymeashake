@@ -39,11 +39,32 @@ export class SupporterService {
     return this.http.delete<{ message: string; following: boolean }>(`${this.apiUrl}/follow/${handle}`);
   }
 
-  likePost(postId: number): Observable<{ success: boolean; likes_count: number }> {
-    return this.http.post<{ success: boolean; likes_count: number }>(`${this.apiUrl}/posts/${postId}/like`, {});
+  likePost(postId: number): Observable<{ success: boolean; likes_count: number; liked: boolean }> {
+    return this.http.post<{ success: boolean; likes_count: number; liked: boolean }>(
+      `${this.apiUrl}/posts/${postId}/like`,
+      {},
+    );
   }
 
-  commentOnPost(postId: number, content: string): Observable<any> {
-    return this.http.post<any>(`${this.apiUrl}/posts/${postId}/comments`, { content });
+  commentOnPost(postId: number, content: string): Observable<{
+    id: number;
+    post_id: number;
+    user_id: number;
+    user_name: string;
+    user_avatar: string | null;
+    content: string;
+    likes_count: number;
+    created_at: string;
+  }> {
+    return this.http.post<{
+      id: number;
+      post_id: number;
+      user_id: number;
+      user_name: string;
+      user_avatar: string | null;
+      content: string;
+      likes_count: number;
+      created_at: string;
+    }>(`${this.apiUrl}/posts/${postId}/comments`, { content });
   }
 }

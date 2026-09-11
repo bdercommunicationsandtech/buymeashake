@@ -1,13 +1,17 @@
 import { Component, computed, inject, OnDestroy, SecurityContext, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { DomSanitizer } from '@angular/platform-browser';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { ExploreService } from '../../../core/explore.service';
-import { PostItemDto } from '../../../core/api.models';
+import { PostCommentDto, PostItemDto } from '../../../core/api.models';
 import { LanguageService } from '../../../core/language.service';
+import { AuthService } from '../../../core/auth.service';
+import { SupporterService } from '../../../core/supporter.service';
 import { isSafeMediaUrl, resolveMediaUrl, resolveMediaUrlsInContent } from '../../../core/media-url';
 import { IconLockComponent } from '../../../shared/icons';
+import { AllowedUserTextDirective } from '../../../core/directives/allowed-user-text.directive';
 
 function extractFirstImageUrl(content: string): string | null {
   const htmlMatch = content.match(/<img[^>]+src=["']([^"']+)["']/i);
@@ -64,12 +68,15 @@ function toRenderableHtml(content: string, stripLeadingImage = false): string {
 @Component({
   selector: 'app-post-detail',
   standalone: true,
-  imports: [CommonModule, RouterLink, IconLockComponent],
+  imports: [CommonModule, FormsModule, RouterLink, IconLockComponent, AllowedUserTextDirective],
   templateUrl: './post-detail.html',
 })
 export class PostDetail implements OnDestroy {
   private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
   private readonly exploreService = inject(ExploreService);
+  private readonly authService = inject(AuthService);
+  private readonly supporterService = inject(SupporterService);
   private readonly sanitizer = inject(DomSanitizer);
   readonly i18n = inject(LanguageService);
   readonly t = this.i18n.t;
@@ -79,6 +86,9 @@ export class PostDetail implements OnDestroy {
   readonly errorMessage = signal<string | null>(null);
   readonly post = signal<PostItemDto | null>(null);
   readonly handle = signal('');
+  readonly commentsOpen = signal(false);
+  readonly newCommentText = signal('');
+  readonly isCommenting = signal(false);
 
   readonly isLocked = computed(() => this.post()?.is_unlocked === false);
 
@@ -148,17 +158,78 @@ export class PostDetail implements OnDestroy {
 
   readonly unlockFragment = computed(() => 'support');
 
+  readonly commentItems = computed(() => {
+    const comments = this.post()?.comments || [];
+    const locale = this.i18n.lang() === 'es' ? 'es-MX' : 'en-US';
+    return comments.map((c) => ({
+      id: c.id,
+      userName: c.user_name,
+      userAvatar: resolveMediaUrl(c.user_avatar) || c.user_avatar,
+      content: c.content,
+      createdAt: this.formatCommentDate(c.created_at, locale),
+    }));
+  });
+
   constructor() {
     this.paramsSub = this.route.paramMap.subscribe((params) => {
       const nextHandle = params.get('username') || '';
       const nextPostId = params.get('postId') || '';
       this.handle.set(nextHandle);
+      this.commentsOpen.set(false);
+      this.newCommentText.set('');
+      this.isCommenting.set(false);
       this.loadPost(nextHandle, nextPostId);
     });
   }
 
   ngOnDestroy(): void {
     this.paramsSub.unsubscribe();
+  }
+
+  toggleComments(): void {
+    this.commentsOpen.update((v) => !v);
+  }
+
+  submitComment(): void {
+    if (this.isLocked() || this.isCommenting()) return;
+    const text = this.newCommentText().trim();
+    if (!text) return;
+
+    if (!this.authService.isAuthenticated()) {
+      this.router.navigate(['/auth/login'], {
+        queryParams: { returnUrl: window.location.pathname },
+      });
+      return;
+    }
+
+    const current = this.post();
+    if (!current) return;
+
+    this.isCommenting.set(true);
+    this.newCommentText.set('');
+    this.supporterService.commentOnPost(current.id, text).subscribe({
+      next: (comment: PostCommentDto) => {
+        this.post.update((p) => {
+          if (!p) return p;
+          return {
+            ...p,
+            comments: [...(p.comments || []), comment],
+          };
+        });
+        this.isCommenting.set(false);
+        this.commentsOpen.set(true);
+      },
+      error: () => {
+        this.isCommenting.set(false);
+        this.newCommentText.set(text);
+      },
+    });
+  }
+
+  private formatCommentDate(value: string, locale: string): string {
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return value;
+    return date.toLocaleDateString(locale);
   }
 
   private loadPost(handle: string, postId: string): void {

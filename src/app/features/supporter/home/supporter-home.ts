@@ -234,6 +234,7 @@ import { resolveMediaUrl } from '../../../core/media-url';
                 <app-post-card
                   [post]="post"
                   (onLike)="likePost($event)"
+                  (onComment)="commentOnPost($event)"
                   (onUnlock)="unlockPost($event)"
                 />
               }
@@ -405,13 +406,21 @@ export class DashboardSupporterHome implements OnInit {
             authorHandle: item.author_handle || '',
             publishedAt: new Date(item.published_at).toLocaleDateString(),
             likesCount: item.likes_count,
-            commentsCount: 0,
+            commentsCount: item.comments?.length || 0,
+            isLiked: !!item.is_liked,
             isMembersOnly,
             isShakeSupporters,
             isUnlocked,
             coverImageUrl:
               fromApi ||
               (isUnlocked ? resolveMediaUrl(htmlMatch?.[1] || mdMatch?.[1] || null) : null),
+            comments: (item.comments || []).map((cm) => ({
+              id: cm.id,
+              userName: cm.user_name,
+              userAvatar: resolveMediaUrl(cm.user_avatar) || cm.user_avatar,
+              content: cm.content,
+              createdAt: new Date(cm.created_at).toLocaleDateString(),
+            })),
           };
         });
         this.feedPosts.set(mapped);
@@ -423,10 +432,78 @@ export class DashboardSupporterHome implements OnInit {
     });
   }
 
+  private readonly likingPostIds = new Set<string>();
+
   likePost(postId: string): void {
+    if (this.likingPostIds.has(postId)) return;
+
+    const current = this.feedPosts().find((p) => p.id === postId);
+    if (!current) return;
+
+    const prevLiked = !!current.isLiked;
+    const prevCount = current.likesCount;
+    const optimisticLiked = !prevLiked;
+    const optimisticCount = Math.max(0, prevCount + (optimisticLiked ? 1 : -1));
+
     this.feedPosts.update((list) =>
-      list.map((p) => (p.id === postId ? { ...p, likesCount: p.likesCount + 1 } : p))
+      list.map((p) =>
+        p.id === postId ? { ...p, likesCount: optimisticCount, isLiked: optimisticLiked } : p,
+      ),
     );
+
+    this.likingPostIds.add(postId);
+    this.supporterService.likePost(Number(postId)).subscribe({
+      next: (res) => {
+        this.likingPostIds.delete(postId);
+        this.feedPosts.update((list) =>
+          list.map((p) =>
+            p.id === postId
+              ? { ...p, likesCount: res.likes_count, isLiked: res.liked }
+              : p,
+          ),
+        );
+      },
+      error: () => {
+        this.likingPostIds.delete(postId);
+        this.feedPosts.update((list) =>
+          list.map((p) =>
+            p.id === postId ? { ...p, likesCount: prevCount, isLiked: prevLiked } : p,
+          ),
+        );
+      },
+    });
+  }
+
+  commentOnPost(event: { postId: string; content: string; done: (ok: boolean) => void }): void {
+    const postId = Number(event.postId);
+    this.supporterService.commentOnPost(postId, event.content).subscribe({
+      next: (comment) => {
+        this.feedPosts.update((list) =>
+          list.map((p) =>
+            p.id === event.postId
+              ? {
+                  ...p,
+                  commentsCount: (p.commentsCount || 0) + 1,
+                  comments: [
+                    ...(p.comments || []),
+                    {
+                      id: comment.id,
+                      userName: comment.user_name,
+                      userAvatar: comment.user_avatar,
+                      content: comment.content,
+                      createdAt: 'Justo ahora',
+                    },
+                  ],
+                }
+              : p,
+          ),
+        );
+        event.done(true);
+      },
+      error: () => {
+        event.done(false);
+      },
+    });
   }
 
   unlockPost(post: PostItem): void {

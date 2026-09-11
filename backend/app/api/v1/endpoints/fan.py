@@ -84,7 +84,7 @@ async def like_post(
     user: CurrentUser,
     session: DatabaseSession,
 ) -> dict:
-    """Da like a una publicación."""
+    """Toggle like: si ya existe lo quita; si no, lo agrega."""
     service = SupporterService(session)
     return await service.like_post(post_id=post_id, user_id=user.id)
 

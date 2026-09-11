@@ -520,7 +520,11 @@ export interface TranslationSchema {
     readMore: string;
     writeComment: string;
     submitComment: string;
+    submittingComment: string;
     firstToComment: string;
+    commentLockedMembers: string;
+    commentLockedShake: string;
+    commentLockedCta: string;
     backToProfile: string;
     loadingPost: string;
   };

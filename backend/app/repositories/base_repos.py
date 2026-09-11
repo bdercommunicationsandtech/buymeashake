@@ -598,31 +598,48 @@ class PostRepository:
         await self.session.delete(post)
         await self.session.flush()
 
-    async def like_post(self, post_id: int, user_id: int) -> int:
+    async def toggle_like_post(self, post_id: int, user_id: int) -> tuple[int, bool]:
+        """Toggle like. Returns (likes_count, is_liked)."""
         post = await self.get_by_id(post_id)
         if not post:
-            return 0
+            return 0, False
         existing = (
             await self.session.execute(
                 select(PostLike).where(PostLike.post_id == post_id, PostLike.user_id == user_id)
             )
         ).scalar_one_or_none()
         if existing:
-            return post.likes_count or 0
+            await self.session.delete(existing)
+            post.likes_count = max((post.likes_count or 0) - 1, 0)
+            await self.session.flush()
+            return post.likes_count or 0, False
         self.session.add(PostLike(post_id=post_id, user_id=user_id))
         post.likes_count = (post.likes_count or 0) + 1
         await self.session.flush()
-        return post.likes_count
+        return post.likes_count or 0, True
+
+    async def get_liked_post_ids(self, user_id: int, post_ids: list[int]) -> set[int]:
+        if not post_ids:
+            return set()
+        result = await self.session.execute(
+            select(PostLike.post_id).where(
+                PostLike.user_id == user_id,
+                PostLike.post_id.in_(post_ids),
+            )
+        )
+        return set(result.scalars().all())
 
     async def add_comment(self, post_id: int, user_id: int, content: str) -> PostComment:
         comment = PostComment(
             post_id=post_id,
             user_id=user_id,
             content=content,
+            likes_count=0,
         )
         self.session.add(comment)
         await self.session.flush()
-        await self.session.refresh(comment, ["user"])
+        # Reload server defaults (created_at/updated_at) — avoid MissingGreenlet on lazy load.
+        await self.session.refresh(comment)
         return comment
 
 
@@ -1011,7 +1028,10 @@ class FollowRepository:
         offset = (page - 1) * page_size
         posts_q = (
             select(Post)
-            .options(selectinload(Post.athlete).selectinload(AthleteProfile.user))
+            .options(
+                selectinload(Post.athlete).selectinload(AthleteProfile.user),
+                selectinload(Post.comments).selectinload(PostComment.user),
+            )
             .where(*conditions)
             .order_by(Post.published_at.desc())
             .offset(offset)

@@ -806,6 +806,7 @@
             <app-post-card
               [post]="post"
               (onLike)="likePost($event)"
+              (onComment)="commentOnPost($event)"
               (onUnlock)="unlockPost($event)"
             />
           }

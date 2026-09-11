@@ -755,6 +755,9 @@ class SupporterService:
         shake_res = await self.session.execute(shake_query)
         shake_supporter_athlete_ids = set(shake_res.scalars().all())
 
+        post_repo = PostRepository(self.session)
+        liked_ids = await post_repo.get_liked_post_ids(supporter_id, [p.id for p in posts])
+
         items = []
         for p in posts:
             author_name = p.athlete.user.full_name if p.athlete and p.athlete.user else "Atleta"
@@ -762,17 +765,37 @@ class SupporterService:
             access = str(p.access_type)
             flags = _post_access_flags(access)
 
+            # members_only: solo sub activa
+            # shake_supporters: shake completado O sub activa (members incluyen acceso shake)
             is_unlocked = not (
                 (flags["is_members_only"] and p.athlete_id not in active_subscribed_athlete_ids)
-                or (flags["is_shake_supporters"] and p.athlete_id not in shake_supporter_athlete_ids)
+                or (
+                    flags["is_shake_supporters"]
+                    and p.athlete_id not in shake_supporter_athlete_ids
+                    and p.athlete_id not in active_subscribed_athlete_ids
+                )
             )
             if is_unlocked:
                 excerpt = (p.excerpt or "").strip() or AthleteService._resolve_excerpt(p)
                 display_content = p.content_html
+                comments = [
+                    PostCommentResponse(
+                        id=c.id,
+                        post_id=c.post_id,
+                        user_id=c.user_id,
+                        user_name=c.user.full_name if c.user else "Fan",
+                        user_avatar=c.user.avatar_url if c.user else None,
+                        content=c.content,
+                        likes_count=c.likes_count or 0,
+                        created_at=c.created_at,
+                    )
+                    for c in (p.comments or [])
+                ]
             else:
                 excerpt = _locked_public_teaser(p)
                 safe = html.escape(excerpt) if excerpt else ""
                 display_content = f"<p>{safe}</p>" if safe else "<p></p>"
+                comments = []
 
             items.append(PostResponse(
                 id=p.id,
@@ -786,6 +809,8 @@ class SupporterService:
                 author_name=author_name,
                 author_handle=author_handle,
                 is_unlocked=is_unlocked,
+                is_liked=p.id in liked_ids,
+                comments=comments,
                 **flags,
             ))
         total_pages = (total + page_size - 1) // page_size if total > 0 else 1
@@ -820,8 +845,8 @@ class SupporterService:
 
     async def like_post(self, post_id: int, user_id: int) -> dict:
         post_repo = PostRepository(self.session)
-        new_likes = await post_repo.like_post(post_id, user_id)
-        return {"success": True, "likes_count": new_likes}
+        likes_count, is_liked = await post_repo.toggle_like_post(post_id, user_id)
+        return {"success": True, "likes_count": likes_count, "liked": is_liked}
 
     async def comment_post(self, user: User, post_id: int, content: str) -> PostCommentResponse:
         post_repo = PostRepository(self.session)
@@ -829,23 +854,26 @@ class SupporterService:
         if not post:
             raise EntityNotFoundError("Post", post_id)
 
-        # Si el post es exclusivo para miembros, verificar que el usuario sea el autor o tenga suscripción activa
-        if post.access_type == "members_only":
-            is_author = post.athlete and post.athlete.user_id == user.id
-            if not is_author:
-                sub_query = (
-                    select(Subscription.id)
-                    .join(MembershipTier, MembershipTier.id == Subscription.tier_id)
-                    .where(
-                        MembershipTier.athlete_id == post.athlete_id,
-                        Subscription.user_id == user.id,
-                        Subscription.status == "active",
+        access = str(post.access_type)
+        if access == "draft":
+            raise EntityNotFoundError("Post", post_id)
+
+        is_author = bool(post.athlete and post.athlete.user_id == user.id)
+        if not is_author and access in ("members_only", "shake_supporters"):
+            athlete_svc = AthleteService(self.session)
+            entitlements = await athlete_svc._viewer_post_entitlements(
+                user,
+                athlete_id=post.athlete_id,
+                owner_user_id=post.athlete.user_id if post.athlete else None,
+            )
+            if not athlete_svc._can_view_full_post(post, entitlements):
+                if access == "members_only":
+                    raise ForbiddenError(
+                        "Esta publicación es exclusiva para miembros. Necesitas una suscripción activa para comentar."
                     )
-                    .limit(1)
+                raise ForbiddenError(
+                    "Esta publicación es exclusiva para quienes han comprado un Shake."
                 )
-                sub_res = await self.session.execute(sub_query)
-                if not sub_res.scalar_one_or_none():
-                    raise ForbiddenError("Esta publicación es exclusiva para miembros. Necesitas una suscripción activa para comentar.")
 
         comment = await post_repo.add_comment(post_id, user.id, content)
 
@@ -1022,6 +1050,9 @@ class AthleteService:
             athlete_id=profile.id,
             owner_user_id=profile.user_id,
         )
+        liked_ids: set[int] = set()
+        if viewer:
+            liked_ids = await post_repo.get_liked_post_ids(viewer.id, [p.id for p in posts])
         return [
             self._to_post_response(
                 p,
@@ -1029,6 +1060,7 @@ class AthleteService:
                 author_handle=profile.handle,
                 is_unlocked=self._can_view_full_post(p, entitlements),
                 redact_locked=True,
+                is_liked=p.id in liked_ids,
             )
             for p in posts
         ]
@@ -1054,6 +1086,10 @@ class AthleteService:
             owner_user_id=profile.user_id,
         )
         is_unlocked = self._can_view_full_post(post, entitlements)
+        is_liked = False
+        if viewer:
+            liked_ids = await post_repo.get_liked_post_ids(viewer.id, [post.id])
+            is_liked = post.id in liked_ids
         author_name = profile.user.full_name if profile.user else profile.handle
         return self._to_post_response(
             post,
@@ -1061,6 +1097,7 @@ class AthleteService:
             author_handle=profile.handle,
             is_unlocked=is_unlocked,
             redact_locked=True,
+            is_liked=is_liked,
         )
 
     async def _viewer_post_entitlements(
@@ -1114,7 +1151,8 @@ class AthleteService:
         if access == "members_only":
             return bool(entitlements.get("has_sub"))
         if access == "shake_supporters":
-            return bool(entitlements.get("has_shake"))
+            # Un shake desbloquea; una sub activa también (sin necesidad de haber regalado shake).
+            return bool(entitlements.get("has_shake") or entitlements.get("has_sub"))
         return False
 
     @staticmethod
@@ -1136,6 +1174,7 @@ class AthleteService:
         author_handle: str | None = None,
         is_unlocked: bool = True,
         redact_locked: bool = False,
+        is_liked: bool = False,
     ) -> PostResponse:
         access = str(post.access_type)
         if redact_locked and not is_unlocked:
@@ -1174,6 +1213,7 @@ class AthleteService:
             author_handle=author_handle,
             comments=comments,
             is_unlocked=is_unlocked,
+            is_liked=is_liked,
             **_post_access_flags(access),
         )
 

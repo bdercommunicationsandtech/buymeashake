@@ -522,7 +522,13 @@ export const es: TranslationSchema = {
     readMore: 'Leer completo →',
     writeComment: 'Escribe un comentario...',
     submitComment: 'Comentar',
+    submittingComment: 'Enviando…',
     firstToComment: 'Sé el primero en comentar esta publicación.',
+    commentLockedMembers:
+      'No puedes comentar en este post de Solo miembros porque aún no tienes acceso con una membresía activa.',
+    commentLockedShake:
+      'No puedes comentar en este post de Shake supporters porque aún no tienes acceso con un Shake.',
+    commentLockedCta: 'Desbloquear para comentar',
     backToProfile: 'Volver al perfil de',
     loadingPost: 'Cargando publicación…',
   },

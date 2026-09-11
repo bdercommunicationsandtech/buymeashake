@@ -818,6 +818,7 @@ class PostResponse(BaseModel):
     is_draft: bool = False
     is_shake_supporters: bool = False
     is_unlocked: bool = True
+    is_liked: bool = False
     author_name: str | None = None
     author_handle: str | None = None
     comments: list[PostCommentResponse] = []

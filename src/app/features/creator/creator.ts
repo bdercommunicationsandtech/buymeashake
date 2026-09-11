@@ -633,6 +633,7 @@ export class Creator {
               publishedAt: new Date(p.published_at).toLocaleDateString(this.i18n.lang() === 'es' ? 'es-MX' : 'en-US'),
               likesCount: p.likes_count,
               commentsCount: p.comments?.length || 0,
+              isLiked: !!p.is_liked,
               isMembersOnly: p.is_members_only || p.access_type === 'members_only',
               isShakeSupporters: !!p.is_shake_supporters || p.access_type === 'shake_supporters',
               isUnlocked,
@@ -695,24 +696,55 @@ export class Creator {
     };
   }
 
+  private readonly likingPostIds = new Set<string>();
+
   likePost(postId: string): void {
-    const id = Number(postId);
-    this.supporterService.likePost(id).subscribe({
+    if (!this.authService.isAuthenticated()) {
+      this.router.navigate(['/auth/login'], { queryParams: { returnUrl: window.location.pathname } });
+      return;
+    }
+    if (this.likingPostIds.has(postId)) return;
+
+    const current = this.posts().find((p) => p.id === postId);
+    if (!current) return;
+
+    const prevLiked = !!current.isLiked;
+    const prevCount = current.likesCount;
+    const optimisticLiked = !prevLiked;
+    const optimisticCount = Math.max(0, prevCount + (optimisticLiked ? 1 : -1));
+
+    this.posts.update((list) =>
+      list.map((p) =>
+        p.id === postId ? { ...p, likesCount: optimisticCount, isLiked: optimisticLiked } : p,
+      ),
+    );
+
+    this.likingPostIds.add(postId);
+    this.supporterService.likePost(Number(postId)).subscribe({
       next: (res) => {
+        this.likingPostIds.delete(postId);
         this.posts.update((list) =>
-          list.map((p) => (p.id === postId ? { ...p, likesCount: res.likes_count } : p)),
+          list.map((p) =>
+            p.id === postId
+              ? { ...p, likesCount: res.likes_count, isLiked: res.liked }
+              : p,
+          ),
         );
       },
       error: () => {
+        this.likingPostIds.delete(postId);
         this.posts.update((list) =>
-          list.map((p) => (p.id === postId ? { ...p, likesCount: p.likesCount + 1 } : p)),
+          list.map((p) =>
+            p.id === postId ? { ...p, likesCount: prevCount, isLiked: prevLiked } : p,
+          ),
         );
       },
     });
   }
 
-  commentOnPost(event: { postId: string; content: string }): void {
+  commentOnPost(event: { postId: string; content: string; done: (ok: boolean) => void }): void {
     if (!this.authService.isAuthenticated()) {
+      event.done(false);
       this.router.navigate(['/auth/login'], { queryParams: { returnUrl: window.location.pathname } });
       return;
     }
@@ -740,9 +772,10 @@ export class Creator {
               : p,
           ),
         );
+        event.done(true);
       },
-      error: (err) => {
-        console.error('Error adding comment:', err);
+      error: () => {
+        event.done(false);
       },
     });
   }

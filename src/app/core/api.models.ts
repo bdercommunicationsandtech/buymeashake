@@ -356,6 +356,7 @@ export interface PostResponse {
   is_draft?: boolean;
   is_shake_supporters?: boolean;
   is_unlocked?: boolean;
+  is_liked?: boolean;
   author_name?: string | null;
   author_handle?: string | null;
   comments?: PostCommentDto[];
@@ -374,6 +375,7 @@ export interface PostItemDto {
   is_draft?: boolean;
   is_shake_supporters?: boolean;
   is_unlocked?: boolean;
+  is_liked?: boolean;
   author_name?: string | null;
   author_handle?: string | null;
   comments?: PostCommentDto[];

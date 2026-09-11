@@ -22,7 +22,6 @@ class BannerItem(BaseModel):
     status_id: int = 1
     for_user: str | None = None
     platform: str = "all"
-    market_mode: str = "general"
     created_date: str = ""
     updated_date: str = ""
 
@@ -41,7 +40,6 @@ class BannerCreatePayload(BaseModel):
     status_id: int = 1
     for_user: str | None = None
     platform: str = "all"
-    market_mode: str = "general"
 
 class BannerUpdatePayload(BaseModel):
     title: str | None = None
@@ -58,7 +56,6 @@ class BannerUpdatePayload(BaseModel):
     status_id: int | None = None
     for_user: str | None = None
     platform: str | None = None
-    market_mode: str | None = None
 
 class ActionCatalogueItem(BaseModel):
     id: int
@@ -84,7 +81,6 @@ _BANNERS: list[dict[str, Any]] = [
         "display_order": 1,
         "status_id": 1,
         "platform": "all",
-        "market_mode": "general",
         "created_date": datetime.now().isoformat(),
         "updated_date": datetime.now().isoformat(),
     },
@@ -97,7 +93,6 @@ _BANNERS: list[dict[str, Any]] = [
         "display_order": 2,
         "status_id": 1,
         "platform": "all",
-        "market_mode": "general",
         "created_date": datetime.now().isoformat(),
         "updated_date": datetime.now().isoformat(),
     },
@@ -110,7 +105,6 @@ _BANNERS: list[dict[str, Any]] = [
         "display_order": 3,
         "status_id": 1,
         "platform": "all",
-        "market_mode": "general",
         "created_date": datetime.now().isoformat(),
         "updated_date": datetime.now().isoformat(),
     },
@@ -123,7 +117,6 @@ _BANNERS: list[dict[str, Any]] = [
         "display_order": 4,
         "status_id": 1,
         "platform": "all",
-        "market_mode": "general",
         "created_date": datetime.now().isoformat(),
         "updated_date": datetime.now().isoformat(),
     },
@@ -136,7 +129,6 @@ _BANNERS: list[dict[str, Any]] = [
         "display_order": 5,
         "status_id": 1,
         "platform": "all",
-        "market_mode": "general",
         "created_date": datetime.now().isoformat(),
         "updated_date": datetime.now().isoformat(),
     },

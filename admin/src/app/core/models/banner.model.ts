@@ -17,7 +17,6 @@ export interface BannerAdminItem {
   status_id: number;
   for_user?: string | null;
   platform: string;
-  market_mode: string;
   created_date: string;
   updated_date: string;
   created_by?: number | null;
@@ -39,7 +38,6 @@ export interface BannerCreatePayload {
   status_id: number;
   for_user?: string | null;
   platform: string;
-  market_mode: string;
 }
 
 export interface BannerUpdatePayload {
@@ -57,7 +55,6 @@ export interface BannerUpdatePayload {
   status_id?: number;
   for_user?: string | null;
   platform?: string;
-  market_mode?: string;
 }
 
 export interface BannerFormState {
@@ -75,7 +72,6 @@ export interface BannerFormState {
   status_id: number;
   for_user: string;
   platform: string;
-  market_mode: string;
 }
 
 export interface BannerActionCatalogueItem {

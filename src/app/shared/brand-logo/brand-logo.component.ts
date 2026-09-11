@@ -83,10 +83,10 @@ export class BrandLogoComponent {
   readonly iconBoxClass = computed(() => {
     const sizeClass =
       this.size() === 'sm'
-        ? 'h-8 w-8 sm:h-9 sm:w-9'
+        ? 'h-9 w-9 sm:h-10 sm:w-10'
         : this.size() === 'lg'
-          ? 'h-10 w-10'
-          : 'h-9 w-9';
+          ? 'h-11 w-11'
+          : 'h-10 w-10';
     const base = `grid shrink-0 place-items-center rounded-xl bg-[#c9ff3d] font-bold shadow-xs ${sizeClass}`;
     const extra = this.boxClass();
     return extra ? `${base} ${extra}` : base;
@@ -95,10 +95,10 @@ export class BrandLogoComponent {
   readonly titleImgClass = computed(() => {
     const sizeClass =
       this.size() === 'sm'
-        ? 'h-4 sm:h-5'
+        ? 'h-5 sm:h-6'
         : this.size() === 'lg'
-          ? 'h-7 sm:h-8'
-          : 'h-5 sm:h-6';
+          ? 'h-8 sm:h-9'
+          : 'h-6 sm:h-7';
     const base = `w-auto object-contain object-left ${sizeClass}`;
     const mobile = this.hideTitleOnMobile() ? ' hidden sm:block' : '';
     const extra = this.titleClass() ? ` ${this.titleClass()}` : '';

@@ -1856,11 +1856,12 @@ class StorageService:
                 f"Formato no permitido: {content_type}. Preferimos SVG (también PNG/WEBP/JPEG)."
             )
 
-        # Light sanity check for SVG payloads
+        # Light sanity check for SVG payloads + recolor hard-coded ink to currentColor
         if cleaned_type == "image/svg+xml":
             head = file_bytes[:2048].decode("utf-8", errors="ignore").lstrip().lower()
             if "<svg" not in head and "<?xml" not in head:
                 raise ValueError("El archivo no parece un SVG válido.")
+            file_bytes = StorageService._normalize_discipline_svg(file_bytes)
 
         ext = mime_to_ext[cleaned_type]
         unique_name = f"icon_{secrets.token_hex(10)}.{ext}"
@@ -1883,6 +1884,51 @@ class StorageService:
             content_type=cleaned_type,
             size_bytes=len(file_bytes),
         )
+
+    @staticmethod
+    def _normalize_discipline_svg(file_bytes: bytes) -> bytes:
+        """Replace common hard-coded black/dark strokes & fills with currentColor."""
+        import re
+
+        text = file_bytes.decode("utf-8", errors="ignore")
+        # CSS class blocks from SVG Repo / Illustrator exports
+        text = re.sub(
+            r"stroke\s*:\s*#0{3,6}\b",
+            "stroke:currentColor",
+            text,
+            flags=re.IGNORECASE,
+        )
+        text = re.sub(
+            r"fill\s*:\s*#0{3,6}\b",
+            "fill:currentColor",
+            text,
+            flags=re.IGNORECASE,
+        )
+        text = re.sub(
+            r'stroke=(["\'])#0{3,6}\1',
+            r"stroke=\1currentColor\1",
+            text,
+            flags=re.IGNORECASE,
+        )
+        text = re.sub(
+            r'fill=(["\'])#0{3,6}\1',
+            r"fill=\1currentColor\1",
+            text,
+            flags=re.IGNORECASE,
+        )
+        text = re.sub(
+            r'stroke=(["\'])black\1',
+            r"stroke=\1currentColor\1",
+            text,
+            flags=re.IGNORECASE,
+        )
+        text = re.sub(
+            r'fill=(["\'])black\1',
+            r"fill=\1currentColor\1",
+            text,
+            flags=re.IGNORECASE,
+        )
+        return text.encode("utf-8")
 
     @staticmethod
     async def save_product_file(file_bytes: bytes, original_filename: str, content_type: str) -> UploadFileResponse:

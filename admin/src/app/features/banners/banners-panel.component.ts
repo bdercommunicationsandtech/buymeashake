@@ -122,7 +122,6 @@ type BannersTab = 'banners' | 'catalogue';
                     <th scope="col" class="px-6 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">Imagen</th>
                     <th scope="col" class="px-6 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">Título</th>
                     <th scope="col" class="px-6 py-3 text-center text-xs font-bold uppercase tracking-wider text-slate-500">Plataforma</th>
-                    <th scope="col" class="px-6 py-3 text-center text-xs font-bold uppercase tracking-wider text-slate-500">Mercado</th>
                     <th scope="col" class="px-6 py-3 text-center text-xs font-bold uppercase tracking-wider text-slate-500">Orden</th>
                     <th scope="col" class="px-6 py-3 text-center text-xs font-bold uppercase tracking-wider text-slate-500">Estado</th>
                     <th scope="col" class="px-6 py-3 text-center text-xs font-bold uppercase tracking-wider text-slate-500">Acciones</th>
@@ -151,11 +150,6 @@ type BannersTab = 'banners' | 'catalogue';
                       <td class="px-6 py-4 text-center">
                         <span class="inline-flex items-center rounded bg-slate-100 px-2 py-0.5 text-xs font-bold text-slate-700 ring-1 ring-slate-200">
                           {{ platformLabel(b.platform) }}
-                        </span>
-                      </td>
-                      <td class="px-6 py-4 text-center">
-                        <span class="inline-flex items-center rounded bg-violet-50 px-2 py-0.5 text-xs font-bold text-violet-700 ring-1 ring-violet-200">
-                          {{ marketLabel(b.market_mode) }}
                         </span>
                       </td>
                       <td class="px-6 py-4 text-center text-slate-700 font-medium">{{ b.display_order }}</td>
@@ -201,7 +195,7 @@ type BannersTab = 'banners' | 'catalogue';
                     </tr>
                   } @empty {
                     <tr>
-                      <td colspan="8" class="px-6 py-16 text-center text-sm italic text-slate-400">
+                      <td colspan="7" class="px-6 py-16 text-center text-sm italic text-slate-400">
                         @if (loading()) {
                           Cargando banners...
                         } @else {
@@ -414,18 +408,6 @@ type BannersTab = 'banners' | 'catalogue';
                   </select>
                 </div>
                 <div>
-                  <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">Modo de mercado</label>
-                  <select
-                    name="market_mode"
-                    class="w-full rounded-xl border border-slate-200 px-3.5 py-2 text-sm focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition"
-                    [(ngModel)]="form.market_mode"
-                  >
-                    <option value="all">Todos</option>
-                    <option value="traditional">Traditional (venta)</option>
-                    <option value="inverse">Inverse (compra)</option>
-                  </select>
-                </div>
-                <div>
                   <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">Orden</label>
                   <input
                     name="display_order"
@@ -446,7 +428,7 @@ type BannersTab = 'banners' | 'catalogue';
                     [(ngModel)]="form.for_user"
                   />
                 </div>
-                <div class="col-span-2">
+                <div>
                   <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">Estado</label>
                   <select
                     name="status_id"
@@ -597,7 +579,7 @@ type BannersTab = 'banners' | 'catalogue';
                 <input
                   name="cat_action_url"
                   type="text"
-                  placeholder="/catalog, /buy, /guides, /market/inverse..."
+                  placeholder="/explore, /auth/register, /..."
                   class="w-full rounded-xl border border-slate-200 px-3.5 py-2 text-sm font-mono focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition"
                   [(ngModel)]="formCatalogue.action_url"
                 />
@@ -607,7 +589,7 @@ type BannersTab = 'banners' | 'catalogue';
                 <input
                   name="cat_action_url_mobile"
                   type="text"
-                  placeholder="/offers, /guides, /market/traditional, /saved-posts..."
+                  placeholder="/explore, /auth/register, /..."
                   class="w-full rounded-xl border border-slate-200 px-3.5 py-2 text-sm font-mono focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-100 transition"
                   [(ngModel)]="formCatalogue.action_url_mobile"
                 />
@@ -735,7 +717,6 @@ export class BannersPanelComponent implements OnInit {
       status_id: BANNER_STATUS_ACTIVE,
       for_user: 'all',
       platform: 'all',
-      market_mode: 'all',
     };
   }
 
@@ -809,7 +790,6 @@ export class BannersPanelComponent implements OnInit {
       status_id: b.status_id ?? BANNER_STATUS_ACTIVE,
       for_user: b.for_user || 'all',
       platform: b.platform || 'all',
-      market_mode: b.market_mode || 'all',
     };
     if (!this.actionsCatalogue().length) this.loadActionsCatalogue();
     this.modalOpen.set(true);
@@ -884,7 +864,6 @@ export class BannersPanelComponent implements OnInit {
       status_id: Number(this.form.status_id),
       for_user: this.form.for_user.trim() || 'all',
       platform: this.form.platform || 'all',
-      market_mode: this.form.market_mode || 'all',
     };
   }
 
@@ -1073,14 +1052,5 @@ export class BannersPanelComponent implements OnInit {
   platformLabel(platform: string): string {
     const map: Record<string, string> = { mobile: 'Mobile', web: 'Web', all: 'Todas' };
     return map[platform] ?? platform;
-  }
-
-  marketLabel(mode: string): string {
-    const map: Record<string, string> = {
-      all: 'Todos',
-      traditional: 'Venta',
-      inverse: 'Compra',
-    };
-    return map[mode] ?? mode;
   }
 }

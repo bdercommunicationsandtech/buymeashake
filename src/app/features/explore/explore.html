@@ -9,7 +9,7 @@
         <h1 class="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-gray-950 dark:text-white font-display">
           Top 10 Atletas <span class="text-transparent bg-clip-text bg-gradient-to-r from-[#ccff00] via-[#e2ff66] to-[#a3e600]">del Mes</span>
         </h1>
-        <p class="mt-2 text-sm sm:text-base text-gray-500 dark:text-slate-400 max-w-2xl">
+        <p class="mt-2 text-sm sm:text-base text-gray-600 dark:text-slate-400 max-w-2xl">
           {{ t().explore.subtitle }}
         </p>
       </div>
@@ -22,7 +22,7 @@
             appAllowedUserText
             maxlength="100"
             [placeholder]="t().explore.searchPlaceholder"
-            class="w-full rounded-2xl border border-gray-200 dark:border-slate-800 bg-white dark:bg-[#111613]/90 pl-11 pr-4 py-3 text-sm text-slate-200 placeholder:text-slate-500 focus:bg-[#141a16] focus:border-[#ccff00] focus:ring-2 focus:ring-[#ccff00]/20 focus:outline-none shadow-sm transition-all"
+            class="w-full rounded-2xl border border-gray-200 dark:border-slate-800 bg-white dark:bg-[#111613]/90 pl-11 pr-4 py-3 text-sm text-gray-900 dark:text-slate-200 placeholder:text-gray-400 dark:placeholder:text-slate-500 focus:bg-white dark:focus:bg-[#141a16] focus:border-[#ccff00] focus:ring-2 focus:ring-[#ccff00]/20 focus:outline-none shadow-sm transition-all"
             [value]="searchQuery()"
             (input)="onSearch($any($event.target).value)"
             aria-label="Buscar por atleta o disciplina"
@@ -43,7 +43,7 @@
           [class]="
             selectedCategory() === cat
               ? 'bg-[#ccff00] text-gray-950 font-black border-[#ccff00] shadow-[0_0_15px_rgba(204,255,0,0.35)]'
-              : 'bg-white dark:bg-[#111613] text-gray-500 dark:text-slate-400 hover:text-gray-900 dark:text-white border-gray-200 dark:border-slate-800 hover:border-slate-600'
+              : 'bg-white dark:bg-[#111613] text-gray-700 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white border-gray-300 dark:border-slate-800 hover:border-slate-600'
           "
           (click)="setCategory(cat)"
         >
@@ -81,7 +81,9 @@
                     @if (l2.avatarUrl && !avatarErrors().has(l2.id)) {
                       <img [src]="l2.avatarUrl" [alt]="l2.name" (error)="onAvatarError(l2.id)" class="w-full h-full object-cover" />
                     } @else {
-                      <span class="text-gray-600 dark:text-slate-300">{{ l2.initials }}</span>
+                      <svg class="h-10 w-10 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                      </svg>
                     }
                   </div>
                   <!-- Mini Badge #2 -->
@@ -95,7 +97,7 @@
                   <a
                     [routerLink]="['/' + l2.handle]"
                     [title]="'@' + l2.handle"
-                    [class]="'font-black text-white group-hover:text-[#ccff00] transition truncate max-w-full block hover:underline ' + getHandleClass(l2.handle)"
+                    [class]="'font-black text-gray-950 dark:text-white group-hover:text-[#ccff00] transition truncate max-w-full block hover:underline ' + getHandleClass(l2.handle)"
                   >
                     &#64;{{ l2.handle }}
                   </a>
@@ -109,7 +111,7 @@
                 <!-- Shakes Count Box (Centrado con Animated Shaker) -->
                 <div class="mt-6 w-full rounded-2xl bg-gray-50 dark:bg-[#090c0a]/80 border border-gray-200 dark:border-slate-800/80 p-3.5 flex flex-col items-center justify-center text-center">
                   <span class="text-[10px] uppercase font-bold tracking-wider text-gray-500 dark:text-slate-400 block leading-none mb-1">SHAKES</span>
-                  <div class="mt-1 text-2xl font-black text-white flex items-center justify-center gap-2">
+                  <div class="mt-1 text-2xl font-black text-gray-900 dark:text-white flex items-center justify-center gap-2">
                     <span>{{ l2.shakesThisMonth }}</span>
                     <app-icon-shaker [size]="20" customClass="text-gray-500 dark:text-slate-400" />
                   </div>
@@ -118,7 +120,7 @@
                 <!-- Botón CTA -->
                 <a
                   [routerLink]="['/' + l2.handle]"
-                  class="mt-4 w-full py-3.5 px-4 rounded-xl bg-gray-100 dark:bg-slate-800/90 hover:bg-[#ccff00] text-white hover:text-gray-950 border border-slate-700/70 text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 transition active:scale-95 cursor-pointer shadow-sm"
+                  class="mt-4 w-full py-3.5 px-4 rounded-xl bg-gray-100 dark:bg-slate-800/90 hover:bg-[#ccff00] text-gray-900 dark:text-white hover:text-gray-950 border border-gray-300 dark:border-slate-700/70 text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 transition active:scale-95 cursor-pointer shadow-sm"
                 >
                   <span>{{ t().explore.inviteShake }}</span>
                   <app-icon-shaker [size]="18" customClass="text-gray-600 dark:text-slate-300 group-hover:text-gray-950" />
@@ -141,7 +143,9 @@
                     @if (l1.avatarUrl && !avatarErrors().has(l1.id)) {
                       <img [src]="l1.avatarUrl" [alt]="l1.name" (error)="onAvatarError(l1.id)" class="w-full h-full object-cover" />
                     } @else {
-                      <span class="text-[#ccff00]">{{ l1.initials }}</span>
+                      <svg class="h-12 w-12 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                      </svg>
                     }
                   </div>
                   <!-- Mini Badge #1 -->
@@ -155,21 +159,21 @@
                   <a
                     [routerLink]="['/' + l1.handle]"
                     [title]="'@' + l1.handle"
-                    [class]="'font-black text-white group-hover:text-[#ccff00] transition truncate max-w-full block hover:underline ' + getHandleClass(l1.handle)"
+                    [class]="'font-black text-gray-950 dark:text-white group-hover:text-[#ccff00] transition truncate max-w-full block hover:underline ' + getHandleClass(l1.handle)"
                   >
                     &#64;{{ l1.handle }}
                   </a>
                 </h3>
 
                 <!-- Disciplina -->
-                <div class="mt-2 px-3 py-1 rounded-full bg-[#1c2420] border border-[#2b3a30] text-[#ccff00] text-[11px] font-bold text-center truncate max-w-[220px]" [title]="l1.sport">
+                <div class="mt-2 px-3 py-1 rounded-full bg-emerald-50 dark:bg-[#1c2420] border border-emerald-200 dark:border-[#2b3a30] text-emerald-800 dark:text-[#ccff00] text-[11px] font-bold text-center truncate max-w-[220px]" [title]="l1.sport">
                   {{ l1.sport }}
                 </div>
 
                 <!-- Shakes Count Box (Centrado con Animated Shaker) -->
-                <div class="mt-6 w-full rounded-2xl bg-gray-50 dark:bg-[#090c0a] border border-[#232c25] p-4 flex flex-col items-center justify-center text-center shadow-inner">
+                <div class="mt-6 w-full rounded-2xl bg-gray-50 dark:bg-[#090c0a] border border-gray-200 dark:border-[#232c25] p-4 flex flex-col items-center justify-center text-center shadow-inner">
                   <span class="text-[10px] uppercase font-bold tracking-wider text-gray-500 dark:text-slate-400 block leading-none mb-1">SHAKES ESTE MES</span>
-                  <div class="mt-1 text-3xl font-black text-white flex items-center justify-center gap-2">
+                  <div class="mt-1 text-3xl font-black text-gray-900 dark:text-white flex items-center justify-center gap-2">
                     <span>{{ l1.shakesThisMonth }}</span>
                     <app-icon-shaker [size]="24" customClass="text-[#ccff00]" />
                   </div>
@@ -201,7 +205,9 @@
                     @if (l3.avatarUrl && !avatarErrors().has(l3.id)) {
                       <img [src]="l3.avatarUrl" [alt]="l3.name" (error)="onAvatarError(l3.id)" class="w-full h-full object-cover" />
                     } @else {
-                      <span class="text-amber-400">{{ l3.initials }}</span>
+                      <svg class="h-10 w-10 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                      </svg>
                     }
                   </div>
                   <!-- Mini Badge #3 -->
@@ -215,7 +221,7 @@
                   <a
                     [routerLink]="['/' + l3.handle]"
                     [title]="'@' + l3.handle"
-                    [class]="'font-black text-white group-hover:text-[#ccff00] transition truncate max-w-full block hover:underline ' + getHandleClass(l3.handle)"
+                    [class]="'font-black text-gray-950 dark:text-white group-hover:text-[#ccff00] transition truncate max-w-full block hover:underline ' + getHandleClass(l3.handle)"
                   >
                     &#64;{{ l3.handle }}
                   </a>
@@ -229,7 +235,7 @@
                 <!-- Shakes Count Box (Centrado con Animated Shaker) -->
                 <div class="mt-6 w-full rounded-2xl bg-gray-50 dark:bg-[#090c0a]/80 border border-gray-200 dark:border-slate-800/80 p-3.5 flex flex-col items-center justify-center text-center">
                   <span class="text-[10px] uppercase font-bold tracking-wider text-gray-500 dark:text-slate-400 block leading-none mb-1">SHAKES</span>
-                  <div class="mt-1 text-2xl font-black text-white flex items-center justify-center gap-2">
+                  <div class="mt-1 text-2xl font-black text-gray-900 dark:text-white flex items-center justify-center gap-2">
                     <span>{{ l3.shakesThisMonth }}</span>
                     <app-icon-shaker [size]="20" customClass="text-amber-500" />
                   </div>
@@ -238,7 +244,7 @@
                 <!-- Botón CTA -->
                 <a
                   [routerLink]="['/' + l3.handle]"
-                  class="mt-4 w-full py-3.5 px-4 rounded-xl bg-gray-100 dark:bg-slate-800/90 hover:bg-[#ccff00] text-white hover:text-gray-950 border border-slate-700/70 text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 transition active:scale-95 cursor-pointer shadow-sm"
+                  class="mt-4 w-full py-3.5 px-4 rounded-xl bg-gray-100 dark:bg-slate-800/90 hover:bg-[#ccff00] text-gray-900 dark:text-white hover:text-gray-950 border border-gray-300 dark:border-slate-700/70 text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 transition active:scale-95 cursor-pointer shadow-sm"
                 >
                   <span>{{ t().explore.inviteShake }}</span>
                   <app-icon-shaker [size]="18" customClass="text-gray-600 dark:text-slate-300 group-hover:text-gray-950" />
@@ -266,7 +272,7 @@
             
             <!-- Cabecera del Carrusel Infinito -->
             <div class="mb-8 px-1 flex flex-col items-center justify-center">
-              <h3 class="text-xl sm:text-2xl font-black tracking-tight text-white uppercase font-display">
+              <h3 class="text-xl sm:text-2xl font-black tracking-tight text-gray-950 dark:text-white uppercase font-display">
                 {{ t().explore.fullRanking }}
               </h3>
               <div class="w-12 h-1 mt-3 rounded-full bg-gradient-to-r from-[#ccff00] to-[#8fcc00]"></div>
@@ -293,8 +299,8 @@
             <!-- Contenedor con Difuminado a los Extremos (Sin Scrollbars) -->
             <div class="relative overflow-hidden w-full py-4 select-none">
               <!-- Máscaras de difuminado lateral -->
-              <div class="absolute inset-y-0 left-0 w-10 md:w-24 bg-gradient-to-r from-[#080a0b] via-[#080a0b]/80 to-transparent z-10 pointer-events-none"></div>
-              <div class="absolute inset-y-0 right-0 w-10 md:w-24 bg-gradient-to-l from-[#080a0b] via-[#080a0b]/80 to-transparent z-10 pointer-events-none"></div>
+              <div class="absolute inset-y-0 left-0 w-10 md:w-24 bg-gradient-to-r from-[#fafafb] via-[#fafafb]/80 to-transparent dark:from-[#080a0b] dark:via-[#080a0b]/80 z-10 pointer-events-none"></div>
+              <div class="absolute inset-y-0 right-0 w-10 md:w-24 bg-gradient-to-l from-[#fafafb] via-[#fafafb]/80 to-transparent dark:from-[#080a0b] dark:via-[#080a0b]/80 z-10 pointer-events-none"></div>
 
               <!-- Pista Marquee con Pausa en Hover/Touch -->
               <div [class]="topRemaining().length >= 4 ? 'animate-infinite-marquee' : 'flex w-full justify-center gap-4'">
@@ -344,27 +350,29 @@
                   class="w-full h-full object-cover rounded-full border-2 border-gray-200/80 dark:border-white/10 group-hover:border-[#ccff00] transition"
                 />
               } @else {
-                <div class="w-full h-full rounded-full border-2 border-gray-200/80 dark:border-white/10 bg-[#1c2420] text-gray-600 dark:text-slate-300 flex items-center justify-center text-lg font-black group-hover:border-[#ccff00] transition">
-                  {{ athlete.initials }}
+                <div class="w-full h-full rounded-full border-2 border-gray-200/80 dark:border-white/10 bg-gray-100 dark:bg-[#1c2420] text-gray-500 dark:text-slate-300 flex items-center justify-center group-hover:border-[#ccff00] transition">
+                  <svg class="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
                 </div>
               }
             </div>
 
             <!-- Nickname & Sport -->
-            <h4 class="font-black text-white group-hover:text-[#ccff00] text-base truncate w-full block transition">
+            <h4 class="font-black text-gray-950 dark:text-white group-hover:text-[#ccff00] text-base truncate w-full block transition">
               <a [routerLink]="['/', athlete.handle]" [title]="'@' + athlete.handle" class="hover:underline">
                 &#64;{{ athlete.handle }}
               </a>
             </h4>
 
-            <p class="text-[10px] font-bold text-gray-500 dark:text-slate-400 mt-1 uppercase tracking-wider truncate w-full px-1" [title]="athlete.sport">
+            <p class="text-[10px] font-bold text-gray-600 dark:text-slate-400 mt-1 uppercase tracking-wider truncate w-full px-1" [title]="athlete.sport">
               {{ languageService.translateDiscipline(athlete.sport) }}
             </p>
 
             <!-- Stats Box: [Número] + [Animated Shaker] -->
             <div class="w-full mt-4 pt-3 border-t border-gray-200/80 dark:border-white/10 flex flex-col items-center justify-center text-center bg-gray-50 dark:bg-[#090c0a]/80 rounded-2xl p-2.5 border border-gray-200 dark:border-slate-800/80">
               <span class="text-[9px] uppercase font-bold tracking-wider text-gray-500 dark:text-slate-400 block leading-none mb-1">SHAKES</span>
-              <div class="text-lg font-black text-white flex items-center justify-center gap-1.5">
+              <div class="text-lg font-black text-gray-900 dark:text-white flex items-center justify-center gap-1.5">
                 <span>{{ athlete.shakesThisMonth }}</span>
                 <app-icon-shaker [size]="16" customClass="text-[#ccff00]" />
               </div>
@@ -373,7 +381,7 @@
             <!-- Botón Apoyar / Invitar Shake -->
             <a
               [routerLink]="['/', athlete.handle]"
-              class="mt-3 w-full py-2.5 px-3 rounded-xl bg-gray-100 dark:bg-slate-800/90 hover:bg-[#ccff00] text-white hover:text-gray-950 border border-slate-700/70 text-[11px] font-black uppercase tracking-wider flex items-center justify-center gap-1.5 transition active:scale-95 cursor-pointer"
+              class="mt-3 w-full py-2.5 px-3 rounded-xl bg-gray-100 dark:bg-slate-800/90 hover:bg-[#ccff00] text-gray-900 dark:text-white hover:text-gray-950 border border-gray-300 dark:border-slate-700/70 text-[11px] font-black uppercase tracking-wider flex items-center justify-center gap-1.5 transition active:scale-95 cursor-pointer"
             >
               <span>{{ t().explore.support }}</span>
               <app-icon-shaker [size]="14" customClass="text-gray-600 dark:text-slate-300 group-hover:text-gray-950" />
@@ -388,7 +396,7 @@
     <!-- VISTA DE EXPLORACIÓN POR DISCIPLINA / BÚSQUEDA -->
     <!-- ========================================================================= -->
     @if (searchQuery() !== '' || selectedCategory() !== 'ALL') {
-      <section class="animate-fade-in">
+      <section id="explore-filtered-athletes" class="animate-fade-in scroll-mt-24">
         <div class="flex items-center justify-between mb-6 pb-4 border-b border-gray-200/80 dark:border-white/10">
           <h2 class="text-xl font-black text-gray-950 dark:text-white font-display uppercase tracking-tight">
             {{ t().explore.exploreByDiscipline }}
@@ -419,32 +427,34 @@
                       class="h-14 w-14 shrink-0 rounded-2xl object-cover border border-white/15 group-hover:border-[#ccff00] shadow-md transition duration-300"
                     />
                   } @else {
-                    <div class="grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-gray-50 dark:bg-[#090c0a] text-base font-black text-[#ccff00] border border-gray-200/80 dark:border-white/10 group-hover:border-[#ccff00]/50 transition">
-                      {{ athlete.initials }}
+                    <div class="grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-gray-100 dark:bg-[#090c0a] text-gray-500 dark:text-slate-400 border border-gray-200/80 dark:border-white/10 group-hover:border-[#ccff00]/50 transition">
+                      <svg class="h-7 w-7" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                      </svg>
                     </div>
                   }
                   
                   <div class="min-w-0 flex-1">
-                    <h3 class="font-extrabold text-white text-base sm:text-lg truncate block group-hover:text-[#ccff00] transition">
+                    <h3 class="font-extrabold text-gray-950 dark:text-white text-base sm:text-lg truncate block group-hover:text-[#ccff00] transition">
                       <a [routerLink]="['/', athlete.handle]" class="hover:underline">
                         {{ athlete.name }}
                       </a>
                     </h3>
-                    <p class="text-xs text-gray-500 dark:text-slate-400 font-semibold truncate">&#64;{{ athlete.handle }}</p>
+                    <p class="text-xs text-gray-600 dark:text-slate-400 font-semibold truncate">&#64;{{ athlete.handle }}</p>
                   </div>
                 </div>
 
                 <!-- Píldoras de Disciplinas (Manejo limpio de múltiples disciplinas) -->
                 <div class="mt-3.5 flex flex-wrap gap-1.5 max-h-16 overflow-hidden">
                   @for (disc of getDisciplinesList(athlete); track disc) {
-                    <span class="inline-flex items-center rounded-md bg-[#18201a] border border-[#2b3a30] px-2.5 py-0.5 text-[10px] font-bold text-[#ccff00] uppercase tracking-wider">
+                    <span class="inline-flex items-center rounded-md bg-emerald-50 dark:bg-black border border-emerald-200 dark:border-[#2b3a30] px-2.5 py-0.5 text-[10px] font-bold text-emerald-800 dark:text-[#ccff00] uppercase tracking-wider">
                       {{ languageService.translateDiscipline(disc) }}
                     </span>
                   }
                 </div>
 
                 <!-- Biografía del Atleta con acento sutil -->
-                <p class="mt-3 text-xs sm:text-sm text-gray-600 dark:text-slate-300/90 leading-relaxed line-clamp-2 border-l-2 border-slate-700/60 pl-3 group-hover:border-[#ccff00]/60 transition duration-300">
+                <p class="mt-3 text-xs sm:text-sm text-gray-600 dark:text-slate-300/90 leading-relaxed line-clamp-2 border-l-2 border-gray-300 dark:border-slate-700/60 pl-3 group-hover:border-[#ccff00]/60 transition duration-300">
                   {{ athlete.bio }}
                 </p>
               </div>
@@ -454,14 +464,14 @@
                 <div class="flex items-center gap-2">
                   <span class="text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-slate-400">{{ t().explore.monthlySupport }}</span>
                   <div class="flex items-center gap-1.5 bg-gray-50 dark:bg-[#090c0a] px-3 py-1.5 rounded-xl border border-gray-200 dark:border-slate-800 shadow-inner">
-                    <span class="text-xs font-black text-white">{{ athlete.shakesThisMonth }}</span>
+                    <span class="text-xs font-black text-gray-900 dark:text-white">{{ athlete.shakesThisMonth }}</span>
                     <app-icon-shaker [size]="15" customClass="text-[#ccff00]" />
                   </div>
                 </div>
 
                 <a
                   [routerLink]="['/', athlete.handle]"
-                  class="inline-flex items-center gap-2 rounded-xl border border-gray-200/80 dark:border-white/10 group-hover:border-[#ccff00] bg-white/5 group-hover:bg-[#ccff00] text-slate-200 group-hover:text-gray-950 px-4 py-2 text-xs font-black uppercase tracking-wider transition-all duration-300 active:scale-95 cursor-pointer shadow-sm"
+                  class="inline-flex items-center gap-2 rounded-xl border border-gray-200/80 dark:border-white/10 group-hover:border-[#ccff00] bg-gray-50 dark:bg-white/5 group-hover:bg-[#ccff00] text-gray-800 dark:text-slate-200 group-hover:text-gray-950 px-4 py-2 text-xs font-black uppercase tracking-wider transition-all duration-300 active:scale-95 cursor-pointer shadow-sm"
                 >
                   <span>{{ t().explore.viewProfile }}</span>
                   <svg class="w-3.5 h-3.5 transform group-hover:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -481,7 +491,7 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
             </div>
-            <p class="text-base font-bold text-white">{{ t().explore.noAthletesFound }}</p>
+            <p class="text-base font-bold text-gray-950 dark:text-white">{{ t().explore.noAthletesFound }}</p>
             <p class="text-xs text-gray-500 dark:text-slate-400 mt-1">{{ t().explore.noAthletesSubtitle }}</p>
             <button
               type="button"

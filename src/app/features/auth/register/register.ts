@@ -1,7 +1,7 @@
-import { Component, effect, inject, OnInit, signal , computed} from "@angular/core";
+import { Component, computed, effect, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/auth.service';
 import { LookupService } from '../../../core/lookup.service';
 import { LookupItemDto } from '../../../core/api.models';
@@ -9,10 +9,15 @@ import { AllowedUserTextDirective } from '../../../core/directives/allowed-user-
 import { LanguageService } from '../../../core/language.service';
 import { BrandLogoComponent } from '../../../shared/brand-logo/brand-logo.component';
 import { ChromeControlsComponent } from '../../../shared/chrome-controls/chrome-controls.component';
+import { PasswordStrengthComponent } from '../../../shared/password-strength/password-strength.component';
+import { evaluatePassword } from '../../../core/utils/password-validator.util';
+
+type RegisterRole = 'athlete' | 'supporter';
 
 type RegisterError =
   | { type: 'fillAllFields' }
   | { type: 'passwordMinLength' }
+  | { type: 'passwordRequirements' }
   | { type: 'blacklisted' }
   | { type: 'suspended' }
   | { type: 'general' }
@@ -21,12 +26,21 @@ type RegisterError =
 @Component({
   selector: 'app-register',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, AllowedUserTextDirective, BrandLogoComponent, ChromeControlsComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    RouterLink,
+    AllowedUserTextDirective,
+    BrandLogoComponent,
+    ChromeControlsComponent,
+    PasswordStrengthComponent,
+  ],
   templateUrl: './register.html',
 })
 export class Register implements OnInit {
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
   private readonly lookupService = inject(LookupService);
   readonly i18n = inject(LanguageService);
   readonly t = this.i18n.t;
@@ -41,6 +55,9 @@ export class Register implements OnInit {
     });
   }
 
+  readonly role = signal<RegisterRole>('athlete');
+  readonly isAthlete = computed(() => this.role() === 'athlete');
+
   readonly handle = signal('');
   readonly name = signal('');
   readonly email = signal('');
@@ -48,18 +65,18 @@ export class Register implements OnInit {
   readonly disciplineIds = signal<number[]>([]);
   readonly dropdownOpen = signal<boolean>(false);
   readonly searchSport = signal('');
-  readonly filteredSports = computed(() => {
-    const q = this.searchSport().toLowerCase().trim();
-    const all = this.sports();
-    if (!q) return all;
-    // use this.i18n or this.languageService
-    const svc = (this as any).i18n || (this as any).languageService;
-    return all.filter((s) => svc.translateDiscipline(s.label).toLowerCase().includes(q));
-  });
-
+  readonly sports = signal<LookupItemDto[]>([]);
   readonly loading = signal(false);
   readonly errorState = signal<RegisterError | null>(null);
-  readonly errorMessage = computed<string | null>(() => {
+
+  readonly filteredSports = computed(() => {
+    const q = this.searchSport().trim().toLowerCase();
+    const list = this.sports();
+    if (!q) return list;
+    return list.filter((s) => this.i18n.translateDiscipline(s.label).toLowerCase().includes(q));
+  });
+
+  readonly errorMessage = computed(() => {
     const err = this.errorState();
     if (!err) return null;
     const auth = this.t().auth;
@@ -68,58 +85,75 @@ export class Register implements OnInit {
         return auth.fillAllFieldsError;
       case 'passwordMinLength':
         return auth.passwordMinLengthError;
+      case 'passwordRequirements':
+        return auth.passwordRequirementsError;
       case 'blacklisted':
         return auth.blacklistedEmailError;
       case 'suspended':
         return auth.accountSuspendedIndefiniteError;
-      case 'general':
-        return auth.registerGeneralError;
       case 'custom':
         return err.message;
+      default:
+        return auth.registerGeneralError;
     }
   });
 
-  readonly sports = signal<LookupItemDto[]>([]);
-
   ngOnInit(): void {
+    const roleParam = (this.route.snapshot.queryParamMap.get('role') || '').toLowerCase();
+    this.role.set(roleParam === 'supporter' ? 'supporter' : 'athlete');
+
+    this.route.queryParamMap.subscribe((params) => {
+      const next = (params.get('role') || '').toLowerCase();
+      this.role.set(next === 'supporter' ? 'supporter' : 'athlete');
+    });
+
     this.lookupService.getSportDisciplines().subscribe({
       next: (items) => {
-        this.sports.set(items);
-        if (items.length > 0) {
+        this.sports.set(items || []);
+        if (this.isAthlete() && items.length > 0 && this.disciplineIds().length === 0) {
           this.disciplineIds.set([items[0].id]);
         }
       },
-      error: () => {},
+      error: () => this.sports.set([]),
     });
   }
 
-  onHandleInput(val: string): void {
-    this.handle.set(val.toLowerCase().replace(/[^a-z0-9_]/g, '').slice(0, 30));
+  onHandleInput(value: string): void {
+    const cleaned = value
+      .toLowerCase()
+      .replace(/[^a-z0-9_]/g, '')
+      .slice(0, 30);
+    this.handle.set(cleaned);
   }
-
 
   toggleSport(id: number): void {
     const current = this.disciplineIds();
     if (current.includes(id)) {
-      this.disciplineIds.set(current.filter((c) => c !== id));
-    } else {
-      this.disciplineIds.set([...current, id]);
+      this.disciplineIds.set(current.filter((x) => x !== id));
+      return;
     }
+    this.disciplineIds.set([...current, id]);
   }
 
   getDisciplineLabel(id: number): string {
-    const sport = this.sports().find((s) => s.id === id);
-    return sport ? this.i18n.translateDiscipline(sport.label) : '';
+    const found = this.sports().find((s) => s.id === id);
+    return found ? this.i18n.translateDiscipline(found.label) : String(id);
   }
 
   submit(): void {
-    if (!this.email() || !this.password() || !this.name() || !this.handle()) {
+    const isAthlete = this.isAthlete();
+    if (!this.email() || !this.password() || !this.name() || (isAthlete && !this.handle())) {
       this.errorState.set({ type: 'fillAllFields' });
       return;
     }
 
     if (this.password().length < 8) {
       this.errorState.set({ type: 'passwordMinLength' });
+      return;
+    }
+
+    if (!evaluatePassword(this.password()).isValid) {
+      this.errorState.set({ type: 'passwordRequirements' });
       return;
     }
 
@@ -131,14 +165,14 @@ export class Register implements OnInit {
         email: this.email(),
         password: this.password(),
         full_name: this.name(),
-        role: 'athlete',
-        handle: this.handle(),
-        discipline_ids: this.disciplineIds(),
+        role: this.role(),
+        handle: isAthlete ? this.handle() : undefined,
+        discipline_ids: isAthlete ? this.disciplineIds() : undefined,
       })
       .subscribe({
         next: () => {
           this.loading.set(false);
-          this.router.navigate(['/onboarding']);
+          void this.router.navigateByUrl(isAthlete ? '/onboarding' : '/supporter/home');
         },
         error: (err) => {
           this.loading.set(false);

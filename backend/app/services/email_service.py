@@ -219,7 +219,10 @@ def generate_thank_you_html(athlete_name: str, athlete_handle: str, shakes_count
     esc_handle = _esc(clean_handle)
     safe_handle_url = f"https://buymeashake.fit/{esc_handle}"
     custom_msg = _esc(thank_you_message) if thank_you_message else "¡Muchas gracias por tu apoyo y por ser parte de mi camino deportivo!"
-    shakes_num = int(shakes_count) if isinstance(shakes_count, (int, float, str)) and str(shakes_count).isdigit() else 1
+    try:
+        shakes_num = max(1, int(shakes_count))
+    except (TypeError, ValueError):
+        shakes_num = 1
 
     return f"""
     <!DOCTYPE html>

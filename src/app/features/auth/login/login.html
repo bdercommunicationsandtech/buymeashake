@@ -23,6 +23,13 @@
         <app-chrome-controls size="sm" />
         <a
           routerLink="/auth/register"
+          [queryParams]="{ role: 'supporter' }"
+          class="hidden rounded-full border border-gray-300 bg-white/80 px-3 py-2 text-xs font-bold text-gray-800 transition hover:bg-white sm:inline-flex dark:border-white/20 dark:bg-white/5 dark:text-white dark:hover:bg-white/10"
+        >
+          {{ t().auth.registerAsSupporter }}
+        </a>
+        <a
+          routerLink="/auth/register"
           class="hidden rounded-full bg-[#c9ff3d] px-4 py-2 text-xs font-black text-[#070a08] transition hover:bg-[#bbf033] sm:inline-flex"
         >
           {{ t().auth.createPageButton }}
@@ -360,12 +367,21 @@
             </div>
           </div>
 
-          <p class="mt-6 text-center text-xs font-medium text-gray-500 dark:text-white/50">
-            {{ t().auth.newHerePrompt }}
-            <a routerLink="/auth/register" class="ml-1 font-black text-emerald-700 hover:underline dark:text-[#c9ff3d]">
-              {{ t().auth.createAccountCta }} →
-            </a>
-          </p>
+          <div class="mt-6 space-y-2 text-center text-xs font-medium text-gray-500 dark:text-white/50">
+            <p>{{ t().auth.newHerePrompt }}</p>
+            <div class="flex flex-col gap-1.5 sm:flex-row sm:items-center sm:justify-center sm:gap-4">
+              <a routerLink="/auth/register" class="font-black text-emerald-700 hover:underline dark:text-[#c9ff3d]">
+                {{ t().auth.registerAsAthleteCta }} →
+              </a>
+              <a
+                routerLink="/auth/register"
+                [queryParams]="{ role: 'supporter' }"
+                class="font-bold text-gray-700 hover:underline dark:text-white/80"
+              >
+                {{ t().auth.registerAsSupporterCta }} →
+              </a>
+            </div>
+          </div>
         </div>
       </section>
     </div>

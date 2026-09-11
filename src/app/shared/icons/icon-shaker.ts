@@ -5,6 +5,9 @@ export type IconShakerTone = 'auto' | 'black' | 'muted' | 'white' | 'lime' | 'am
 /**
  * Official bshake mark. The source SVG is black; tones are applied with CSS filters
  * so it can read as gray, white, lime, etc. (CSS mask does not work with this asset).
+ *
+ * `muted` stays dark-gray on light backgrounds and inverts only under `.dark`
+ * so icons remain visible on light cards (e.g. ranking #2 / #3).
  */
 @Component({
   selector: 'app-icon-shaker',
@@ -16,6 +19,21 @@ export type IconShakerTone = 'auto' | 'black' | 'muted' | 'white' | 'lime' | 'am
       :host-context(.group:hover) img.hover-to-black {
         filter: none !important;
         opacity: 1 !important;
+      }
+
+      img.tone-muted {
+        filter: none;
+        opacity: 0.55;
+      }
+
+      :host-context(html.dark) img.tone-muted,
+      :host-context(.dark) img.tone-muted {
+        filter: invert(1);
+        opacity: 0.75;
+      }
+
+      img.tone-white {
+        filter: invert(1);
       }
     `,
   ],
@@ -63,7 +81,13 @@ export class IconShakerComponent {
     const hover = /group-hover:text-gray-950|group-hover:text-black/.test(this.customClass)
       ? 'hover-to-black'
       : '';
-    return [layout, hover].filter(Boolean).join(' ');
+    const toneClass =
+      this.resolvedTone === 'muted'
+        ? 'tone-muted'
+        : this.resolvedTone === 'white'
+          ? 'tone-white'
+          : '';
+    return [layout, hover, toneClass].filter(Boolean).join(' ');
   }
 
   private get resolvedTone(): Exclude<IconShakerTone, 'auto'> {
@@ -77,11 +101,12 @@ export class IconShakerComponent {
     return 'black';
   }
 
-  get filterCss(): string {
+  get filterCss(): string | null {
     switch (this.resolvedTone) {
       case 'white':
       case 'muted':
-        return 'invert(1)';
+        // Handled by CSS classes so muted can differ in light vs dark.
+        return null;
       case 'lime':
         return 'invert(89%) sepia(47%) saturate(1206%) hue-rotate(22deg) brightness(105%) contrast(104%)';
       case 'amber':
@@ -95,11 +120,12 @@ export class IconShakerComponent {
   get opacityCss(): number | null {
     const c = this.customClass;
     if (this.resolvedTone === 'muted') {
+      // Base opacity overridden by CSS; keep slight tweaks when requested.
       if (/text-white\/70|opacity-70/.test(c)) return 0.7;
-      if (/text-slate-400|text-gray-400/.test(c)) return 0.65;
-      if (/text-slate-300|text-gray-300/.test(c)) return 0.8;
-      if (/text-gray-600/.test(c)) return 0.55;
-      return 0.7;
+      if (/text-slate-400|text-gray-400/.test(c)) return null;
+      if (/text-slate-300|text-gray-300/.test(c)) return null;
+      if (/text-gray-600|text-gray-500/.test(c)) return null;
+      return null;
     }
     return null;
   }

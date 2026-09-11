@@ -728,9 +728,22 @@ class StripeService:
         cancel_url = f"{settings.FRONTEND_URL}/{athlete.handle}?membership=cancelled"
 
         if is_placeholder:
+            mock_session_id = f"cs_sub_mock_{tx_uuid}"
+            # Sin Stripe real: activar membresía ya (si hay usuario autenticado).
+            if supporter_user:
+                await self._upsert_active_subscription(
+                    user_id=supporter_user.id,
+                    tier_id=int(tier.id),
+                    stripe_subscription_id=f"sub_mock_{tx_uuid}",
+                    athlete_id=int(athlete.id),
+                )
+            success_url_mock = (
+                f"{settings.FRONTEND_URL}/{athlete.handle}"
+                f"?membership=success&tx={tx_uuid}&session_id={mock_session_id}"
+            )
             return {
-                "checkout_url": success_url,
-                "session_id": f"cs_sub_mock_{tx_uuid}",
+                "checkout_url": success_url_mock,
+                "session_id": mock_session_id,
                 "transaction_uuid": tx_uuid,
             }
 
@@ -1071,6 +1084,14 @@ class StripeService:
         )
 
         if is_mock or is_placeholder:
+            # Membresía mock: no confundir con shake pendiente.
+            if session_id and session_id.startswith("cs_sub_mock_"):
+                return {
+                    "handled": True,
+                    "status": "active",
+                    "kind": "tier_subscription",
+                    "session_id": session_id,
+                }
             if tx_uuid:
                 return await self.fulfill_pending_shake(
                     tx_uuid,
@@ -1542,6 +1563,78 @@ class StripeService:
             "transaction_uuid": tx.transaction_uuid if tx else None,
         }
 
+    async def _upsert_active_subscription(
+        self,
+        *,
+        user_id: int,
+        tier_id: int,
+        stripe_subscription_id: str,
+        athlete_id: int | None = None,
+        notify: bool = True,
+    ) -> Subscription:
+        """Crea o reactiva una membresía local (Stripe real o mock)."""
+        from datetime import datetime, timezone, timedelta
+
+        now = datetime.now(timezone.utc)
+        period_end = now + timedelta(days=31)
+
+        sub_stmt = select(Subscription).where(
+            Subscription.stripe_subscription_id == stripe_subscription_id
+        )
+        existing_sub = (await self.session.execute(sub_stmt)).scalar_one_or_none()
+
+        if not existing_sub:
+            # Evitar duplicar membresía activa del mismo user+tier en mocks reiterados.
+            dup_stmt = (
+                select(Subscription)
+                .where(
+                    Subscription.user_id == user_id,
+                    Subscription.tier_id == tier_id,
+                    Subscription.status == "active",
+                )
+                .limit(1)
+            )
+            existing_sub = (await self.session.execute(dup_stmt)).scalar_one_or_none()
+
+        if not existing_sub:
+            existing_sub = Subscription(
+                user_id=user_id,
+                tier_id=tier_id,
+                stripe_subscription_id=stripe_subscription_id,
+                status="active",
+                current_period_start=now,
+                current_period_end=period_end,
+            )
+            self.session.add(existing_sub)
+        else:
+            existing_sub.status = "active"
+            existing_sub.tier_id = tier_id
+            existing_sub.stripe_subscription_id = stripe_subscription_id
+            existing_sub.current_period_start = now
+            existing_sub.current_period_end = period_end
+            existing_sub.canceled_at = None
+
+        if notify and athlete_id:
+            athlete_stmt = (
+                select(AthleteProfile)
+                .options(selectinload(AthleteProfile.user))
+                .where(AthleteProfile.id == athlete_id)
+            )
+            athlete = (await self.session.execute(athlete_stmt)).scalar_one_or_none()
+            if athlete and athlete.user_id:
+                self.session.add(
+                    Notification(
+                        user_id=athlete.user_id,
+                        title="¡Nuevo Miembro en tu Comunidad! ⭐️",
+                        message="Un seguidor se acaba de suscribir a tu nivel de membresía.",
+                        type_code=402,
+                        action_url="/dashboard/memberships",
+                    )
+                )
+
+        await self.session.flush()
+        return existing_sub
+
     async def _process_subscription_completed(self, session_obj: dict[str, Any]) -> dict[str, Any]:
         """Procesa una sesión de Stripe Checkout completada en modo subscription."""
         metadata = session_obj.get("metadata") or {}
@@ -1562,7 +1655,7 @@ class StripeService:
             return {"handled": False, "reason": "missing_subscription_id"}
 
         tier_id_raw = metadata.get("tier_id")
-        if not tier_id_raw or not tier_id_raw.isdigit():
+        if not tier_id_raw or not str(tier_id_raw).isdigit():
             logger.warning("Sesión de suscripción sin tier_id válido: %s", tier_id_raw)
             return {"handled": False, "reason": "invalid_tier_id"}
 
@@ -1572,17 +1665,15 @@ class StripeService:
         # Si no había supporter_user_id directo, buscar por email o customer_id
         if not supporter_user_id:
             customer_id = session_obj.get("customer")
-            email = session_obj.get("customer_details", {}).get("email")
+            email = (session_obj.get("customer_details") or {}).get("email")
             if customer_id:
                 user_stmt = select(User).where(User.stripe_customer_id == customer_id)
-                u_res = await self.session.execute(user_stmt)
-                matched_user = u_res.scalar_one_or_none()
+                matched_user = (await self.session.execute(user_stmt)).scalar_one_or_none()
                 if matched_user:
                     supporter_user_id = matched_user.id
             if not supporter_user_id and email:
                 user_stmt = select(User).where(User.email == email)
-                u_res = await self.session.execute(user_stmt)
-                matched_user = u_res.scalar_one_or_none()
+                matched_user = (await self.session.execute(user_stmt)).scalar_one_or_none()
                 if matched_user:
                     supporter_user_id = matched_user.id
 
@@ -1590,51 +1681,13 @@ class StripeService:
             logger.warning("No se pudo vincular la suscripción a un User existente.")
             return {"handled": False, "reason": "user_not_found"}
 
-        # Verificar si la suscripción ya existe (idempotente)
-        sub_stmt = select(Subscription).where(Subscription.stripe_subscription_id == stripe_sub_id)
-        sub_res = await self.session.execute(sub_stmt)
-        existing_sub = sub_res.scalar_one_or_none()
-
-        from datetime import datetime, timezone, timedelta
-        now = datetime.now(timezone.utc)
-        period_end = now + timedelta(days=31)
-
-        if not existing_sub:
-            new_sub = Subscription(
-                user_id=supporter_user_id,
-                tier_id=tier_id,
-                stripe_subscription_id=stripe_sub_id,
-                status="active",
-                current_period_start=now,
-                current_period_end=period_end,
-            )
-            self.session.add(new_sub)
-        else:
-            existing_sub.status = "active"
-            existing_sub.current_period_start = now
-            existing_sub.current_period_end = period_end
-
-        # Notificar al atleta
-        athlete_id = int(metadata.get("athlete_id", 0))
-        if athlete_id:
-            athlete_stmt = (
-                select(AthleteProfile)
-                .options(selectinload(AthleteProfile.user))
-                .where(AthleteProfile.id == athlete_id)
-            )
-            a_res = await self.session.execute(athlete_stmt)
-            athlete = a_res.scalar_one_or_none()
-            if athlete and athlete.user_id:
-                notif = Notification(
-                    user_id=athlete.user_id,
-                    title="¡Nuevo Miembro en tu Comunidad! ⭐️",
-                    message="Un seguidor se acaba de suscribir a tu nivel de membresía.",
-                    type_code=402,
-                    action_url="/dashboard/memberships",
-                )
-                self.session.add(notif)
-
-        await self.session.flush()
+        athlete_id = int(metadata.get("athlete_id", 0) or 0) or None
+        await self._upsert_active_subscription(
+            user_id=supporter_user_id,
+            tier_id=tier_id,
+            stripe_subscription_id=stripe_sub_id,
+            athlete_id=athlete_id,
+        )
         return {"handled": True, "subscription_id": stripe_sub_id, "status": "active"}
 
     async def _process_invoice_payment_succeeded(self, invoice_obj: dict[str, Any]) -> dict[str, Any]:

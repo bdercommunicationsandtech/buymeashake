@@ -274,6 +274,9 @@ export const es: TranslationSchema = {
       deleting: 'Eliminando...',
       deleteConfirm: '¿Eliminar "{title}"? Esta acción no se puede deshacer.',
       deleteFailedError: 'No se pudo eliminar la publicación. Inténtalo de nuevo.',
+      emptyTitle: 'Aún no tienes publicaciones',
+      emptyDesc: 'Crea tu primer post para gestionarlo desde aquí: editarlo, cambiar su audiencia o eliminarlo cuando quieras.',
+      emptyCta: 'Crear mi primer post',
       chooseToCreate: 'Elige qué crear',
       postTypePost: 'Publicación',
       postTypeGallery: 'Galería',
@@ -528,6 +531,8 @@ export const es: TranslationSchema = {
     submitComment: 'Comentar',
     submittingComment: 'Enviando…',
     firstToComment: 'Sé el primero en comentar esta publicación.',
+    deleteComment: 'Eliminar',
+    deletingComment: 'Eliminando…',
     commentLockedMembers:
       'No puedes comentar en este post de Solo miembros porque aún no tienes acceso con una membresía activa.',
     commentLockedShake:

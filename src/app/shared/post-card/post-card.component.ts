@@ -10,6 +10,7 @@ import { MediaUrlPipe } from '../pipes/media-url.pipe';
 
 export interface PostCommentItem {
   id: number;
+  userId: number;
   userName: string;
   userAvatar?: string | null;
   content: string;
@@ -327,9 +328,21 @@ export interface PostItem {
                       {{ c.userName.slice(0, 1).toUpperCase() }}
                     </div>
                     <div class="flex-1 min-w-0">
-                      <div class="flex items-center justify-between">
+                      <div class="flex items-center justify-between gap-2">
                         <span class="font-bold text-gray-900 dark:text-white">{{ c.userName }}</span>
-                        <span class="text-[10px] text-gray-400">{{ c.createdAt }}</span>
+                        <div class="flex items-center gap-2 shrink-0">
+                          <span class="text-[10px] text-gray-400">{{ c.createdAt }}</span>
+                          @if (isOwnComment(c)) {
+                            <button
+                              type="button"
+                              class="text-[10px] font-semibold text-red-500 hover:text-red-600 disabled:opacity-50"
+                              [disabled]="deletingCommentId() === c.id"
+                              (click)="deleteComment(c)"
+                            >
+                              {{ deletingCommentId() === c.id ? t().post.deletingComment : t().post.deleteComment }}
+                            </button>
+                          }
+                        </div>
                       </div>
                       <p class="text-gray-600 dark:text-gray-300 mt-0.5">{{ c.content }}</p>
                     </div>
@@ -371,6 +384,7 @@ export class PostCardComponent {
   readonly t = this.i18n.t;
 
   readonly post = input.required<PostItem>();
+  readonly currentUserId = input<number | null>(null);
   readonly onLike = output<string>();
   readonly onUnlock = output<PostItem>();
   readonly onRead = output<PostItem>();
@@ -379,11 +393,17 @@ export class PostCardComponent {
     content: string;
     done: (ok: boolean) => void;
   }>();
+  readonly onDeleteComment = output<{
+    postId: string;
+    commentId: number;
+    done: (ok: boolean) => void;
+  }>();
 
   readonly commentsOpen = signal(false);
   readonly newCommentText = signal('');
   readonly likePulse = signal(false);
   readonly isCommenting = signal(false);
+  readonly deletingCommentId = signal<number | null>(null);
 
   handleLikeClick(): void {
     this.likePulse.set(false);
@@ -412,6 +432,24 @@ export class PostCardComponent {
       done: (ok) => {
         this.isCommenting.set(false);
         if (!ok) this.newCommentText.set(text);
+      },
+    });
+  }
+
+  isOwnComment(comment: PostCommentItem): boolean {
+    const uid = this.currentUserId();
+    return uid != null && comment.userId === uid;
+  }
+
+  deleteComment(comment: PostCommentItem): void {
+    if (!this.isOwnComment(comment) || this.deletingCommentId() != null) return;
+    this.deletingCommentId.set(comment.id);
+    this.onDeleteComment.emit({
+      postId: this.post().id,
+      commentId: comment.id,
+      done: (ok) => {
+        if (this.deletingCommentId() === comment.id) this.deletingCommentId.set(null);
+        if (!ok) return;
       },
     });
   }

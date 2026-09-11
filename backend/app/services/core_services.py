@@ -902,9 +902,25 @@ class SupporterService:
             user_name=user.full_name,
             user_avatar=user.avatar_url,
             content=comment.content,
-            likes_count=comment.likes_count,
+            likes_count=comment.likes_count or 0,
             created_at=comment.created_at,
         )
+
+    async def delete_comment(self, user: User, post_id: int, comment_id: int) -> dict:
+        post_repo = PostRepository(self.session)
+        post = await post_repo.get_by_id(post_id)
+        if not post or str(post.access_type) == "draft":
+            raise EntityNotFoundError("Post", post_id)
+
+        comment = await post_repo.get_comment_by_id(comment_id)
+        if not comment or comment.post_id != post_id:
+            raise EntityNotFoundError("Comentario", comment_id)
+
+        if comment.user_id != user.id:
+            raise ForbiddenError("Solo puedes eliminar tus propios comentarios.")
+
+        await post_repo.delete_comment(comment)
+        return {"success": True, "deleted": True}
 
 
 

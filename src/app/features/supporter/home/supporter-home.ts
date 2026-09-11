@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, OnInit, inject, signal } from '@angular/core';
+import { Component, ChangeDetectionStrategy, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink, ActivatedRoute } from '@angular/router';
 import { PostCardComponent, PostItem } from '../../../shared/post-card/post-card.component';
@@ -195,8 +195,10 @@ import { ChromeControlsComponent } from '../../../shared/chrome-controls/chrome-
               @for (post of feedPosts(); track post.id) {
                 <app-post-card
                   [post]="post"
+                  [currentUserId]="currentUserId()"
                   (onLike)="likePost($event)"
                   (onComment)="commentOnPost($event)"
+                  (onDeleteComment)="deleteComment($event)"
                   (onUnlock)="unlockPost($event)"
                 />
               }
@@ -287,6 +289,7 @@ export class DashboardSupporterHome implements OnInit {
 
   readonly followedAthletes = signal<FollowedAthlete[]>([]);
   readonly feedPosts = signal<PostItem[]>([]);
+  readonly currentUserId = computed(() => this.authService.currentUser()?.id ?? null);
   readonly feedFilter = signal<'all' | 'public' | 'shake_supporters' | 'members_only'>('all');
   readonly feedFilters = [
     { value: 'all' as const, labelKey: 'all' },
@@ -378,6 +381,7 @@ export class DashboardSupporterHome implements OnInit {
               (isUnlocked ? resolveMediaUrl(htmlMatch?.[1] || mdMatch?.[1] || null) : null),
             comments: (item.comments || []).map((cm) => ({
               id: cm.id,
+              userId: cm.user_id,
               userName: cm.user_name,
               userAvatar: resolveMediaUrl(cm.user_avatar) || cm.user_avatar,
               content: cm.content,
@@ -450,12 +454,36 @@ export class DashboardSupporterHome implements OnInit {
                     ...(p.comments || []),
                     {
                       id: comment.id,
+                      userId: comment.user_id,
                       userName: comment.user_name,
                       userAvatar: comment.user_avatar,
                       content: comment.content,
                       createdAt: 'Justo ahora',
                     },
                   ],
+                }
+              : p,
+          ),
+        );
+        event.done(true);
+      },
+      error: () => {
+        event.done(false);
+      },
+    });
+  }
+
+  deleteComment(event: { postId: string; commentId: number; done: (ok: boolean) => void }): void {
+    const postId = Number(event.postId);
+    this.supporterService.deleteComment(postId, event.commentId).subscribe({
+      next: () => {
+        this.feedPosts.update((list) =>
+          list.map((p) =>
+            p.id === event.postId
+              ? {
+                  ...p,
+                  commentsCount: Math.max((p.commentsCount || 0) - 1, 0),
+                  comments: (p.comments || []).filter((c) => c.id !== event.commentId),
                 }
               : p,
           ),

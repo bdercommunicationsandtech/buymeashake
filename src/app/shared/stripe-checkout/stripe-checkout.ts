@@ -136,27 +136,30 @@ export class StripeCheckout {
               window.location.href = sessionRes.checkout_url;
               return;
             }
-            // En modo mock / desarrollo: marcar como pagado/suscrito
-            setTimeout(() => {
-              this.processing.set(false);
-              this.checkout.markPaid(
-                null,
-                null,
-                isEn
-                  ? `Successfully subscribed to tier ${draft.title}!`
-                  : `¡Te has suscrito con éxito al nivel ${draft.title}!`
-              );
-            }, FAKE_PROCESSING_MS);
+            // Mock / desarrollo: confirmar en backend (crea la fila en subscriptions) y mostrar éxito.
+            const finishMock = () => {
+              setTimeout(() => {
+                this.processing.set(false);
+                this.checkout.markPaid(
+                  null,
+                  null,
+                  isEn
+                    ? `Successfully subscribed to tier ${draft.title}!`
+                    : `¡Te has suscrito con éxito al nivel ${draft.title}!`
+                );
+              }, FAKE_PROCESSING_MS);
+            };
+            this.paymentService
+              .verifySession(sessionRes.session_id || '', sessionRes.transaction_uuid || '')
+              .subscribe({ next: () => finishMock(), error: () => finishMock() });
           },
-          error: (err) => {
+          error: () => {
             setTimeout(() => {
               this.processing.set(false);
-              this.checkout.markPaid(
-                null,
-                null,
+              this.errorMessage.set(
                 isEn
-                  ? `Successfully subscribed to tier ${draft.title}!`
-                  : `¡Te has suscrito con éxito al nivel ${draft.title}!`
+                  ? 'Could not start membership checkout. Please try again.'
+                  : 'No se pudo iniciar el checkout de membresía. Inténtalo de nuevo.'
               );
             }, FAKE_PROCESSING_MS);
           },

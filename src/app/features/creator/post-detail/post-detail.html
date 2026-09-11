@@ -199,7 +199,19 @@
                         <div class="flex-1 min-w-0">
                           <div class="flex items-center justify-between gap-2">
                             <span class="font-bold text-gray-900 dark:text-white">{{ c.userName }}</span>
-                            <span class="text-[10px] text-gray-400 shrink-0">{{ c.createdAt }}</span>
+                            <div class="flex items-center gap-2 shrink-0">
+                              <span class="text-[10px] text-gray-400">{{ c.createdAt }}</span>
+                              @if (c.isOwn) {
+                                <button
+                                  type="button"
+                                  class="text-[10px] font-semibold text-red-500 hover:text-red-600 disabled:opacity-50"
+                                  [disabled]="deletingCommentId() === c.id"
+                                  (click)="deleteComment(c.id)"
+                                >
+                                  {{ deletingCommentId() === c.id ? t().post.deletingComment : t().post.deleteComment }}
+                                </button>
+                              }
+                            </div>
                           </div>
                           <p class="text-gray-600 dark:text-gray-300 mt-0.5">{{ c.content }}</p>
                         </div>

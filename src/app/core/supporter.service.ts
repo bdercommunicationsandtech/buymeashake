@@ -67,4 +67,10 @@ export class SupporterService {
       created_at: string;
     }>(`${this.apiUrl}/posts/${postId}/comments`, { content });
   }
+
+  deleteComment(postId: number, commentId: number): Observable<{ success: boolean; deleted: boolean }> {
+    return this.http.delete<{ success: boolean; deleted: boolean }>(
+      `${this.apiUrl}/posts/${postId}/comments/${commentId}`,
+    );
+  }
 }

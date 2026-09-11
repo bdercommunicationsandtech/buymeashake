@@ -99,3 +99,15 @@ async def comment_on_post(
     """Agrega un comentario a una publicación."""
     service = SupporterService(session)
     return await service.comment_post(user=user, post_id=post_id, content=dto.content)
+
+
+@router.delete("/posts/{post_id}/comments/{comment_id}")
+async def delete_post_comment(
+    post_id: int,
+    comment_id: int,
+    user: CurrentUser,
+    session: DatabaseSession,
+) -> dict:
+    """Elimina un comentario propio de una publicación."""
+    service = SupporterService(session)
+    return await service.delete_comment(user=user, post_id=post_id, comment_id=comment_id)

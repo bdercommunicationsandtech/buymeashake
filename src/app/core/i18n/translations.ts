@@ -272,6 +272,9 @@ export interface TranslationSchema {
       deleting: string;
       deleteConfirm: string;
       deleteFailedError: string;
+      emptyTitle: string;
+      emptyDesc: string;
+      emptyCta: string;
       chooseToCreate: string;
       postTypePost: string;
       postTypeGallery: string;
@@ -526,6 +529,8 @@ export interface TranslationSchema {
     submitComment: string;
     submittingComment: string;
     firstToComment: string;
+    deleteComment: string;
+    deletingComment: string;
     commentLockedMembers: string;
     commentLockedShake: string;
     commentLockedCta: string;

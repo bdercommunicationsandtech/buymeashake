@@ -98,6 +98,7 @@ export class PostDetail implements OnDestroy {
   readonly commentsOpen = signal(false);
   readonly newCommentText = signal('');
   readonly isCommenting = signal(false);
+  readonly deletingCommentId = signal<number | null>(null);
 
   readonly isLocked = computed(() => this.post()?.is_unlocked === false);
 
@@ -170,12 +171,15 @@ export class PostDetail implements OnDestroy {
   readonly commentItems = computed(() => {
     const comments = this.post()?.comments || [];
     const locale = this.i18n.lang() === 'es' ? 'es-MX' : 'en-US';
+    const currentUserId = this.authService.currentUser()?.id ?? null;
     return comments.map((c) => ({
       id: c.id,
+      userId: c.user_id,
       userName: c.user_name,
       userAvatar: resolveMediaUrl(c.user_avatar) || c.user_avatar,
       content: c.content,
       createdAt: this.formatCommentDate(c.created_at, locale),
+      isOwn: currentUserId != null && c.user_id === currentUserId,
     }));
   });
 
@@ -187,6 +191,7 @@ export class PostDetail implements OnDestroy {
       this.commentsOpen.set(false);
       this.newCommentText.set('');
       this.isCommenting.set(false);
+      this.deletingCommentId.set(null);
       this.loadPost(nextHandle, nextPostId);
     });
   }
@@ -231,6 +236,36 @@ export class PostDetail implements OnDestroy {
       error: () => {
         this.isCommenting.set(false);
         this.newCommentText.set(text);
+      },
+    });
+  }
+
+  deleteComment(commentId: number): void {
+    if (this.deletingCommentId() != null) return;
+    const current = this.post();
+    if (!current) return;
+
+    if (!this.authService.isAuthenticated()) {
+      this.router.navigate(['/auth/login'], {
+        queryParams: { returnUrl: window.location.pathname },
+      });
+      return;
+    }
+
+    this.deletingCommentId.set(commentId);
+    this.supporterService.deleteComment(current.id, commentId).subscribe({
+      next: () => {
+        this.post.update((p) => {
+          if (!p) return p;
+          return {
+            ...p,
+            comments: (p.comments || []).filter((c) => c.id !== commentId),
+          };
+        });
+        this.deletingCommentId.set(null);
+      },
+      error: () => {
+        this.deletingCommentId.set(null);
       },
     });
   }

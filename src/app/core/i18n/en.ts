@@ -274,6 +274,9 @@ export const en: TranslationSchema = {
       deleting: 'Deleting...',
       deleteConfirm: 'Delete "{title}"? This cannot be undone.',
       deleteFailedError: 'Could not delete the post. Try again.',
+      emptyTitle: 'You don’t have any posts yet',
+      emptyDesc: 'Create your first post to manage it from here—edit it, change who can see it, or delete it anytime.',
+      emptyCta: 'Create my first post',
       chooseToCreate: 'Choose to create',
       postTypePost: 'Post',
       postTypeGallery: 'Gallery',
@@ -528,6 +531,8 @@ export const en: TranslationSchema = {
     submitComment: 'Comment',
     submittingComment: 'Sending…',
     firstToComment: 'Be the first to comment on this post.',
+    deleteComment: 'Delete',
+    deletingComment: 'Deleting…',
     commentLockedMembers:
       'You can’t comment on this Members Only post until you unlock access with an active membership.',
     commentLockedShake:

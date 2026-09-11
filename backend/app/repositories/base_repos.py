@@ -643,6 +643,16 @@ class PostRepository:
         await self.session.refresh(comment)
         return comment
 
+    async def get_comment_by_id(self, comment_id: int) -> PostComment | None:
+        result = await self.session.execute(
+            select(PostComment).where(PostComment.id == comment_id)
+        )
+        return result.scalar_one_or_none()
+
+    async def delete_comment(self, comment: PostComment) -> None:
+        await self.session.delete(comment)
+        await self.session.flush()
+
 
 class SupporterRepository:
     def __init__(self, session: AsyncSession):

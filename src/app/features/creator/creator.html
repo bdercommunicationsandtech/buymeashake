@@ -813,8 +813,10 @@
           @for (post of posts(); track post.id) {
             <app-post-card
               [post]="post"
+              [currentUserId]="currentUserId()"
               (onLike)="likePost($event)"
               (onComment)="commentOnPost($event)"
+              (onDeleteComment)="deleteComment($event)"
               (onUnlock)="unlockPost($event)"
             />
           }

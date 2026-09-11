@@ -167,6 +167,7 @@ export class Creator {
   readonly supportMode = signal<'once' | 'recurring'>('once');
   readonly showBookingPanel = signal(false);
   readonly posts = signal<PostItem[]>([]);
+  readonly currentUserId = computed(() => this.authService.currentUser()?.id ?? null);
 
   readonly bookingServices = signal<CreatorBookingService[]>([]);
   readonly products = signal<CreatorProduct[]>([]);
@@ -666,6 +667,7 @@ export class Creator {
               coverImageUrl,
               comments: (p.comments || []).map((cm) => ({
                 id: cm.id,
+                userId: cm.user_id,
                 userName: cm.user_name,
                 userAvatar: resolveMediaUrl(cm.user_avatar) || cm.user_avatar,
                 content: cm.content,
@@ -789,12 +791,42 @@ export class Creator {
                     ...(p.comments || []),
                     {
                       id: comment.id,
+                      userId: comment.user_id,
                       userName: comment.user_name,
                       userAvatar: resolveMediaUrl(comment.user_avatar),
                       content: comment.content,
                       createdAt: 'Justo ahora',
                     },
                   ],
+                }
+              : p,
+          ),
+        );
+        event.done(true);
+      },
+      error: () => {
+        event.done(false);
+      },
+    });
+  }
+
+  deleteComment(event: { postId: string; commentId: number; done: (ok: boolean) => void }): void {
+    if (!this.authService.isAuthenticated()) {
+      event.done(false);
+      this.router.navigate(['/auth/login'], { queryParams: { returnUrl: window.location.pathname } });
+      return;
+    }
+
+    const postId = Number(event.postId);
+    this.supporterService.deleteComment(postId, event.commentId).subscribe({
+      next: () => {
+        this.posts.update((list) =>
+          list.map((p) =>
+            p.id === event.postId
+              ? {
+                  ...p,
+                  commentsCount: Math.max((p.commentsCount || 0) - 1, 0),
+                  comments: (p.comments || []).filter((c) => c.id !== event.commentId),
                 }
               : p,
           ),
@@ -900,6 +932,11 @@ export class Creator {
       .subscribe({
         next: (sessionRes) => {
           if (sessionRes.checkout_url && sessionRes.checkout_url.startsWith('https://checkout.stripe.com')) {
+            window.location.href = sessionRes.checkout_url;
+            return;
+          }
+          // Mock / local: el backend ya activó la membresía; seguir success_url para refrescar perfil.
+          if (sessionRes.checkout_url && sessionRes.checkout_url.includes('membership=success')) {
             window.location.href = sessionRes.checkout_url;
             return;
           }

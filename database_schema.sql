@@ -183,14 +183,29 @@ CREATE TABLE athlete_profiles (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 DROP TABLE IF EXISTS athlete_disciplines;
+DROP TABLE IF EXISTS disciplines;
+CREATE TABLE disciplines (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    description VARCHAR(150) NULL,
+    image_url VARCHAR(512) NULL,
+    icon_url VARCHAR(512) NULL,
+    sort_order INT NOT NULL DEFAULT 0,
+    show_in_home BOOLEAN NOT NULL DEFAULT FALSE,
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    KEY idx_disciplines_active_sort (is_active, sort_order)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 CREATE TABLE athlete_disciplines (
     athlete_id BIGINT UNSIGNED NOT NULL,
-    discipline_item_id BIGINT UNSIGNED NOT NULL,
+    discipline_id BIGINT UNSIGNED NOT NULL,
     is_primary BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (athlete_id, discipline_item_id),
+    PRIMARY KEY (athlete_id, discipline_id),
     FOREIGN KEY (athlete_id) REFERENCES athlete_profiles(id) ON DELETE CASCADE,
-    FOREIGN KEY (discipline_item_id) REFERENCES lookup_items(id) ON DELETE CASCADE
+    FOREIGN KEY (discipline_id) REFERENCES disciplines(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 DROP TABLE IF EXISTS athlete_page_settings;
@@ -734,6 +749,19 @@ INSERT INTO lookup_items (lookup_group_id, code, label, icon, sort_order) VALUES
 (@sports_group_id, 107, 'Fútbol & Colectivos', 'football', 7),
 (@sports_group_id, 108, 'Movilidad & Yoga', 'spa', 8),
 (@sports_group_id, 109, 'Calistenia & Freestyle', 'body', 9);
+
+-- Canonical disciplines (source of truth for athletes / home / explore)
+INSERT INTO disciplines (name, description, image_url, sort_order, show_in_home, is_active) VALUES
+('Fuerza & Gym', 'ENTRENAMIENTO', 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=800&auto=format&fit=crop', 1, 1, 1),
+('Cross Training', 'DISCIPLINA & RESULTADOS', 'https://images.unsplash.com/photo-1517838277536-f5f99be501cd?q=80&w=800&auto=format&fit=crop', 2, 1, 1),
+('Running', 'PISTA & MARATÓN', 'https://images.unsplash.com/photo-1552674605-db6ffd4facb5?q=80&w=800&auto=format&fit=crop', 3, 1, 1),
+('Ciclismo', 'RUTA & GRAVEL', '/images/carousel-cycling.jpg', 4, 1, 1),
+('Artes Marciales & Boxeo', NULL, NULL, 8, 0, 1),
+('Deportes Acuáticos', 'NATACIÓN & SURF', 'https://images.unsplash.com/photo-1530549387789-4c1017266635?q=80&w=800&auto=format&fit=crop', 5, 1, 1),
+('Fútbol & Colectivos', NULL, NULL, 9, 0, 1),
+('Bienestar', 'MENTE & CUERPO', 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?q=80&w=800&auto=format&fit=crop', 6, 1, 1),
+('Calistenia & Freestyle', NULL, NULL, 10, 0, 1),
+('Esports & Gaming', 'COMPETITIVO & SIM', 'https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=800&auto=format&fit=crop', 7, 1, 1);
 
 INSERT INTO lookup_items (lookup_group_id, code, label, icon, sort_order) VALUES
 (@trans_group_id, 201, 'Shake Único', 'shake', 1),

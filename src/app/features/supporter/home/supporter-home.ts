@@ -7,12 +7,14 @@ import { AuthService } from '../../../core/auth.service';
 import { SupporterService } from '../../../core/supporter.service';
 import { LanguageService } from '../../../core/language.service';
 import { FollowedAthlete, PostResponse } from '../../../core/api.models';
+import { BrandLogoComponent } from '../../../shared/brand-logo/brand-logo.component';
+import { ChromeControlsComponent } from '../../../shared/chrome-controls/chrome-controls.component';
 
 @Component({
   selector: 'app-supporter-home',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, RouterLink, PostCardComponent],
+  imports: [CommonModule, RouterLink, PostCardComponent, BrandLogoComponent, ChromeControlsComponent],
   template: `
     <div class="min-h-screen bg-[#fafafb] dark:bg-[#090c0a] text-gray-900 dark:text-gray-100 font-sans transition-colors duration-200">
       
@@ -20,51 +22,11 @@ import { FollowedAthlete, PostResponse } from '../../../core/api.models';
       <header class="sticky top-0 z-40 bg-white/95 dark:bg-[#121614]/95 backdrop-blur-md border-b border-gray-200/80 dark:border-white/10 px-5 sm:px-10 h-16 flex items-center justify-between">
         
         <!-- Logo -->
-        <a routerLink="/" class="flex items-center gap-2.5">
-          <span class="grid h-9 w-9 place-items-center rounded-xl bg-[#c9ff3d] text-[#070a08] font-bold shadow-xs">
-            <svg viewBox="0 0 32 32" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linejoin="round">
-              <rect x="12" y="4" width="8" height="4" rx="2" fill="currentColor" stroke="none" />
-              <path d="M10 10h12l-1.4 16a4 4 0 0 1-4 3.6h-1.2a4 4 0 0 1-4-3.6z" />
-              <path d="M11 20h10" stroke-linecap="round" />
-            </svg>
-          </span>
-          <span class="font-display text-lg font-black tracking-tight text-gray-950 dark:text-white hidden sm:inline">
-            buymeashake.fit
-          </span>
-        </a>
+        <app-brand-logo link="/" [hideTitleOnMobile]="true" />
 
         <!-- Acciones Derecha -->
         <div class="flex items-center gap-3">
-          
-          <!-- Botón Idioma Toggle -->
-          <button
-            type="button"
-            (click)="languageService.toggleLanguage()"
-            [title]="lang() === 'es' ? 'Switch to English' : 'Cambiar a Español'"
-            [attr.aria-label]="t().nav.switchLanguage"
-            class="h-9 px-2.5 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 text-gray-700 dark:text-gray-200 flex items-center gap-1.5 hover:bg-gray-100 dark:hover:bg-white/10 transition cursor-pointer select-none"
-          >
-            <span class="text-emerald-600 dark:text-[#c9ff3d] text-sm leading-none">🌐</span>
-            <span class="text-[11px] font-black tracking-wider uppercase">{{ lang() === 'es' ? 'ES' : 'EN' }}</span>
-          </button>
-
-          <!-- Botón Theme Toggle -->
-          <button
-            type="button"
-            (click)="themeService.toggleTheme()"
-            class="h-9 w-9 rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 text-gray-700 dark:text-gray-200 grid place-items-center hover:bg-gray-100 dark:hover:bg-white/10 transition cursor-pointer"
-            [attr.aria-label]="t().common.toggleTheme"
-          >
-            @if (themeService.currentTheme() === 'dark') {
-              <svg class="w-4 h-4 text-[#c9ff3d]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
-              </svg>
-            } @else {
-              <svg class="w-4 h-4 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
-              </svg>
-            }
-          </button>
+          <app-chrome-controls size="sm" />
 
           <!-- Botón según rol: Si ya es atleta va a su dashboard, si es supporter crea su página -->
           @if (isAthlete()) {

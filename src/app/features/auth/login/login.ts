@@ -7,6 +7,8 @@ import { FirebaseAuthService, SocialProvider } from '../../../core/firebase-auth
 import { LanguageService } from '../../../core/language.service';
 import { ThemeService } from '../../../core/theme.service';
 import { FirebaseNeedsRoleDetails } from '../../../core/api.models';
+import { BrandLogoComponent } from '../../../shared/brand-logo/brand-logo.component';
+import { ChromeControlsComponent } from '../../../shared/chrome-controls/chrome-controls.component';
 
 type ErrorDescriptor =
   | { type: 'userNotFound' }
@@ -28,7 +30,7 @@ type InfoKey = 'activeOtpNotice' | 'codeResentSuccess' | 'activeSessionRedirect'
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink, BrandLogoComponent, ChromeControlsComponent],
   templateUrl: './login.html',
   styleUrl: './login.css',
 })

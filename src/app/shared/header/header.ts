@@ -2,17 +2,17 @@ import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../core/auth.service';
-import { ThemeService } from '../../core/theme.service';
 import { LanguageService } from '../../core/language.service';
+import { BrandLogoComponent } from '../brand-logo/brand-logo.component';
+import { ChromeControlsComponent } from '../chrome-controls/chrome-controls.component';
 
 @Component({
   selector: 'app-header',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, BrandLogoComponent, ChromeControlsComponent],
   templateUrl: './header.html',
 })
 export class Header {
-  readonly themeService = inject(ThemeService);
   readonly languageService = inject(LanguageService);
   readonly auth = inject(AuthService);
   private readonly router = inject(Router);
@@ -27,10 +27,6 @@ export class Header {
   readonly links = [
     { path: '/explore', label: 'Explorar atletas' },
   ];
-
-  toggleLanguage(): void {
-    this.languageService.toggleLanguage();
-  }
 
   toggleMenu(): void {
     this.menuOpen.update((value) => !value);

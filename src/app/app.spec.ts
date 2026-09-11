@@ -20,7 +20,8 @@ describe('App', () => {
     const fixture = TestBed.createComponent(App);
     await fixture.whenStable();
 
-    const header = fixture.nativeElement as HTMLElement;
-    expect(header.textContent).toContain('buymeashake');
+    const root = fixture.nativeElement as HTMLElement;
+    const brandTitle = root.querySelector('app-brand-logo img[alt="buymeashake.fit"]');
+    expect(brandTitle).toBeTruthy();
   });
 });

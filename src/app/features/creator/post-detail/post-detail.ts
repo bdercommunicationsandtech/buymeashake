@@ -6,10 +6,12 @@ import { Subscription } from 'rxjs';
 import { ExploreService } from '../../../core/explore.service';
 import { PostItemDto } from '../../../core/api.models';
 import { LanguageService } from '../../../core/language.service';
+import { resolveMediaUrl, resolveMediaUrlsInHtml } from '../../../core/utils/media-url.util';
 
 function isSafeHttpUrl(url: string): boolean {
   try {
-    const parsed = new URL(url, 'https://example.invalid');
+    const resolved = resolveMediaUrl(url) ?? url;
+    const parsed = new URL(resolved);
     return parsed.protocol === 'http:' || parsed.protocol === 'https:';
   } catch {
     return false;
@@ -18,10 +20,10 @@ function isSafeHttpUrl(url: string): boolean {
 
 function extractFirstImageUrl(content: string): string | null {
   const htmlMatch = content.match(/<img[^>]+src=["']([^"']+)["']/i);
-  if (htmlMatch?.[1] && isSafeHttpUrl(htmlMatch[1])) return htmlMatch[1];
+  if (htmlMatch?.[1] && isSafeHttpUrl(htmlMatch[1])) return resolveMediaUrl(htmlMatch[1]);
 
   const mdMatch = content.match(/!\[[^\]]*]\(([^)\s]+)\)/);
-  if (mdMatch?.[1] && isSafeHttpUrl(mdMatch[1])) return mdMatch[1];
+  if (mdMatch?.[1] && isSafeHttpUrl(mdMatch[1])) return resolveMediaUrl(mdMatch[1]);
 
   return null;
 }
@@ -91,7 +93,7 @@ export class PostDetail implements OnDestroy {
     const p = this.post();
     if (!p) return null;
     const hasCover = !!extractFirstImageUrl(p.content_html);
-    const rawRendered = toRenderableHtml(p.content_html, hasCover);
+    const rawRendered = resolveMediaUrlsInHtml(toRenderableHtml(p.content_html, hasCover));
     return this.sanitizer.sanitize(SecurityContext.HTML, rawRendered);
   });
 

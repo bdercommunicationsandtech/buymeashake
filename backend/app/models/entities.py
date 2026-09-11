@@ -204,16 +204,37 @@ class UserRole(Base):
     role_item: Mapped[LookupItem] = relationship("LookupItem", foreign_keys=[role_id])
     status_item: Mapped[LookupItem] = relationship("LookupItem", foreign_keys=[status_id])
 
+class Discipline(Base):
+    """Canonical sport / discipline catalog (replaces lookup group 100 for athletes)."""
+
+    __tablename__ = "disciplines"
+
+    id: Mapped[int] = mapped_column(BIGINT(unsigned=True), primary_key=True, autoincrement=True)
+    name: Mapped[str] = mapped_column(String(100), nullable=False)
+    description: Mapped[str | None] = mapped_column(String(150), nullable=True)
+    image_url: Mapped[str | None] = mapped_column(String(512), nullable=True)
+    icon_url: Mapped[str | None] = mapped_column(String(512), nullable=True)
+    sort_order: Mapped[int] = mapped_column(Integer, default=0)
+    show_in_home: Mapped[bool] = mapped_column(Boolean, default=False)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now(), onupdate=func.now())
+
+
 class AthleteDiscipline(Base):
     __tablename__ = "athlete_disciplines"
 
-    athlete_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("athlete_profiles.id", ondelete="CASCADE"), primary_key=True)
-    discipline_item_id: Mapped[int] = mapped_column(BigInteger, ForeignKey("lookup_items.id", ondelete="CASCADE"), primary_key=True)
+    athlete_id: Mapped[int] = mapped_column(
+        BIGINT(unsigned=True), ForeignKey("athlete_profiles.id", ondelete="CASCADE"), primary_key=True
+    )
+    discipline_id: Mapped[int] = mapped_column(
+        BIGINT(unsigned=True), ForeignKey("disciplines.id", ondelete="CASCADE"), primary_key=True
+    )
     is_primary: Mapped[bool] = mapped_column(Boolean, default=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
 
     athlete: Mapped["AthleteProfile"] = relationship("AthleteProfile", back_populates="disciplines_association")
-    discipline_item: Mapped["LookupItem"] = relationship("LookupItem")
+    discipline: Mapped["Discipline"] = relationship("Discipline")
 
 
 class AthleteProfile(Base):

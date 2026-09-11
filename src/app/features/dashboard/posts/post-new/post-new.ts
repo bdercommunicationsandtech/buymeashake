@@ -5,12 +5,13 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { DashboardService } from '../../../../core/dashboard.service';
 import { AllowedUserTextDirective } from '../../../../core/directives/allowed-user-text.directive';
 import { LanguageService } from '../../../../core/language.service';
+import { MediaUrlPipe } from '../../../../shared/pipes/media-url.pipe';
 
 @Component({
   selector: 'app-dashboard-post-new',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, FormsModule, RouterLink, AllowedUserTextDirective],
+  imports: [CommonModule, FormsModule, RouterLink, AllowedUserTextDirective, MediaUrlPipe],
   template: `
     <div class="space-y-6 max-w-4xl mx-auto pb-16">
       
@@ -220,7 +221,7 @@ import { LanguageService } from '../../../../core/language.service';
             
             @if (coverUrl()) {
               <div class="relative rounded-2xl overflow-hidden h-36 w-full border border-gray-200 dark:border-white/10">
-                <img [src]="coverUrl()" alt="Cover" class="w-full h-full object-cover" />
+                <img [src]="coverUrl() | mediaUrl" alt="Cover" class="w-full h-full object-cover" />
                 <button
                   type="button"
                   (click)="coverUrl.set(null)"

@@ -30,14 +30,14 @@ export interface UserRegisterPayload {
   full_name: string;
   role: 'supporter' | 'athlete';
   handle?: string;
-  discipline_codes?: number[];
+  discipline_ids?: number[];
   referral_code?: string;
 }
 
 export interface UpgradeToAthletePayload {
   handle: string;
   full_name?: string;
-  discipline_codes?: number[];
+  discipline_ids?: number[];
   bio?: string;
   city?: string;
   shake_price?: number;
@@ -214,10 +214,25 @@ export interface ReferralDashboardData {
 }
 
 export interface LookupItemDto {
-  code: number;
+  /** Primary key used by sport disciplines (GET /disciplines). */
+  id: number;
+  /** Optional lookup catalog code (GET /system/lookups). */
+  code?: number;
   label: string;
   icon: string | null;
   sort_order: number;
+  metadata?: Record<string, unknown> | null;
+}
+
+export interface DisciplineDto {
+  id: number;
+  name: string;
+  description: string | null;
+  image_url: string | null;
+  icon_url: string | null;
+  sort_order: number;
+  show_in_home: boolean;
+  is_active: boolean;
 }
 
 export interface LookupGroupDto {
@@ -240,7 +255,7 @@ export interface AthleteProfileFull {
   agenda_image_url?: string | null;
   city: string | null;
   city_id?: number | null;
-  discipline_codes: number[];
+  discipline_ids: number[];
   shake_price: number;
   currency: string;
   avatar_url: string | null;
@@ -264,7 +279,7 @@ export interface AthleteProfileUpdatePayload {
   agenda_image_url?: string | null;
   city?: string;
   city_id?: number | null;
-  discipline_codes?: number[];
+  discipline_ids?: number[];
   shake_price?: number;
   currency?: string;
   avatar_url?: string;

@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { PLATFORM_ID } from '@angular/core';
+import { PLATFORM_ID, signal } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { of } from 'rxjs';
 import { Home } from './home';
@@ -8,6 +8,18 @@ import { LanguageService } from '../../core/language.service';
 import { LookupService } from '../../core/lookup.service';
 import { ExploreService } from '../../core/explore.service';
 import { CheckoutService } from '../../core/checkout.service';
+import { BannerService } from '../../core/banner.service';
+import { DisciplineDto } from '../../core/api.models';
+
+const MOCK_HOME_DISCIPLINES: DisciplineDto[] = [
+  { id: 1, name: 'Fuerza & Gym', description: 'ENTRENAMIENTO', image_url: 'https://example.com/1.jpg', icon_url: null, sort_order: 1, show_in_home: true, is_active: true },
+  { id: 2, name: 'Cross Training', description: 'DISCIPLINA', image_url: 'https://example.com/2.jpg', icon_url: null, sort_order: 2, show_in_home: true, is_active: true },
+  { id: 3, name: 'Running', description: 'PISTA', image_url: 'https://example.com/3.jpg', icon_url: null, sort_order: 3, show_in_home: true, is_active: true },
+  { id: 4, name: 'Ciclismo', description: 'RUTA', image_url: 'https://example.com/4.jpg', icon_url: null, sort_order: 4, show_in_home: true, is_active: true },
+  { id: 5, name: 'Deportes Acuáticos', description: 'NATACIÓN', image_url: 'https://example.com/5.jpg', icon_url: null, sort_order: 5, show_in_home: true, is_active: true },
+  { id: 6, name: 'Bienestar', description: 'MENTE', image_url: 'https://example.com/6.jpg', icon_url: null, sort_order: 6, show_in_home: true, is_active: true },
+  { id: 7, name: 'Esports & Gaming', description: 'SIM', image_url: 'https://example.com/7.jpg', icon_url: null, sort_order: 7, show_in_home: true, is_active: true },
+];
 
 describe('Home Component', () => {
   let component: Home;
@@ -23,6 +35,7 @@ describe('Home Component', () => {
           provide: LookupService,
           useValue: {
             getSportDisciplines: () => of([]),
+            getDisciplines: () => of(MOCK_HOME_DISCIPLINES),
           },
         },
         {
@@ -35,6 +48,14 @@ describe('Home Component', () => {
           provide: CheckoutService,
           useValue: {
             start: () => {},
+          },
+        },
+import { signal } from '@angular/core';
+...
+        {
+          provide: BannerService,
+          useValue: {
+            heroImages: signal<string[]>([]),
           },
         },
       ],
@@ -50,18 +71,17 @@ describe('Home Component', () => {
   });
 
   describe('Carrusel 3D Coverflow de Disciplinas', () => {
-    it('debe inicializarse en el índice 3 (Cross Training) por defecto', () => {
-      expect(component.activeDisciplineIndex()).toBe(3);
-      expect(component.coverflowDisciplines[3].name).toBe('Cross Training');
+    it('debe cargar disciplinas desde API e iniciar en Cross Training', () => {
+      expect(component.coverflowDisciplines().length).toBe(7);
+      expect(component.coverflowDisciplines()[component.activeDisciplineIndex()].name).toBe('Cross Training');
     });
 
     it('debe avanzar a la siguiente disciplina de forma cíclica con nextDiscipline()', () => {
+      const start = component.activeDisciplineIndex();
       component.nextDiscipline();
-      expect(component.activeDisciplineIndex()).toBe(4);
-      expect(component.coverflowDisciplines[4].name).toBe('Bienestar');
+      expect(component.activeDisciplineIndex()).toBe((start + 1) % component.coverflowDisciplines().length);
 
-      // Avanzar hasta el final y dar la vuelta cíclica
-      component.selectDiscipline(component.coverflowDisciplines.length - 1);
+      component.selectDiscipline(component.coverflowDisciplines().length - 1);
       component.nextDiscipline();
       expect(component.activeDisciplineIndex()).toBe(0);
     });
@@ -69,7 +89,7 @@ describe('Home Component', () => {
     it('debe retroceder a la disciplina previa de forma cíclica con prevDiscipline()', () => {
       component.selectDiscipline(0);
       component.prevDiscipline();
-      const lastIndex = component.coverflowDisciplines.length - 1;
+      const lastIndex = component.coverflowDisciplines().length - 1;
       expect(component.activeDisciplineIndex()).toBe(lastIndex);
     });
 

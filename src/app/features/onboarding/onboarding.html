@@ -44,14 +44,14 @@
             (click)="dropdownOpen.set(!dropdownOpen()); searchSport.set('')"
             class="relative w-full px-4 py-3 text-left border border-gray-300 dark:border-white/15 rounded-xl shadow-xs bg-white dark:bg-[#191c1d] text-sm font-semibold text-gray-900 dark:text-white focus:outline-none focus:border-gray-900 dark:focus:border-[#c9ff3d] cursor-pointer transition"
           >
-            @if (disciplineCodes().length === 0) {
+            @if (disciplineIds().length === 0) {
               <span class="text-gray-400">Selecciona disciplinas...</span>
             } @else {
               <div class="flex flex-wrap gap-1.5">
-                @for (code of disciplineCodes(); track code) {
+                @for (id of disciplineIds(); track id) {
                   <span class="inline-flex items-center gap-1 bg-gray-200 dark:bg-white/10 text-gray-800 dark:text-gray-200 px-2 py-0.5 rounded-md text-xs font-bold border border-gray-300 dark:border-white/10">
-                    {{ getDisciplineLabel(code) }}
-                    <span class="text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-white ml-1 cursor-pointer" (click)="$event.stopPropagation(); toggleSport(code)">&times;</span>
+                    {{ getDisciplineLabel(id) }}
+                    <span class="text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-white ml-1 cursor-pointer" (click)="$event.stopPropagation(); toggleSport(id)">&times;</span>
                   </span>
                 }
               </div>
@@ -72,13 +72,13 @@
                   />
                 </div>
                 <ul class="py-1 overflow-y-auto text-sm font-semibold text-gray-900 dark:text-white flex-1">
-                  @for (sport of filteredSports(); track sport.code) {
+                  @for (sport of filteredSports(); track sport.id) {
                   <li
-                    (click)="toggleSport(sport.code)"
+                    (click)="toggleSport(sport.id)"
                     class="px-4 py-2.5 hover:bg-gray-100 dark:hover:bg-white/5 cursor-pointer flex justify-between items-center transition-colors"
                   >
                     <span>{{ languageService.translateDiscipline(sport.label) }}</span>
-                    @if (disciplineCodes().includes(sport.code)) {
+                    @if (disciplineIds().includes(sport.id)) {
                       <span class="text-gray-900 dark:text-white text-lg leading-none">✓</span>
                     }
                   </li>

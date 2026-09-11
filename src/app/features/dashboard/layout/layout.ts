@@ -6,11 +6,13 @@ import { DashboardService } from '../../../core/dashboard.service';
 import { ThemeService } from '../../../core/theme.service';
 import { AthleteProfileFull } from '../../../core/api.models';
 import { LanguageService } from '../../../core/language.service';
+import { BrandLogoComponent } from '../../../shared/brand-logo/brand-logo.component';
+import { ChromeControlsComponent } from '../../../shared/chrome-controls/chrome-controls.component';
 
 @Component({
   selector: 'app-dashboard-layout',
   standalone: true,
-  imports: [CommonModule, RouterLink, RouterLinkActive, RouterOutlet],
+  imports: [CommonModule, RouterLink, RouterLinkActive, RouterOutlet, BrandLogoComponent, ChromeControlsComponent],
   templateUrl: './layout.html',
 })
 export class DashboardLayout implements OnInit {

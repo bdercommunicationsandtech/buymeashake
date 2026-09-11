@@ -17,9 +17,10 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { ExploreService } from '../../core/explore.service';
 import { LookupService } from '../../core/lookup.service';
 import { LanguageService } from '../../core/language.service';
-import { AnimatedShakerComponent } from '../../shared/icons/animated-shaker';
+import { IconShakerComponent } from '../../shared/icons/icon-shaker';
 import { AthleteLeaderboardItem } from '../../core/api.models';
 import { AllowedUserTextDirective } from '../../core/directives/allowed-user-text.directive';
+import { resolveMediaUrl } from '../../core/utils/media-url.util';
 
 export interface AthleteProfile {
   id: string;
@@ -49,7 +50,7 @@ function normalizeText(text: string | null | undefined): string {
 @Component({
   selector: 'app-explore',
   standalone: true,
-  imports: [CommonModule, RouterLink, AnimatedShakerComponent, AllowedUserTextDirective],
+  imports: [CommonModule, RouterLink, IconShakerComponent, AllowedUserTextDirective],
   templateUrl: './explore.html',
 })
 export class Explore implements OnInit, AfterViewInit, OnDestroy {
@@ -165,7 +166,7 @@ export class Explore implements OnInit, AfterViewInit, OnDestroy {
       name: it.athlete_name,
       handle: it.handle,
       initials,
-      avatarUrl: it.avatar_url,
+      avatarUrl: resolveMediaUrl(it.avatar_url),
       sport: it.disciplines?.join(', ') || 'Deporte General',
       disciplines: it.disciplines && it.disciplines.length > 0 ? it.disciplines : [it.disciplines?.join(', ') || 'Deporte General'],
       bio: it.bio || 'Atleta oficial en buymeashake.fit',
@@ -221,6 +222,9 @@ export class Explore implements OnInit, AfterViewInit, OnDestroy {
       const translatedCatNorm = normalizeText(
         this.languageService.translateDiscipline(category)
       );
+      const disciplineNorms = this.getDisciplinesList(athlete).map((d) =>
+        normalizeText(this.languageService.translateDiscipline(d)),
+      );
 
       const matchesCategory =
         category === 'ALL' ||
@@ -229,7 +233,10 @@ export class Explore implements OnInit, AfterViewInit, OnDestroy {
         athleteSportNorm.includes(catNorm) ||
         catNorm.includes(athleteSportNorm) ||
         athleteSportNorm.includes(translatedCatNorm) ||
-        translatedCatNorm.includes(athleteSportNorm);
+        translatedCatNorm.includes(athleteSportNorm) ||
+        disciplineNorms.some(
+          (d) => d.includes(catNorm) || catNorm.includes(d) || d.includes(translatedCatNorm),
+        );
 
       if (!matchesCategory) {
         return false;

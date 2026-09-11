@@ -32,8 +32,10 @@ export class App {
     return (
       !url.startsWith('/dashboard')
       && !url.startsWith('/supporter')
+      && !url.startsWith('/fan')
       && !url.startsWith('/auth/')
       && !url.startsWith('/onboarding')
+      && !url.startsWith('/editar-mi-pagina')
     );
   });
 

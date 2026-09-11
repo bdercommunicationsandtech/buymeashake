@@ -20,15 +20,18 @@ import { LookupItemDto, AthleteLeaderboardItem } from '../../core/api.models';
 import { LanguageService } from '../../core/language.service';
 import { SHAKE_PRICE } from '../../core/demo';
 import { BannerService } from '../../core/banner.service';
+import { resolveMediaUrl } from '../../core/utils/media-url.util';
 
-import { AnimatedShakerComponent } from '../../shared/icons/animated-shaker';
+import { IconShakerComponent } from '../../shared/icons/icon-shaker';
+import { MediaUrlPipe } from '../../shared/pipes/media-url.pipe';
 
 export interface DisciplineCarouselItem {
   id: string;
   name: string;
   tag: string;
-  icon: string;
+  iconUrl: string | null;
   image: string;
+  exploreCat: string;
 }
 
 @Component({
@@ -37,7 +40,8 @@ export interface DisciplineCarouselItem {
   imports: [
     CommonModule,
     RouterLink,
-    AnimatedShakerComponent,
+    IconShakerComponent,
+    MediaUrlPipe,
   ],
   templateUrl: './home.html',
 })
@@ -60,61 +64,10 @@ export class Home implements OnInit, AfterViewInit, OnDestroy {
   readonly currentHeroIndex = signal<number>(0);
   private heroImageTimer: any = null;
 
-  // 7 Disciplinas del carrusel 3D Coverflow alineadas a las referencias
-  readonly coverflowDisciplines: DisciplineCarouselItem[] = [
-    {
-      id: 'fuerza',
-      name: 'Fuerza & Gym',
-      tag: 'ENTRENAMIENTO',
-      icon: 'dumbbell',
-      image: 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=800&auto=format&fit=crop',
-    },
-    {
-      id: 'running',
-      name: 'Running',
-      tag: 'PISTA & MARATÓN',
-      icon: 'runner',
-      image: 'https://images.unsplash.com/photo-1552674605-db6ffd4facb5?q=80&w=800&auto=format&fit=crop',
-    },
-    {
-      id: 'ciclismo',
-      name: 'Ciclismo',
-      tag: 'RUTA & GRAVEL',
-      icon: 'cycling',
-      image: '/images/carousel-cycling.jpg',
-    },
-    {
-      id: 'cross',
-      name: 'Cross Training',
-      tag: 'DISCIPLINA & RESULTADOS',
-      icon: 'crossfit',
-      image: 'https://images.unsplash.com/photo-1517838277536-f5f99be501cd?q=80&w=800&auto=format&fit=crop',
-    },
-    {
-      id: 'bienestar',
-      name: 'Bienestar',
-      tag: 'MENTE & CUERPO',
-      icon: 'yoga',
-      image: 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?q=80&w=800&auto=format&fit=crop',
-    },
-    {
-      id: 'acuaticos',
-      name: 'Deportes Acuáticos',
-      tag: 'NATACIÓN & SURF',
-      icon: 'swimmer',
-      image: 'https://images.unsplash.com/photo-1530549387789-4c1017266635?q=80&w=800&auto=format&fit=crop',
-    },
-    {
-      id: 'gaming',
-      name: 'Esports & Gaming',
-      tag: 'COMPETITIVO & SIM',
-      icon: 'gaming',
-      image: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=800&auto=format&fit=crop',
-    },
-  ];
+  readonly coverflowDisciplines = signal<DisciplineCarouselItem[]>([]);
 
-  // Estado del Carrusel 3D Coverflow: Inicia en Cross Training (índice 3)
-  readonly activeDisciplineIndex = signal<number>(3);
+  // Estado del Carrusel 3D Coverflow
+  readonly activeDisciplineIndex = signal<number>(0);
   readonly isAutoPlaying = signal<boolean>(true);
   private autoplayTimer: any = null;
 
@@ -171,7 +124,7 @@ export class Home implements OnInit, AfterViewInit, OnDestroy {
       shakes: a.total_shakes_this_month,
       totalRaised: a.total_raised_this_month,
       initials: a.athlete_name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() || 'AT',
-      avatarUrl: a.avatar_url,
+      avatarUrl: resolveMediaUrl(a.avatar_url),
     }));
   });
 
@@ -194,6 +147,24 @@ export class Home implements OnInit, AfterViewInit, OnDestroy {
   ngOnInit(): void {
     this.lookupService.getSportDisciplines().subscribe({
       next: (items) => this.disciplines.set(items),
+    });
+
+    this.lookupService.getDisciplines(true).subscribe({
+      next: (items) => {
+        const mapped: DisciplineCarouselItem[] = items
+          .filter((d) => !!d.image_url)
+          .map((d) => ({
+            id: String(d.id),
+            name: d.name,
+            tag: d.description || '',
+            iconUrl: d.icon_url,
+            image: resolveMediaUrl(d.image_url) || d.image_url || '',
+            exploreCat: d.name,
+          }));
+        this.coverflowDisciplines.set(mapped);
+        const crossIdx = mapped.findIndex((d) => /cross/i.test(d.name));
+        this.activeDisciplineIndex.set(crossIdx >= 0 ? crossIdx : 0);
+      },
     });
 
     this.exploreService.getMonthlyLeaderboard(3).subscribe({
@@ -255,21 +226,25 @@ export class Home implements OnInit, AfterViewInit, OnDestroy {
 
   // Métodos de control del Carrusel Coverflow
   selectDiscipline(index: number): void {
+    const list = this.coverflowDisciplines();
+    if (!list.length) return;
     this.activeDisciplineIndex.set(index);
     this.trackEvent('carousel_discipline_select', {
-      discipline: this.coverflowDisciplines[index].name,
+      discipline: list[index]?.name,
       index,
     });
   }
 
   nextDiscipline(): void {
-    const total = this.coverflowDisciplines.length;
+    const total = this.coverflowDisciplines().length;
+    if (!total) return;
     const nextIdx = (this.activeDisciplineIndex() + 1) % total;
     this.selectDiscipline(nextIdx);
   }
 
   prevDiscipline(): void {
-    const total = this.coverflowDisciplines.length;
+    const total = this.coverflowDisciplines().length;
+    if (!total) return;
     const prevIdx = (this.activeDisciplineIndex() - 1 + total) % total;
     this.selectDiscipline(prevIdx);
   }

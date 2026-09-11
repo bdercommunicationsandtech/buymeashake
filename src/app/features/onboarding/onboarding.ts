@@ -32,7 +32,7 @@ export class Onboarding implements OnInit {
   readonly bio = signal('');
   readonly city = signal('');
   readonly handle = signal('');
-  readonly disciplineCodes = signal<number[]>([]);
+  readonly disciplineIds = signal<number[]>([]);
   readonly dropdownOpen = signal(false);
   readonly searchSport = signal('');
   readonly filteredSports = computed(() => {
@@ -46,17 +46,17 @@ export class Onboarding implements OnInit {
   readonly shakePrice = signal(3);
   readonly sports = signal<LookupItemDto[]>([]);
 
-  toggleSport(code: number): void {
-    const current = this.disciplineCodes();
-    if (current.includes(code)) {
-      this.disciplineCodes.set(current.filter((c: number) => c !== code));
+  toggleSport(id: number): void {
+    const current = this.disciplineIds();
+    if (current.includes(id)) {
+      this.disciplineIds.set(current.filter((c: number) => c !== id));
     } else {
-      this.disciplineCodes.set([...current, code]);
+      this.disciplineIds.set([...current, id]);
     }
   }
 
-  getDisciplineLabel(code: number): string {
-    const sport = this.sports().find((s) => s.code === code);
+  getDisciplineLabel(id: number): string {
+    const sport = this.sports().find((s) => s.id === id);
     return sport ? this.languageService.translateDiscipline(sport.label) : '';
   }
 
@@ -88,7 +88,7 @@ export class Onboarding implements OnInit {
         this.bio.set(p.bio || '');
         this.city.set(p.city || '');
         this.handle.set(p.handle);
-        this.disciplineCodes.set(p.discipline_codes || []);
+        this.disciplineIds.set(p.discipline_ids || []);
         this.shakePrice.set(Number(p.shake_price) || 3);
         this.loading.set(false);
       },
@@ -113,7 +113,7 @@ export class Onboarding implements OnInit {
           full_name: this.fullName().trim(),
           bio: this.bio().trim() || undefined,
           city: this.city().trim() || undefined,
-          discipline_codes: this.disciplineCodes(),
+          discipline_ids: this.disciplineIds(),
           shake_price: this.shakePrice(),
         })
         .subscribe({
@@ -135,7 +135,7 @@ export class Onboarding implements OnInit {
         full_name: this.fullName(),
         bio: this.bio(),
         city: this.city(),
-        discipline_codes: this.disciplineCodes(),
+        discipline_ids: this.disciplineIds(),
         shake_price: this.shakePrice(),
       })
       .subscribe({

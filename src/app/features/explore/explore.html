@@ -1,15 +1,15 @@
-<div class="min-h-screen bg-[#080a0b] text-slate-100 pb-20 font-sans selection:bg-[#ccff00] selection:text-black">
+<div class="min-h-screen bg-[#fafafb] dark:bg-[#080a0b] text-gray-900 dark:text-gray-900 dark:text-slate-100 pb-20 font-sans selection:bg-[#ccff00] selection:text-black transition-colors duration-200">
   <!-- Hero / Header Section -->
-  <section class="border-b border-white/10 bg-[#0c0f10]/95 backdrop-blur-md py-10 px-5 sm:px-8 relative overflow-hidden">
+  <section class="border-b border-gray-200/80 dark:border-gray-200/80 dark:border-white/10 bg-white/95 dark:bg-[#0c0f10]/95 backdrop-blur-md py-10 px-5 sm:px-8 relative overflow-hidden">
     <!-- Glow background accent -->
     <div class="absolute -top-12 left-1/2 -translate-x-1/2 w-[500px] h-48 bg-[#ccff00]/10 rounded-full blur-[100px] pointer-events-none" aria-hidden="true"></div>
     
     <div class="mx-auto max-w-6xl flex flex-col md:flex-row md:items-end justify-between gap-6 relative z-10">
       <div>
-        <h1 class="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-white font-display">
+        <h1 class="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-gray-950 dark:text-white font-display">
           Top 10 Atletas <span class="text-transparent bg-clip-text bg-gradient-to-r from-[#ccff00] via-[#e2ff66] to-[#a3e600]">del Mes</span>
         </h1>
-        <p class="mt-2 text-sm sm:text-base text-slate-400 max-w-2xl">
+        <p class="mt-2 text-sm sm:text-base text-gray-500 dark:text-slate-400 max-w-2xl">
           {{ t().explore.subtitle }}
         </p>
       </div>
@@ -22,7 +22,7 @@
             appAllowedUserText
             maxlength="100"
             [placeholder]="t().explore.searchPlaceholder"
-            class="w-full rounded-2xl border border-slate-800 bg-[#111613]/90 pl-11 pr-4 py-3 text-sm text-slate-200 placeholder:text-slate-500 focus:bg-[#141a16] focus:border-[#ccff00] focus:ring-2 focus:ring-[#ccff00]/20 focus:outline-none shadow-sm transition-all"
+            class="w-full rounded-2xl border border-gray-200 dark:border-slate-800 bg-white dark:bg-[#111613]/90 pl-11 pr-4 py-3 text-sm text-slate-200 placeholder:text-slate-500 focus:bg-[#141a16] focus:border-[#ccff00] focus:ring-2 focus:ring-[#ccff00]/20 focus:outline-none shadow-sm transition-all"
             [value]="searchQuery()"
             (input)="onSearch($any($event.target).value)"
             aria-label="Buscar por atleta o disciplina"
@@ -35,7 +35,7 @@
     </div>
 
     <!-- Filters Bar (Píldoras de Disciplinas) -->
-    <div class="mx-auto max-w-6xl mt-8 pt-6 border-t border-white/10 flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none relative z-10">
+    <div class="mx-auto max-w-6xl mt-8 pt-6 border-t border-gray-200/80 dark:border-white/10 flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none relative z-10">
       @for (cat of categories(); track cat) {
         <button
           type="button"
@@ -43,7 +43,7 @@
           [class]="
             selectedCategory() === cat
               ? 'bg-[#ccff00] text-gray-950 font-black border-[#ccff00] shadow-[0_0_15px_rgba(204,255,0,0.35)]'
-              : 'bg-[#111613] text-slate-400 hover:text-white border-slate-800 hover:border-slate-600'
+              : 'bg-white dark:bg-[#111613] text-gray-500 dark:text-slate-400 hover:text-gray-900 dark:text-white border-gray-200 dark:border-slate-800 hover:border-slate-600'
           "
           (click)="setCategory(cat)"
         >
@@ -68,10 +68,10 @@
             
             <!-- 2ND PLACE (Plata) - order-2 en mobile, md:order-1 en desktop -->
             @if (leader2(); as l2) {
-              <div class="podium-card order-2 md:order-1 relative rounded-3xl bg-[#111613]/90 border border-slate-800/90 p-6 flex flex-col items-center backdrop-blur-md hover:border-slate-600 transition-all duration-300 transform hover:-translate-y-1 group shadow-xl">
+              <div class="podium-card order-2 md:order-1 relative rounded-3xl bg-white dark:bg-[#111613]/90 border border-gray-200 dark:border-slate-800/90 p-6 flex flex-col items-center backdrop-blur-md hover:border-slate-600 transition-all duration-300 transform hover:-translate-y-1 group shadow-xl">
                 <!-- Badge #2 -->
-                <div class="absolute -top-3.5 px-3 py-0.5 rounded-full bg-[#1c2420] border border-slate-700 text-slate-300 text-xs font-bold flex items-center gap-1.5 shadow-md">
-                  <span class="text-slate-400">★</span>
+                <div class="absolute -top-3.5 px-3 py-0.5 rounded-full bg-[#1c2420] border border-slate-700 text-gray-600 dark:text-slate-300 text-xs font-bold flex items-center gap-1.5 shadow-md">
+                  <span class="text-gray-500 dark:text-slate-400">★</span>
                   <span>#2</span>
                 </div>
 
@@ -81,7 +81,7 @@
                     @if (l2.avatarUrl && !avatarErrors().has(l2.id)) {
                       <img [src]="l2.avatarUrl" [alt]="l2.name" (error)="onAvatarError(l2.id)" class="w-full h-full object-cover" />
                     } @else {
-                      <span class="text-slate-300">{{ l2.initials }}</span>
+                      <span class="text-gray-600 dark:text-slate-300">{{ l2.initials }}</span>
                     }
                   </div>
                   <!-- Mini Badge #2 -->
@@ -102,33 +102,33 @@
                 </h3>
 
                 <!-- Disciplina -->
-                <div class="mt-2 px-3 py-1 rounded-full bg-slate-800/70 border border-slate-700/60 text-[11px] font-medium text-slate-300 text-center truncate max-w-[210px]" [title]="l2.sport">
+                <div class="mt-2 px-3 py-1 rounded-full bg-gray-100 dark:bg-slate-800/70 border border-slate-700/60 text-[11px] font-medium text-gray-600 dark:text-slate-300 text-center truncate max-w-[210px]" [title]="l2.sport">
                   {{ l2.sport }}
                 </div>
 
                 <!-- Shakes Count Box (Centrado con Animated Shaker) -->
-                <div class="mt-6 w-full rounded-2xl bg-[#090c0a]/80 border border-slate-800/80 p-3.5 flex flex-col items-center justify-center text-center">
-                  <span class="text-[10px] uppercase font-bold tracking-wider text-slate-400 block leading-none mb-1">SHAKES</span>
+                <div class="mt-6 w-full rounded-2xl bg-gray-50 dark:bg-[#090c0a]/80 border border-gray-200 dark:border-slate-800/80 p-3.5 flex flex-col items-center justify-center text-center">
+                  <span class="text-[10px] uppercase font-bold tracking-wider text-gray-500 dark:text-slate-400 block leading-none mb-1">SHAKES</span>
                   <div class="mt-1 text-2xl font-black text-white flex items-center justify-center gap-2">
                     <span>{{ l2.shakesThisMonth }}</span>
-                    <app-animated-shaker [size]="20" customClass="text-slate-400" />
+                    <app-icon-shaker [size]="20" customClass="text-gray-500 dark:text-slate-400" />
                   </div>
                 </div>
 
                 <!-- Botón CTA -->
                 <a
                   [routerLink]="['/' + l2.handle]"
-                  class="mt-4 w-full py-3.5 px-4 rounded-xl bg-slate-800/90 hover:bg-[#ccff00] text-white hover:text-gray-950 border border-slate-700/70 text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 transition active:scale-95 cursor-pointer shadow-sm"
+                  class="mt-4 w-full py-3.5 px-4 rounded-xl bg-gray-100 dark:bg-slate-800/90 hover:bg-[#ccff00] text-white hover:text-gray-950 border border-slate-700/70 text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 transition active:scale-95 cursor-pointer shadow-sm"
                 >
                   <span>{{ t().explore.inviteShake }}</span>
-                  <app-animated-shaker [size]="18" customClass="text-slate-300 group-hover:text-gray-950" />
+                  <app-icon-shaker [size]="18" customClass="text-gray-600 dark:text-slate-300 group-hover:text-gray-950" />
                 </a>
               </div>
             }
 
             <!-- 1ST PLACE (Oro / Neon Champion) - order-1 en mobile, md:order-2 en desktop (elevado) -->
             @if (leader1(); as l1) {
-              <div class="podium-card order-1 md:order-2 relative rounded-3xl bg-[#111613] border-2 border-[#ccff00] p-7 flex flex-col items-center shadow-[0_0_40px_rgba(204,255,0,0.25)] md:-translate-y-6 transition-all duration-300 transform hover:-translate-y-7 group z-20">
+              <div class="podium-card order-1 md:order-2 relative rounded-3xl bg-white dark:bg-[#111613] border-2 border-[#ccff00] p-7 flex flex-col items-center shadow-[0_0_40px_rgba(204,255,0,0.25)] md:-translate-y-6 transition-all duration-300 transform hover:-translate-y-7 group z-20">
                 <!-- Badge #1 Neon -->
                 <div class="absolute -top-4 px-3.5 py-1 rounded-full bg-[#ccff00] text-gray-950 text-xs font-black flex items-center gap-1 shadow-[0_0_20px_rgba(204,255,0,0.65)]">
                   <span>★</span>
@@ -167,11 +167,11 @@
                 </div>
 
                 <!-- Shakes Count Box (Centrado con Animated Shaker) -->
-                <div class="mt-6 w-full rounded-2xl bg-[#090c0a] border border-[#232c25] p-4 flex flex-col items-center justify-center text-center shadow-inner">
-                  <span class="text-[10px] uppercase font-bold tracking-wider text-slate-400 block leading-none mb-1">SHAKES ESTE MES</span>
+                <div class="mt-6 w-full rounded-2xl bg-gray-50 dark:bg-[#090c0a] border border-[#232c25] p-4 flex flex-col items-center justify-center text-center shadow-inner">
+                  <span class="text-[10px] uppercase font-bold tracking-wider text-gray-500 dark:text-slate-400 block leading-none mb-1">SHAKES ESTE MES</span>
                   <div class="mt-1 text-3xl font-black text-white flex items-center justify-center gap-2">
                     <span>{{ l1.shakesThisMonth }}</span>
-                    <app-animated-shaker [size]="24" customClass="text-[#ccff00]" />
+                    <app-icon-shaker [size]="24" customClass="text-[#ccff00]" />
                   </div>
                 </div>
 
@@ -181,14 +181,14 @@
                   class="mt-4 w-full py-3.5 px-4 rounded-xl bg-[#ccff00] hover:bg-[#b8e600] text-gray-950 font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition active:scale-95 cursor-pointer shadow-[0_0_20px_rgba(204,255,0,0.35)]"
                 >
                   <span>{{ t().explore.inviteShake }}</span>
-                  <app-animated-shaker [size]="18" customClass="text-gray-950" />
+                  <app-icon-shaker [size]="18" customClass="text-gray-950" />
                 </a>
               </div>
             }
 
             <!-- 3RD PLACE (Bronce) - order-3 en mobile, md:order-3 en desktop -->
             @if (leader3(); as l3) {
-              <div class="podium-card order-3 md:order-3 relative rounded-3xl bg-[#111613]/90 border border-slate-800/90 p-6 flex flex-col items-center backdrop-blur-md hover:border-amber-700/60 transition-all duration-300 transform hover:-translate-y-1 group shadow-xl">
+              <div class="podium-card order-3 md:order-3 relative rounded-3xl bg-white dark:bg-[#111613]/90 border border-gray-200 dark:border-slate-800/90 p-6 flex flex-col items-center backdrop-blur-md hover:border-amber-700/60 transition-all duration-300 transform hover:-translate-y-1 group shadow-xl">
                 <!-- Badge #3 -->
                 <div class="absolute -top-3.5 px-3 py-0.5 rounded-full bg-[#1c2420] border border-amber-800/60 text-amber-400 text-xs font-bold flex items-center gap-1.5 shadow-md">
                   <span class="text-amber-500">★</span>
@@ -222,26 +222,26 @@
                 </h3>
 
                 <!-- Disciplina -->
-                <div class="mt-2 px-3 py-1 rounded-full bg-slate-800/70 border border-slate-700/60 text-[11px] font-medium text-slate-300 text-center truncate max-w-[210px]" [title]="l3.sport">
+                <div class="mt-2 px-3 py-1 rounded-full bg-gray-100 dark:bg-slate-800/70 border border-slate-700/60 text-[11px] font-medium text-gray-600 dark:text-slate-300 text-center truncate max-w-[210px]" [title]="l3.sport">
                   {{ l3.sport }}
                 </div>
 
                 <!-- Shakes Count Box (Centrado con Animated Shaker) -->
-                <div class="mt-6 w-full rounded-2xl bg-[#090c0a]/80 border border-slate-800/80 p-3.5 flex flex-col items-center justify-center text-center">
-                  <span class="text-[10px] uppercase font-bold tracking-wider text-slate-400 block leading-none mb-1">SHAKES</span>
+                <div class="mt-6 w-full rounded-2xl bg-gray-50 dark:bg-[#090c0a]/80 border border-gray-200 dark:border-slate-800/80 p-3.5 flex flex-col items-center justify-center text-center">
+                  <span class="text-[10px] uppercase font-bold tracking-wider text-gray-500 dark:text-slate-400 block leading-none mb-1">SHAKES</span>
                   <div class="mt-1 text-2xl font-black text-white flex items-center justify-center gap-2">
                     <span>{{ l3.shakesThisMonth }}</span>
-                    <app-animated-shaker [size]="20" customClass="text-amber-500" />
+                    <app-icon-shaker [size]="20" customClass="text-amber-500" />
                   </div>
                 </div>
 
                 <!-- Botón CTA -->
                 <a
                   [routerLink]="['/' + l3.handle]"
-                  class="mt-4 w-full py-3.5 px-4 rounded-xl bg-slate-800/90 hover:bg-[#ccff00] text-white hover:text-gray-950 border border-slate-700/70 text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 transition active:scale-95 cursor-pointer shadow-sm"
+                  class="mt-4 w-full py-3.5 px-4 rounded-xl bg-gray-100 dark:bg-slate-800/90 hover:bg-[#ccff00] text-white hover:text-gray-950 border border-slate-700/70 text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 transition active:scale-95 cursor-pointer shadow-sm"
                 >
                   <span>{{ t().explore.inviteShake }}</span>
-                  <app-animated-shaker [size]="18" customClass="text-slate-300 group-hover:text-gray-950" />
+                  <app-icon-shaker [size]="18" customClass="text-gray-600 dark:text-slate-300 group-hover:text-gray-950" />
                 </a>
               </div>
             }
@@ -249,12 +249,12 @@
           </div>
         } @else if (!leaderboardLoading()) {
           <!-- Empty state podio -->
-          <div class="rounded-3xl bg-[#111613] border border-white/10 p-10 text-center max-w-lg mx-auto mb-12">
-            <div class="w-14 h-14 mx-auto mb-4 rounded-2xl bg-[#090c0a] border border-[#ccff00]/30 grid place-items-center">
-              <app-animated-shaker [size]="28" customClass="text-[#ccff00]" />
+          <div class="rounded-3xl bg-white dark:bg-[#111613] border border-gray-200/80 dark:border-white/10 p-10 text-center max-w-lg mx-auto mb-12">
+            <div class="w-14 h-14 mx-auto mb-4 rounded-2xl bg-gray-50 dark:bg-[#090c0a] border border-[#ccff00]/30 grid place-items-center">
+              <app-icon-shaker [size]="28" customClass="text-[#ccff00]" />
             </div>
-            <h3 class="text-lg font-black text-white font-display">Aún no hay líderes registrados</h3>
-            <p class="text-xs text-slate-400 mt-1">Sé el primer atleta en recibir apoyo de la comunidad este mes.</p>
+            <h3 class="text-lg font-black text-gray-950 dark:text-white font-display">Aún no hay líderes registrados</h3>
+            <p class="text-xs text-gray-500 dark:text-slate-400 mt-1">Sé el primer atleta en recibir apoyo de la comunidad este mes.</p>
           </div>
         }
 
@@ -262,7 +262,7 @@
         <!-- CARRUSEL INFINITO EN MOVIMIENTO CONTINUO (Puestos del 4 al 10) -->
         <!-- ========================================================================= -->
         @if (topRemaining().length > 0) {
-          <div class="mt-12 pt-8 border-t border-white/10">
+          <div class="mt-12 pt-8 border-t border-gray-200/80 dark:border-white/10">
             
             <!-- Cabecera del Carrusel Infinito -->
             <div class="mb-8 px-1 flex flex-col items-center justify-center">
@@ -327,10 +327,10 @@
 
         <!-- Template Reutilizable de Tarjeta de Carrusel -->
         <ng-template #carouselCard let-athlete="athlete">
-          <div class="carousel-card-item w-full bg-[#111613] border border-white/10 hover:border-[#ccff00]/60 rounded-3xl p-5 flex flex-col items-center text-center shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 relative group">
+          <div class="carousel-card-item w-full bg-white dark:bg-[#111613] border border-gray-200/80 dark:border-white/10 hover:border-[#ccff00]/60 rounded-3xl p-5 flex flex-col items-center text-center shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 relative group">
             
             <!-- Badge numérico de Ranking Exacto -->
-            <div class="absolute top-3.5 left-4 bg-[#1c2420] text-slate-300 border border-slate-700/80 px-2.5 py-0.5 rounded-md text-[11px] font-black shadow-sm tracking-wider">
+            <div class="absolute top-3.5 left-4 bg-[#1c2420] text-gray-600 dark:text-slate-300 border border-slate-700/80 px-2.5 py-0.5 rounded-md text-[11px] font-black shadow-sm tracking-wider">
               #{{ athlete.rank }}
             </div>
 
@@ -341,10 +341,10 @@
                   [src]="athlete.avatarUrl"
                   [alt]="athlete.handle"
                   (error)="onAvatarError(athlete.id)"
-                  class="w-full h-full object-cover rounded-full border-2 border-white/10 group-hover:border-[#ccff00] transition"
+                  class="w-full h-full object-cover rounded-full border-2 border-gray-200/80 dark:border-white/10 group-hover:border-[#ccff00] transition"
                 />
               } @else {
-                <div class="w-full h-full rounded-full border-2 border-white/10 bg-[#1c2420] text-slate-300 flex items-center justify-center text-lg font-black group-hover:border-[#ccff00] transition">
+                <div class="w-full h-full rounded-full border-2 border-gray-200/80 dark:border-white/10 bg-[#1c2420] text-gray-600 dark:text-slate-300 flex items-center justify-center text-lg font-black group-hover:border-[#ccff00] transition">
                   {{ athlete.initials }}
                 </div>
               }
@@ -357,26 +357,26 @@
               </a>
             </h4>
 
-            <p class="text-[10px] font-bold text-slate-400 mt-1 uppercase tracking-wider truncate w-full px-1" [title]="athlete.sport">
+            <p class="text-[10px] font-bold text-gray-500 dark:text-slate-400 mt-1 uppercase tracking-wider truncate w-full px-1" [title]="athlete.sport">
               {{ languageService.translateDiscipline(athlete.sport) }}
             </p>
 
             <!-- Stats Box: [Número] + [Animated Shaker] -->
-            <div class="w-full mt-4 pt-3 border-t border-white/10 flex flex-col items-center justify-center text-center bg-[#090c0a]/80 rounded-2xl p-2.5 border border-slate-800/80">
-              <span class="text-[9px] uppercase font-bold tracking-wider text-slate-400 block leading-none mb-1">SHAKES</span>
+            <div class="w-full mt-4 pt-3 border-t border-gray-200/80 dark:border-white/10 flex flex-col items-center justify-center text-center bg-gray-50 dark:bg-[#090c0a]/80 rounded-2xl p-2.5 border border-gray-200 dark:border-slate-800/80">
+              <span class="text-[9px] uppercase font-bold tracking-wider text-gray-500 dark:text-slate-400 block leading-none mb-1">SHAKES</span>
               <div class="text-lg font-black text-white flex items-center justify-center gap-1.5">
                 <span>{{ athlete.shakesThisMonth }}</span>
-                <app-animated-shaker [size]="16" customClass="text-[#ccff00]" />
+                <app-icon-shaker [size]="16" customClass="text-[#ccff00]" />
               </div>
             </div>
 
             <!-- Botón Apoyar / Invitar Shake -->
             <a
               [routerLink]="['/', athlete.handle]"
-              class="mt-3 w-full py-2.5 px-3 rounded-xl bg-slate-800/90 hover:bg-[#ccff00] text-white hover:text-gray-950 border border-slate-700/70 text-[11px] font-black uppercase tracking-wider flex items-center justify-center gap-1.5 transition active:scale-95 cursor-pointer"
+              class="mt-3 w-full py-2.5 px-3 rounded-xl bg-gray-100 dark:bg-slate-800/90 hover:bg-[#ccff00] text-white hover:text-gray-950 border border-slate-700/70 text-[11px] font-black uppercase tracking-wider flex items-center justify-center gap-1.5 transition active:scale-95 cursor-pointer"
             >
               <span>{{ t().explore.support }}</span>
-              <app-animated-shaker [size]="14" customClass="text-slate-300 group-hover:text-gray-950" />
+              <app-icon-shaker [size]="14" customClass="text-gray-600 dark:text-slate-300 group-hover:text-gray-950" />
             </a>
           </div>
         </ng-template>
@@ -389,11 +389,11 @@
     <!-- ========================================================================= -->
     @if (searchQuery() !== '' || selectedCategory() !== 'ALL') {
       <section class="animate-fade-in">
-        <div class="flex items-center justify-between mb-6 pb-4 border-b border-white/10">
-          <h2 class="text-xl font-black text-white font-display uppercase tracking-tight">
+        <div class="flex items-center justify-between mb-6 pb-4 border-b border-gray-200/80 dark:border-white/10">
+          <h2 class="text-xl font-black text-gray-950 dark:text-white font-display uppercase tracking-tight">
             {{ t().explore.exploreByDiscipline }}
           </h2>
-          <span class="text-xs font-bold text-slate-400 bg-[#111613] px-3 py-1 rounded-full border border-white/10">
+          <span class="text-xs font-bold text-gray-500 dark:text-slate-400 bg-white dark:bg-[#111613] px-3 py-1 rounded-full border border-gray-200/80 dark:border-white/10">
             {{ filteredAthletes().length }} {{ filteredAthletes().length === 1 ? t().explore.athleteFound : t().explore.athletesFound }}
           </span>
         </div>
@@ -402,7 +402,7 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
           @for (athlete of filteredAthletes(); track athlete.id; let i = $index) {
             <article 
-              class="relative bg-[#111613] rounded-3xl p-6 border border-white/10 hover:border-[#ccff00]/60 shadow-lg hover:shadow-[0_10px_30px_rgba(0,0,0,0.5)] transition-all duration-300 flex flex-col justify-between group overflow-hidden"
+              class="relative bg-white dark:bg-[#111613] rounded-3xl p-6 border border-gray-200/80 dark:border-white/10 hover:border-[#ccff00]/60 shadow-lg hover:shadow-[0_10px_30px_rgba(0,0,0,0.5)] transition-all duration-300 flex flex-col justify-between group overflow-hidden"
               [style.animation-delay]="(i * 40) + 'ms'"
             >
               <!-- Sutil gradiente radial en hover -->
@@ -419,7 +419,7 @@
                       class="h-14 w-14 shrink-0 rounded-2xl object-cover border border-white/15 group-hover:border-[#ccff00] shadow-md transition duration-300"
                     />
                   } @else {
-                    <div class="grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-[#090c0a] text-base font-black text-[#ccff00] border border-white/10 group-hover:border-[#ccff00]/50 transition">
+                    <div class="grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-gray-50 dark:bg-[#090c0a] text-base font-black text-[#ccff00] border border-gray-200/80 dark:border-white/10 group-hover:border-[#ccff00]/50 transition">
                       {{ athlete.initials }}
                     </div>
                   }
@@ -430,7 +430,7 @@
                         {{ athlete.name }}
                       </a>
                     </h3>
-                    <p class="text-xs text-slate-400 font-semibold truncate">&#64;{{ athlete.handle }}</p>
+                    <p class="text-xs text-gray-500 dark:text-slate-400 font-semibold truncate">&#64;{{ athlete.handle }}</p>
                   </div>
                 </div>
 
@@ -444,24 +444,24 @@
                 </div>
 
                 <!-- Biografía del Atleta con acento sutil -->
-                <p class="mt-3 text-xs sm:text-sm text-slate-300/90 leading-relaxed line-clamp-2 border-l-2 border-slate-700/60 pl-3 group-hover:border-[#ccff00]/60 transition duration-300">
+                <p class="mt-3 text-xs sm:text-sm text-gray-600 dark:text-slate-300/90 leading-relaxed line-clamp-2 border-l-2 border-slate-700/60 pl-3 group-hover:border-[#ccff00]/60 transition duration-300">
                   {{ athlete.bio }}
                 </p>
               </div>
 
               <!-- Barra Inferior: Apoyo mensual + Botón de Acción -->
-              <div class="mt-6 pt-4 border-t border-white/10 flex items-center justify-between gap-3">
+              <div class="mt-6 pt-4 border-t border-gray-200/80 dark:border-white/10 flex items-center justify-between gap-3">
                 <div class="flex items-center gap-2">
-                  <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400">{{ t().explore.monthlySupport }}</span>
-                  <div class="flex items-center gap-1.5 bg-[#090c0a] px-3 py-1.5 rounded-xl border border-slate-800 shadow-inner">
+                  <span class="text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-slate-400">{{ t().explore.monthlySupport }}</span>
+                  <div class="flex items-center gap-1.5 bg-gray-50 dark:bg-[#090c0a] px-3 py-1.5 rounded-xl border border-gray-200 dark:border-slate-800 shadow-inner">
                     <span class="text-xs font-black text-white">{{ athlete.shakesThisMonth }}</span>
-                    <app-animated-shaker [size]="15" customClass="text-[#ccff00]" />
+                    <app-icon-shaker [size]="15" customClass="text-[#ccff00]" />
                   </div>
                 </div>
 
                 <a
                   [routerLink]="['/', athlete.handle]"
-                  class="inline-flex items-center gap-2 rounded-xl border border-white/10 group-hover:border-[#ccff00] bg-white/5 group-hover:bg-[#ccff00] text-slate-200 group-hover:text-gray-950 px-4 py-2 text-xs font-black uppercase tracking-wider transition-all duration-300 active:scale-95 cursor-pointer shadow-sm"
+                  class="inline-flex items-center gap-2 rounded-xl border border-gray-200/80 dark:border-white/10 group-hover:border-[#ccff00] bg-white/5 group-hover:bg-[#ccff00] text-slate-200 group-hover:text-gray-950 px-4 py-2 text-xs font-black uppercase tracking-wider transition-all duration-300 active:scale-95 cursor-pointer shadow-sm"
                 >
                   <span>{{ t().explore.viewProfile }}</span>
                   <svg class="w-3.5 h-3.5 transform group-hover:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -475,14 +475,14 @@
 
         <!-- Sin resultados -->
         @if (filteredAthletes().length === 0) {
-          <div class="bg-[#111613] rounded-3xl p-12 text-center border border-white/10 mt-6 max-w-lg mx-auto">
-            <div class="w-12 h-12 mx-auto mb-3 rounded-full bg-[#090c0a] border border-[#ccff00]/30 grid place-items-center">
+          <div class="bg-white dark:bg-[#111613] rounded-3xl p-12 text-center border border-gray-200/80 dark:border-white/10 mt-6 max-w-lg mx-auto">
+            <div class="w-12 h-12 mx-auto mb-3 rounded-full bg-gray-50 dark:bg-[#090c0a] border border-[#ccff00]/30 grid place-items-center">
               <svg class="w-6 h-6 text-[#ccff00]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
             </div>
             <p class="text-base font-bold text-white">{{ t().explore.noAthletesFound }}</p>
-            <p class="text-xs text-slate-400 mt-1">{{ t().explore.noAthletesSubtitle }}</p>
+            <p class="text-xs text-gray-500 dark:text-slate-400 mt-1">{{ t().explore.noAthletesSubtitle }}</p>
             <button
               type="button"
               class="mt-4 rounded-xl bg-[#ccff00] text-gray-950 px-5 py-2 text-xs font-black uppercase tracking-wider transition hover:bg-[#b8e600] active:scale-95 cursor-pointer shadow-md"

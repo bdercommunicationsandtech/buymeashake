@@ -1,41 +1,106 @@
 import { Component, Input, ChangeDetectionStrategy } from '@angular/core';
 
+export type IconShakerTone = 'auto' | 'black' | 'muted' | 'white' | 'lime' | 'amber';
+
+/**
+ * Official bshake mark. The source SVG is black; tones are applied with CSS filters
+ * so it can read as gray, white, lime, etc. (CSS mask does not work with this asset).
+ */
 @Component({
   selector: 'app-icon-shaker',
   standalone: true,
-  template: `
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      [attr.viewBox]="viewBox"
-      [attr.width]="size"
-      [attr.height]="size"
-      fill="currentColor"
-      aria-hidden="true"
-      [class]="customClass"
-    >
-      <!-- Tapa con boquilla abatible y argolla de transporte (Loop) -->
-      <path d="M7 2.5C7 2.22 7.22 2 7.5 2H11C11.55 2 12 2.45 12 3V4H6.5C6.5 3.45 6.72 2.5 7 2.5Z" />
-      <!-- Argolla circular de agarre lateral derecha -->
-      <path
-        fill-rule="evenodd"
-        clip-rule="evenodd"
-        d="M12.5 2.5C12.5 2.22 12.72 2 13 2C14.66 2 16 3.34 16 5C16 6.66 14.66 8 13 8C12.45 8 12 7.55 12 7C12 6.45 12.45 6 13 6C13.55 6 14 5.55 14 5C14 4.45 13.55 4 13 4H12.5V2.5Z"
-      />
-      <!-- Banda ancha de rosca de la tapa -->
-      <rect x="4.5" y="4.5" width="13" height="3" rx="1" />
-      
-      <!-- Cuerpo del shaker cónico con onda de batido -->
-      <path
-        fill-rule="evenodd"
-        clip-rule="evenodd"
-        d="M5.5 8.5L6.9 19.8C7.05 21.05 8.1 22 9.35 22H12.65C13.9 22 14.95 21.05 15.1 19.8L16.5 8.5H5.5ZM7.6 14C8.8 13.2 10.4 13.2 11.6 14C12.8 14.8 14.2 14.6 14.8 14.2L14.4 17.5C14.3 18.3 13.6 19 12.8 19H9.2C8.4 19 7.7 18.3 7.6 17.5L7.6 14Z"
-      />
-    </svg>
-  `,
   changeDetection: ChangeDetectionStrategy.OnPush,
+  host: { class: 'inline-flex leading-none shrink-0' },
+  styles: [
+    `
+      :host-context(.group:hover) img.hover-to-black {
+        filter: none !important;
+        opacity: 1 !important;
+      }
+    `,
+  ],
+  template: `
+    <img
+      src="/logos/bshake-logo.svg"
+      alt=""
+      decoding="async"
+      draggable="false"
+      [attr.width]="numericSize"
+      [attr.height]="numericSize"
+      class="object-contain select-none"
+      [class]="imgClass"
+      [style.filter]="filterCss"
+      [style.opacity]="opacityCss"
+    />
+  `,
 })
 export class IconShakerComponent {
   @Input() size: number | string = 24;
+  /** Kept for API compatibility. */
   @Input() viewBox: string = '0 0 24 24';
+  /** Layout / hover utilities. Color tokens in here are read when tone is `auto`. */
   @Input() customClass: string = '';
+  /** Explicit tone; `auto` infers from customClass text-* tokens. */
+  @Input() tone: IconShakerTone = 'auto';
+
+  get numericSize(): number {
+    if (typeof this.size === 'number') return this.size;
+    const n = parseFloat(this.size);
+    return Number.isFinite(n) ? n : 24;
+  }
+
+  get imgClass(): string {
+    const layout = this.customClass
+      .split(/\s+/)
+      .filter(
+        (c) =>
+          c &&
+          !c.startsWith('text-') &&
+          !c.startsWith('group-hover:text-') &&
+          !c.startsWith('dark:text-'),
+      )
+      .join(' ');
+    const hover = /group-hover:text-gray-950|group-hover:text-black/.test(this.customClass)
+      ? 'hover-to-black'
+      : '';
+    return [layout, hover].filter(Boolean).join(' ');
+  }
+
+  private get resolvedTone(): Exclude<IconShakerTone, 'auto'> {
+    if (this.tone !== 'auto') return this.tone;
+    const c = this.customClass;
+    if (/text-\[#ccff00\]|text-\[#c9ff3d\]|text-lime/.test(c)) return 'lime';
+    if (/text-amber/.test(c)) return 'amber';
+    if (/text-white(?:\/|\b)/.test(c) && !/text-white\//.test(c)) return 'white';
+    if (/text-white\//.test(c)) return 'muted';
+    if (/text-slate-|text-gray-[3-6]/.test(c)) return 'muted';
+    return 'black';
+  }
+
+  get filterCss(): string {
+    switch (this.resolvedTone) {
+      case 'white':
+      case 'muted':
+        return 'invert(1)';
+      case 'lime':
+        return 'invert(89%) sepia(47%) saturate(1206%) hue-rotate(22deg) brightness(105%) contrast(104%)';
+      case 'amber':
+        return 'invert(66%) sepia(58%) saturate(1200%) hue-rotate(1deg) brightness(100%) contrast(95%)';
+      case 'black':
+      default:
+        return 'none';
+    }
+  }
+
+  get opacityCss(): number | null {
+    const c = this.customClass;
+    if (this.resolvedTone === 'muted') {
+      if (/text-white\/70|opacity-70/.test(c)) return 0.7;
+      if (/text-slate-400|text-gray-400/.test(c)) return 0.65;
+      if (/text-slate-300|text-gray-300/.test(c)) return 0.8;
+      if (/text-gray-600/.test(c)) return 0.55;
+      return 0.7;
+    }
+    return null;
+  }
 }

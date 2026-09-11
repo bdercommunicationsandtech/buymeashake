@@ -10,6 +10,7 @@ from app.api.v1.endpoints import (
     auth,
     checkout,
     dashboard,
+    disciplines,
     explore,
     fan,
     geo,
@@ -28,6 +29,7 @@ api_router.include_router(admin_support.router, prefix="/admin/support/tickets",
 api_router.include_router(admin_support.router, prefix="/contact", tags=["Contact & Support"])
 api_router.include_router(admin_stats.router, tags=["Admin Stats"])
 api_router.include_router(admin_users.router, tags=["Admin Users"])
+api_router.include_router(disciplines.router, tags=["Disciplines"])
 api_router.include_router(fan.router, tags=["Fan", "Supporter"])
 api_router.include_router(system.router, tags=["System"])
 api_router.include_router(explore.router, tags=["Explore", "Creators"])

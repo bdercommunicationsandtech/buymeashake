@@ -49,10 +49,10 @@ from app.services.profile_helpers import (
     get_referral_code,
     get_shake_price,
     get_thank_you,
-    discipline_codes,
+    discipline_ids,
     discipline_labels,
     resolve_city_display,
-    resolve_sport_item_ids,
+    resolve_discipline_ids,
     upsert_social_links,
 )
 from app.repositories.base_repos import (
@@ -164,14 +164,14 @@ class AuthService:
 
         if dto.role == "athlete" and dto.handle:
             referral_code = f"{dto.handle}_{secrets.token_hex(3)}"
-            sport_item_ids = await resolve_sport_item_ids(self.session, dto.discipline_codes)
+            sport_item_ids = await resolve_discipline_ids(self.session, dto.discipline_ids)
             athlete = AthleteProfile(
                 user_id=user.id,
                 handle=dto.handle,
             )
             if sport_item_ids:
                 athlete.disciplines_association = [
-                    AthleteDiscipline(discipline_item_id=item_id) for item_id in sport_item_ids
+                    AthleteDiscipline(discipline_id=item_id) for item_id in sport_item_ids
                 ]
             await self.athlete_repo.create(athlete)
             await ensure_child_rows(
@@ -622,7 +622,7 @@ class AuthService:
         )
 
         referral_code = f"{dto.handle}_{secrets.token_hex(3)}"
-        sport_item_ids = await resolve_sport_item_ids(self.session, dto.discipline_codes)
+        sport_item_ids = await resolve_discipline_ids(self.session, dto.discipline_ids)
 
         athlete = AthleteProfile(
             user_id=user.id,
@@ -632,7 +632,7 @@ class AuthService:
         )
         if sport_item_ids:
             athlete.disciplines_association = [
-                AthleteDiscipline(discipline_item_id=item_id) for item_id in sport_item_ids
+                AthleteDiscipline(discipline_id=item_id) for item_id in sport_item_ids
             ]
         await self.athlete_repo.create(athlete)
         await ensure_child_rows(
@@ -1033,7 +1033,7 @@ class DashboardService:
             agenda_image_url=get_page_field(athlete, "agenda_image_url"),
             city=resolve_city_display(athlete),
             city_id=athlete.city_id,
-            discipline_codes=discipline_codes(athlete),
+            discipline_ids=discipline_ids(athlete),
             shake_price=get_shake_price(athlete),
             currency=get_currency(athlete),
             avatar_url=user.avatar_url if user else None,
@@ -1104,10 +1104,10 @@ class DashboardService:
             if dto.currency is not None:
                 mon.currency = dto.currency
 
-        if dto.discipline_codes is not None:
-            sport_item_ids = await resolve_sport_item_ids(self.session, dto.discipline_codes)
+        if dto.discipline_ids is not None:
+            sport_item_ids = await resolve_discipline_ids(self.session, dto.discipline_ids)
             athlete.disciplines_association = [
-                AthleteDiscipline(discipline_item_id=item_id) for item_id in sport_item_ids
+                AthleteDiscipline(discipline_id=item_id) for item_id in sport_item_ids
             ]
 
         social_updates = {
@@ -1596,6 +1596,69 @@ class StorageService:
 
         return UploadFileResponse(
             url=f"/static/uploads/images/{unique_name}",
+            filename=unique_name,
+            content_type=cleaned_type,
+            size_bytes=len(file_bytes),
+        )
+
+    @staticmethod
+    async def save_discipline_icon(
+        file_bytes: bytes, original_filename: str, content_type: str
+    ) -> UploadFileResponse:
+        """Store discipline badge icons under static/uploads/disciplines_svgs (SVG preferred)."""
+        import os
+
+        MAX_ICON_SIZE = 1 * 1024 * 1024  # 1 MB
+        if len(file_bytes) > MAX_ICON_SIZE:
+            raise ValueError("El icono excede el tamaño máximo permitido (1 MB).")
+
+        mime_to_ext = {
+            "image/svg+xml": "svg",
+            "image/png": "png",
+            "image/webp": "webp",
+            "image/jpeg": "jpg",
+        }
+        cleaned_type = (content_type or "").strip().lower()
+        name_lower = (original_filename or "").strip().lower()
+
+        if cleaned_type not in mime_to_ext:
+            if name_lower.endswith(".svg"):
+                cleaned_type = "image/svg+xml"
+            elif name_lower.endswith(".png"):
+                cleaned_type = "image/png"
+            elif name_lower.endswith(".webp"):
+                cleaned_type = "image/webp"
+            elif name_lower.endswith(".jpg") or name_lower.endswith(".jpeg"):
+                cleaned_type = "image/jpeg"
+
+        if cleaned_type not in mime_to_ext:
+            raise ValueError(
+                f"Formato no permitido: {content_type}. Preferimos SVG (también PNG/WEBP/JPEG)."
+            )
+
+        # Light sanity check for SVG payloads
+        if cleaned_type == "image/svg+xml":
+            head = file_bytes[:2048].decode("utf-8", errors="ignore").lstrip().lower()
+            if "<svg" not in head and "<?xml" not in head:
+                raise ValueError("El archivo no parece un SVG válido.")
+
+        ext = mime_to_ext[cleaned_type]
+        unique_name = f"icon_{secrets.token_hex(10)}.{ext}"
+
+        static_dir = os.path.join(
+            os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
+            "static",
+            "uploads",
+            "disciplines_svgs",
+        )
+        os.makedirs(static_dir, exist_ok=True)
+        file_path = os.path.join(static_dir, unique_name)
+
+        with open(file_path, "wb") as f:
+            f.write(file_bytes)
+
+        return UploadFileResponse(
+            url=f"/static/uploads/disciplines_svgs/{unique_name}",
             filename=unique_name,
             content_type=cleaned_type,
             size_bytes=len(file_bytes),

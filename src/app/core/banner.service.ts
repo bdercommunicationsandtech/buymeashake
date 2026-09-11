@@ -2,6 +2,7 @@ import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, of, catchError, map, tap } from 'rxjs';
 import { environment } from '../../environments/environment';
+import { resolveMediaUrl } from './utils/media-url.util';
 
 export interface HeroBannerItem {
   id: number;
@@ -44,8 +45,8 @@ export class BannerService {
             const activeUrls = parsed
               .filter((b: any) => b.status_id === 1 || b.isActive === true)
               .sort((a: any, b: any) => (a.display_order ?? a.displayOrder ?? 0) - (b.display_order ?? b.displayOrder ?? 0))
-              .map((b: any) => b.image_url ?? b.imageUrl)
-              .filter(Boolean);
+              .map((b: any) => resolveMediaUrl(b.image_url ?? b.imageUrl))
+              .filter(Boolean) as string[];
             if (activeUrls.length > 0) {
               this.heroImages.set(activeUrls);
             }
@@ -63,8 +64,8 @@ export class BannerService {
         return items
           .filter((it) => it.status_id === 1 || it.is_active === true)
           .sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0))
-          .map((it) => it.image_url || it.imageUrl)
-          .filter(Boolean);
+          .map((it) => resolveMediaUrl(it.image_url || it.imageUrl))
+          .filter(Boolean) as string[];
       }),
       tap((urls) => {
         if (urls.length > 0) {

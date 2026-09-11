@@ -1,10 +1,12 @@
 import { Component, computed, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { LanguageService } from '../../core/language.service';
+import { BrandLogoComponent } from '../brand-logo/brand-logo.component';
+import { ChromeControlsComponent } from '../chrome-controls/chrome-controls.component';
 
 @Component({
   selector: 'app-footer',
-  imports: [RouterLink],
+  imports: [RouterLink, BrandLogoComponent, ChromeControlsComponent],
   templateUrl: './footer.html',
 })
 export class Footer {
@@ -12,10 +14,6 @@ export class Footer {
   readonly lang = this.languageService.lang;
   readonly t = this.languageService.t;
   readonly year = new Date().getFullYear();
-
-  toggleLanguage(): void {
-    this.languageService.toggleLanguage();
-  }
 
   readonly columns = computed(() => {
     const t = this.t();

@@ -4,7 +4,7 @@
   <div class="bg-white dark:bg-[#121614] rounded-3xl p-6 sm:p-7 border border-gray-200/80 dark:border-white/10 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-5 transition-colors">
     <div class="flex items-center gap-4 min-w-0">
       @if (profile()?.avatar_url) {
-        <img [src]="profile()?.avatar_url" alt="Avatar" class="h-14 w-14 rounded-full object-cover border-2 border-emerald-500/40 dark:border-[#c9ff3d]/50 shrink-0" />
+        <img [src]="profile()?.avatar_url | mediaUrl" alt="Avatar" class="h-14 w-14 rounded-full object-cover border-2 border-emerald-500/40 dark:border-[#c9ff3d]/50 shrink-0" />
       } @else {
         <div class="h-14 w-14 rounded-full bg-gray-950 dark:bg-white/10 text-[#c9ff3d] grid place-items-center text-lg font-black shrink-0 border border-white/10">
           {{ (profile()?.full_name || 'Atleta').slice(0, 2).toUpperCase() }}

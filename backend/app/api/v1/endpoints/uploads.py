@@ -19,6 +19,18 @@ async def upload_image(
     )
 
 
+@router.post("/uploads/discipline-icon", response_model=UploadFileResponse)
+async def upload_discipline_icon(
+    user: CurrentUser,
+    file: UploadFile = File(...),
+) -> UploadFileResponse:
+    """Sube un icono de disciplina (SVG preferido) a /static/uploads/disciplines_svgs/."""
+    file_bytes = await file.read()
+    return await StorageService.save_discipline_icon(
+        file_bytes, file.filename or "icon.svg", file.content_type or "image/svg+xml"
+    )
+
+
 @router.post("/uploads/product", response_model=UploadFileResponse)
 async def upload_digital_product_file(
     athlete: CurrentAthlete,

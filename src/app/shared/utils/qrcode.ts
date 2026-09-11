@@ -202,9 +202,10 @@ export async function renderShareCardPng(params: {
   const matrix = generateQrMatrix(params.profileUrl);
 
   const isLight = params.variant === 'light';
+  // Contrast mapping: light card → black title SVG; dark card → white title SVG
   const [logoImg, titleImg] = await Promise.all([
-    loadImage('/images/logo.png'),
-    loadImage(isLight ? '/images/light-title.png' : '/images/dark-title.png'),
+    loadImage('/logos/bshake-logo.svg'),
+    loadImage(isLight ? '/logos/bshake-title-light.svg' : '/logos/bshake-title-dark.svg'),
   ]);
 
   const canvas = document.createElement('canvas');

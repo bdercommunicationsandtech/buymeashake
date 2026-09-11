@@ -16,6 +16,7 @@ from app.models.entities import (
     BookingAvailability,
     BookingService,
     DigitalProduct,
+    Discipline,
     EmailVerification,
     Goal,
     LookupGroup,
@@ -118,13 +119,13 @@ class AthleteRepository:
                 AthleteProfile.handle,
                 User.full_name.label("athlete_name"),
                 User.avatar_url,
-                func.group_concat(distinct(LookupItem.label)).label("disciplines_concat"),
+                func.group_concat(distinct(Discipline.name)).label("disciplines_concat"),
                 func.coalesce(func.sum(ShakeDetails.shakes_count), 0).label("total_shakes_this_month"),
                 func.coalesce(func.sum(Transaction.gross_amount), 0).label("total_raised_this_month"),
             )
             .join(User, AthleteProfile.user_id == User.id)
             .outerjoin(AthleteDiscipline, AthleteProfile.id == AthleteDiscipline.athlete_id)
-            .outerjoin(LookupItem, AthleteDiscipline.discipline_item_id == LookupItem.id)
+            .outerjoin(Discipline, AthleteDiscipline.discipline_id == Discipline.id)
             .outerjoin(
                 Transaction,
                 (AthleteProfile.id == Transaction.athlete_id)
@@ -165,14 +166,14 @@ class AthleteRepository:
                 AthleteProfile.handle,
                 User.full_name.label("athlete_name"),
                 User.avatar_url,
-                func.group_concat(distinct(LookupItem.label)).label("disciplines_concat"),
+                func.group_concat(distinct(Discipline.name)).label("disciplines_concat"),
                 AthleteProfile.bio,
                 func.coalesce(func.sum(ShakeDetails.shakes_count), 0).label("total_shakes_this_month"),
                 func.coalesce(func.sum(Transaction.gross_amount), 0).label("total_raised_this_month"),
             )
             .join(User, AthleteProfile.user_id == User.id)
             .outerjoin(AthleteDiscipline, AthleteProfile.id == AthleteDiscipline.athlete_id)
-            .outerjoin(LookupItem, AthleteDiscipline.discipline_item_id == LookupItem.id)
+            .outerjoin(Discipline, AthleteDiscipline.discipline_id == Discipline.id)
             .outerjoin(
                 Transaction,
                 (AthleteProfile.id == Transaction.athlete_id)
@@ -184,7 +185,7 @@ class AthleteRepository:
 
         if category and category.strip() and category.strip().lower() != "todos":
             cat_filter = f"%{category.strip().lower()}%"
-            query = query.where(func.lower(LookupItem.label).like(cat_filter))
+            query = query.where(func.lower(Discipline.name).like(cat_filter))
 
         if query_str and query_str.strip():
             clean_q = f"%{query_str.strip().lower()}%"

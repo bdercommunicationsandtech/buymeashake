@@ -5,6 +5,7 @@ import { RouterLink } from '@angular/router';
 import { IconLockComponent } from '../icons';
 import { AllowedUserTextDirective } from '../../core/directives/allowed-user-text.directive';
 import { LanguageService } from '../../core/language.service';
+import { MediaUrlPipe } from '../pipes/media-url.pipe';
 
 export interface PostCommentItem {
   id: number;
@@ -37,7 +38,7 @@ export interface PostItem {
   selector: 'app-post-card',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, FormsModule, RouterLink, IconLockComponent, AllowedUserTextDirective],
+  imports: [CommonModule, FormsModule, RouterLink, IconLockComponent, AllowedUserTextDirective, MediaUrlPipe],
   template: `
     <article class="bg-white dark:bg-[#121614] rounded-3xl border border-gray-200/80 dark:border-white/10 overflow-hidden shadow-xs hover:border-gray-300 dark:hover:border-white/20 transition-all duration-200">
       
@@ -45,7 +46,7 @@ export interface PostItem {
       @if (post().coverImageUrl) {
         <a [routerLink]="['/', post().authorHandle, 'posts', post().id]" class="relative block h-56 sm:h-72 w-full bg-gray-900 overflow-hidden">
           <img
-            [src]="post().coverImageUrl"
+            [src]="post().coverImageUrl | mediaUrl"
             [alt]="post().title"
             class="w-full h-full object-cover transition-transform duration-700"
             [class.blur-sm]="post().isMembersOnly && !post().isUnlocked"
@@ -97,7 +98,7 @@ export interface PostItem {
         <div class="flex items-center justify-between text-xs">
           <div class="flex items-center gap-3">
             @if (post().authorAvatar) {
-              <img [src]="post().authorAvatar" [alt]="post().authorName" class="h-9 w-9 rounded-full object-cover border border-gray-200 dark:border-white/10" />
+              <img [src]="post().authorAvatar | mediaUrl" [alt]="post().authorName" class="h-9 w-9 rounded-full object-cover border border-gray-200 dark:border-white/10" />
             } @else {
               <div class="h-9 w-9 rounded-full bg-gray-900 text-[#c9ff3d] grid place-items-center font-black text-xs">
                 {{ post().authorName.slice(0, 2).toUpperCase() }}

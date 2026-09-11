@@ -69,7 +69,7 @@ class UserRegisterRequest(BaseModel):
     full_name: str = Field(min_length=2, max_length=150)
     role: str = Field(default="supporter", pattern="^(supporter|athlete)$")
     handle: str | None = Field(default=None, pattern="^[a-z0-9_]{3,30}$")
-    discipline_codes: list[int] = Field(default_factory=list)
+    discipline_ids: list[int] = Field(default_factory=list)
     referral_code: str | None = Field(default=None, max_length=50)
 
     @field_validator("full_name", mode="before")
@@ -294,7 +294,7 @@ class UserMeResponse(BaseModel):
 class UpgradeToAthleteRequest(BaseModel):
     handle: str = Field(min_length=3, max_length=30, pattern="^[a-z0-9_]{3,30}$")
     full_name: str | None = Field(default=None, min_length=2, max_length=150)
-    discipline_codes: list[int] = Field(default_factory=list)
+    discipline_ids: list[int] = Field(default_factory=list)
     bio: str | None = Field(default=None, max_length=600)
     city: str | None = Field(default=None, max_length=255)
     shake_price: Decimal | None = Field(default=None, ge=1)
@@ -326,6 +326,39 @@ class LookupGroupResponse(BaseModel):
     name: str
     description: str | None
     items: list[LookupItemResponse]
+
+
+class DisciplineResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    name: str
+    description: str | None = None
+    image_url: str | None = None
+    icon_url: str | None = None
+    sort_order: int = 0
+    show_in_home: bool = False
+    is_active: bool = True
+
+
+class DisciplineCreateRequest(BaseModel):
+    name: str = Field(min_length=1, max_length=100)
+    description: str | None = Field(default=None, max_length=150)
+    image_url: str | None = Field(default=None, max_length=512)
+    icon_url: str | None = Field(default=None, max_length=512)
+    sort_order: int = 0
+    show_in_home: bool = False
+    is_active: bool = True
+
+
+class DisciplineUpdateRequest(BaseModel):
+    name: str | None = Field(default=None, min_length=1, max_length=100)
+    description: str | None = Field(default=None, max_length=150)
+    image_url: str | None = Field(default=None, max_length=512)
+    icon_url: str | None = Field(default=None, max_length=512)
+    sort_order: int | None = None
+    show_in_home: bool | None = None
+    is_active: bool | None = None
 
 
 class AppVersionCheckResponse(BaseModel):
@@ -680,7 +713,7 @@ class AthleteProfileUpdateRequest(BaseModel):
     agenda_image_url: str | None = Field(default=None, max_length=255)
     city: str | None = Field(default=None, max_length=255)
     city_id: int | None = None
-    discipline_codes: list[int] | None = None
+    discipline_ids: list[int] | None = None
     shake_price: Decimal | None = Field(default=None, gt=0)
     currency: str | None = Field(default=None, pattern="^USD$")
     avatar_url: str | None = Field(default=None, max_length=255)
@@ -730,7 +763,7 @@ class AthleteProfileFullResponse(BaseModel):
     agenda_image_url: str | None = None
     city: str | None
     city_id: int | None = None
-    discipline_codes: list[int] = Field(default_factory=list)
+    discipline_ids: list[int] = Field(default_factory=list)
     shake_price: Decimal
     currency: str
     avatar_url: str | None

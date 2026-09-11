@@ -3,6 +3,7 @@ import { CheckoutService } from '../../core/checkout.service';
 import { PaymentService } from '../../core/payment.service';
 import { LanguageService } from '../../core/language.service';
 import { AnimatedShakerComponent } from '../icons/animated-shaker';
+import { BrandLogoComponent } from '../brand-logo/brand-logo.component';
 
 /** Duración del estado "Procesando…" antes de mostrar la confirmación. */
 const FAKE_PROCESSING_MS = 1000;
@@ -12,7 +13,7 @@ const FAKE_PROCESSING_MS = 1000;
   standalone: true,
   templateUrl: './stripe-checkout.html',
   styleUrl: './stripe-checkout.css',
-  imports: [AnimatedShakerComponent],
+  imports: [AnimatedShakerComponent, BrandLogoComponent],
   host: { '(document:keydown.escape)': 'onEscape()' },
 })
 export class StripeCheckout {

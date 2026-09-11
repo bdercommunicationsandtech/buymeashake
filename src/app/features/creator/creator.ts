@@ -35,6 +35,7 @@ import { PricesModalComponent } from '../../shared/page-editor-modals/prices-mod
 import { EditorSavePatch } from '../../shared/page-editor-modals/editor-save-patch';
 import { CreatorProfile } from '../../core/api.models';
 import { AllowedUserTextDirective } from '../../core/directives/allowed-user-text.directive';
+import { resolveMediaUrl } from '../../core/utils/media-url.util';
 
 export interface CreatorProduct {
   title: string;
@@ -244,13 +245,13 @@ export class Creator {
   readonly hasActiveGoal = computed(() => Boolean(this.creatorView()?.hasActiveGoal));
 
   readonly agendaImageStyle = computed(() => {
-    const url = this.creatorView()?.agendaImageUrl;
+    const url = resolveMediaUrl(this.creatorView()?.agendaImageUrl);
     if (url) return `url('${url}')`;
     return "url('https://images.unsplash.com/photo-1576678927484-cc907957088c?q=80&w=1200&auto=format&fit=crop')";
   });
 
   readonly coverStyle = computed(() => {
-    const url = this.creatorView()?.coverImageUrl;
+    const url = resolveMediaUrl(this.creatorView()?.coverImageUrl);
     if (url) {
       return `url('${url}')`;
     }
@@ -461,12 +462,16 @@ export class Creator {
         agendaDescription:
           patch.agendaDescription !== undefined ? patch.agendaDescription : current.agendaDescription,
         agendaImageUrl:
-          patch.agendaImageUrl !== undefined ? patch.agendaImageUrl : current.agendaImageUrl,
+          patch.agendaImageUrl !== undefined
+            ? resolveMediaUrl(patch.agendaImageUrl)
+            : current.agendaImageUrl,
         goalTitle: patch.goalTitle ?? current.goalTitle,
         goalTarget: patch.goalTarget ?? current.goalTarget,
         goalRaised: patch.goalRaised ?? current.goalRaised,
         goalCoverImageUrl:
-          patch.goalCoverImageUrl !== undefined ? patch.goalCoverImageUrl : current.goalCoverImageUrl,
+          patch.goalCoverImageUrl !== undefined
+            ? resolveMediaUrl(patch.goalCoverImageUrl)
+            : current.goalCoverImageUrl,
         hasActiveGoal:
           patch.goalTitle !== undefined
             ? Boolean(patch.goalTitle?.trim())
@@ -478,8 +483,11 @@ export class Creator {
         bio: patch.bio ?? current.bio,
         city: patch.city ?? current.city,
         coverImageUrl:
-          patch.coverImageUrl !== undefined ? patch.coverImageUrl : current.coverImageUrl,
-        avatarUrl: patch.avatarUrl !== undefined ? patch.avatarUrl : current.avatarUrl,
+          patch.coverImageUrl !== undefined
+            ? resolveMediaUrl(patch.coverImageUrl)
+            : current.coverImageUrl,
+        avatarUrl:
+          patch.avatarUrl !== undefined ? resolveMediaUrl(patch.avatarUrl) : current.avatarUrl,
         instagramUrl:
           patch.instagramUrl !== undefined ? patch.instagramUrl : current.instagramUrl,
         tiktokUrl: patch.tiktokUrl !== undefined ? patch.tiktokUrl : current.tiktokUrl,
@@ -607,7 +615,7 @@ export class Creator {
           items.map((p) => {
             const htmlMatch = p.content_html.match(/<img[^>]+src=["']([^"']+)["']/i);
             const mdMatch = p.content_html.match(/!\[[^\]]*]\(([^)\s]+)\)/);
-            const coverImageUrl = htmlMatch?.[1] || mdMatch?.[1] || null;
+            const coverImageUrl = resolveMediaUrl(htmlMatch?.[1] || mdMatch?.[1] || null);
             return {
               id: String(p.id),
               title: p.title,
@@ -624,7 +632,7 @@ export class Creator {
               comments: (p.comments || []).map((cm) => ({
                 id: cm.id,
                 userName: cm.user_name,
-                userAvatar: cm.user_avatar,
+                userAvatar: resolveMediaUrl(cm.user_avatar),
                 content: cm.content,
                 createdAt: new Date(cm.created_at).toLocaleDateString('es-MX'),
               })),
@@ -652,7 +660,7 @@ export class Creator {
       pageDescription: profile.page_description ?? null,
       agendaTitle: profile.agenda_title ?? null,
       agendaDescription: profile.agenda_description ?? null,
-      agendaImageUrl: profile.agenda_image_url ?? null,
+      agendaImageUrl: resolveMediaUrl(profile.agenda_image_url ?? null),
       initials: profile.name
         .split(' ')
         .map((n) => n[0])
@@ -662,15 +670,15 @@ export class Creator {
       goalTitle: profile.active_goal_title?.trim() || '',
       goalTarget: goalTarget,
       goalRaised: goalRaised,
-      goalCoverImageUrl: profile.active_goal_cover_image_url ?? null,
+      goalCoverImageUrl: resolveMediaUrl(profile.active_goal_cover_image_url ?? null),
       hasActiveGoal: Boolean(profile.active_goal_title?.trim()),
       supporters: followersCount,
       shakesReceived,
       disciplines: profile.disciplines || [],
       shakePrice: Number(profile.shake_price) || SHAKE_PRICE,
       currency: 'USD',
-      coverImageUrl: profile.cover_image_url,
-      avatarUrl: profile.avatar_url,
+      coverImageUrl: resolveMediaUrl(profile.cover_image_url),
+      avatarUrl: resolveMediaUrl(profile.avatar_url),
       isVerified: profile.is_verified,
       instagramUrl: profile.instagram_url,
       tiktokUrl: profile.tiktok_url,
@@ -716,7 +724,7 @@ export class Creator {
                     {
                       id: comment.id,
                       userName: comment.user_name,
-                      userAvatar: comment.user_avatar,
+                      userAvatar: resolveMediaUrl(comment.user_avatar),
                       content: comment.content,
                       createdAt: 'Justo ahora',
                     },

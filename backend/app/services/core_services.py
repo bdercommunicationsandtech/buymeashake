@@ -23,49 +23,7 @@ from app.core.security import (
     get_password_hash,
     verify_password,
 )
-
-POST_ACCESS_TYPES = frozenset({"public", "draft", "shake_supporters", "members_only"})
-FEED_ACCESS_TYPES = frozenset({"public", "shake_supporters", "members_only"})
-
-
-def _normalize_post_access_type(value: str | None, *, fallback: str = "public") -> str:
-    if value in POST_ACCESS_TYPES:
-        return value  # type: ignore[return-value]
-    return fallback
-
-
-def _post_access_flags(access_type: str) -> dict[str, bool]:
-    return {
-        "is_draft": access_type == "draft",
-        "is_members_only": access_type == "members_only",
-        "is_shake_supporters": access_type == "shake_supporters",
-    }
-
-
-def _locked_public_teaser(post: Any) -> str:
-    """Teaser visible sin entitlement: solo el extracto escrito por el atleta (nunca el body ni media)."""
-    raw = (getattr(post, "excerpt", None) or "").strip()
-    if not raw:
-        return ""
-    # Evitar filtrar markdown/HTML de imágenes aunque alguien lo pegue en el extracto.
-    text = re.sub(r"<img\b[^>]*>", " ", raw, flags=re.IGNORECASE)
-    text = re.sub(r"!\[[^\]]*]\([^)]*\)", " ", text)
-    text = re.sub(r"<[^>]+>", " ", text)
-    return re.sub(r"\s+", " ", text).strip()
-
-
-def _extract_post_cover_url(content_html: str | None) -> str | None:
-    """Primera imagen del post: visible como teaser incluso cuando el body está bloqueado."""
-    raw = content_html or ""
-    html_match = re.search(r'<img[^>]+src=["\']([^"\']+)["\']', raw, flags=re.IGNORECASE)
-    if html_match:
-        return html_match.group(1).strip() or None
-    md_match = re.search(r"!\[[^\]]*]\(([^)\s]+)\)", raw)
-    if md_match:
-        return md_match.group(1).strip() or None
-    return None
-
-
+from app.core.turnstile import verify_turnstile_token
 from app.models.entities import (
     AthleteDiscipline,
     AthleteMonetization,
@@ -170,6 +128,47 @@ from app.schemas.dtos import (
     VerifyOtpRequest,
 )
 
+POST_ACCESS_TYPES = frozenset({"public", "draft", "shake_supporters", "members_only"})
+FEED_ACCESS_TYPES = frozenset({"public", "shake_supporters", "members_only"})
+
+
+def _normalize_post_access_type(value: str | None, *, fallback: str = "public") -> str:
+    if value in POST_ACCESS_TYPES:
+        return value  # type: ignore[return-value]
+    return fallback
+
+
+def _post_access_flags(access_type: str) -> dict[str, bool]:
+    return {
+        "is_draft": access_type == "draft",
+        "is_members_only": access_type == "members_only",
+        "is_shake_supporters": access_type == "shake_supporters",
+    }
+
+
+def _locked_public_teaser(post: Any) -> str:
+    """Teaser visible sin entitlement: solo el extracto escrito por el atleta (nunca el body ni media)."""
+    raw = (getattr(post, "excerpt", None) or "").strip()
+    if not raw:
+        return ""
+    # Evitar filtrar markdown/HTML de imágenes aunque alguien lo pegue en el extracto.
+    text = re.sub(r"<img\b[^>]*>", " ", raw, flags=re.IGNORECASE)
+    text = re.sub(r"!\[[^\]]*]\([^)]*\)", " ", text)
+    text = re.sub(r"<[^>]+>", " ", text)
+    return re.sub(r"\s+", " ", text).strip()
+
+
+def _extract_post_cover_url(content_html: str | None) -> str | None:
+    """Primera imagen del post: visible como teaser incluso cuando el body está bloqueado."""
+    raw = content_html or ""
+    html_match = re.search(r'<img[^>]+src=["\']([^"\']+)["\']', raw, flags=re.IGNORECASE)
+    if html_match:
+        return html_match.group(1).strip() or None
+    md_match = re.search(r"!\[[^\]]*]\(([^)\s]+)\)", raw)
+    if md_match:
+        return md_match.group(1).strip() or None
+    return None
+
 
 class AuthService:
     def __init__(self, session: AsyncSession):
@@ -236,6 +235,7 @@ class AuthService:
         )
 
     async def login(self, dto: UserLoginRequest) -> TokenResponse:
+        await verify_turnstile_token(dto.cf_turnstile_token)
         await assert_email_not_blacklisted(self.session, dto.email)
         user = await self.user_repo.get_by_email(dto.email)
         if not user:

@@ -91,6 +91,9 @@ class Settings(BaseSettings):
     FIREBASE_CREDENTIALS_JSON: str | None = None
     FIREBASE_PROJECT_ID: str | None = None
 
+    # Cloudflare Turnstile (CAPTCHA). Empty = verification disabled.
+    CLOUDFLARE_TURNSTILE_SECRET_KEY: str = ""
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",

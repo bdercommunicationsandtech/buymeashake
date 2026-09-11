@@ -1,6 +1,8 @@
 export const environment = {
   production: true,
   apiUrl: 'https://buymeashake.fit/api/v1',
+  /** Cloudflare Turnstile site key (same widget as local / Bder). */
+  cloudflareTurnstileSiteKey: '0x4AAAAAAEwu6VJZ5Ua_uUuA',
   /**
    * Firebase web config (Console → Project settings → Your apps).
    * Same project as development unless you use a separate Firebase app for prod.

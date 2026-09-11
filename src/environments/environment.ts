@@ -3,6 +3,11 @@ export const environment = {
   apiUrl: 'http://localhost:8000/api/v1',
   // apiUrl: 'http://207.38.88.6/api/v1',
   /**
+   * Cloudflare Turnstile site key (Widget "local host" — same as Bder).
+   * Empty = CAPTCHA disabled on password login.
+   */
+  cloudflareTurnstileSiteKey: '0x4AAAAAAEwu6VJZ5Ua_uUuA',
+  /**
    * Firebase web config (Console → Project settings → Your apps).
    * Leave apiKey empty to disable social login until configured.
    * Also enable Google + Apple providers under Authentication → Sign-in method.

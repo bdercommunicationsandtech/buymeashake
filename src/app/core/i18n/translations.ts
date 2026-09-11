@@ -672,6 +672,7 @@ export interface TranslationSchema {
     continueWithGoogle: string;
     continueWithApple: string;
     fillAllFieldsError: string;
+    captchaRequired: string;
     loginGeneralError: string;
     sendOtpError: string;
     blacklistedEmailError: string;
@@ -732,8 +733,17 @@ export interface TranslationSchema {
     passwordMismatchError: string;
     newHerePrompt: string;
     createAccountCta: string;
+    registerAsAthleteCta: string;
+    registerAsSupporterCta: string;
+    registerAsSupporter: string;
     registerTitle: string;
     registerSubtitle: string;
+    registerSupporterTitle: string;
+    registerSupporterSubtitle: string;
+    createSupporterAccountButton: string;
+    creatingSupporterAccount: string;
+    supporterNameLabel: string;
+    supporterNamePlaceholder: string;
     athleteLinkLabel: string;
     handlePlaceholder: string;
     athleteNameLabel: string;
@@ -745,6 +755,11 @@ export interface TranslationSchema {
     alreadyHaveAccountPrompt: string;
     loginLink: string;
     passwordMinLengthError: string;
+    passwordStrengthHint: string;
+    passwordStrengthWeak: string;
+    passwordStrengthFair: string;
+    passwordStrengthStrong: string;
+    passwordRequirementsError: string;
     registerGeneralError: string;
   };
   checkout: {

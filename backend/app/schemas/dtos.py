@@ -14,6 +14,27 @@ from app.core.html_sanitize import sanitize_post_html
 
 T = TypeVar("T")
 
+_PASSWORD_SPECIAL_CHARS = set("!@*._$#&-+")
+_PASSWORD_REQUIREMENTS_MSG = (
+    "La contraseña debe tener al menos 8 caracteres, una mayúscula, una minúscula, "
+    "un número y un carácter especial (!, @, *, ., _, $, #, &, -, +)."
+)
+
+
+def validate_strong_password(value: str) -> str:
+    password = (value or "").strip()
+    if len(password) < 8:
+        raise ValueError(_PASSWORD_REQUIREMENTS_MSG)
+    if not any(c.isupper() for c in password):
+        raise ValueError(_PASSWORD_REQUIREMENTS_MSG)
+    if not any(c.islower() for c in password):
+        raise ValueError(_PASSWORD_REQUIREMENTS_MSG)
+    if not any(c.isdigit() for c in password):
+        raise ValueError(_PASSWORD_REQUIREMENTS_MSG)
+    if not any(c in _PASSWORD_SPECIAL_CHARS for c in password):
+        raise ValueError(_PASSWORD_REQUIREMENTS_MSG)
+    return value
+
 _SOCIAL_HOST_HINTS: dict[str, tuple[str, ...]] = {
     "instagram_url": ("instagram.com", "www.instagram.com"),
     "tiktok_url": ("tiktok.com", "www.tiktok.com", "vm.tiktok.com"),
@@ -65,7 +86,7 @@ class PaginatedResponse(BaseModel, Generic[T]):
 
 class UserRegisterRequest(BaseModel):
     email: EmailStr = Field(max_length=191)
-    password: str = Field(min_length=8, max_length=128, description="Mínimo 8 caracteres")
+    password: str = Field(min_length=8, max_length=128, description="Mínimo 8 caracteres con mayúscula, minúscula, número y símbolo")
     full_name: str = Field(min_length=2, max_length=150)
     role: str = Field(default="supporter", pattern="^(supporter|athlete)$")
     handle: str | None = Field(default=None, pattern="^[a-z0-9_]{3,30}$")
@@ -77,15 +98,22 @@ class UserRegisterRequest(BaseModel):
     def validate_full_name_chars(cls, value: Any) -> str:
         return validate_required_allowed_user_text(value)
 
+    @field_validator("password")
+    @classmethod
+    def validate_password_strength(cls, value: str) -> str:
+        return validate_strong_password(value)
+
 
 class UserLoginRequest(BaseModel):
     email: EmailStr = Field(max_length=191)
     password: str = Field(max_length=128)
+    cf_turnstile_token: str | None = None
 
 
 class AdminLoginRequest(BaseModel):
     email: EmailStr
     password: str = Field(min_length=1, max_length=256)
+    cf_turnstile_token: str | None = None
 
 
 class AdminLoginResponse(BaseModel):
@@ -221,7 +249,12 @@ class ForgotPasswordRequest(BaseModel):
 class ResetPasswordRequest(BaseModel):
     email: EmailStr = Field(max_length=191)
     code: str = Field(min_length=4, max_length=10)
-    new_password: str = Field(min_length=8, max_length=128, description="Mínimo 8 caracteres")
+    new_password: str = Field(min_length=8, max_length=128, description="Mínimo 8 caracteres con mayúscula, minúscula, número y símbolo")
+
+    @field_validator("new_password")
+    @classmethod
+    def validate_new_password_strength(cls, value: str) -> str:
+        return validate_strong_password(value)
 
 
 class ForgotPasswordResponse(BaseModel):
@@ -244,6 +277,13 @@ class UpdateProfileRequest(BaseModel):
     @classmethod
     def validate_profile_name_chars(cls, value: Any) -> str | None:
         return validate_allowed_user_text(value)
+
+    @field_validator("password")
+    @classmethod
+    def validate_profile_password_strength(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        return validate_strong_password(value)
 
 class RequestOtpResponse(BaseModel):
     message: str

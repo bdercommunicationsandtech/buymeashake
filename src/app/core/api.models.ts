@@ -46,6 +46,7 @@ export interface UpgradeToAthletePayload {
 export interface UserLoginPayload {
   email: string;
   password: string;
+  cf_turnstile_token?: string;
 }
 
 export interface ForgotPasswordPayload {

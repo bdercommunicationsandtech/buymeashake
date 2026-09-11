@@ -4,6 +4,7 @@ from fastapi import APIRouter, status
 from app.api.dependencies import CurrentAdmin, DatabaseSession
 from app.core.exceptions import ForbiddenError, UnauthorizedError
 from app.core.security import create_access_token, create_refresh_token, verify_password
+from app.core.turnstile import verify_turnstile_token
 from app.repositories.base_repos import UserRepository
 from app.schemas.dtos import AdminLoginRequest, AdminLoginResponse, AdminMeResponse
 from app.services import user_roles_service as user_roles
@@ -46,6 +47,8 @@ def _to_admin_me(
 @router.post("/admin/login", response_model=AdminLoginResponse)
 async def admin_login(dto: AdminLoginRequest, session: DatabaseSession) -> AdminLoginResponse:
     """Login del panel admin. 401 credenciales; 403 sin rol admin."""
+    await verify_turnstile_token(dto.cf_turnstile_token)
+
     email = str(dto.email).strip().lower()
     user_repo = UserRepository(session)
     user = await user_repo.get_by_email(email)

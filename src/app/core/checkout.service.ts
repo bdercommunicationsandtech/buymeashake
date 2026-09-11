@@ -143,7 +143,28 @@ export class CheckoutService {
     if (thankYouMessage) {
       this.thankYouMessage.set(thankYouMessage);
     }
-    if (supporterItem || newGoalRaised) {
+
+    const shakesFromItem = Number(
+      supporterItem?.shake_details?.shakes_count ?? supporterItem?.shakes_count ?? 0,
+    );
+    if (shakesFromItem > 0) {
+      const current = this._draft();
+      if (current) {
+        this._draft.set({
+          ...current,
+          shakes: Math.min(Math.max(Math.round(shakesFromItem), 1), 99),
+          message:
+            current.message ||
+            String(supporterItem?.shake_details?.supporter_message || '').trim() ||
+            current.message,
+          supporterName:
+            current.supporterName ||
+            (supporterItem?.supporter_name ? String(supporterItem.supporter_name) : undefined),
+        });
+      }
+    }
+
+    if (supporterItem || newGoalRaised != null) {
       this._lastDonation.set({ supporterItem, newGoalRaised });
     }
   }

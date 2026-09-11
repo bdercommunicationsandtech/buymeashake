@@ -40,4 +40,26 @@ describe('CheckoutService', () => {
     expect(service.open()).toBe(false);
     expect(service.paid()).toBe(false);
   });
+
+  it('actualiza shakes desde supporter_item al confirmar pago Stripe', () => {
+    service.beginStripeReturn({
+      creatorName: 'Sofía Ramírez',
+      creatorHandle: 'sofifit',
+      type: 'shake',
+    });
+    expect(service.draft()?.shakes).toBe(1);
+
+    service.markPaid(
+      {
+        supporter_name: 'Ana',
+        shake_details: { shakes_count: 5, supporter_message: 'Vamos!' },
+      },
+      null,
+      'Gracias!',
+    );
+
+    expect(service.paid()).toBe(true);
+    expect(service.draft()?.shakes).toBe(5);
+    expect(service.thankYouMessage()).toBe('Gracias!');
+  });
 });
